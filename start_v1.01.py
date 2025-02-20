@@ -22,8 +22,7 @@ except ImportError:
 def get_required_directories():
     return {
         "dataneos", "dataneos/daily_outputs", "dataneos/data",
-        "dataneos/reporting", "dataneos/orbital_elements",
-        "dataneos/orbital_elements_cache"
+        "dataneos/reporting"
     }
 
 # Ensure all required directories exist

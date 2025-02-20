@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
 # neos_analyzer.py
-# Version: v6.16 (Beautified Output, Enhanced Logging & Reporting,
-#                Fixed Source Verification & Horizons Polling,
-#                Reduced Retries, Continuous Anomaly Scores)
-# Date: 2025-02-16
+# Version: v6.19.1
+# Date: 2025-02-20
 #
 # Overview:
 # This script identifies potentially artificial NEOs through a multi‑stage process.
 #
-# Key enhancements in v6.16:
-#  - Console output now uses dynamic text wrapping, colorization, emojis, and centered titles.
-#  - File reports include decorative headers, section separators, and emoji-enhanced titles.
-#  - Logging includes a clear session header and separator lines.
-#  - When polling a source that fails, a log message is emitted indicating which source (SBDB, NEODyS, MPC, or Horizons) failed.
-#  - Retry timer reduced to 3 seconds per retry with a maximum of 3 retries.
-#  - Horizons polling now correctly extracts the inclination value (using key "i").
-#  - Evaluation functions compute continuous scores (no binary clamping) and dynamic TAS is computed as the z‑score of raw TAS values.
+# Key enhancements in v6.19.1:
+#  - Fixed a typo in the analyze_data() function: replaced 'final_enos' with 'final_enriched'.
+#  - Maintained all enhancements from v6.19 with improved error handling and logging.
 #
 # Workflow:
 #   1. Source Verification (with enhanced logging)
@@ -49,7 +42,7 @@ from astropy.coordinates import ICRS, ITRS, EarthLocation, CartesianRepresentati
 from astropy import units as u
 from astropy.time import Time
 import numpy as np
-from sklearn.cluster import KMeans, DBSCAN
+from sklearn.cluster import DBSCAN
 import shelve
 import traceback
 import functools
@@ -57,6 +50,7 @@ import warnings
 from erfa import ErfaWarning
 from logging.handlers import RotatingFileHandler
 import shutil, textwrap
+from astropy.table import Table
 
 # Suppress ERFA “dubious year” warnings.
 warnings.filterwarnings("ignore", category=ErfaWarning)
@@ -72,8 +66,7 @@ def wrap_text(text: str, width: int = None) -> str:
     return textwrap.fill(text, width=width)
 
 def colorize(text: str, color_code: str) -> str:
-    """Wrap text with ANSI color codes. Example color codes: '36' (cyan), '35' (magenta),
-    '32' (green), '31' (red)."""
+    """Wrap text with ANSI color codes. Example: '36' (cyan), '35' (magenta), etc."""
     return f"\033[{color_code}m{text}\033[0m"
 
 def print_wrapped(text: str, color: str = None):
@@ -133,8 +126,8 @@ CONFIG = {
         "albedo_artificial": 0.6
     },
     "REQUEST_TIMEOUT": 10,
-    "MAX_RETRIES": 3,         # Reduced from 5 to 3
-    "INITIAL_RETRY_DELAY": 3  # Reduced from 5 to 3 seconds
+    "MAX_RETRIES": 3,
+    "INITIAL_RETRY_DELAY": 3
 }
 
 # Global dictionaries to track polling stats and quality.
@@ -154,21 +147,22 @@ def create_data_directories() -> None:
         os.makedirs(d, exist_ok=True)
 
 def setup_logging() -> logging.Logger:
+    log_file_path = CONFIG["LOG_FILE"]
+    os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
     logger_obj = logging.getLogger("neos_analyzer")
     logger_obj.setLevel(logging.WARNING)
-    handler = RotatingFileHandler(CONFIG["LOG_FILE"], maxBytes=1_000_000, backupCount=5)
+    handler = RotatingFileHandler(log_file_path, maxBytes=1_000_000, backupCount=5)
     handler.setLevel(logging.WARNING)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger_obj.addHandler(handler)
-    # Write an initial log header.
     logger_obj.info("=" * 80)
     logger_obj.info("🚀 NEO Analyzer Log Session Started 🚀")
     logger_obj.info("=" * 80)
     return logger_obj
 
-logger = setup_logging()
 create_data_directories()
+logger = setup_logging()
 
 def load_api_key():
     return None
@@ -217,10 +211,6 @@ def create_session_with_retries() -> requests.Session:
 session = create_session_with_retries()
 
 def verify_sources() -> dict:
-    """
-    Poll each source URL and log its availability.
-    Treat 400-level responses as live.
-    """
     available = {}
     for src in CONFIG["DATA_SOURCES_PRIORITY"]:
         if src == "NEODyS":
@@ -282,7 +272,6 @@ def wait_with_progress(delay, description="Waiting"):
 # ==============================================================================
 
 def clear_orbital_cache():
-    """Remove old cache files to avoid mixing data."""
     for root, dirs, files in os.walk(CONFIG["ORBITAL_DIR"]):
         for file in files:
             if file.endswith(".json"):
@@ -483,21 +472,55 @@ def fetch_orbital_elements_neodys(designation: str, data_usage: dict) -> dict:
         logger.warning(f"No orbital data in NEODyS for {designation}")
     return None
 
+# ---------------------
+# Custom get_neos function for MPC
+# ---------------------
+def get_neos(designation: str):
+    """
+    Custom wrapper to query MPC data for a given designation.
+    Uses MPC.query_object to retrieve an Astropy Table, converts the first row to a dictionary.
+    Assumes that the epoch is provided as MJD under the key 'epoch_mjd'.
+    """
+    try:
+        table = MPC.query_object(designation)
+        # Verify that we have a valid table with at least one row.
+        if not isinstance(table, Table) or len(table) == 0:
+            logger.warning(f"MPC query returned an invalid result for {designation} (type: {type(table)})")
+            return None
+        row = table[0]
+        data = {
+            "e": float(row["e"]) if "e" in row and row["e"] is not None else None,
+            "incl": float(row["incl"]) if "incl" in row and row["incl"] is not None else None,
+            "a": float(row["a"]) if "a" in row and row["a"] is not None else None,
+            "Omega": float(row["Omega"]) if "Omega" in row and row["Omega"] is not None else None,
+            "w": float(row["w"]) if "w" in row and row["w"] is not None else None,
+            "M": float(row["M"]) if "M" in row and row["M"] is not None else None,
+        }
+        if "epoch_mjd" in row and row["epoch_mjd"] is not None:
+            data["epoch"] = Time(float(row["epoch_mjd"]), format="mjd").to_datetime().replace(tzinfo=utc)
+        else:
+            data["epoch"] = None
+        return [data]
+    except Exception as e:
+        logger.error(f"Error in custom get_neos for {designation}: {e}\n{traceback.format_exc()}")
+        return None
+
 @safe_execute
 def fetch_orbital_elements_mpc(designation: str, data_usage: dict) -> dict:
-    result = MPC.get_neos(designation=designation)
+    # Use our custom get_neos instead of the non-existent MPC.get_neos
+    result = get_neos(designation)
     if not result:
         logger.warning(f"No MPC data for {designation}")
         return None
     data = result[0]
     orbital_data = {
-        "eccentricity": float(data["e"]),
-        "inclination": float(data["incl"]),
-        "semi_major_axis": float(data["a"]),
-        "ra_of_ascending_node": float(data["Omega"]),
-        "arg_of_periapsis": float(data["w"]),
-        "mean_anomaly": float(data["M"]),
-        "epoch": Time(data["epoch"], format="mjd").to_datetime().replace(tzinfo=utc),
+        "eccentricity": float(data["e"]) if data.get("e") is not None else None,
+        "inclination": float(data["incl"]) if data.get("incl") is not None else None,
+        "semi_major_axis": float(data["a"]) if data.get("a") is not None else None,
+        "ra_of_ascending_node": float(data["Omega"]) if data.get("Omega") is not None else None,
+        "arg_of_periapsis": float(data["w"]) if data.get("w") is not None else None,
+        "mean_anomaly": float(data["M"]) if data.get("M") is not None else None,
+        "epoch": data["epoch"],
         "diameter": float(data.get("diameter", 0)) if data.get("diameter") else None,
         "albedo": float(data.get("albedo", 0)) if data.get("albedo") else None,
         "rot_per": float(data.get("rot_per", 0)) if data.get("rot_per") else None
@@ -507,22 +530,37 @@ def fetch_orbital_elements_mpc(designation: str, data_usage: dict) -> dict:
 
 @safe_execute
 def fetch_orbital_elements_horizons(designation: str, data_usage: dict) -> dict:
-    # Request heliocentric orbital elements from Horizons.
     obj = Horizons(id=designation, location='@sun', epochs='now')
     elements = obj.elements()
     if len(elements) == 0:
         logger.warning(f"No Horizons data for {designation}")
         return None
     el = elements[0]
-    # Note: astroquery Horizons returns inclination under key "i"
+    # Process the epoch (it might be a string; try multiple formats)
+    dt_val = el.get("datetime", el.get("datetime_str"))
+    if isinstance(dt_val, str):
+        try:
+            epoch_dt = datetime.datetime.strptime(dt_val, "%Y-%b-%d %H:%M:%S").replace(tzinfo=utc)
+        except ValueError:
+            try:
+                epoch_dt = datetime.datetime.strptime(dt_val, "%Y-%b-%d %H:%M").replace(tzinfo=utc)
+            except Exception as ex:
+                logger.error(f"Error parsing Horizons epoch for {designation}: {dt_val} - {ex}")
+                epoch_dt = None
+    else:
+        try:
+            epoch_dt = dt_val.replace(tzinfo=utc)
+        except Exception as ex:
+            logger.error(f"Error converting Horizons epoch for {designation}: {dt_val} - {ex}")
+            epoch_dt = None
     orbital_data = {
-        "eccentricity": float(el["e"]),
-        "inclination": float(el["i"]),
-        "semi_major_axis": float(el["a"]),
-        "ra_of_ascending_node": float(el["node"]),
-        "arg_of_periapsis": float(el["peri"]),
-        "mean_anomaly": float(el["M"]),
-        "epoch": el.get("datetime", el.get("datetime_str")).replace(tzinfo=utc),
+        "eccentricity": float(el["e"]) if el.get("e") is not None else None,
+        "inclination": float(el["i"]) if el.get("i") is not None else None,
+        "semi_major_axis": float(el["a"]) if el.get("a") is not None else None,
+        "ra_of_ascending_node": float(el["node"]) if el.get("node") is not None else None,
+        "arg_of_periapsis": float(el["peri"]) if el.get("peri") is not None else None,
+        "mean_anomaly": float(el["M"]) if el.get("M") is not None else None,
+        "epoch": epoch_dt,
         "diameter": float(el.get("diameter", 0)) if el.get("diameter") else None,
         "albedo": float(el.get("albedo", 0)) if el.get("albedo") else None,
         "rot_per": float(el.get("rot_per", 0)) if el.get("rot_per") else None
@@ -876,8 +914,6 @@ def save_results(enriched_neos: list, raw_stats: dict, dynamic_category_counts: 
     base_output = os.path.join(CONFIG["OUTPUT_DIR"],
                                f"scan_{datetime.date.today().isoformat()}_{datetime.datetime.now().strftime('%H%M%S')}")
     os.makedirs(base_output, exist_ok=True)
-    
-    # Write a decorative header with emojis for the summary report.
     summary_header = "🚀 FINAL ANALYSIS REPORT 🚀".center(60)
     summary_filepath = os.path.join(base_output, "analysis_summary.txt")
     try:
@@ -897,7 +933,6 @@ def save_results(enriched_neos: list, raw_stats: dict, dynamic_category_counts: 
             f.write("=" * 60 + "\n")
     except Exception as e:
         logger.error(f"Error writing analysis summary: {e}\n{traceback.format_exc()}")
-    
     details_filepath = os.path.join(base_output, "detailed_results.txt")
     try:
         with open(details_filepath, "w") as f:
@@ -915,7 +950,6 @@ def save_results(enriched_neos: list, raw_stats: dict, dynamic_category_counts: 
                 f.write("-" * 60 + "\n")
     except Exception as e:
         logger.error(f"Error writing detailed results: {e}\n{traceback.format_exc()}")
-    
     top10_filepath = os.path.join(base_output, "top10_high_dynamic_TAS.txt")
     try:
         with open(top10_filepath, "w") as f:
@@ -930,7 +964,6 @@ def save_results(enriched_neos: list, raw_stats: dict, dynamic_category_counts: 
                 f.write("-" * 60 + "\n")
     except Exception as e:
         logger.error(f"Error writing top 10 results: {e}\n{traceback.format_exc()}")
-    
     usage_filepath = os.path.join(base_output, "data_usage_report.txt")
     try:
         with open(usage_filepath, "w") as f:
@@ -942,7 +975,6 @@ def save_results(enriched_neos: list, raw_stats: dict, dynamic_category_counts: 
             f.write("=" * 60 + "\n")
     except Exception as e:
         logger.error(f"Error writing data usage report: {e}\n{traceback.format_exc()}")
-    
     source_stats_filepath = os.path.join(base_output, "source_poll_stats.txt")
     try:
         with open(source_stats_filepath, "w") as f:
@@ -960,7 +992,6 @@ def save_results(enriched_neos: list, raw_stats: dict, dynamic_category_counts: 
             f.write("=" * 60 + "\n")
     except Exception as e:
         logger.error(f"Error writing source polling stats: {e}\n{traceback.format_exc()}")
-    
     print_wrapped(f"🚀 Results saved to {base_output}", "32")
 
 # ==============================================================================
@@ -1126,7 +1157,6 @@ def main():
         clear_orbital_cache()
         api_key = load_api_key()
         available_sources = verify_sources()
-        # Console welcome message with emoji and dynamic wrapping.
         print_wrapped("🚀 Welcome to the NEO Analyzer! 🚀", "36")
         while True:
             tp_input = input("Enter time period for analysis (e.g., '1d', '1m', '1y', '200y' or 'max'): ").strip().lower()
