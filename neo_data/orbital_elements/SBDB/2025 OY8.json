@@ -1,0 +1,19 @@
+{
+  "designation": "2025 OY8",
+  "source": "SBDB",
+  "cached_at": 1754374812.474518,
+  "cached_date": "2025-08-05T08:20:12.474520",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.5,
+    "semi_major_axis": 1.89,
+    "inclination": 9.23,
+    "arg_of_periapsis": 38.9
+  },
+  "raw_data": {
+    "eccentricity": 0.5,
+    "semi_major_axis": 1.89,
+    "inclination": 9.23,
+    "arg_of_periapsis": 38.9
+  }
+}

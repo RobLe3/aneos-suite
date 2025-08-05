@@ -1,0 +1,19 @@
+{
+  "designation": "2025 MG1",
+  "source": "SBDB",
+  "cached_at": 1754374808.3382819,
+  "cached_date": "2025-08-05T08:20:08.338283",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.354,
+    "semi_major_axis": 1.59,
+    "inclination": 8.12,
+    "arg_of_periapsis": 200.0
+  },
+  "raw_data": {
+    "eccentricity": 0.354,
+    "semi_major_axis": 1.59,
+    "inclination": 8.12,
+    "arg_of_periapsis": 200.0
+  }
+}

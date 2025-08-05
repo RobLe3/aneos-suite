@@ -1,0 +1,19 @@
+{
+  "designation": "2025 OZ",
+  "source": "SBDB",
+  "cached_at": 1754374810.249707,
+  "cached_date": "2025-08-05T08:20:10.249710",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.628,
+    "semi_major_axis": 2.34,
+    "inclination": 3.01,
+    "arg_of_periapsis": 268.0
+  },
+  "raw_data": {
+    "eccentricity": 0.628,
+    "semi_major_axis": 2.34,
+    "inclination": 3.01,
+    "arg_of_periapsis": 268.0
+  }
+}

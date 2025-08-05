@@ -1,0 +1,31 @@
+# aNEOS Core Requirements - Essential Dependencies Only
+# This file contains only the essential dependencies needed for core NEO analysis
+
+# Essential Scientific Computing
+numpy>=1.24.0
+astropy>=5.3.0
+requests>=2.28.0
+python-dateutil>=2.8.0
+
+# NEO Data Sources (Optional - graceful fallback)
+astroquery>=0.4.6  # For MPC and Horizons APIs
+
+# Core Analysis
+tqdm>=4.64.0  # Progress bars
+humanize>=4.4.0  # Human-readable formatting
+
+# Geospatial (for NEO distance calculations)
+geopy>=2.3.0
+
+# User Interface (Optional - graceful fallback)
+rich>=13.0.0  # Rich terminal output
+
+# Data Processing
+scikit-learn>=1.1.0  # For anomaly detection algorithms
+
+# Sky mechanics (Optional - graceful fallback)
+skyfield>=1.46  # For astronomical calculations
+
+# Additional utilities that enhance but don't break core functionality
+matplotlib>=3.6.0  # For plotting (optional)
+pandas>=1.5.0  # For data analysis (optional)

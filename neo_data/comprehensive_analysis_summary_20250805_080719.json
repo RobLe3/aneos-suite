@@ -1,0 +1,190 @@
+{
+  "analysis_timestamp": "2025-08-05T08:07:19.977922",
+  "total_objects_analyzed": 5,
+  "classification_summary": {
+    "natural_objects": 5,
+    "suspicious_objects": 0,
+    "classification_breakdown": {
+      "NATURAL - No Significant Artificial Signatures": 5
+    }
+  },
+  "artificial_detection_stats": {
+    "average_artificial_score": 0.125,
+    "max_artificial_score": 0.125,
+    "highly_suspicious_count": 0,
+    "suspicious_count": 0
+  },
+  "data_quality_stats": {
+    "average_completeness": 0.6666666666666666,
+    "high_quality_objects": 5,
+    "low_quality_objects": 0
+  },
+  "source_utilization": {
+    "sources_attempted": {
+      "SBDB": 5
+    },
+    "source_success_rates": {
+      "SBDB": "5/5"
+    },
+    "most_reliable_source": "SBDB"
+  },
+  "temporal_analysis": {
+    "discovery_timeline": {
+      "2025-08-05": 5
+    },
+    "analysis_span_days": 1,
+    "recent_discoveries": 1
+  },
+  "detailed_classifications": [
+    {
+      "designation": "2025 MN88",
+      "classification": "NATURAL - No Significant Artificial Signatures",
+      "artificial_score": 0.125,
+      "confidence": 0.8,
+      "data_quality": 0.6666666666666666,
+      "anomaly_count": 2,
+      "top_indicators": [
+        "Suspiciously consistent velocities (\u03c3=0.0000)",
+        "Unusually low velocities (avg: 1.00)"
+      ],
+      "sources_used": [
+        "SBDB"
+      ],
+      "analysis_details": {
+        "orbital_score": 0.0,
+        "velocity_score": 0.5,
+        "discovery_score": 0.0,
+        "consistency_score": 0.0,
+        "total_indicators": 2,
+        "enrichment_attempts": 1,
+        "days_in_database": 0,
+        "orbital_elements": {
+          "eccentricity": 0.395,
+          "semi_major_axis": 1.57,
+          "inclination": 1.15,
+          "arg_of_periapsis": 222.0
+        }
+      }
+    },
+    {
+      "designation": "2025 OH11",
+      "classification": "NATURAL - No Significant Artificial Signatures",
+      "artificial_score": 0.125,
+      "confidence": 0.8,
+      "data_quality": 0.6666666666666666,
+      "anomaly_count": 2,
+      "top_indicators": [
+        "Suspiciously consistent velocities (\u03c3=0.0000)",
+        "Unusually low velocities (avg: 1.00)"
+      ],
+      "sources_used": [
+        "SBDB"
+      ],
+      "analysis_details": {
+        "orbital_score": 0.0,
+        "velocity_score": 0.5,
+        "discovery_score": 0.0,
+        "consistency_score": 0.0,
+        "total_indicators": 2,
+        "enrichment_attempts": 1,
+        "days_in_database": 0,
+        "orbital_elements": {
+          "eccentricity": 0.264,
+          "semi_major_axis": 1.42,
+          "inclination": 0.827,
+          "arg_of_periapsis": 229.0
+        }
+      }
+    },
+    {
+      "designation": "2025 MC92",
+      "classification": "NATURAL - No Significant Artificial Signatures",
+      "artificial_score": 0.125,
+      "confidence": 0.8,
+      "data_quality": 0.6666666666666666,
+      "anomaly_count": 2,
+      "top_indicators": [
+        "Suspiciously consistent velocities (\u03c3=0.0000)",
+        "Unusually low velocities (avg: 1.00)"
+      ],
+      "sources_used": [
+        "SBDB"
+      ],
+      "analysis_details": {
+        "orbital_score": 0.0,
+        "velocity_score": 0.5,
+        "discovery_score": 0.0,
+        "consistency_score": 0.0,
+        "total_indicators": 2,
+        "enrichment_attempts": 1,
+        "days_in_database": 0,
+        "orbital_elements": {
+          "eccentricity": 0.314,
+          "semi_major_axis": 1.48,
+          "inclination": 1.05,
+          "arg_of_periapsis": 36.5
+        }
+      }
+    },
+    {
+      "designation": "2025 NJ",
+      "classification": "NATURAL - No Significant Artificial Signatures",
+      "artificial_score": 0.125,
+      "confidence": 0.8,
+      "data_quality": 0.6666666666666666,
+      "anomaly_count": 2,
+      "top_indicators": [
+        "Suspiciously consistent velocities (\u03c3=0.0000)",
+        "Unusually low velocities (avg: 1.00)"
+      ],
+      "sources_used": [
+        "SBDB"
+      ],
+      "analysis_details": {
+        "orbital_score": 0.0,
+        "velocity_score": 0.5,
+        "discovery_score": 0.0,
+        "consistency_score": 0.0,
+        "total_indicators": 2,
+        "enrichment_attempts": 1,
+        "days_in_database": 0,
+        "orbital_elements": {
+          "eccentricity": 0.518,
+          "semi_major_axis": 1.8,
+          "inclination": 9.86,
+          "arg_of_periapsis": 240.0
+        }
+      }
+    },
+    {
+      "designation": "2025 MO",
+      "classification": "NATURAL - No Significant Artificial Signatures",
+      "artificial_score": 0.125,
+      "confidence": 0.8,
+      "data_quality": 0.6666666666666666,
+      "anomaly_count": 2,
+      "top_indicators": [
+        "Suspiciously consistent velocities (\u03c3=0.0000)",
+        "Unusually low velocities (avg: 1.00)"
+      ],
+      "sources_used": [
+        "SBDB"
+      ],
+      "analysis_details": {
+        "orbital_score": 0.0,
+        "velocity_score": 0.5,
+        "discovery_score": 0.0,
+        "consistency_score": 0.0,
+        "total_indicators": 2,
+        "enrichment_attempts": 1,
+        "days_in_database": 0,
+        "orbital_elements": {
+          "eccentricity": 0.287,
+          "semi_major_axis": 1.43,
+          "inclination": 1.09,
+          "arg_of_periapsis": 171.0
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+2025-08-05 17:39:23,234 - enhanced_neo_poller_4419121712 - INFO - _setup_enhanced_logging:357 - ================================================================================
+2025-08-05 17:39:23,234 - enhanced_neo_poller_4419121712 - INFO - _setup_enhanced_logging:358 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 17:39:23,234 - enhanced_neo_poller_4419121712 - INFO - _setup_enhanced_logging:359 - ================================================================================
+2025-08-05 18:00:15,315 - enhanced_neo_poller_4386004944 - INFO - _setup_enhanced_logging:370 - ================================================================================
+2025-08-05 18:00:15,315 - enhanced_neo_poller_4386004944 - INFO - _setup_enhanced_logging:371 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 18:00:15,315 - enhanced_neo_poller_4386004944 - INFO - _setup_enhanced_logging:372 - ================================================================================
+2025-08-05 18:03:18,959 - enhanced_neo_poller_4521123792 - INFO - _setup_enhanced_logging:370 - ================================================================================
+2025-08-05 18:03:18,961 - enhanced_neo_poller_4521123792 - INFO - _setup_enhanced_logging:371 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 18:03:18,961 - enhanced_neo_poller_4521123792 - INFO - _setup_enhanced_logging:372 - ================================================================================
+2025-08-05 18:05:43,809 - enhanced_neo_poller_4325679056 - INFO - _setup_enhanced_logging:371 - ================================================================================
+2025-08-05 18:05:43,810 - enhanced_neo_poller_4325679056 - INFO - _setup_enhanced_logging:372 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 18:05:43,811 - enhanced_neo_poller_4325679056 - INFO - _setup_enhanced_logging:373 - ================================================================================
+2025-08-05 18:07:52,899 - enhanced_neo_poller_4452638672 - INFO - _setup_enhanced_logging:373 - ================================================================================
+2025-08-05 18:07:52,900 - enhanced_neo_poller_4452638672 - INFO - _setup_enhanced_logging:374 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 18:07:52,900 - enhanced_neo_poller_4452638672 - INFO - _setup_enhanced_logging:375 - ================================================================================
+2025-08-05 18:07:52,900 - enhanced_neo_poller_4452638672 - WARNING - __init__:260 - Professional reporting requested but not available: Full professional reporting requires numpy and matplotlib
+2025-08-05 18:15:40,975 - enhanced_neo_poller_4462714832 - INFO - _setup_enhanced_logging:375 - ================================================================================
+2025-08-05 18:15:40,976 - enhanced_neo_poller_4462714832 - INFO - _setup_enhanced_logging:376 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 18:15:40,976 - enhanced_neo_poller_4462714832 - INFO - _setup_enhanced_logging:377 - ================================================================================
+2025-08-05 18:15:40,976 - enhanced_neo_poller_4462714832 - WARNING - __init__:259 - Professional reporting requested but not available: Full professional reporting requires numpy and matplotlib
+2025-08-05 18:19:43,842 - enhanced_neo_poller_4448362448 - INFO - _setup_enhanced_logging:375 - ================================================================================
+2025-08-05 18:19:43,843 - enhanced_neo_poller_4448362448 - INFO - _setup_enhanced_logging:376 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 18:19:43,843 - enhanced_neo_poller_4448362448 - INFO - _setup_enhanced_logging:377 - ================================================================================
+2025-08-05 18:19:43,843 - enhanced_neo_poller_4448362448 - WARNING - __init__:259 - Professional reporting requested but not available: Full professional reporting requires numpy and matplotlib
+2025-08-05 18:20:54,791 - enhanced_neo_poller_4571013072 - INFO - _setup_enhanced_logging:375 - ================================================================================
+2025-08-05 18:20:54,791 - enhanced_neo_poller_4571013072 - INFO - _setup_enhanced_logging:376 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 18:20:54,791 - enhanced_neo_poller_4571013072 - INFO - _setup_enhanced_logging:377 - ================================================================================
+2025-08-05 18:51:35,611 - enhanced_neo_poller_4387168208 - INFO - _setup_enhanced_logging:375 - ================================================================================
+2025-08-05 18:51:35,613 - enhanced_neo_poller_4387168208 - INFO - _setup_enhanced_logging:376 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 18:51:35,613 - enhanced_neo_poller_4387168208 - INFO - _setup_enhanced_logging:377 - ================================================================================
+2025-08-05 18:51:35,613 - enhanced_neo_poller_4387168208 - WARNING - __init__:259 - Professional reporting requested but not available: Full professional reporting requires numpy and matplotlib
+2025-08-05 22:29:39,608 - enhanced_neo_poller_4571753472 - INFO - _setup_enhanced_logging:375 - ================================================================================
+2025-08-05 22:29:39,609 - enhanced_neo_poller_4571753472 - INFO - _setup_enhanced_logging:376 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 22:29:39,610 - enhanced_neo_poller_4571753472 - INFO - _setup_enhanced_logging:377 - ================================================================================
+2025-08-05 22:29:42,996 - enhanced_neo_poller_4571753472 - WARNING - fetch_cad_data_with_cache:570 - Cache read error: db type could not be determined
+2025-08-05 22:29:43,360 - enhanced_neo_poller_4571753472 - WARNING - fetch_cad_data_with_cache:595 - Cache write error: db type could not be determined
+2025-08-05 22:29:43,396 - enhanced_neo_poller_4571753472 - WARNING - fetch_and_merge_orbital_elements:1589 - Cache read error for 2025 OA3: db type could not be determined
+2025-08-05 22:29:43,396 - enhanced_neo_poller_4571753472 - WARNING - fetch_and_merge_orbital_elements:1589 - Cache read error for 2025 PA: db type could not be determined
+2025-08-05 22:29:43,535 - enhanced_neo_poller_4571753472 - WARNING - fetch_all_orbital_elements:1562 - No data returned from NEODyS for 2025 PA
+2025-08-05 22:29:43,754 - enhanced_neo_poller_4571753472 - WARNING - fetch_all_orbital_elements:1562 - No data returned from NEODyS for 2025 OA3
+2025-08-05 22:29:55,747 - enhanced_neo_poller_4571753472 - WARNING - fetch_all_orbital_elements:1562 - No data returned from MPC for 2025 PA
+2025-08-05 22:29:55,755 - enhanced_neo_poller_4571753472 - WARNING - fetch_all_orbital_elements:1562 - No data returned from MPC for 2025 OA3
+2025-08-05 22:29:59,346 - enhanced_neo_poller_4571753472 - WARNING - fetch_all_orbital_elements:1562 - No data returned from Horizons for 2025 PA
+2025-08-05 22:29:59,347 - enhanced_neo_poller_4571753472 - WARNING - fetch_all_orbital_elements:1562 - No data returned from Horizons for 2025 OA3
+2025-08-05 22:29:59,861 - enhanced_neo_poller_4571753472 - WARNING - fetch_and_merge_orbital_elements:1626 - Cache write error for 2025 PA: db type could not be determined
+2025-08-05 22:30:00,408 - enhanced_neo_poller_4571753472 - WARNING - fetch_and_merge_orbital_elements:1626 - Cache write error for 2025 OA3: db type could not be determined
+2025-08-05 22:42:50,966 - enhanced_neo_poller_4417632784 - INFO - _setup_enhanced_logging:375 - ================================================================================
+2025-08-05 22:42:50,967 - enhanced_neo_poller_4417632784 - INFO - _setup_enhanced_logging:376 - 🚀 Enhanced NEO Poller Log Session Started 🚀
+2025-08-05 22:42:50,967 - enhanced_neo_poller_4417632784 - INFO - _setup_enhanced_logging:377 - ================================================================================

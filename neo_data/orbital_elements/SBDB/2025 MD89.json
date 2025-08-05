@@ -1,0 +1,19 @@
+{
+  "designation": "2025 MD89",
+  "source": "SBDB",
+  "cached_at": 1754374807.872042,
+  "cached_date": "2025-08-05T08:20:07.872044",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.339,
+    "semi_major_axis": 1.57,
+    "inclination": 11.7,
+    "arg_of_periapsis": 203.0
+  },
+  "raw_data": {
+    "eccentricity": 0.339,
+    "semi_major_axis": 1.57,
+    "inclination": 11.7,
+    "arg_of_periapsis": 203.0
+  }
+}

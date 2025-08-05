@@ -1,0 +1,19 @@
+{
+  "designation": "2019 JM",
+  "source": "SBDB",
+  "cached_at": 1754374807.758191,
+  "cached_date": "2025-08-05T08:20:07.758195",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.389,
+    "semi_major_axis": 1.59,
+    "inclination": 2.62,
+    "arg_of_periapsis": 215.0
+  },
+  "raw_data": {
+    "eccentricity": 0.389,
+    "semi_major_axis": 1.59,
+    "inclination": 2.62,
+    "arg_of_periapsis": 215.0
+  }
+}

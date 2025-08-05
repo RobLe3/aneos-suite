@@ -1,0 +1,19 @@
+{
+  "designation": "2025 OE4",
+  "source": "SBDB",
+  "cached_at": 1754374809.410464,
+  "cached_date": "2025-08-05T08:20:09.410467",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.582,
+    "semi_major_axis": 2.13,
+    "inclination": 2.05,
+    "arg_of_periapsis": 308.0
+  },
+  "raw_data": {
+    "eccentricity": 0.582,
+    "semi_major_axis": 2.13,
+    "inclination": 2.05,
+    "arg_of_periapsis": 308.0
+  }
+}

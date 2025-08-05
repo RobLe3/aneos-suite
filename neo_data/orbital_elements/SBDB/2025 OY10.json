@@ -1,0 +1,19 @@
+{
+  "designation": "2025 OY10",
+  "source": "SBDB",
+  "cached_at": 1754374812.601671,
+  "cached_date": "2025-08-05T08:20:12.601675",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.265,
+    "semi_major_axis": 0.942,
+    "inclination": 4.9,
+    "arg_of_periapsis": 301.0
+  },
+  "raw_data": {
+    "eccentricity": 0.265,
+    "semi_major_axis": 0.942,
+    "inclination": 4.9,
+    "arg_of_periapsis": 301.0
+  }
+}

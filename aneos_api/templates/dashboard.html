@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2>System Status</h2>
+    <p class="status-{{ 'healthy' if system_status.status == 'healthy' else 'warning' }}">
+        Status: {{ system_status.status|title }}
+    </p>
+    <p>Version: {{ system_status.version }}</p>
+    <p>Services Online: {{ system_status.services|length }}</p>
+</div>
+
+<div class="card">
+    <h2>Key Metrics</h2>
+    <div class="metrics">
+        <div class="metric">
+            <div class="metric-value">{{ "%.1f"|format(metrics.cpu_percent) }}%</div>
+            <div class="metric-label">CPU Usage</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">{{ "%.1f"|format(metrics.memory_percent) }}%</div>
+            <div class="metric-label">Memory Usage</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">{{ metrics.total_analyses }}</div>
+            <div class="metric-label">Total Analyses</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">{{ metrics.model_predictions }}</div>
+            <div class="metric-label">ML Predictions</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Quick Actions</h2>
+    <button class="btn" onclick="analyzeNEO()">Analyze NEO</button>
+    <button class="btn" onclick="viewMetrics()">View Metrics</button>
+    <button class="btn" onclick="checkAlerts()">Check Alerts</button>
+</div>
+
+<script>
+    function analyzeNEO() {
+        const designation = prompt("Enter NEO designation:");
+        if (designation) {
+            window.open(`/docs#/Analysis/analyze_neo_api_v1_analysis_analyze_post`, '_blank');
+        }
+    }
+    
+    function viewMetrics() {
+        window.open('/dashboard/monitoring', '_blank');
+    }
+    
+    function checkAlerts() {
+        fetch('/api/v1/monitoring/alerts')
+            .then(response => response.json())
+            .then(data => alert(`Found ${data.length} alerts`))
+            .catch(error => alert('Error fetching alerts'));
+    }
+</script>
+{% endblock %}

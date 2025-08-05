@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aneos-api
+  labels:
+    app: aneos-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aneos-api
+  template:
+    metadata:
+      labels:
+        app: aneos-api
+    spec:
+      containers:
+      - name: aneos-api
+        image: aneos:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ANEOS_ENV
+          value: "production"
+        - name: ANEOS_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aneos-secrets
+              key: database-url
+        - name: ANEOS_REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: aneos-secrets
+              key: redis-url
+        - name: ANEOS_LOG_LEVEL
+          value: "INFO"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+        - name: logs-volume
+          mountPath: /app/logs
+        - name: models-volume
+          mountPath: /app/models
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: aneos-data-pvc
+      - name: logs-volume
+        persistentVolumeClaim:
+          claimName: aneos-logs-pvc
+      - name: models-volume
+        persistentVolumeClaim:
+          claimName: aneos-models-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aneos-api-service
+spec:
+  selector:
+    app: aneos-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aneos-secrets
+type: Opaque
+stringData:
+  database-url: "postgresql://aneos:aneos@postgres-service:5432/aneos"
+  redis-url: "redis://redis-service:6379/0"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aneos-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aneos-logs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aneos-models-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi

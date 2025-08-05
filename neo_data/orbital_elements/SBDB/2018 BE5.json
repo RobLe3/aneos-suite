@@ -1,0 +1,19 @@
+{
+  "designation": "2018 BE5",
+  "source": "SBDB",
+  "cached_at": 1754374811.216189,
+  "cached_date": "2025-08-05T08:20:11.216191",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.46,
+    "semi_major_axis": 1.35,
+    "inclination": 6.13,
+    "arg_of_periapsis": 276.0
+  },
+  "raw_data": {
+    "eccentricity": 0.46,
+    "semi_major_axis": 1.35,
+    "inclination": 6.13,
+    "arg_of_periapsis": 276.0
+  }
+}

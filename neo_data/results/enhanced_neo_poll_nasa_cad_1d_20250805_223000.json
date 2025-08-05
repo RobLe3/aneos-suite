@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "api_used": "NASA_CAD",
+    "time_period": "1d",
+    "analysis_date": "2025-08-05T22:30:00.474983",
+    "total_objects": 2,
+    "suspicious_count": 1,
+    "highly_suspicious_count": 0,
+    "data_sources_used": [],
+    "average_completeness": 0.0,
+    "source_statistics": {
+      "SBDB": {
+        "success": 4,
+        "failure": 0
+      },
+      "NEODyS": {
+        "success": 0,
+        "failure": 6
+      },
+      "MPC": {
+        "success": 0,
+        "failure": 6
+      },
+      "Horizons": {
+        "success": 0,
+        "failure": 6
+      }
+    },
+    "data_usage_bytes": {
+      "SBDB": 3867,
+      "NEODyS": 0,
+      "MPC": 0,
+      "Horizons": 0
+    }
+  },
+  "results": [
+    {
+      "designation": "2025 PA",
+      "raw_TAS": 2.1,
+      "tas_components": {
+        "orbital_mechanics": 0.0,
+        "velocity_shifts": 0.0,
+        "physical_anomalies": 1.5,
+        "detection_history": 0.6,
+        "acceleration_anomalies": 0.0
+      },
+      "classification": "SLIGHTLY ANOMALOUS - Some Unusual Features",
+      "confidence": 0.65,
+      "indicators": [
+        "Suspiciously round semi-major axis: 2.440 AU",
+        "Suspiciously round eccentricity: 0.5900",
+        "Suspiciously round inclination: 7.80\u00b0",
+        "Limited source detection: only 1 source(s)"
+      ],
+      "analysis_details": {
+        "total_components": 5,
+        "highest_component": "physical_anomalies",
+        "highest_component_score": 1.5,
+        "completeness": 0.6666666666666666,
+        "sources_used": [
+          "SBDB"
+        ],
+        "close_approaches": 1
+      }
+    },
+    {
+      "designation": "2025 OA3",
+      "raw_TAS": 1.6,
+      "tas_components": {
+        "orbital_mechanics": 0.0,
+        "velocity_shifts": 0.0,
+        "physical_anomalies": 1.0,
+        "detection_history": 0.6,
+        "acceleration_anomalies": 0.0
+      },
+      "classification": "MARGINALLY ANOMALOUS - Minor Irregularities",
+      "confidence": 0.55,
+      "indicators": [
+        "Suspiciously round eccentricity: 0.3420",
+        "Suspiciously round inclination: 20.00\u00b0",
+        "Limited source detection: only 1 source(s)"
+      ],
+      "analysis_details": {
+        "total_components": 5,
+        "highest_component": "physical_anomalies",
+        "highest_component_score": 1.0,
+        "completeness": 0.6666666666666666,
+        "sources_used": [
+          "SBDB"
+        ],
+        "close_approaches": 1
+      }
+    }
+  ]
+}

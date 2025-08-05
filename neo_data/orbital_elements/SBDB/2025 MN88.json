@@ -1,0 +1,19 @@
+{
+  "designation": "2025 MN88",
+  "source": "SBDB",
+  "cached_at": 1754373546.72189,
+  "cached_date": "2025-08-05T07:59:06.721895",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.395,
+    "semi_major_axis": 1.57,
+    "inclination": 1.15,
+    "arg_of_periapsis": 222.0
+  },
+  "raw_data": {
+    "eccentricity": 0.395,
+    "semi_major_axis": 1.57,
+    "inclination": 1.15,
+    "arg_of_periapsis": 222.0
+  }
+}

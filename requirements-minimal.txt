@@ -1,0 +1,17 @@
+# aNEOS Minimal Requirements - Absolute bare minimum for core functionality
+# The system will work with just these dependencies and graceful degradation
+
+# Python Standard Library Enhanced
+requests>=2.28.0  # For API calls (essential)
+python-dateutil>=2.8.0  # For date handling (essential)
+
+# Progress and User Experience  
+tqdm>=4.64.0  # Progress bars (nice to have)
+
+# Optional but recommended
+rich>=13.0.0  # Rich terminal output (fallback to basic print)
+
+# Scientific computing (core analysis will work without these but with limitations)
+numpy>=1.24.0  # For statistical analysis (recommended)
+
+# Everything else is optional and system provides fallbacks

@@ -1,0 +1,19 @@
+{
+  "designation": "2025 NJ",
+  "source": "SBDB",
+  "cached_at": 1754374033.811716,
+  "cached_date": "2025-08-05T08:07:13.811718",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.518,
+    "semi_major_axis": 1.8,
+    "inclination": 9.86,
+    "arg_of_periapsis": 240.0
+  },
+  "raw_data": {
+    "eccentricity": 0.518,
+    "semi_major_axis": 1.8,
+    "inclination": 9.86,
+    "arg_of_periapsis": 240.0
+  }
+}

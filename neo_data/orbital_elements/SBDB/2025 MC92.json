@@ -1,0 +1,19 @@
+{
+  "designation": "2025 MC92",
+  "source": "SBDB",
+  "cached_at": 1754374033.383842,
+  "cached_date": "2025-08-05T08:07:13.383844",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.314,
+    "semi_major_axis": 1.48,
+    "inclination": 1.05,
+    "arg_of_periapsis": 36.5
+  },
+  "raw_data": {
+    "eccentricity": 0.314,
+    "semi_major_axis": 1.48,
+    "inclination": 1.05,
+    "arg_of_periapsis": 36.5
+  }
+}

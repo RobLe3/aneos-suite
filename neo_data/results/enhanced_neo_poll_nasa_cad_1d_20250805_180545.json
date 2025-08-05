@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "api_used": "NASA_CAD",
+    "time_period": "1d",
+    "analysis_date": "2025-08-05T18:05:45.255142",
+    "total_objects": 2,
+    "suspicious_count": 1,
+    "highly_suspicious_count": 0,
+    "data_sources_used": [],
+    "average_completeness": 0.0,
+    "source_statistics": {
+      "SBDB": {
+        "success": 0,
+        "failure": 0
+      },
+      "NEODyS": {
+        "success": 0,
+        "failure": 0
+      },
+      "MPC": {
+        "success": 0,
+        "failure": 0
+      },
+      "Horizons": {
+        "success": 0,
+        "failure": 0
+      }
+    },
+    "data_usage_bytes": {
+      "SBDB": 0,
+      "NEODyS": 0,
+      "MPC": 0,
+      "Horizons": 0
+    }
+  },
+  "results": [
+    {
+      "designation": "2025 MN88",
+      "raw_TAS": 1.7000000000000002,
+      "tas_components": {
+        "orbital_mechanics": 0.0,
+        "velocity_shifts": 0.0,
+        "physical_anomalies": 1.1,
+        "detection_history": 0.6,
+        "acceleration_anomalies": 0.0
+      },
+      "classification": "MARGINALLY ANOMALOUS - Minor Irregularities",
+      "confidence": 0.55,
+      "indicators": [
+        "Suspiciously round semi-major axis: 1.570 AU",
+        "Suspiciously round eccentricity: 0.3950",
+        "Limited source detection: only 1 source(s)"
+      ],
+      "analysis_details": {
+        "total_components": 5,
+        "highest_component": "physical_anomalies",
+        "highest_component_score": 1.1,
+        "completeness": 0.4444444444444444,
+        "sources_used": [
+          "SBDB"
+        ],
+        "close_approaches": 1
+      }
+    },
+    {
+      "designation": "2025 OH11",
+      "raw_TAS": 2.1,
+      "tas_components": {
+        "orbital_mechanics": 0.0,
+        "velocity_shifts": 0.4,
+        "physical_anomalies": 1.1,
+        "detection_history": 0.6,
+        "acceleration_anomalies": 0.0
+      },
+      "classification": "SLIGHTLY ANOMALOUS - Some Unusual Features",
+      "confidence": 0.65,
+      "indicators": [
+        "Unusually low velocity: 3.45 km/s",
+        "Suspiciously round semi-major axis: 1.420 AU",
+        "Suspiciously round eccentricity: 0.2640",
+        "Limited source detection: only 1 source(s)"
+      ],
+      "analysis_details": {
+        "total_components": 5,
+        "highest_component": "physical_anomalies",
+        "highest_component_score": 1.1,
+        "completeness": 0.4444444444444444,
+        "sources_used": [
+          "SBDB"
+        ],
+        "close_approaches": 1
+      }
+    }
+  ]
+}

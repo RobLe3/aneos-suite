@@ -1,0 +1,114 @@
+{
+  "metadata": {
+    "api_used": "NASA_CAD",
+    "time_period": "6m",
+    "analysis_date": "2025-08-05T07:34:48.770696",
+    "total_objects": 3,
+    "suspicious_count": 0,
+    "highly_suspicious_count": 0,
+    "data_sources_used": [
+      "SBDB"
+    ],
+    "average_completeness": 0.6666666666666666,
+    "source_statistics": {
+      "SBDB": {
+        "success": 3,
+        "failure": 0
+      },
+      "NEODyS": {
+        "success": 0,
+        "failure": 0
+      },
+      "MPC": {
+        "success": 0,
+        "failure": 0
+      },
+      "Horizons": {
+        "success": 0,
+        "failure": 0
+      }
+    },
+    "data_usage_bytes": {
+      "SBDB": 5815,
+      "NEODyS": 0,
+      "MPC": 0,
+      "Horizons": 0
+    }
+  },
+  "results": [
+    {
+      "designation": "2025 MN88",
+      "artificial_score": 0.0,
+      "classification": "NATURAL - No Artificial Signatures",
+      "indicators": [],
+      "orbital_elements": {
+        "eccentricity": 0.395,
+        "semi_major_axis": 1.57,
+        "inclination": 1.15,
+        "arg_of_periapsis": 222.0
+      },
+      "close_approaches_count": 1,
+      "data_completeness": 0.6666666666666666,
+      "sources_used": [
+        "SBDB"
+      ],
+      "analysis_details": {
+        "eccentricity": 0.395,
+        "inclination": 1.15,
+        "semi_major_axis": 1.57,
+        "velocity_count": 1,
+        "first_observation": "2025-Jul-06 11:52"
+      }
+    },
+    {
+      "designation": "2025 NJ",
+      "artificial_score": 0.0,
+      "classification": "NATURAL - No Artificial Signatures",
+      "indicators": [],
+      "orbital_elements": {
+        "eccentricity": 0.518,
+        "semi_major_axis": 1.8,
+        "inclination": 9.86,
+        "arg_of_periapsis": 240.0
+      },
+      "close_approaches_count": 1,
+      "data_completeness": 0.6666666666666666,
+      "sources_used": [
+        "SBDB"
+      ],
+      "analysis_details": {
+        "eccentricity": 0.518,
+        "inclination": 9.86,
+        "semi_major_axis": 1.8,
+        "velocity_count": 1,
+        "first_observation": "2025-Jul-07 11:09"
+      }
+    },
+    {
+      "designation": "2025 OH11",
+      "artificial_score": 0.2,
+      "classification": "NATURAL - No Artificial Signatures",
+      "indicators": [
+        "Unusually low velocity: 3.45 km/s"
+      ],
+      "orbital_elements": {
+        "eccentricity": 0.264,
+        "semi_major_axis": 1.42,
+        "inclination": 0.827,
+        "arg_of_periapsis": 229.0
+      },
+      "close_approaches_count": 1,
+      "data_completeness": 0.6666666666666666,
+      "sources_used": [
+        "SBDB"
+      ],
+      "analysis_details": {
+        "eccentricity": 0.264,
+        "inclination": 0.827,
+        "semi_major_axis": 1.42,
+        "velocity_count": 1,
+        "first_observation": "2025-Jul-06 15:29"
+      }
+    }
+  ]
+}

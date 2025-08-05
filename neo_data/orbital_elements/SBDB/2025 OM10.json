@@ -1,0 +1,19 @@
+{
+  "designation": "2025 OM10",
+  "source": "SBDB",
+  "cached_at": 1754374812.0539231,
+  "cached_date": "2025-08-05T08:20:12.053925",
+  "data_completeness": 0.6666666666666666,
+  "orbital_elements": {
+    "eccentricity": 0.266,
+    "semi_major_axis": 1.38,
+    "inclination": 6.5,
+    "arg_of_periapsis": 336.0
+  },
+  "raw_data": {
+    "eccentricity": 0.266,
+    "semi_major_axis": 1.38,
+    "inclination": 6.5,
+    "arg_of_periapsis": 336.0
+  }
+}
