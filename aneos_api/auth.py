@@ -5,6 +5,7 @@ Provides API key authentication, user management, and role-based access control.
 """
 
 from typing import Optional, Dict, Any
+import os
 import logging
 import hashlib
 import secrets
@@ -39,7 +40,7 @@ MOCK_USERS = {
         'email': 'admin@aneos.local',
         'password_hash': 'mock_admin_hash',
         'role': UserRole.ADMIN,
-        'api_keys': ['aneos_admin_key_123'],
+        'api_keys': [os.getenv('ANEOS_ADMIN_API_KEY', 'admin-key-not-configured')],
         'created_at': datetime.now(),
         'last_login': datetime.now(),
         'is_active': True
@@ -50,7 +51,7 @@ MOCK_USERS = {
         'email': 'analyst@aneos.local',
         'password_hash': 'mock_analyst_hash',
         'role': UserRole.ANALYST,
-        'api_keys': ['aneos_analyst_key_456'],
+        'api_keys': [os.getenv('ANEOS_ANALYST_API_KEY', 'analyst-key-not-configured')],
         'created_at': datetime.now(),
         'last_login': datetime.now(),
         'is_active': True
@@ -61,7 +62,7 @@ MOCK_USERS = {
         'email': 'viewer@aneos.local',
         'password_hash': 'mock_viewer_hash',
         'role': UserRole.VIEWER,
-        'api_keys': ['aneos_viewer_key_789'],
+        'api_keys': [os.getenv('ANEOS_VIEWER_API_KEY', 'viewer-key-not-configured')],
         'created_at': datetime.now(),
         'last_login': datetime.now(),
         'is_active': True

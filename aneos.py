@@ -111,6 +111,8 @@ except Exception as e:
         
         status_script = """
 import sys
+import os
+from pathlib import Path
 sys.path.insert(0, '.')
 
 try:
@@ -145,7 +147,7 @@ try:
         
     # Check required directories
     from pathlib import Path
-    dirs = ['data', 'logs', 'models', 'cache']
+    dirs = ['data', 'logs', 'models', 'cache', 'neo_data', 'exports']
     missing = [d for d in dirs if not Path(d).exists()]
     
     if not missing:

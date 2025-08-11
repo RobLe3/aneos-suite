@@ -12,6 +12,8 @@ import subprocess
 import platform
 import json
 import shutil
+import secrets
+import string
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import logging
@@ -411,7 +413,11 @@ class ANEOSInstaller:
             'cache',
             'exports',
             'backups',
-            'temp'
+            'temp',
+            'neo_data',
+            'neo_data/cache',
+            'neo_data/results',
+            'hardware_cache'
         ]
         
         self.log_info("Creating directory structure...")
@@ -478,14 +484,32 @@ class ANEOSInstaller:
             self.log_error(f"Database setup failed: {e}")
             return False
     
+    def generate_api_key(self, prefix: str = "aneos", length: int = 32) -> str:
+        """Generate a secure API key."""
+        # Generate random string of alphanumeric characters
+        alphabet = string.ascii_letters + string.digits
+        random_part = ''.join(secrets.choice(alphabet) for _ in range(length))
+        return f"{prefix}_{random_part}"
+    
     def create_config_files(self) -> bool:
         """Create default configuration files."""
         self.log_info("Creating configuration files...")
+        
+        # Generate unique API keys for this installation
+        admin_api_key = self.generate_api_key("admin", 32)
+        analyst_api_key = self.generate_api_key("analyst", 32) 
+        viewer_api_key = self.generate_api_key("viewer", 32)
+        secret_key = self.generate_api_key("secret", 48)
+        api_key_salt = self.generate_api_key("salt", 24)
+        
+        self.log_info("Generated unique API keys for this installation")
         
         # Create .env file
         env_file = self.project_root / '.env'
         if not env_file.exists():
             env_content = f"""# aNEOS Environment Configuration
+# Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
 # Database
 ANEOS_DATABASE_URL=sqlite:///./aneos.db
 
@@ -506,9 +530,14 @@ ANEOS_FEATURE_CACHE_TTL=1800
 ANEOS_METRICS_INTERVAL=60
 ANEOS_ALERT_COOLDOWN=300
 
-# Security
-ANEOS_SECRET_KEY=your-secret-key-change-in-production
-ANEOS_API_KEY_SALT=your-api-key-salt-change-in-production
+# Security (Generated unique keys for this installation)
+ANEOS_SECRET_KEY={secret_key}
+ANEOS_API_KEY_SALT={api_key_salt}
+
+# API Keys (Generated unique keys for this installation)
+ANEOS_ADMIN_API_KEY={admin_api_key}
+ANEOS_ANALYST_API_KEY={analyst_api_key}
+ANEOS_VIEWER_API_KEY={viewer_api_key}
 """
             try:
                 env_file.write_text(env_content)

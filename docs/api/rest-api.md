@@ -15,8 +15,8 @@ The aNEOS REST API provides programmatic access to all platform functionality in
 ### API Key Authentication
 
 ```bash
-# Include API key in header
-curl -H "X-API-Key: your-api-key" \
+# Include API key in header (find your keys in .env file)
+curl -H "X-API-Key: <YOUR_API_KEY>" \
      http://localhost:8000/api/v1/analysis/analyze
 ```
 
@@ -32,13 +32,13 @@ curl -H "Authorization: Bearer your-jwt-token" \
 
 ```bash
 # Admin user
-X-API-Key: aneos_admin_key_123
+X-API-Key: <YOUR_ADMIN_API_KEY>
 
 # Analyst user  
-X-API-Key: aneos_analyst_key_456
+X-API-Key: <YOUR_ANALYST_API_KEY>
 
 # Viewer user
-X-API-Key: aneos_viewer_key_789
+X-API-Key: <YOUR_VIEWER_API_KEY>
 ```
 
 ## 📊 Analysis Endpoints
@@ -90,7 +90,7 @@ Perform comprehensive analysis of a single Near Earth Object.
 **cURL Example**:
 ```bash
 curl -X POST "http://localhost:8000/api/v1/analysis/analyze" \
-     -H "X-API-Key: aneos_analyst_key_456" \
+     -H "X-API-Key: <YOUR_ANALYST_API_KEY>" \
      -H "Content-Type: application/json" \
      -d '{
        "designation": "2024 AB123",
@@ -104,7 +104,7 @@ import requests
 
 response = requests.post(
     "http://localhost:8000/api/v1/analysis/analyze",
-    headers={"X-API-Key": "aneos_analyst_key_456"},
+    headers={"X-API-Key": "<YOUR_ANALYST_API_KEY>"},
     json={
         "designation": "2024 AB123",
         "include_indicators": True
@@ -505,7 +505,7 @@ class ANEOSClient:
         return response.json()
 
 # Usage
-client = ANEOSClient(api_key="aneos_analyst_key_456")
+client = ANEOSClient(api_key="<YOUR_ANALYST_API_KEY>")
 
 # Analyze NEO
 result = client.analyze_neo("2024 AB123")
@@ -570,7 +570,7 @@ class ANEOSClient {
 }
 
 // Usage
-const client = new ANEOSClient('http://localhost:8000', 'aneos_analyst_key_456');
+const client = new ANEOSClient('http://localhost:8000', '<YOUR_ANALYST_API_KEY>');
 
 // Analyze NEO
 client.analyzeNEO('2024 AB123')
@@ -592,13 +592,13 @@ curl http://localhost:8000/health
 
 # Analyze NEO with authentication
 curl -X POST \
-  -H "X-API-Key: aneos_analyst_key_456" \
+  -H "X-API-Key: <YOUR_ANALYST_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"designation": "2024 AB123"}' \
   http://localhost:8000/api/v1/analysis/analyze
 
 # Get system metrics
-curl -H "X-API-Key: aneos_admin_key_123" \
+curl -H "X-API-Key: <YOUR_ADMIN_API_KEY>" \
   http://localhost:8000/api/v1/monitoring/metrics
 ```
 
@@ -611,7 +611,7 @@ pip install httpie
 # Test endpoints
 http GET localhost:8000/health
 http POST localhost:8000/api/v1/analysis/analyze \
-  X-API-Key:aneos_analyst_key_456 \
+  X-API-Key:<YOUR_ANALYST_API_KEY> \
   designation="2024 AB123"
 ```
 
