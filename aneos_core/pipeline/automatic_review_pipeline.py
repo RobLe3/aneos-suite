@@ -126,6 +126,7 @@ class PipelineResult:
     stage_results: Dict[ProcessingStage, StageResult]
     pipeline_metrics: Dict[str, Any]
     historical_polling_result: Optional[HistoricalPollingResult] = None
+    validated_candidates: List[Dict] = None  # Store actual candidate data
 
 class AutomaticReviewPipeline:
     """
@@ -317,7 +318,7 @@ class AutomaticReviewPipeline:
             # Calculate pipeline metrics
             pipeline_metrics = self._calculate_pipeline_metrics(stage_results, start_time)
             
-            # Create final result
+            # Create final result with validated candidates
             final_result = PipelineResult(
                 total_input_objects=len(raw_objects),
                 final_candidates=expert_review_result.output_count,
@@ -325,7 +326,8 @@ class AutomaticReviewPipeline:
                 processing_end_time=datetime.now(),
                 stage_results=stage_results,
                 pipeline_metrics=pipeline_metrics,
-                historical_polling_result=historical_result
+                historical_polling_result=historical_result,
+                validated_candidates=expert_review_result.candidates if expert_review_result.success else []
             )
             
             # Save results
@@ -678,32 +680,78 @@ class AutomaticReviewPipeline:
             return None
     
     async def _stage_multi_validation(self, candidates: List[Dict]) -> StageResult:
-        """Execute multi-stage validation - EMERGENCY FIX: Avoid infinite validation loops."""
+        """Execute multi-stage validation with proper Sigma 5 artificial NEO detection."""
         start_time = time.time()
         config = self.config.multi_stage
         
         try:
-            self.logger.info(f"Starting multi-stage validation of {len(candidates)} candidates")
+            self.logger.info(f"Starting multi-stage validation of {len(candidates)} candidates with Sigma 5 analysis")
             
             validated_candidates = []
+            processed_count = 0
             
-            # EMERGENCY FIX: Use simplified validation to prevent infinite loops
-            # TODO: Properly fix the validation pipeline after emergency resolution
+            # Process candidates with proper Sigma 5 validation
             for candidate in candidates[:config.max_candidates]:  # Limit processing
+                processed_count += 1
                 try:
-                    # Use simplified validation criteria instead of full pipeline
+                    # Get first stage results
                     first_stage_score = candidate.get('first_stage_score', {}).get('overall_score', 0.0)
+                    has_sigma_detection = candidate.get('first_stage_score', {}).get('artificial_neo_detected', False)
+                    sigma_level = candidate.get('first_stage_score', {}).get('sigma_level', 0.0)
                     
-                    # Apply basic validation filters
-                    basic_validation_score = min(first_stage_score * 1.2, 1.0)  # Slight bonus for passing first stage
+                    # MULTI-STAGE VALIDATION: Re-run Sigma 5 analysis for verification
+                    artificial_analysis = await self._detect_artificial_neo(candidate)
                     
-                    if basic_validation_score >= config.score_threshold:
+                    validation_score = first_stage_score
+                    validation_method = 'standard'
+                    
+                    if artificial_analysis and artificial_analysis.is_artificial:
+                        # SIGMA 5 VALIDATION: Apply rigorous statistical standards
+                        sigma_level = artificial_analysis.sigma_level
+                        certainty = artificial_analysis.statistical_certainty
+                        confidence = artificial_analysis.confidence
+                        
+                        if sigma_level >= 5.0:
+                            # Sigma 5: 99.99994% statistical certainty - automatic validation
+                            validation_score = 0.95
+                            validation_method = 'sigma_5_validated'
+                            
+                        elif sigma_level >= 4.0:
+                            # Sigma 4: 99.99% statistical certainty - strong validation
+                            validation_score = max(first_stage_score, 0.75)
+                            validation_method = 'sigma_4_validated'
+                            
+                        elif sigma_level >= 3.0:
+                            # Sigma 3: 99.7% statistical certainty - moderate validation
+                            validation_score = max(first_stage_score, 0.60)
+                            validation_method = 'sigma_3_validated'
+                            
+                        else:
+                            # Lower sigma: Apply conservative scoring
+                            boost = min(sigma_level / 5.0 * 0.3, 0.3)  # Up to 30% boost
+                            validation_score = min(first_stage_score + boost, 0.85)
+                            validation_method = 'sigma_boosted'
+                            
+                        self.logger.info(f"Multi-stage Sigma analysis for {candidate.get('designation', 'Unknown')}: "
+                                       f"σ={sigma_level:.2f}, confidence={confidence:.3f}, validation_score={validation_score:.3f}")
+                    else:
+                        # No artificial detection - apply conservative validation
+                        validation_score = first_stage_score * 0.8  # Reduce score without artificial evidence
+                        validation_method = 'natural_object_standard'
+                    
+                    # Apply validation threshold
+                    if validation_score >= config.score_threshold:
                         candidate['multi_stage_validation'] = {
-                            'validation_score': basic_validation_score,
-                            'fp_probability': 1.0 - basic_validation_score,
-                            'confidence': basic_validation_score,
-                            'recommendation': 'accept' if basic_validation_score > 0.8 else 'expert_review',
-                            'validation_method': 'emergency_simplified'
+                            'validation_score': validation_score,
+                            'sigma_level': sigma_level if artificial_analysis else 0.0,
+                            'statistical_certainty': artificial_analysis.statistical_certainty if artificial_analysis else 0.0,
+                            'artificial_confidence': artificial_analysis.confidence if artificial_analysis else 0.0,
+                            'fp_probability': 1.0 - validation_score,
+                            'confidence': validation_score,
+                            'recommendation': 'accept' if validation_score > 0.8 else 'expert_review',
+                            'validation_method': validation_method,
+                            'artificial_detected': bool(artificial_analysis and artificial_analysis.is_artificial),
+                            'validation_timestamp': datetime.now().isoformat()
                         }
                         validated_candidates.append(candidate)
                         
@@ -823,7 +871,7 @@ class AutomaticReviewPipeline:
         }
     
     def _save_pipeline_results(self, result: PipelineResult):
-        """Save complete pipeline results."""
+        """Save complete pipeline results including validated candidates."""
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"pipeline_result_{timestamp}.json"
@@ -844,13 +892,17 @@ class AutomaticReviewPipeline:
                         'processing_time_seconds': stage_result.processing_time_seconds
                     }
                     for stage, stage_result in result.stage_results.items()
-                }
+                },
+                # Include validated candidates with Sigma 5 analysis results
+                'validated_candidates': result.validated_candidates[:100] if result.validated_candidates else [],  # Limit to first 100 for file size
+                'candidate_count': len(result.validated_candidates) if result.validated_candidates else 0
             }
             
             with open(filepath, 'w') as f:
                 json.dump(data, f, indent=2)
                 
             self.logger.info(f"Pipeline results saved to: {filepath}")
+            self.logger.info(f"Validated candidates included: {len(result.validated_candidates) if result.validated_candidates else 0}")
             
         except Exception as e:
             self.logger.error(f"Failed to save pipeline results: {e}")
