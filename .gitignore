@@ -76,6 +76,7 @@ neo_data/historical_cache/
 neo_data/historical_results/
 neo_data/pipeline_results/
 neo_data/polling-results/
+neo_data/polling-archive/
 neo_data/results/
 # Note: aneos_core/data/ contains source code and should be included
 
@@ -87,13 +88,21 @@ temp/
 logs/
 exports/
 
-# Test results and reports
+# Development and testing artifacts (moved to development/ directory)
 *_test_results_*.json
 *_test_results_*.md
 *_report_*.json
 *_validation_*.json
-*.log
+*_diagnostic_*.json
+*_analysis_summary_*.json
 test_*.py
+
+# Development directory - track structure, ignore contents
+development/**/*
+!development/
+!development/README.md
+!development/*/
+!development/*/.gitkeep
 
 # Backup and temporary files
 *_backup_*/
