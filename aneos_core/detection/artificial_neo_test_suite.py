@@ -18,16 +18,8 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 import logging
 
-from .factual_artificial_neo_detector import (
-    FactualArtificialNEODetector, 
-    ArtificialNEOIdentification,
-    LaunchRecord,
-    KnownDebrisObject
-)
-from .reliable_artificial_neo_detector import (
-    ReliableArtificialNEODetector,
-    ReliableArtificialResult
-)
+from .multimodal_sigma5_artificial_neo_detector import MultiModalSigma5ArtificialNEODetector
+from .production_artificial_neo_detector import ProductionArtificialNEODetector
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +38,8 @@ class ArtificialNEOTestSuite:
     """Comprehensive test suite for artificial NEO detection."""
     
     def __init__(self):
-        self.detector = FactualArtificialNEODetector()
-        self.reliable_detector = ReliableArtificialNEODetector()  # Use reliable detector
+        self.detector = MultiModalSigma5ArtificialNEODetector()
+        self.production_detector = ProductionArtificialNEODetector()
         self.test_cases = []
         self._generate_test_cases()
     
@@ -339,7 +331,7 @@ class ArtificialNEOTestSuite:
             
             # Run reliable detection
             start_time = datetime.now()
-            result = await self.reliable_detector.detect_artificial_neo(
+            result = await self.production_detector.detect_artificial_neo(
                 neo_data,
                 test_case.orbital_elements
             )

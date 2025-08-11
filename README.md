@@ -25,7 +25,7 @@ If an advanced civilization wanted to monitor Earth covertly, modifying existing
 
 ### Evolution from Original Research
 
-This system builds directly on the pioneering work in [neo-analyzer-repo](https://github.com/RobLe3/neo-analyzer-repo), which established the theoretical framework with scripts like `neos_o3high_v6.16.py` and `reporting_neos_ng_v3.0.py`. aNEOS represents a complete architectural evolution, providing:
+This system builds directly on the pioneering work in [neo-analyzer-repo](https://github.com/RobLe3/neo-analyzer-repo), which established the theoretical framework with foundational scripts. aNEOS represents a complete architectural evolution beyond the original basic anomaly detection, providing:
 
 - **Multi-Modal Sigma 5 Detection**: 99.99994% statistical certainty for artificial object classification
 - **200-Year Historical Analysis**: Comprehensive long-term orbital pattern detection
@@ -142,19 +142,19 @@ python aneos_menu.py
 This system directly evolves from the groundbreaking theoretical framework established in [neo-analyzer-repo](https://github.com/RobLe3/neo-analyzer-repo). Key improvements include:
 
 ### **From Theory to Implementation**
-- **Original**: Conceptual framework with basic anomaly detection scripts
+- **Original**: Foundational theoretical framework and proof-of-concept scripts
 - **aNEOS**: Complete professional platform with sigma 5 statistical certainty
 
 ### **Enhanced Detection Methods**  
-- **Original**: Single-parameter anomaly scoring (TAS system)
+- **Original**: Basic anomaly detection with simple scoring systems
 - **aNEOS**: Multi-modal evidence fusion with independent source correlation
 
 ### **Scientific Rigor**
-- **Original**: Proof-of-concept analysis with basic statistical methods
+- **Original**: Exploratory analysis establishing the theoretical foundation
 - **aNEOS**: Astronomical discovery standards with comprehensive validation
 
 ### **Operational Capability**
-- **Original**: Manual script execution with limited datasets  
+- **Original**: Research scripts demonstrating feasibility of artificial NEO detection
 - **aNEOS**: Automated pipeline with 200-year historical processing and real-time monitoring
 
 ## The Search Continues
