@@ -382,3 +382,131 @@ class AnalysisResult:
             "max_dynamic_score": self.max_dynamic_score,
             "min_dynamic_score": self.min_dynamic_score
         }
+
+@dataclass
+class PhysicalProperties:
+    """Physical properties of a Near Earth Object."""
+    
+    # Size and mass properties
+    diameter_km: Optional[float] = None
+    diameter_uncertainty: Optional[float] = None
+    mass_kg: Optional[float] = None
+    density_g_cm3: Optional[float] = None
+    
+    # Optical properties
+    absolute_magnitude_h: Optional[float] = None
+    albedo: Optional[float] = None
+    albedo_uncertainty: Optional[float] = None
+    
+    # Rotational properties
+    rotation_period_hours: Optional[float] = None
+    rotation_period_uncertainty: Optional[float] = None
+    pole_ecliptic_lat: Optional[float] = None  # degrees
+    pole_ecliptic_lon: Optional[float] = None  # degrees
+    
+    # Spectral properties
+    spectral_type: Optional[str] = None
+    spectral_class: Optional[str] = None
+    color_indices: Dict[str, float] = field(default_factory=dict)
+    
+    # Thermal properties
+    thermal_inertia: Optional[float] = None  # SI units
+    emissivity: Optional[float] = None
+    
+    # Data quality indicators
+    data_quality_flag: Optional[str] = None
+    measurement_method: Optional[str] = None
+    reference_source: Optional[str] = None
+    
+    def __post_init__(self):
+        """Validate physical properties after initialization."""
+        self._validate()
+    
+    def _validate(self) -> None:
+        """Validate physical property values."""
+        errors = []
+        
+        if self.diameter_km is not None:
+            if self.diameter_km <= 0:
+                errors.append(f"Diameter {self.diameter_km} km must be positive")
+        
+        if self.mass_kg is not None:
+            if self.mass_kg <= 0:
+                errors.append(f"Mass {self.mass_kg} kg must be positive")
+        
+        if self.density_g_cm3 is not None:
+            if self.density_g_cm3 <= 0:
+                errors.append(f"Density {self.density_g_cm3} g/cm³ must be positive")
+        
+        if self.albedo is not None:
+            if not (0 <= self.albedo <= 1):
+                errors.append(f"Albedo {self.albedo} outside valid range [0, 1]")
+        
+        if self.rotation_period_hours is not None:
+            if self.rotation_period_hours <= 0:
+                errors.append(f"Rotation period {self.rotation_period_hours} hours must be positive")
+        
+        if self.emissivity is not None:
+            if not (0 <= self.emissivity <= 1):
+                errors.append(f"Emissivity {self.emissivity} outside valid range [0, 1]")
+        
+        if errors:
+            raise ValueError("Physical properties validation failed: " + "; ".join(errors))
+    
+    def completeness_score(self) -> float:
+        """Calculate completeness score (0-1) based on available physical data."""
+        all_fields = [
+            self.diameter_km, self.mass_kg, self.absolute_magnitude_h, self.albedo,
+            self.rotation_period_hours, self.spectral_type, self.thermal_inertia
+        ]
+        present_count = sum(1 for field in all_fields if field is not None)
+        return present_count / len(all_fields)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary format."""
+        return {
+            "diameter_km": self.diameter_km,
+            "diameter_uncertainty": self.diameter_uncertainty,
+            "mass_kg": self.mass_kg,
+            "density_g_cm3": self.density_g_cm3,
+            "absolute_magnitude_h": self.absolute_magnitude_h,
+            "albedo": self.albedo,
+            "albedo_uncertainty": self.albedo_uncertainty,
+            "rotation_period_hours": self.rotation_period_hours,
+            "rotation_period_uncertainty": self.rotation_period_uncertainty,
+            "pole_ecliptic_lat": self.pole_ecliptic_lat,
+            "pole_ecliptic_lon": self.pole_ecliptic_lon,
+            "spectral_type": self.spectral_type,
+            "spectral_class": self.spectral_class,
+            "color_indices": self.color_indices,
+            "thermal_inertia": self.thermal_inertia,
+            "emissivity": self.emissivity,
+            "data_quality_flag": self.data_quality_flag,
+            "measurement_method": self.measurement_method,
+            "reference_source": self.reference_source
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'PhysicalProperties':
+        """Create from dictionary data."""
+        return cls(
+            diameter_km=data.get("diameter_km"),
+            diameter_uncertainty=data.get("diameter_uncertainty"),
+            mass_kg=data.get("mass_kg"),
+            density_g_cm3=data.get("density_g_cm3"),
+            absolute_magnitude_h=data.get("absolute_magnitude_h"),
+            albedo=data.get("albedo"),
+            albedo_uncertainty=data.get("albedo_uncertainty"),
+            rotation_period_hours=data.get("rotation_period_hours"),
+            rotation_period_uncertainty=data.get("rotation_period_uncertainty"),
+            pole_ecliptic_lat=data.get("pole_ecliptic_lat"),
+            pole_ecliptic_lon=data.get("pole_ecliptic_lon"),
+            spectral_type=data.get("spectral_type"),
+            spectral_class=data.get("spectral_class"),
+            color_indices=data.get("color_indices", {}),
+            thermal_inertia=data.get("thermal_inertia"),
+            emissivity=data.get("emissivity"),
+            data_quality_flag=data.get("data_quality_flag"),
+            measurement_method=data.get("measurement_method"),
+            reference_source=data.get("reference_source")
+        )

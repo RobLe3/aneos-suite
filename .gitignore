@@ -65,13 +65,14 @@ monte_carlo_cache/
 neo_population_cache/
 test_cache/
 
-# Data directories
+# Data directories (exclude data files but keep source code)
 data/
 dataneos/
 neo_data/cache/
 neo_data/logs/
 neo_data/orbital_elements/
 neo_data/pipeline_cache/
+# Note: aneos_core/data/ contains source code and should be included
 
 # Test results and reports
 *_test_results_*.json
