@@ -7,10 +7,10 @@ massive NEO dataset processing. Creates the multi-stage funnel that
 processes candidates through progressive refinement stages.
 
 Pipeline Flow:
-1. Chunked Historical Polling → 50,000+ raw objects
-2. ATLAS First-Stage Review → 5,000 candidates  
-3. Enhanced Multi-Stage Validation → 500 candidates
-4. Expert Review Queue → 50 final candidates
+1. Chunked Historical Polling → Variable raw objects (dataset dependent)
+2. ATLAS First-Stage Review → Dynamic candidates (up to 50,000)  
+3. Enhanced Multi-Stage Validation → Sigma 5 validated candidates (up to 500)
+4. Expert Review Queue → Final artificial NEO candidates (up to 50)
 
 Key Features:
 - Integrated with chunked historical poller
@@ -77,7 +77,7 @@ class PipelineConfig:
     # Stage configurations
     first_stage: StageConfig = field(default_factory=lambda: StageConfig(
         name="ATLAS First-Stage Review",
-        max_candidates=5000,
+        max_candidates=50000,  # Increased cap to allow dynamic processing
         score_threshold=0.35,  # FIXED: Aligned with artificial NEO detection threshold
         processing_timeout_seconds=600,
         parallel_workers=20
