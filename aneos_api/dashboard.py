@@ -85,19 +85,31 @@ async def dashboard_home(
         aneos_app = get_aneos_app()
         system_status = aneos_app.get_health_status()
         
-        # Get basic metrics
-        metrics_data = {}
+        # Get basic metrics with safe fallbacks
+        metrics_data = {
+            'cpu_percent': 0,
+            'memory_percent': 0,
+            'total_analyses': 0,
+            'model_predictions': 0,
+            'status': 'limited_functionality'
+        }
+        
         if aneos_app.metrics_collector:
-            system_metrics = aneos_app.metrics_collector.get_system_metrics()
-            analysis_metrics = aneos_app.metrics_collector.get_analysis_metrics()
-            ml_metrics = aneos_app.metrics_collector.get_ml_metrics()
-            
-            metrics_data = {
-                'cpu_percent': system_metrics.cpu_percent if system_metrics else 0,
-                'memory_percent': system_metrics.memory_percent if system_metrics else 0,
-                'total_analyses': analysis_metrics.total_analyses if analysis_metrics else 0,
-                'model_predictions': ml_metrics.model_predictions if ml_metrics else 0,
-            }
+            try:
+                system_metrics = aneos_app.metrics_collector.get_system_metrics()
+                analysis_metrics = aneos_app.metrics_collector.get_analysis_metrics()
+                ml_metrics = aneos_app.metrics_collector.get_ml_metrics()
+                
+                metrics_data.update({
+                    'cpu_percent': system_metrics.cpu_percent if system_metrics else 0,
+                    'memory_percent': system_metrics.memory_percent if system_metrics else 0,
+                    'total_analyses': analysis_metrics.total_analyses if analysis_metrics else 0,
+                    'model_predictions': ml_metrics.model_predictions if ml_metrics else 0,
+                    'status': 'active'
+                })
+            except Exception as e:
+                logger.error(f"Error getting dashboard metrics: {e}")
+                metrics_data['error'] = str(e)
         
         return templates.TemplateResponse("dashboard.html", {
             "request": request,

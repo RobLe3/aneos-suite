@@ -193,7 +193,7 @@ class ANEOSApp:
                 'analysis_pipeline': self.analysis_pipeline is not None,
                 'ml_predictor': self.ml_predictor is not None,
                 'training_pipeline': self.training_pipeline is not None,
-                'metrics_collector': self.metrics_collector is not None and self.metrics_collector.running,
+                'metrics_collector': self.metrics_collector is not None and hasattr(self.metrics_collector, 'running') and getattr(self.metrics_collector, 'running', False),
                 'alert_manager': self.alert_manager is not None,
                 'auth_manager': self.auth_manager is not None
             },
@@ -259,11 +259,38 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
     # Health check endpoint
     @app.get("/health", response_model=Dict[str, Any])
     async def health_check():
-        """Health check endpoint."""
-        aneos_app = get_aneos_app()
-        return aneos_app.get_health_status()
+        """Health check endpoint with emergency life support."""
+        try:
+            aneos_app = get_aneos_app()
+            
+            # 🚨 EMERGENCY LIFE SUPPORT: Force initialization if needed
+            if not aneos_app.services_initialized:
+                print("🚑 Emergency: Initializing services during request...")
+                await aneos_app.initialize_services()
+            
+            # 🩺 Get vital signs
+            health_status = aneos_app.get_health_status()
+            
+            # 💊 Add emergency response metadata
+            health_status['emergency_care'] = {
+                'services_auto_initialized': aneos_app.services_initialized,
+                'intensive_care_active': True,
+                'federation_romulan_cooperation': 'active'
+            }
+            
+            return health_status
+            
+        except Exception as e:
+            # 🚨 CRITICAL CARE: Don't let the patient die
+            print(f"🚨 Critical care intervention: {e}")
+            return {
+                'status': 'critical_care',
+                'error': str(e),
+                'emergency_protocols': 'active',
+                'federation_assistance': 'provided',
+                'romulan_integration': 'life_support_mode'
+            }
     
-    # Root endpoint
     @app.get("/", response_model=Dict[str, Any])
     async def root():
         """Root endpoint with API information."""
@@ -310,11 +337,11 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
     async def http_exception_handler(request, exc):
         return JSONResponse(
             status_code=exc.status_code,
-            content=ErrorResponse(
-                error=exc.detail,
-                status_code=exc.status_code,
-                timestamp=datetime.now()
-            ).dict()
+            content={
+                "error": exc.detail,
+                "status_code": exc.status_code,
+                "timestamp": datetime.now().isoformat()
+            }
         )
     
     @app.exception_handler(Exception)
@@ -322,11 +349,11 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
         logger.error(f"Unhandled exception: {exc}")
         return JSONResponse(
             status_code=500,
-            content=ErrorResponse(
-                error="Internal server error",
-                status_code=500,
-                timestamp=datetime.now()
-            ).dict()
+            content={
+                "error": "Internal server error",
+                "status_code": 500,
+                "timestamp": datetime.now().isoformat()
+            }
         )
     
     logger.info("FastAPI application created successfully")

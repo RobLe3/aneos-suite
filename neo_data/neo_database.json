@@ -1446,5 +1446,92 @@
       "ra_of_ascending_node": 180.0,
       "mean_anomaly": 0.0
     }
+  },
+  "2025 OT7": {
+    "designation": "2025 OT7",
+    "first_seen": "2025-08-06T15:07:26.989463",
+    "last_updated": "2025-08-06T15:07:26.989492",
+    "enrichment_attempts": 1,
+    "sources_attempted": [
+      "SBDB"
+    ],
+    "best_completeness": 0.6666666666666666,
+    "combined_data": {
+      "eccentricity": 0.683,
+      "inclination": 5.99,
+      "semi_major_axis": 1.77,
+      "ra_of_ascending_node": 180.0,
+      "arg_of_periapsis": 278.0,
+      "mean_anomaly": 0.0,
+      "epoch": null,
+      "diameter": null,
+      "albedo": null
+    }
+  },
+  "2025 OW9": {
+    "designation": "2025 OW9",
+    "first_seen": "2025-08-07T17:17:55.464986",
+    "last_updated": "2025-08-07T17:31:49.166969",
+    "enrichment_attempts": 2,
+    "sources_attempted": [
+      "SBDB",
+      "MPC"
+    ],
+    "best_completeness": 0.7777777777777778,
+    "combined_data": {
+      "eccentricity": 0.406335,
+      "inclination": 2.27535,
+      "semi_major_axis": 1.70824,
+      "ra_of_ascending_node": 134.200954,
+      "arg_of_periapsis": 205.49991,
+      "mean_anomaly": 309.20474,
+      "epoch": "2025-05-05.0",
+      "diameter": null,
+      "albedo": null
+    }
+  },
+  "2025 OT4": {
+    "designation": "2025 OT4",
+    "first_seen": "2025-08-08T00:18:20.475117",
+    "last_updated": "2025-08-08T08:14:29.927317",
+    "enrichment_attempts": 2,
+    "sources_attempted": [
+      "SBDB",
+      "MPC"
+    ],
+    "best_completeness": 0.7777777777777778,
+    "combined_data": {
+      "eccentricity": 0.1311106,
+      "inclination": 8.95464,
+      "semi_major_axis": 1.06493,
+      "ra_of_ascending_node": 134.3189206,
+      "arg_of_periapsis": 259.33127,
+      "mean_anomaly": 211.3306,
+      "epoch": "2025-05-05.0",
+      "diameter": null,
+      "albedo": null
+    }
+  },
+  "2025 OQ5": {
+    "designation": "2025 OQ5",
+    "first_seen": "2025-08-08T00:18:20.661597",
+    "last_updated": "2025-08-08T08:14:29.926731",
+    "enrichment_attempts": 3,
+    "sources_attempted": [
+      "SBDB",
+      "MPC"
+    ],
+    "best_completeness": 0.7777777777777778,
+    "combined_data": {
+      "eccentricity": 0.5027613,
+      "inclination": 15.01759,
+      "semi_major_axis": 1.12298,
+      "ra_of_ascending_node": 134.0411874,
+      "arg_of_periapsis": 290.7003,
+      "mean_anomaly": 230.79349,
+      "epoch": "2025-05-05.0",
+      "diameter": null,
+      "albedo": null
+    }
   }
 }

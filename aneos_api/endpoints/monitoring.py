@@ -53,67 +53,45 @@ else:
         def mount(self, *args, **kwargs): pass
     router = MockRouter()
 
-async def get_metrics_collector() -> MetricsCollector:
+async def get_metrics_collector() -> Optional[MetricsCollector]:
     """Get the metrics collector from the application."""
     from ..app import get_aneos_app  # Import here to avoid circular imports
     aneos_app = get_aneos_app()
-    if not aneos_app.metrics_collector:
-        raise HTTPException(status_code=503, detail="Metrics collector not available")
     return aneos_app.metrics_collector
 
-async def get_alert_manager() -> AlertManager:
+async def get_alert_manager() -> Optional[AlertManager]:
     """Get the alert manager from the application."""
     from ..app import get_aneos_app  # Import here to avoid circular imports
     aneos_app = get_aneos_app()
-    if not aneos_app.alert_manager:
-        raise HTTPException(status_code=503, detail="Alert manager not available")
     return aneos_app.alert_manager
 
-@router.get("/health", response_model=Dict[str, Any])
-async def get_system_health(
-    current_user: Optional[Dict] = Depends(get_current_user)
-):
-    """Get overall system health status."""
-    try:
-        from ..app import get_aneos_app  # Import here to avoid circular imports
-        aneos_app = get_aneos_app()
-        health_status = aneos_app.get_health_status()
-        
-        # Add detailed service status
-        service_health = {}
-        for service_name, is_healthy in health_status['services'].items():
-            if is_healthy:
-                service_health[service_name] = {
-                    'status': 'healthy',
-                    'last_check': datetime.now().isoformat()
-                }
-            else:
-                service_health[service_name] = {
-                    'status': 'unhealthy',
-                    'last_check': datetime.now().isoformat(),
-                    'error': 'Service not initialized or failed'
-                }
-        
-        return {
-            'overall_status': health_status['status'],
-            'uptime_seconds': (datetime.now() - datetime.fromisoformat(health_status['startup_time'])).total_seconds() if health_status['startup_time'] else 0,
-            'version': health_status['version'],
-            'services': service_health,
-            'timestamp': datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"Health check failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+# Health endpoint removed to prevent conflicts with main health endpoint in app.py
+# All health check functionality is now centralized in the main app health endpoint
 
 @router.get("/metrics", response_model=MetricsResponse)
 async def get_current_metrics(
     include_history: bool = Query(False, description="Include historical metrics"),
-    metrics_collector: MetricsCollector = Depends(get_metrics_collector),
+    metrics_collector: Optional[MetricsCollector] = Depends(get_metrics_collector),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
     """Get current system metrics including system, analysis, and ML metrics."""
     try:
+        if not metrics_collector:
+            # Return empty/mock response instead of 503 error
+            return MetricsResponse(
+                system_metrics=None,
+                analysis_metrics=None,
+                ml_metrics=None,
+                recent_alerts=[],
+                performance_summary={
+                    'system_load': 0,
+                    'memory_usage': 0,
+                    'analysis_success_rate': 0,
+                    'ml_prediction_rate': 0,
+                    'active_alerts': 0,
+                    'status': 'monitoring_unavailable'
+                }
+            )
         # Get latest metrics
         system_metrics = metrics_collector.get_system_metrics()
         analysis_metrics = metrics_collector.get_analysis_metrics()
@@ -158,7 +136,7 @@ async def get_current_metrics(
         
         # Get recent alerts
         alert_manager = await get_alert_manager()
-        recent_alerts = alert_manager.get_recent_alerts(limit=10)
+        recent_alerts = alert_manager.get_recent_alerts(limit=10) if alert_manager else []
         alert_responses = [
             AlertResponse(
                 alert_id=alert.alert_id,
@@ -198,11 +176,13 @@ async def get_current_metrics(
 @router.get("/metrics/history", response_model=Dict[str, Any])
 async def get_metrics_history(
     hours: int = Query(24, ge=1, le=168, description="Hours of history to retrieve"),
-    metrics_collector: MetricsCollector = Depends(get_metrics_collector),
+    metrics_collector: Optional[MetricsCollector] = Depends(get_metrics_collector),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
     """Get historical metrics data for trending analysis."""
     try:
+        if not metrics_collector:
+            raise HTTPException(status_code=503, detail="Metrics collector not available")
         end_time = datetime.now()
         start_time = end_time - timedelta(hours=hours)
         
@@ -233,11 +213,13 @@ async def get_alerts(
     level: Optional[str] = Query(None, description="Filter by alert level"),
     resolved: Optional[bool] = Query(None, description="Filter by resolved status"),
     limit: int = Query(50, ge=1, le=200, description="Maximum number of alerts to return"),
-    alert_manager: AlertManager = Depends(get_alert_manager),
+    alert_manager: Optional[AlertManager] = Depends(get_alert_manager),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
     """Get system alerts with optional filtering."""
     try:
+        if not alert_manager:
+            raise HTTPException(status_code=503, detail="Alert manager not available")
         alerts = alert_manager.get_alerts(
             level=level,
             resolved=resolved,
@@ -266,11 +248,13 @@ async def get_alerts(
 @router.post("/alerts/{alert_id}/acknowledge", response_model=Dict[str, Any])
 async def acknowledge_alert(
     alert_id: str,
-    alert_manager: AlertManager = Depends(get_alert_manager),
+    alert_manager: Optional[AlertManager] = Depends(get_alert_manager),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
     """Acknowledge an alert."""
     try:
+        if not alert_manager:
+            raise HTTPException(status_code=503, detail="Alert manager not available")
         success = alert_manager.acknowledge_alert(alert_id, current_user.get('username', 'unknown') if current_user else 'api')
         
         if not success:
@@ -290,11 +274,13 @@ async def acknowledge_alert(
 @router.post("/alerts/{alert_id}/resolve", response_model=Dict[str, Any])
 async def resolve_alert(
     alert_id: str,
-    alert_manager: AlertManager = Depends(get_alert_manager),
+    alert_manager: Optional[AlertManager] = Depends(get_alert_manager),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
     """Resolve an alert."""
     try:
+        if not alert_manager:
+            raise HTTPException(status_code=503, detail="Alert manager not available")
         success = alert_manager.resolve_alert(alert_id, current_user.get('username', 'unknown') if current_user else 'api')
         
         if not success:
@@ -313,11 +299,13 @@ async def resolve_alert(
 
 @router.get("/performance", response_model=Dict[str, Any])
 async def get_performance_metrics(
-    metrics_collector: MetricsCollector = Depends(get_metrics_collector),
+    metrics_collector: Optional[MetricsCollector] = Depends(get_metrics_collector),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
     """Get detailed performance metrics and benchmarks."""
     try:
+        if not metrics_collector:
+            raise HTTPException(status_code=503, detail="Metrics collector not available")
         performance_data = metrics_collector.get_performance_summary()
         
         # Calculate additional performance indicators
@@ -355,19 +343,21 @@ async def get_performance_metrics(
 
 @router.get("/dashboard", response_model=Dict[str, Any])
 async def get_dashboard_data(
-    metrics_collector: MetricsCollector = Depends(get_metrics_collector),
-    alert_manager: AlertManager = Depends(get_alert_manager),
+    metrics_collector: Optional[MetricsCollector] = Depends(get_metrics_collector),
+    alert_manager: Optional[AlertManager] = Depends(get_alert_manager),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
     """Get comprehensive dashboard data for monitoring interface."""
     try:
+        if not metrics_collector:
+            raise HTTPException(status_code=503, detail="Metrics collector not available")
         # Get current metrics
         system_metrics = metrics_collector.get_system_metrics()
         analysis_metrics = metrics_collector.get_analysis_metrics()
         ml_metrics = metrics_collector.get_ml_metrics()
         
         # Get recent alerts
-        recent_alerts = alert_manager.get_recent_alerts(limit=5)
+        recent_alerts = alert_manager.get_recent_alerts(limit=5) if alert_manager else []
         active_alerts = [a for a in recent_alerts if not a.resolved]
         
         # Build dashboard data

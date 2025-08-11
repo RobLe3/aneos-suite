@@ -351,8 +351,7 @@ def setup_middleware(app: FastAPI) -> None:
     app.add_middleware(SecurityHeadersMiddleware)
     
     # Metrics middleware
-    _metrics_middleware = MetricsMiddleware(app)
-    app.add_middleware(type(_metrics_middleware), app=app)
+    app.add_middleware(MetricsMiddleware)
     
     # Request logging middleware
     app.add_middleware(RequestLoggingMiddleware, log_level="INFO")

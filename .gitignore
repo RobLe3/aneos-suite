@@ -72,7 +72,20 @@ neo_data/cache/
 neo_data/logs/
 neo_data/orbital_elements/
 neo_data/pipeline_cache/
+neo_data/historical_cache/
+neo_data/historical_results/
+neo_data/pipeline_results/
+neo_data/polling-results/
+neo_data/results/
 # Note: aneos_core/data/ contains source code and should be included
+
+# Large cache directories  
+*_cache/
+cache/
+backups/
+temp/
+logs/
+exports/
 
 # Test results and reports
 *_test_results_*.json

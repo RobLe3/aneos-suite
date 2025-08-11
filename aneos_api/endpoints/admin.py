@@ -57,12 +57,10 @@ else:
 # Training session tracking
 _training_sessions: Dict[str, Dict[str, Any]] = {}
 
-async def get_training_pipeline() -> TrainingPipeline:
+async def get_training_pipeline():
     """Get the training pipeline from the application."""
     from ..app import get_aneos_app  # Import here to avoid circular imports
     aneos_app = get_aneos_app()
-    if not aneos_app.training_pipeline:
-        raise HTTPException(status_code=503, detail="Training pipeline not available")
     return aneos_app.training_pipeline
 
 @router.get("/status", response_model=SystemStatusResponse)
@@ -170,11 +168,13 @@ async def update_system_config(
 async def start_model_training(
     request: TrainingRequest,
     background_tasks: BackgroundTasks,
-    training_pipeline: TrainingPipeline = Depends(get_training_pipeline),
+    training_pipeline = Depends(get_training_pipeline),
     current_user: Dict = Depends(require_admin)
 ):
     """Start ML model training with specified parameters."""
     try:
+        if not training_pipeline:
+            raise HTTPException(status_code=503, detail="Training pipeline not available")
         logger.info(f"Starting model training requested by {current_user['username']}")
         
         # Create training session

@@ -1,0 +1,39 @@
+{
+  "timestamp": "20250806_233818",
+  "test_results": [
+    {
+      "url": "http://127.0.0.1:8007/health",
+      "status": 200,
+      "response_time": 0.004667043685913086,
+      "content_length": 356,
+      "success": true
+    },
+    {
+      "url": "http://127.0.0.1:8007/api/v1/analysis/stats",
+      "status": 200,
+      "response_time": 0.0043756961822509766,
+      "content_length": 105,
+      "success": true
+    },
+    {
+      "url": "http://127.0.0.1:8007/api/v1/analysis/analyze",
+      "status": 422,
+      "response_time": 0.005784034729003906,
+      "content_length": 146,
+      "success": false
+    },
+    {
+      "url": "http://127.0.0.1:8007/api/v1/prediction/predict",
+      "status": 422,
+      "response_time": 0.0031130313873291016,
+      "content_length": 179,
+      "success": false
+    }
+  ],
+  "summary": {
+    "total_tests": 4,
+    "successful": 2,
+    "failed": 2,
+    "success_rate": 0.5
+  }
+}
