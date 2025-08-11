@@ -1,0 +1,41 @@
+{
+  "encounter_geometry_weight": 0.15,
+  "orbit_behavior_weight": 0.25,
+  "physical_traits_weight": 0.20,
+  "spectral_identity_weight": 0.20,
+  "dynamical_sanity_weight": 0.15,
+  "human_origin_weight": 0.05,
+  "ordinary_threshold": 0.30,
+  "suspicious_threshold": 0.60,
+  "highly_suspicious_threshold": 1.00,
+  "debris_penalty": 0.4,
+  "debris_confidence_threshold": 0.8,
+  "distance_scale": 0.1,
+  "velocity_scale": 2.0,
+  "_metadata": {
+    "description": "Advanced Anomaly Scoring System Configuration - ATLAS",
+    "version": "1.0",
+    "last_updated": "2025-01-08",
+    "notes": {
+      "encounter_geometry_weight": "Weight for distance and velocity factors (0.15 = 15% of total score)",
+      "orbit_behavior_weight": "Weight for orbital patterns and accelerations (0.25 = 25% of total score)",
+      "physical_traits_weight": "Weight for area-to-mass, radar, thermal traits (0.20 = 20% of total score)",
+      "spectral_identity_weight": "Weight for spectral/material analysis (0.20 = 20% of total score)",
+      "dynamical_sanity_weight": "Weight for Yarkovsky drift and dynamics (0.15 = 15% of total score)",
+      "human_origin_weight": "Weight for space debris correlation (0.05 = 5% of total score)",
+      "ordinary_threshold": "Scores below 0.05 classified as 'ordinary' (ALPHA PRIME CALIBRATION)",
+      "suspicious_threshold": "Scores 0.05-0.15 classified as 'suspicious' (needs follow-up)",
+      "highly_suspicious_threshold": "Scores ≥0.15 classified as 'highly suspicious' (highest priority)",
+      "debris_penalty": "Fixed penalty (0.4) subtracted for likely space debris",
+      "debris_confidence_threshold": "Confidence needed (0.8) to apply debris penalty",
+      "distance_scale": "AU scale for distance scoring (0.1 AU = moderate score)",
+      "velocity_scale": "km/s scale for velocity scoring (50 km/s = max score)"
+    },
+    "priority_examples": {
+      "giving_more_emphasis_to_spectral_outliers": "Increase 'spectral_identity_weight' from 0.20 to 0.30",
+      "reducing_false_alarms_from_debris": "Increase 'debris_penalty' from 0.4 to 0.6",
+      "stricter_classification": "Increase 'suspicious_threshold' from 0.60 to 0.70",
+      "focus_on_orbital_anomalies": "Increase 'orbit_behavior_weight' from 0.25 to 0.35"
+    }
+  }
+}

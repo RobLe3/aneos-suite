@@ -603,3 +603,41 @@ class AlertManager:
                 logger.info(f"Cleaned up {removed_count} old alerts")
             
             return removed_count
+    
+    def get_alerts(self, level: Optional[str] = None, resolved: Optional[bool] = None, limit: int = 50) -> List[Alert]:
+        """Get alerts with optional filtering."""
+        with self._lock:
+            filtered_alerts = self.alerts.copy()
+            
+            # Filter by level
+            if level:
+                try:
+                    alert_level = AlertLevel(level.lower())
+                    filtered_alerts = [a for a in filtered_alerts if a.alert_level == alert_level]
+                except ValueError:
+                    logger.warning(f"Invalid alert level filter: {level}")
+            
+            # Filter by resolved status
+            if resolved is not None:
+                filtered_alerts = [a for a in filtered_alerts if a.resolved == resolved]
+            
+            # Sort by timestamp (newest first) and limit
+            sorted_alerts = sorted(filtered_alerts, key=lambda x: x.timestamp, reverse=True)
+            return sorted_alerts[:limit]
+    
+    def resolve_alert(self, alert_id: str, resolved_by: Optional[str] = None) -> bool:
+        """Resolve an alert."""
+        with self._lock:
+            for alert in self.alerts:
+                if alert.alert_id == alert_id and not alert.resolved:
+                    alert.resolved = True
+                    alert.resolved_at = datetime.now()
+                    
+                    # Add resolved_by metadata if provided
+                    if resolved_by:
+                        alert.data['resolved_by'] = resolved_by
+                    
+                    logger.info(f"Alert resolved: {alert_id}" + (f" by {resolved_by}" if resolved_by else ""))
+                    return True
+            
+            return False

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aNEOS Real-Time Validation Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/dashboard/static/img/favicon.ico">
+    
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="/dashboard/static/css/dashboard.css">
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <!-- Meta tags for security and performance -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="aNEOS Real-Time Validation Dashboard - Monitoring artificial object detection and validation pipeline performance">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/dashboard/static/js/dashboard.js" as="script">
+    
+    <style>
+        /* Critical CSS for initial render performance */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #ffffff30;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .loading-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading aNEOS Dashboard</div>
+        <div class="loading-subtitle">Initializing real-time validation monitoring...</div>
+    </div>
+    
+    <!-- Main Dashboard Content -->
+    <div id="dashboard-content" style="display: none;">
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>aNEOS Real-Time Validation Dashboard</h1>
+                    <div class="status-indicator">
+                        <span class="status-dot" id="system-status-dot"></span>
+                        <span id="system-status-text">System Status: Loading...</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="dashboard-info">
+                        <span style="font-size: 0.9rem; opacity: 0.8;">Last Updated: <span id="last-updated">--</span></span>
+                    </div>
+                    <div class="dashboard-controls">
+                        <button class="nav-button" onclick="dashboard.loadInitialData()" title="Refresh Dashboard">
+                            🔄 Refresh
+                        </button>
+                        <button class="nav-button" onclick="dashboard.toggleFullscreen()" title="Toggle Fullscreen">
+                            ⛶ Fullscreen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Navigation -->
+        <nav class="dashboard-nav">
+            <button class="nav-button active" data-view="overview">📊 Overview</button>
+            <button class="nav-button" data-view="validation">🔍 Validation Pipeline</button>
+            <button class="nav-button" data-view="detection">🎯 Detection Statistics</button>
+            <button class="nav-button" data-view="alerts">⚠️ Alerts & Monitoring</button>
+            <button class="nav-button" data-view="analytics">📈 Analytics</button>
+            <button class="nav-button" data-view="settings">⚙️ Settings</button>
+        </nav>
+        
+        <!-- Main Dashboard Container -->
+        <main class="dashboard-container" id="dashboard-container">
+            <!-- System Overview Cards -->
+            <div class="dashboard-card" id="system-overview-card" data-view="overview validation detection">
+                <div class="card-header">
+                    <h3 class="card-title">🖥️ System Overview</h3>
+                    <div class="card-subtitle">Real-time operational metrics</div>
+                </div>
+                <div class="metrics-grid" id="system-metrics">
+                    <div class="loading">Loading system metrics...</div>
+                </div>
+            </div>
+            
+            <!-- Validation Pipeline Performance -->
+            <div class="dashboard-card" id="validation-performance-card" data-view="overview validation">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ Validation Pipeline Performance</h3>
+                    <div class="card-subtitle">Multi-stage processing metrics</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="stage-performance-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Real-Time Validation Results -->
+            <div class="dashboard-card" id="validation-results-card" data-view="overview validation analytics">
+                <div class="card-header">
+                    <h3 class="card-title">🎯 Real-Time Validation Results</h3>
+                    <div class="card-subtitle">Confidence vs Score scatter plot</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="validation-scatter-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Detection Statistics -->
+            <div class="dashboard-card" id="detection-stats-card" data-view="overview detection analytics">
+                <div class="card-header">
+                    <h3 class="card-title">📊 Detection Statistics</h3>
+                    <div class="card-subtitle">Classification and recommendation metrics</div>
+                </div>
+                <div class="metrics-grid" id="detection-metrics">
+                    <div class="loading">Loading detection statistics...</div>
+                </div>
+                <div class="chart-container small">
+                    <canvas id="recommendation-distribution-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Processing Trends -->
+            <div class="dashboard-card" id="processing-trends-card" data-view="overview analytics">
+                <div class="card-header">
+                    <h3 class="card-title">📈 Processing Trends</h3>
+                    <div class="card-subtitle">Throughput and performance over time</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="processing-trends-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Artificial Object Alerts -->
+            <div class="dashboard-card" id="alerts-card" data-view="overview alerts">
+                <div class="card-header">
+                    <h3 class="card-title">🚨 Artificial Object Alerts</h3>
+                    <div class="card-subtitle">
+                        High-confidence artificial detections
+                        <span class="alert-count" id="alert-count">0</span>
+                    </div>
+                </div>
+                <div class="alert-list" id="alert-list">
+                    <div class="loading">Loading alerts...</div>
+                </div>
+            </div>
+            
+            <!-- Stage Performance Details -->
+            <div class="dashboard-card" id="stage-details-card" data-view="validation">
+                <div class="card-header">
+                    <h3 class="card-title">🔍 Stage Performance Details</h3>
+                    <div class="card-subtitle">Individual validation stage metrics</div>
+                </div>
+                <div class="stage-list" id="stage-list">
+                    <div class="loading">Loading stage details...</div>
+                </div>
+            </div>
+            
+            <!-- Module Availability -->
+            <div class="dashboard-card" id="module-availability-card" data-view="validation analytics">
+                <div class="card-header">
+                    <h3 class="card-title">🧩 Validation Module Availability</h3>
+                    <div class="card-subtitle">Phase 1-3 module operational status</div>
+                </div>
+                <div class="chart-container small">
+                    <canvas id="module-availability-chart"></canvas>
+                </div>
+                <div class="module-details" id="module-details" style="margin-top: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; font-size: 0.8rem;">
+                        <div class="module-status">
+                            <strong>ΔBIC Analysis</strong><br>
+                            <span id="delta-bic-status">Loading...</span>
+                        </div>
+                        <div class="module-status">
+                            <strong>Spectral Analysis</strong><br>
+                            <span id="spectral-status">Loading...</span>
+                        </div>
+                        <div class="module-status">
+                            <strong>Radar Polarization</strong><br>
+                            <span id="radar-status">Loading...</span>
+                        </div>
+                        <div class="module-status">
+                            <strong>Thermal-IR</strong><br>
+                            <span id="thermal-status">Loading...</span>
+                        </div>
+                        <div class="module-status">
+                            <strong>Gaia Astrometry</strong><br>
+                            <span id="gaia-status">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Health -->
+            <div class="dashboard-card" id="system-health-card" data-view="overview alerts">
+                <div class="card-header">
+                    <h3 class="card-title">❤️ System Health</h3>
+                    <div class="card-subtitle">Resource utilization and performance</div>
+                </div>
+                <div class="metrics-grid" id="health-metrics">
+                    <div class="loading">Loading health metrics...</div>
+                </div>
+            </div>
+            
+            <!-- Expert Review Queue -->
+            <div class="dashboard-card" id="expert-review-card" data-view="alerts analytics">
+                <div class="card-header">
+                    <h3 class="card-title">👨‍🔬 Expert Review Queue</h3>
+                    <div class="card-subtitle">Objects requiring expert analysis</div>
+                </div>
+                <div class="expert-review-list" id="expert-review-list">
+                    <div class="loading">Loading expert review queue...</div>
+                </div>
+            </div>
+            
+            <!-- Geographic Distribution (Future Enhancement) -->
+            <div class="dashboard-card" id="geographic-card" data-view="analytics" style="display: none;">
+                <div class="card-header">
+                    <h3 class="card-title">🌍 Geographic Distribution</h3>
+                    <div class="card-subtitle">Observation locations and orbital distributions</div>
+                </div>
+                <div class="chart-container">
+                    <div id="geographic-map" style="height: 100%; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #666;">
+                        Geographic visualization coming soon
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Panel -->
+            <div class="dashboard-card" id="settings-card" data-view="settings" style="display: none;">
+                <div class="card-header">
+                    <h3 class="card-title">⚙️ Dashboard Settings</h3>
+                    <div class="card-subtitle">Customize your monitoring experience</div>
+                </div>
+                <div class="settings-content">
+                    <div class="setting-group">
+                        <label for="update-interval">Update Interval (seconds):</label>
+                        <select id="update-interval">
+                            <option value="1">1 second</option>
+                            <option value="5">5 seconds</option>
+                            <option value="10">10 seconds</option>
+                            <option value="30">30 seconds</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label for="chart-animation">Chart Animations:</label>
+                        <input type="checkbox" id="chart-animation" checked>
+                    </div>
+                    <div class="setting-group">
+                        <label for="dark-mode">Dark Mode:</label>
+                        <input type="checkbox" id="dark-mode">
+                    </div>
+                    <div class="setting-group">
+                        <button class="nav-button" onclick="dashboard.exportData()">📊 Export Data</button>
+                        <button class="nav-button" onclick="dashboard.resetDashboard()">🔄 Reset Dashboard</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Connection Status -->
+        <div class="connection-status connecting" id="connection-status">
+            Connecting...
+        </div>
+        
+        <!-- Notification Container -->
+        <div id="notification-container" style="position: fixed; top: 80px; right: 20px; z-index: 1001; max-width: 400px;"></div>
+    </div>
+    
+    <!-- JavaScript Dependencies -->
+    <script src="/dashboard/static/js/dashboard.js"></script>
+    
+    <script>
+        // Initialize loading screen removal
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show dashboard content and hide loading screen after a short delay
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('dashboard-content').style.display = 'block';
+                
+                // Update last updated time
+                function updateLastUpdated() {
+                    const now = new Date();
+                    document.getElementById('last-updated').textContent = now.toLocaleTimeString();
+                }
+                updateLastUpdated();
+                setInterval(updateLastUpdated, 1000);
+                
+            }, 1500);
+        });
+        
+        // Additional dashboard utilities
+        window.dashboardUtils = {
+            toggleFullscreen: function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            },
+            
+            exportData: function() {
+                // Implementation for data export
+                alert('Data export functionality coming soon');
+            },
+            
+            resetDashboard: function() {
+                if (confirm('Are you sure you want to reset the dashboard? This will reload the page.')) {
+                    location.reload();
+                }
+            }
+        };
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey) {
+                switch(e.key) {
+                    case '1':
+                        dashboard.switchView('overview');
+                        break;
+                    case '2':
+                        dashboard.switchView('validation');
+                        break;
+                    case '3':
+                        dashboard.switchView('detection');
+                        break;
+                    case '4':
+                        dashboard.switchView('alerts');
+                        break;
+                    case '5':
+                        dashboard.switchView('analytics');
+                        break;
+                    case 'r':
+                        dashboard.loadInitialData();
+                        break;
+                    case 'f':
+                        dashboardUtils.toggleFullscreen();
+                        break;
+                }
+            }
+        });
+        
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('Dashboard error:', e);
+        });
+        
+        // Performance monitoring
+        window.addEventListener('load', function() {
+            if ('performance' in window) {
+                const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+                console.log('Dashboard load time:', loadTime + 'ms');
+            }
+        });
+    </script>
+    
+    <!-- Service Worker for offline support (optional) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/dashboard/static/js/sw.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+</html>

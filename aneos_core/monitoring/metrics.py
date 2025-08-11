@@ -483,6 +483,128 @@ class MetricsCollector:
             'custom_metrics': self.get_custom_metrics_summary()
         }
     
+    def get_system_metrics(self) -> Optional[SystemMetrics]:
+        """Get latest system metrics."""
+        recent_metrics = self.system_metrics.get_recent(hours=1)
+        return recent_metrics[-1] if recent_metrics else None
+    
+    def get_analysis_metrics(self) -> Optional[AnalysisMetrics]:
+        """Get latest analysis metrics.""" 
+        recent_metrics = self.analysis_metrics.get_recent(hours=1)
+        return recent_metrics[-1] if recent_metrics else None
+    
+    def get_ml_metrics(self) -> Optional[MLMetrics]:
+        """Get latest ML metrics."""
+        recent_metrics = self.ml_metrics.get_recent(hours=1)
+        return recent_metrics[-1] if recent_metrics else None
+    
+    def get_metrics_history(self, start_time: datetime, end_time: datetime) -> List[Dict[str, Any]]:
+        """Get historical metrics data for trending analysis."""
+        history = []
+        
+        # Get all metrics within time range
+        system_history = []
+        analysis_history = []
+        ml_history = []
+        
+        for metric in self.system_metrics.get_all():
+            if start_time <= metric.timestamp <= end_time:
+                system_history.append(metric.to_dict())
+        
+        for metric in self.analysis_metrics.get_all():
+            if start_time <= metric.timestamp <= end_time:
+                analysis_history.append(metric.to_dict())
+        
+        for metric in self.ml_metrics.get_all():
+            if start_time <= metric.timestamp <= end_time:
+                ml_history.append(metric.to_dict())
+        
+        # Combine into time-series format
+        all_timestamps = set()
+        for metrics_list in [system_history, analysis_history, ml_history]:
+            for metric in metrics_list:
+                all_timestamps.add(metric['timestamp'])
+        
+        for timestamp in sorted(all_timestamps):
+            entry = {'timestamp': timestamp}
+            
+            # Find matching metrics for this timestamp
+            for metric in system_history:
+                if metric['timestamp'] == timestamp:
+                    entry.update({f'system_{k}': v for k, v in metric.items() if k != 'timestamp'})
+                    break
+            
+            for metric in analysis_history:
+                if metric['timestamp'] == timestamp:
+                    entry.update({f'analysis_{k}': v for k, v in metric.items() if k != 'timestamp'})
+                    break
+                    
+            for metric in ml_history:
+                if metric['timestamp'] == timestamp:
+                    entry.update({f'ml_{k}': v for k, v in metric.items() if k != 'timestamp'})
+                    break
+            
+            history.append(entry)
+        
+        return history
+    
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """Get performance summary for dashboard."""
+        try:
+            system_metrics = self.get_system_metrics()
+            analysis_metrics = self.get_analysis_metrics()
+            ml_metrics = self.get_ml_metrics()
+            
+            summary = {
+                'load_average': getattr(system_metrics, 'load_average', None) if system_metrics else None,
+                'uptime_hours': 24.0,  # Mock - would calculate from startup time
+                'service_health': 'healthy',
+                'last_updated': datetime.now().isoformat()
+            }
+            
+            if system_metrics:
+                summary.update({
+                    'cpu_utilization': system_metrics.cpu_percent,
+                    'memory_utilization': system_metrics.memory_percent,
+                    'disk_utilization': system_metrics.disk_usage_percent
+                })
+            
+            if analysis_metrics:
+                summary.update({
+                    'analysis_throughput': analysis_metrics.total_analyses,
+                    'analysis_success_rate': analysis_metrics.successful_analyses / max(analysis_metrics.total_analyses, 1)
+                })
+            
+            if ml_metrics:
+                summary.update({
+                    'prediction_throughput': ml_metrics.model_predictions,
+                    'prediction_latency': ml_metrics.prediction_latency
+                })
+            
+            return summary
+            
+        except Exception as e:
+            logger.error(f"Error getting performance summary: {e}")
+            return {
+                'error': 'Failed to get performance summary',
+                'last_updated': datetime.now().isoformat()
+            }
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Get cache statistics and metrics collector stats."""
+        return {
+            'metrics_collected': {
+                'system': len(self.system_metrics.get_all()),
+                'analysis': len(self.analysis_metrics.get_all()),
+                'ml': len(self.ml_metrics.get_all())
+            },
+            'collection_running': self.running,
+            'collection_interval': self.collection_interval,
+            'custom_counters': len(self.custom_counters),
+            'custom_gauges': len(self.custom_gauges),
+            'custom_timers': len(self.custom_timers)
+        }
+    
     def export_metrics_to_file(self, filepath: str, hours: int = 24) -> None:
         """Export metrics to JSON file."""
         try:

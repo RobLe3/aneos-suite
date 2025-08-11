@@ -251,7 +251,7 @@ import asyncio
 
 async def analyze_neo(designation):
     pipeline = create_analysis_pipeline()
-    result = await pipeline.analyze_neo_async(designation)
+    result = await pipeline.analyze_neo(designation)
     
     if result:
         score = result.anomaly_score.overall_score

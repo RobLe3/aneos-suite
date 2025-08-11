@@ -332,7 +332,8 @@ class EnhancedNEOPoller:
         # Verify source availability on startup (inspired by original script)
         self.verify_sources()
         
-        print("🚀 Enhanced NEO Poller initialized")
+        # EMERGENCY: Suppress banner printing
+        # print("🚀 Enhanced NEO Poller initialized")
         print(f"📁 Data directory: {self.data_dir}")
         print("Mission: Complete NEO data enrichment and artificial detection")
         
@@ -373,7 +374,8 @@ class EnhancedNEOPoller:
         
         # Log initialization
         logger.info("=" * 80)
-        logger.info("🚀 Enhanced NEO Poller Log Session Started 🚀")
+        # EMERGENCY: Suppress logging banner
+        # logger.info("🚀 Enhanced NEO Poller Log Session Started 🚀")
         logger.info("=" * 80)
         
         return logger
@@ -940,75 +942,22 @@ class EnhancedNEOPoller:
             return None
     
     @safe_execute
-    @retry_with_exponential_backoff(max_retries=3, initial_delay=2)
+    @retry_with_exponential_backoff(max_retries=2, initial_delay=1)
     def fetch_orbital_elements_neodys(self, designation: str) -> Optional[Dict[str, Any]]:
         """
-        Fetch orbital elements from NEODyS (improved from original script approach).
+        Fetch orbital elements from NEODyS - currently disabled due to endpoint issues.
         
         Args:
             designation: NEO designation
             
         Returns:
-            Orbital elements dictionary or None if failed
+            None (NEODyS temporarily unavailable)
         """
-        try:
-            # Try multiple NEODyS endpoints (inspired by original but more robust)
-            endpoints = [
-                'https://newton.spacedys.com/neodys/api/',
-                'https://newton.spacedys.com/neodys/',  # Alternative endpoint
-            ]
-            
-            for endpoint in endpoints:
-                try:
-                    params = {
-                        'name': designation,
-                        'format': 'json'
-                    }
-                    
-                    response = self.session.get(endpoint, params=params, timeout=self.config['REQUEST_TIMEOUT'])
-                    
-                    # Handle different response patterns
-                    if response.status_code == 404:
-                        continue  # Try next endpoint or fail gracefully
-                    
-                    response.raise_for_status()
-                    
-                    # Try to parse response 
-                    try:
-                        data = response.json()
-                    except json.JSONDecodeError:
-                        # Some NEODyS responses might not be JSON
-                        continue
-                    
-                    self.data_usage['NEODyS'] += len(response.content)
-                    
-                    # Handle different NEODyS response formats (inspired by original)
-                    orbital_data = {}
-                    
-                    # Try standard orbit format
-                    if 'orbit' in data and data['orbit']:
-                        orbit = data['orbit']
-                        orbital_data = self._parse_neodys_orbit_data(orbit, designation)
-                    
-                    # Try alternative format if orbit format failed
-                    elif 'elements' in data:
-                        orbital_data = self._parse_neodys_elements_data(data['elements'], designation)
-                    
-                    if orbital_data:
-                        self.source_statistics['NEODyS']['success'] += 1
-                        return orbital_data
-                        
-                except requests.RequestException:
-                    continue  # Try next endpoint
-            
-            # All endpoints failed
-            self.source_statistics['NEODyS']['failure'] += 1
-            return None
-            
-        except Exception as e:
-            self.logger.error(f"Unexpected error fetching NEODyS data for {designation}: {e}")
-            self.source_statistics['NEODyS']['failure'] += 1
-            return None
+        # NEODyS endpoints are currently experiencing connection issues
+        # Skip to prevent timeouts and improve performance
+        self.logger.warning(f"NEODyS source temporarily disabled for {designation} - endpoint unavailable")
+        self.source_statistics['NEODyS']['failure'] += 1
+        return None
     
     def _parse_neodys_orbit_data(self, orbit: Dict[str, Any], designation: str) -> Dict[str, Any]:
         """Parse NEODyS orbit data format (inspired by original)."""
@@ -1074,39 +1023,60 @@ class EnhancedNEOPoller:
             Orbital elements dictionary or None if failed
         """
         try:
-            # Import MPC from astroquery (needs to be installed)
-            from astroquery.mpc import MPC
-            from astropy.table import Table
+            # MPC Web Service API approach (more reliable than astroquery for current objects)
+            import requests
             
-            # Try different designation formats (inspired by original but more robust)
+            # Try MPC web service first
+            mpc_api_url = "https://minorplanetcenter.net/web_service/search_orbits"
+            mpc_auth = ('mpc_ws', 'mpc!!ws')  # Public MPC web service credentials
+            
+            # Try different designation formats for MPC API
             designation_variants = [
                 designation,
-                designation.replace(' ', ''),  # Remove spaces
-                designation.upper(),  # Uppercase
-                designation.lower(),  # Lowercase
+                designation.replace(' ', '+'),    # URL encoded space  
+                designation.replace(' ', '%20'),  # Alternative URL encoding
+                designation.replace(' ', ''),     # Remove spaces
             ]
             
             for variant in designation_variants:
                 try:
-                    # Query MPC for the designation
-                    table = MPC.query_object(variant)
+                    # Query MPC web service for object data
+                    params = {
+                        'designation': variant,
+                        'json': '1'  # Request JSON format
+                    }
                     
-                    if not isinstance(table, Table) or len(table) == 0:
+                    response = self.session.get(
+                        mpc_api_url, 
+                        params=params, 
+                        auth=mpc_auth,
+                        timeout=self.config['REQUEST_TIMEOUT']
+                    )
+                    response.raise_for_status()
+                    
+                    # Check if we got JSON data
+                    try:
+                        data = response.json()
+                    except json.JSONDecodeError:
+                        # MPC returned HTML error page
+                        continue  # Try next variant
+                        
+                    if not data or len(data) == 0:
                         continue  # Try next variant
                     
-                    row = table[0]
+                    record = data[0] if isinstance(data, list) else data
                     
                     # Extract orbital data with robust error handling
-                    orbital_data = self._parse_mpc_row(row, designation)
+                    orbital_data = self._parse_mpc_json(record, designation)
                     
                     if orbital_data:
-                        # Track data usage (estimate)
-                        self.data_usage['MPC'] += len(str(orbital_data).encode())
+                        # Track data usage
+                        self.data_usage['MPC'] += len(response.content)
                         self.source_statistics['MPC']['success'] += 1
                         return orbital_data
                         
                 except Exception as e:
-                    self.logger.debug(f"MPC query failed for variant '{variant}': {e}")
+                    self.logger.debug(f"MPC web service query failed for variant '{variant}': {e}")
                     continue  # Try next variant
             
             # All variants failed
@@ -1122,8 +1092,45 @@ class EnhancedNEOPoller:
             self.source_statistics['MPC']['failure'] += 1
             return None
     
+    def _parse_mpc_json(self, record: Dict[str, Any], designation: str) -> Dict[str, Any]:
+        """Parse MPC JSON record with robust error handling."""
+        orbital_data = {}
+        
+        # MPC JSON field mapping  
+        field_mappings = {
+            'eccentricity': ['eccentricity', 'e'],
+            'inclination': ['inclination', 'incl', 'i'],
+            'semi_major_axis': ['semimajor_axis', 'a'],
+            'ra_of_ascending_node': ['ascending_node', 'Omega', 'node'],
+            'arg_of_periapsis': ['argument_of_perihelion', 'peri', 'w'],
+            'mean_anomaly': ['mean_anomaly', 'M']
+        }
+        
+        # Extract orbital elements with fallback field names
+        for target_key, possible_fields in field_mappings.items():
+            value = None
+            for field in possible_fields:
+                if field in record and record[field] is not None:
+                    try:
+                        value = float(record[field])
+                        break
+                    except (ValueError, TypeError):
+                        continue
+            
+            if value is not None:
+                orbital_data[target_key] = value
+                
+        # Handle epoch
+        epoch_fields = ['epoch', 'epoch_jd', 'datetime']
+        for field in epoch_fields:
+            if field in record and record[field] is not None:
+                orbital_data["epoch"] = str(record[field])
+                break
+                
+        return orbital_data
+        
     def _parse_mpc_row(self, row, designation: str) -> Dict[str, Any]:
-        """Parse MPC table row with robust error handling (improved from original)."""
+        """Parse MPC table row with robust error handling (legacy astroquery method)."""
         orbital_data = {}
         
         # MPC field mapping with multiple possible field names
@@ -1186,64 +1193,19 @@ class EnhancedNEOPoller:
     @safe_execute
     def fetch_orbital_elements_horizons(self, designation: str) -> Optional[Dict[str, Any]]:
         """
-        Fetch orbital elements from JPL Horizons (improved from original script approach).
+        Fetch orbital elements from JPL Horizons - currently disabled due to API issues.
         
         Args:
             designation: NEO designation
             
         Returns:
-            Orbital elements dictionary or None if failed
+            None (Horizons API experiencing issues)
         """
-        try:
-            # Import Horizons from astroquery (needs to be installed)
-            from astroquery.jplhorizons import Horizons
-            
-            # Try different designation formats and locations (inspired by original but more robust)
-            designation_variants = [
-                designation,
-                designation.replace(' ', ''),  # Remove spaces
-                f"'{designation}'",  # Quoted format
-            ]
-            
-            locations = ['@sun', '500']  # Sun-centered, geocentric
-            
-            for variant in designation_variants:
-                for location in locations:
-                    try:
-                        # Query Horizons for orbital elements
-                        obj = Horizons(id=variant, location=location, epochs='now')
-                        elements = obj.elements()
-                        
-                        if len(elements) == 0:
-                            continue  # Try next variant/location
-                        
-                        el = elements[0]
-                        
-                        # Extract orbital data with robust parsing
-                        orbital_data = self._parse_horizons_elements(el, designation)
-                        
-                        if orbital_data:
-                            # Track data usage (estimate)
-                            self.data_usage['Horizons'] += len(str(orbital_data).encode())
-                            self.source_statistics['Horizons']['success'] += 1
-                            return orbital_data
-                            
-                    except Exception as e:
-                        self.logger.debug(f"Horizons query failed for '{variant}' at {location}: {e}")
-                        continue  # Try next variant/location
-            
-            # All variants failed
-            self.source_statistics['Horizons']['failure'] += 1
-            return None
-            
-        except ImportError:
-            self.logger.debug("astroquery not installed - cannot fetch Horizons data")
-            self.source_statistics['Horizons']['failure'] += 1
-            return None
-        except Exception as e:
-            self.logger.error(f"Unexpected error fetching Horizons data for {designation}: {e}")
-            self.source_statistics['Horizons']['failure'] += 1
-            return None
+        # JPL Horizons API is currently experiencing BATVAR/TLIST errors
+        # Skip to prevent blocking and improve performance
+        self.logger.warning(f"Horizons source temporarily disabled for {designation} - API issues")
+        self.source_statistics['Horizons']['failure'] += 1
+        return None
     
     def _parse_horizons_elements(self, el, designation: str) -> Dict[str, Any]:
         """Parse Horizons elements with robust error handling (improved from original)."""
