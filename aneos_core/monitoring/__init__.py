@@ -9,7 +9,7 @@ from .alerts import AlertManager, AlertRule, AlertLevel
 from .metrics import MetricsCollector, SystemMetrics
 from .dashboard import MonitoringDashboard
 
-__version__ = "2.0.0"
+__version__ = "0.7.0"
 __author__ = "aNEOS Project"
 
 __all__ = [

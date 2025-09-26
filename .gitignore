@@ -96,6 +96,7 @@ exports/
 *_diagnostic_*.json
 *_analysis_summary_*.json
 test_*.py
+!tests/test_multimodal_sigma5_detector.py
 
 # Development directory - track structure, ignore contents
 development/**/*

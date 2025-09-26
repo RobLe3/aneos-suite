@@ -21,10 +21,10 @@ Architecture:
 - Authentication integration for secure access
 
 Author: NU SWARM - Real-Time Validation Dashboard Team
-Version: 1.0.0
+Version: 0.7.0
 """
 
-__version__ = "1.0.0"
+__version__ = "0.7.0"
 __author__ = "NU SWARM - Real-Time Validation Dashboard Team"
 
 from .api.dashboard_endpoints import router as dashboard_router

@@ -97,6 +97,14 @@ class AnalysisPipeline:
         """Initialize the analysis pipeline."""
         self.config = config or get_config()
         self.pipeline_config = pipeline_config or PipelineConfig()
+
+        # Align pipeline execution characteristics with configuration
+        self.pipeline_config.max_workers = getattr(self.config, 'max_workers', self.pipeline_config.max_workers)
+        self.pipeline_config.timeout_seconds = getattr(
+            self.config, 'analysis_timeout', self.pipeline_config.timeout_seconds
+        )
+        self.analysis_parallel = getattr(self.config, 'analysis_parallel', True)
+        self.analysis_queue_size = max(1, getattr(self.config, 'analysis_queue_size', 1))
         
         # Initialize components
         self.cache_manager = get_cache_manager()
@@ -293,47 +301,60 @@ class AnalysisPipeline:
         
         results = []
         completed = 0
-        
-        # Use thread pool for parallel processing
-        with ThreadPoolExecutor(max_workers=self.pipeline_config.max_workers) as executor:
-            # Submit all tasks
-            future_to_designation = {
-                executor.submit(asyncio.run, self.analyze_neo(designation)): designation
-                for designation in designations
-            }
-            
-            # Process completed tasks
-            for future in as_completed(future_to_designation, timeout=self.pipeline_config.timeout_seconds):
-                designation = future_to_designation[future]
-                
-                try:
-                    result = future.result()
-                    results.append(result)
-                    completed += 1
-                    
-                    if progress_callback:
-                        progress_callback(completed, len(designations))
-                    
-                    logger.debug(f"Completed analysis {completed}/{len(designations)}: {designation}")
-                    
-                except Exception as e:
-                    logger.error(f"Failed to analyze {designation}: {e}")
-                    
-                    # Create error result
-                    error_result = PipelineResult(
-                        designation=designation,
-                        anomaly_score=AnomalyScore(designation, 0.0, 0.0, 'natural'),
-                        analysis_metadata={},
-                        processing_time=0.0,
-                        data_quality={'error': 'Processing failed'},
-                        errors=[str(e)]
-                    )
-                    results.append(error_result)
-                    completed += 1
-                    
-                    if progress_callback:
-                        progress_callback(completed, len(designations))
-        
+        total = len(designations)
+
+        if not self.analysis_parallel:
+            logger.info("Parallel analysis disabled; processing sequentially")
+            for designation in designations:
+                result = await self.analyze_neo(designation)
+                results.append(result)
+                completed += 1
+                if progress_callback:
+                    progress_callback(completed, total)
+            return results
+
+        queue_size = self.analysis_queue_size if self.analysis_queue_size else total
+        if queue_size <= 0:
+            queue_size = total
+        batches = [designations[i:i + queue_size] for i in range(0, total, queue_size)]
+
+        for batch in batches:
+            with ThreadPoolExecutor(max_workers=self.pipeline_config.max_workers) as executor:
+                future_to_designation = {
+                    executor.submit(asyncio.run, self.analyze_neo(designation)): designation
+                    for designation in batch
+                }
+
+                for future in as_completed(future_to_designation, timeout=self.pipeline_config.timeout_seconds):
+                    designation = future_to_designation[future]
+
+                    try:
+                        result = future.result()
+                        results.append(result)
+                        completed += 1
+
+                        if progress_callback:
+                            progress_callback(completed, total)
+
+                        logger.debug(f"Completed analysis {completed}/{total}: {designation}")
+
+                    except Exception as e:
+                        logger.error(f"Failed to analyze {designation}: {e}")
+
+                        error_result = PipelineResult(
+                            designation=designation,
+                            anomaly_score=AnomalyScore(designation, 0.0, 0.0, 'natural'),
+                            analysis_metadata={},
+                            processing_time=0.0,
+                            data_quality={'error': 'Processing failed'},
+                            errors=[str(e)]
+                        )
+                        results.append(error_result)
+                        completed += 1
+
+                        if progress_callback:
+                            progress_callback(completed, total)
+
         logger.info(f"Batch analysis completed: {len(results)} results")
         return results
     

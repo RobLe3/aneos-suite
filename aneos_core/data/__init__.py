@@ -1,7 +1,7 @@
 """Data management components for aNEOS."""
 
 from .models import NEOData, OrbitalElements, CloseApproach, AnalysisResult
-from .cache import CacheManager, OrbitElementsCache
+from .cache import CacheManager
 
 __all__ = [
     'NEOData',
@@ -9,5 +9,4 @@ __all__ = [
     'CloseApproach',
     'AnalysisResult',
     'CacheManager',
-    'OrbitElementsCache'
 ]

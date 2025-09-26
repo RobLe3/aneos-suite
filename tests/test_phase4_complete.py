@@ -15,7 +15,7 @@ import tempfile
 import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock, AsyncMock
 import json
 
 # Import aNEOS components
@@ -25,7 +25,7 @@ from aneos_core.ml.features import (
     GeographicFeatureExtractor, IndicatorFeatureExtractor
 )
 from aneos_core.ml.models import (
-    ModelConfig, IsolationForestModel, ModelEnsemble,
+    ModelConfig, IsolationForestModel, ModelEnsemble, AnomalyDetectionModel,
     create_model, create_default_ensemble
 )
 from aneos_core.ml.training import (
@@ -68,6 +68,7 @@ class TestFeatureEngineering:
         
         close_approaches = [
             CloseApproach(
+                designation="2024 TEST",
                 close_approach_date=datetime.now() - timedelta(days=100),
                 distance_au=0.05,
                 relative_velocity_km_s=15.2,
@@ -75,6 +76,7 @@ class TestFeatureEngineering:
                 subpoint=(35.0, -118.0)  # Los Angeles area
             ),
             CloseApproach(
+                designation="2024 TEST",
                 close_approach_date=datetime.now() - timedelta(days=50),
                 distance_au=0.08,
                 relative_velocity_km_s=18.7,
@@ -88,7 +90,6 @@ class TestFeatureEngineering:
             orbital_elements=orbital_elements,
             close_approaches=close_approaches
         )
-    
     @pytest.fixture
     def sample_indicator_results(self):
         """Create sample indicator results."""
@@ -260,6 +261,52 @@ class TestFeatureEngineering:
         assert len(designations) == 3
         assert all("2024 TEST" in des for des in designations)
 
+
+class TestConfigurationLoading:
+    """Validate configuration loading from environment variables."""
+
+    def test_env_processing_flags(self, monkeypatch, tmp_path):
+        temp_dir = tmp_path / "aneos-temp"
+        monkeypatch.setenv("ANEOS_ANALYSIS_PARALLEL", "false")
+        monkeypatch.setenv("ANEOS_ANALYSIS_MAX_WORKERS", "16")
+        monkeypatch.setenv("ANEOS_ANALYSIS_QUEUE_SIZE", "25")
+        monkeypatch.setenv("ANEOS_ANALYSIS_TIMEOUT", "120")
+        monkeypatch.setenv("ANEOS_BATCH_PROCESSING_ENABLED", "true")
+        monkeypatch.setenv("ANEOS_BATCH_SIZE", "50")
+        monkeypatch.setenv("ANEOS_BATCH_MAX_SIZE", "200")
+        monkeypatch.setenv("ANEOS_BATCH_TIMEOUT", "1800")
+        monkeypatch.setenv("ANEOS_ANALYSIS_MEMORY_LIMIT", "2048")
+        monkeypatch.setenv("ANEOS_ANALYSIS_TEMP_DIR", str(temp_dir))
+        monkeypatch.setenv("ANEOS_ANALYSIS_CLEANUP_TEMP_FILES", "False")
+        monkeypatch.setenv("ANEOS_DATA_SOURCES_PRIMARY", "SBDB")
+        monkeypatch.setenv("ANEOS_DATA_SOURCES_FALLBACK", "NEODyS,MPC")
+        monkeypatch.setenv("ANEOS_DATA_SOURCES_TIMEOUT", "15")
+        monkeypatch.setenv("ANEOS_DATA_SOURCES_RETRY_ATTEMPTS", "5")
+
+        config = ANEOSConfig.from_env()
+
+        assert config.analysis_parallel is False
+        assert config.max_workers == 16
+        assert config.analysis_queue_size == 25
+        assert config.analysis_timeout == 120
+        assert config.batch_processing_enabled is True
+        assert config.batch_size == 50
+        assert config.batch_max_size == 200
+        assert config.batch_timeout == 1800
+        assert config.analysis_memory_limit == 2048
+        assert config.analysis_temp_dir == str(temp_dir)
+        assert config.analysis_cleanup_temp_files is False
+        assert config.api.data_sources_priority == ["SBDB", "NEODyS", "MPC"]
+        assert config.api.request_timeout == 15
+        assert config.api.max_retries == 5
+
+    def test_env_max_workers_fallback(self, monkeypatch):
+        monkeypatch.delenv("ANEOS_ANALYSIS_MAX_WORKERS", raising=False)
+        monkeypatch.setenv("ANEOS_MAX_WORKERS", "4")
+        config = ANEOSConfig.from_env()
+        assert config.max_workers == 4
+
+
 class TestMLModels:
     """Test machine learning models."""
     
@@ -349,36 +396,39 @@ class TestMLModels:
     def test_model_save_load(self, temp_model_dir):
         """Test model serialization."""
         config = ModelConfig(model_type="isolation_forest")
-        
-        # Create mock model for testing save/load
-        model = Mock()
-        model.config = config
-        model.model = Mock()
-        model.scaler = Mock()
+
+        class DummyModel(AnomalyDetectionModel):
+            """Lightweight concrete model for exercising persistence helpers."""
+
+            def fit(self, X, y=None):  # pragma: no cover - not needed for this test
+                raise NotImplementedError
+
+            def predict(self, X):  # pragma: no cover - not needed for this test
+                raise NotImplementedError
+
+            def predict_proba(self, X):  # pragma: no cover - not needed for this test
+                raise NotImplementedError
+
+        model = DummyModel(config)
+        model.model = {'type': 'mock_model'}
+        model.scaler = {'type': 'mock_scaler'}
         model.feature_names = ['feature1', 'feature2']
         model.model_id = 'test_model'
         model.is_trained = True
-        
-        # Mock the save_model method
-        def mock_save(filepath):
-            import pickle
-            model_data = {
-                'model': model.model,
-                'scaler': model.scaler,
-                'config': model.config,
-                'feature_names': model.feature_names,
-                'model_id': model.model_id,
-                'is_trained': model.is_trained
-            }
-            with open(filepath, 'wb') as f:
-                pickle.dump(model_data, f)
-        
-        model.save_model = mock_save
-        
-        # Test save
+
         model_path = Path(temp_model_dir) / "test_model.pkl"
         model.save_model(str(model_path))
         assert model_path.exists()
+
+        reloaded = DummyModel(config)
+        reloaded.load_model(str(model_path))
+
+        assert reloaded.model_id == model.model_id
+        assert reloaded.feature_names == model.feature_names
+        assert reloaded.is_trained is True
+        assert reloaded.config.model_type == model.config.model_type
+        assert reloaded.scaler == model.scaler
+        assert reloaded.model == model.model
 
 class TestTrainingPipeline:
     """Test ML training pipeline."""

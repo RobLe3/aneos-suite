@@ -7,9 +7,25 @@ approach in the original monolithic script.
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Union
-from datetime import datetime
+from datetime import UTC, datetime
 import json
 from pathlib import Path
+
+
+def _utcnow() -> datetime:
+    """Return a timezone-aware UTC timestamp."""
+
+    return datetime.now(UTC)
+
+
+def _ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    """Normalise naive datetimes to UTC-aware values."""
+
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 @dataclass
 class OrbitalElements:
@@ -21,6 +37,9 @@ class OrbitalElements:
     semi_major_axis: Optional[float] = None  # AU
     ra_of_ascending_node: Optional[float] = None  # degrees
     arg_of_periapsis: Optional[float] = None  # degrees
+    # Common alternate names
+    ascending_node: Optional[float] = None  # degrees
+    argument_of_perihelion: Optional[float] = None  # degrees
     mean_anomaly: Optional[float] = None  # degrees
     epoch: Optional[datetime] = None
     
@@ -31,8 +50,21 @@ class OrbitalElements:
     spectral_type: Optional[str] = None
     
     def __post_init__(self):
-        """Validate orbital elements after initialization."""
+        """Normalize alternate field names and validate values."""
+        self._synchronize_aliases()
         self._validate()
+
+    def _synchronize_aliases(self) -> None:
+        """Keep legacy and alternate orbital element names in sync."""
+        if self.ascending_node is not None and self.ra_of_ascending_node is None:
+            self.ra_of_ascending_node = self.ascending_node
+        elif self.ascending_node is None and self.ra_of_ascending_node is not None:
+            self.ascending_node = self.ra_of_ascending_node
+
+        if self.argument_of_perihelion is not None and self.arg_of_periapsis is None:
+            self.arg_of_periapsis = self.argument_of_perihelion
+        elif self.argument_of_perihelion is None and self.arg_of_periapsis is not None:
+            self.argument_of_perihelion = self.arg_of_periapsis
     
     def _validate(self) -> None:
         """Validate orbital element values against physical constraints."""
@@ -65,7 +97,7 @@ class OrbitalElements:
         """Check if all essential orbital elements are present."""
         essential = [
             self.eccentricity, self.inclination, self.semi_major_axis,
-            self.ra_of_ascending_node, self.arg_of_periapsis, self.mean_anomaly
+            self.ascending_node, self.argument_of_perihelion, self.mean_anomaly
         ]
         return all(elem is not None for elem in essential)
     
@@ -73,7 +105,7 @@ class OrbitalElements:
         """Calculate completeness score (0-1) based on available data."""
         all_fields = [
             self.eccentricity, self.inclination, self.semi_major_axis,
-            self.ra_of_ascending_node, self.arg_of_periapsis, self.mean_anomaly,
+            self.ascending_node, self.argument_of_perihelion, self.mean_anomaly,
             self.epoch, self.diameter, self.albedo
         ]
         present_count = sum(1 for field in all_fields if field is not None)
@@ -86,7 +118,9 @@ class OrbitalElements:
             "inclination": self.inclination,
             "semi_major_axis": self.semi_major_axis,
             "ra_of_ascending_node": self.ra_of_ascending_node,
+            "ascending_node": self.ascending_node,
             "arg_of_periapsis": self.arg_of_periapsis,
+            "argument_of_perihelion": self.argument_of_perihelion,
             "mean_anomaly": self.mean_anomaly,
             "epoch": self.epoch.isoformat() if self.epoch else None,
             "diameter": self.diameter,
@@ -120,8 +154,10 @@ class OrbitalElements:
             eccentricity=data.get("eccentricity"),
             inclination=data.get("inclination"),
             semi_major_axis=data.get("semi_major_axis"),
-            ra_of_ascending_node=data.get("ra_of_ascending_node"),
-            arg_of_periapsis=data.get("arg_of_periapsis"),
+            ra_of_ascending_node=data.get("ra_of_ascending_node") or data.get("ascending_node"),
+            arg_of_periapsis=data.get("arg_of_periapsis") or data.get("argument_of_perihelion"),
+            ascending_node=data.get("ascending_node"),
+            argument_of_perihelion=data.get("argument_of_perihelion"),
             mean_anomaly=data.get("mean_anomaly"),
             epoch=epoch,
             diameter=data.get("diameter"),
@@ -218,8 +254,8 @@ class NEOData:
     last_observation: Optional[datetime] = None
     
     # Metadata
-    created_at: datetime = field(default_factory=datetime.utcnow)
-    updated_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=_utcnow)
+    updated_at: datetime = field(default_factory=_utcnow)
     
     def __post_init__(self):
         """Post-initialization processing."""
@@ -239,7 +275,7 @@ class NEOData:
             approach = CloseApproach.from_dict(approach)
         
         self.close_approaches.append(approach)
-        self.updated_at = datetime.utcnow()
+        self.updated_at = _utcnow()
         
         # Update observation period
         if approach.close_approach_date:
@@ -255,7 +291,7 @@ class NEOData:
         
         self.orbital_elements = elements
         self.completeness = elements.completeness_score()
-        self.updated_at = datetime.utcnow()
+        self.updated_at = _utcnow()
     
     def update_anomaly_analysis(self, raw_score: float, dynamic_score: float, 
                               category: str, components: Dict[str, float]) -> None:
@@ -264,7 +300,7 @@ class NEOData:
         self.dynamic_anomaly_score = dynamic_score
         self.anomaly_category = category
         self.score_components = components.copy()
-        self.updated_at = datetime.utcnow()
+        self.updated_at = _utcnow()
     
     def is_highly_anomalous(self, threshold: float = 2.0) -> bool:
         """Check if NEO is highly anomalous based on dynamic score."""
@@ -332,10 +368,10 @@ class NEOData:
             dynamic_anomaly_score=data.get("dynamic_TAS"),
             anomaly_category=data.get("dynamic_category"),
             score_components=data.get("score_components", {}),
-            first_observation=parse_datetime(data.get("first_observation")),
-            last_observation=parse_datetime(data.get("last_observation")),
-            created_at=parse_datetime(data.get("created_at")) or datetime.utcnow(),
-            updated_at=parse_datetime(data.get("updated_at")) or datetime.utcnow()
+            first_observation=_ensure_utc(parse_datetime(data.get("first_observation"))),
+            last_observation=_ensure_utc(parse_datetime(data.get("last_observation"))),
+            created_at=_ensure_utc(parse_datetime(data.get("created_at")) or _utcnow()),
+            updated_at=_ensure_utc(parse_datetime(data.get("updated_at")) or _utcnow()),
         )
     
     def save_to_file(self, file_path: Union[str, Path]) -> None:

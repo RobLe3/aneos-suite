@@ -89,6 +89,6 @@ __all__ = [
 ]
 
 # Version information
-__version__ = "1.0.0"
+__version__ = "0.7.0"
 __author__ = "aNEOS Scientific Rigor Enhancement Team"
 __description__ = "Scientific validation and false positive prevention for artificial NEO detection"

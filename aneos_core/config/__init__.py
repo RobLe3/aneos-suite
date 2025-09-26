@@ -6,14 +6,14 @@ from .settings import (
     ThresholdConfig,
     WeightConfig,
     APIConfig,
-    PathConfig
+    DirectoryConfig,
 )
 
 __all__ = [
     'ANEOSConfig',
     'ConfigManager',
-    'ThresholdConfig', 
+    'ThresholdConfig',
     'WeightConfig',
     'APIConfig',
-    'PathConfig'
+    'DirectoryConfig',
 ]

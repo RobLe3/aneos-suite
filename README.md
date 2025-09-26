@@ -4,6 +4,11 @@
 
 aNEOS is a sophisticated, multi-component platform that advances the groundbreaking **Artificial NEOs Theory** through rigorous astronomical data processing and machine learning-based anomaly detection. Building upon the foundational research from the [neo-analyzer-repo](https://github.com/RobLe3/neo-analyzer-repo), this system represents the next evolution in the search for potentially engineered celestial objects.
 
+## Release Status
+
+- **Active development:** v0.7.0 (current branch)
+- **Legacy support:** `version/0.5` branch capturing the previous feature baseline
+
 ## The Artificial NEOs Theory - Scientific Foundation
 
 ### Core Hypothesis
@@ -131,17 +136,31 @@ python aneos.py help                   # View all commands
 - **Statistical Certainty**: Probability of correct artificial/natural classification
 - **Evidence Analysis**: Detailed breakdown of orbital, physical, and temporal signatures
 
-## Current System Status ✅
+## Current System Status
 
-**Production Ready**: The aNEOS system is now fully operational with all core functionality implemented and tested.
+The 0.7.0 stabilization effort has restored a consistent test baseline while
+highlighting several areas that still require hardening before the platform can
+be considered production ready. The current state is best described as
+**"stabilizing"** rather than fully released.
 
-### **Recent Updates (August 2025)**
-- ✅ **Core Functionality**: All basic menu features operational (100% test pass rate)
-- ✅ **Security Fixes**: Custom-generated API keys for each installation
-- ✅ **Import Issues Resolved**: Fixed NumPy 2.x compatibility and authentication system
-- ✅ **Database Integration**: SQLite with 7 tables, proper SQLAlchemy 2.0+ support
-- ✅ **System Health**: Complete status monitoring and directory structure
-- ✅ **Documentation**: Comprehensive installation guides and troubleshooting
+### **Verified Signals (August 2025)**
+- ✅ **Regression Coverage**: 61 automated tests pass locally, exercising cache,
+  configuration, detector, ML persistence, and the phase 4 integration flows.
+- ✅ **Legacy Compatibility**: Restored cache/config interfaces keep older
+  pipeline components operational during the transition to the modern APIs.
+- ✅ **Alert Dispatch**: Email notifications now rely on the standard
+  `email.mime` helpers so baseline monitoring works again.
+
+### **Outstanding Risks**
+- ⚠️ **External Integrations**: Historical polling still falls back to mock
+  simulations when optional pipeline components are unavailable, so real API
+  coverage remains unverified.
+- ⚠️ **Operational Proof**: The README quick-start flows launch, but full
+  end-to-end sigma-5 detections have not been reproduced outside the automated
+  suite.
+- ⚠️ **Documentation Gap**: Several guides continue to market production-ready
+  status; these will be revised after operational validation closes the current
+  gaps.
 
 ### **Validated Components**
 - **Simple NEO Analyzer**: Basic artificial detection working (`simple_neo_analyzer.py`)

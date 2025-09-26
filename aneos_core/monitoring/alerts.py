@@ -14,8 +14,8 @@ import logging
 import asyncio
 import smtplib
 import ssl
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 import threading
 
@@ -132,14 +132,14 @@ class EmailNotificationChannel(NotificationChannel):
         
         try:
             # Create message
-            msg = MimeMultipart()
+            msg = MIMEMultipart()
             msg['From'] = self.username
             msg['To'] = ', '.join(self.recipients)
             msg['Subject'] = f"aNEOS Alert: {alert.alert_level.value.upper()} - {alert.title}"
             
             # Create email body
             body = self._create_email_body(alert)
-            msg.attach(MimeText(body, 'html'))
+            msg.attach(MIMEText(body, 'html'))
             
             # Send email
             context = ssl.create_default_context()
@@ -343,7 +343,12 @@ class AlertManager:
         self.alert_history[cooldown_key] = alert.timestamp
         
         # Send notifications
-        asyncio.create_task(self._send_notifications(alert))
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.run(self._send_notifications(alert))
+        else:
+            loop.create_task(self._send_notifications(alert))
         
         logger.info(f"Alert created: {alert.alert_id} ({alert.alert_level.value})")
         return alert

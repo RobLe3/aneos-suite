@@ -21,6 +21,15 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
+def _get_bool_env(var_name: str, default: bool) -> bool:
+    """Parse boolean environment variables using common truthy strings."""
+    value = os.getenv(var_name)
+    if value is None:
+        return default
+
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
 @dataclass
 class ThresholdConfig:
     """Thresholds for anomaly detection."""
@@ -71,34 +80,74 @@ class APIConfig:
     data_sources_priority: List[str] = field(default_factory=lambda: ["SBDB", "NEODyS", "MPC", "Horizons"])
 
 @dataclass
-class PathConfig:
-    """File system paths for data storage."""
-    data_neos_dir: str = "dataneos"
-    data_dir: str = "dataneos/data"
-    orbital_dir: str = "dataneos/orbital_elements"
-    output_dir: str = "dataneos/daily_outputs"
-    cache_dir: str = "dataneos/cache"
-    log_file: str = "dataneos/neos_analyzer.log"
-    cache_file: str = "dataneos/orbital_elements_cache"
-    
-    def __post_init__(self):
-        """Create directories if they don't exist."""
-        for attr_name in ['data_neos_dir', 'data_dir', 'orbital_dir', 'output_dir', 'cache_dir']:
-            path = getattr(self, attr_name)
-            Path(path).mkdir(parents=True, exist_ok=True)
+class DirectoryConfig:
+    """Directory layout used by the analysis pipeline."""
+
+    base_dir: str = "dataneos"
+    data_dir: Optional[str] = None
+    orbital_dir: Optional[str] = None
+    output_dir: Optional[str] = None
+    cache_dir: Optional[str] = None
+    log_file: Optional[str] = None
+    cache_file: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        self._apply_defaults()
+
+    def _apply_defaults(self, force: bool = False) -> None:
+        """Populate derived paths while respecting explicit overrides."""
+
+        if force or self.data_dir is None:
+            self.data_dir = os.path.join(self.base_dir, "data")
+        if force or self.orbital_dir is None:
+            self.orbital_dir = os.path.join(self.base_dir, "orbital_elements")
+        if force or self.output_dir is None:
+            self.output_dir = os.path.join(self.base_dir, "daily_outputs")
+        if force or self.cache_dir is None:
+            self.cache_dir = os.path.join(self.base_dir, "cache")
+        if force or self.log_file is None:
+            self.log_file = os.path.join(self.base_dir, "neos_analyzer.log")
+        if force or self.cache_file is None:
+            self.cache_file = os.path.join(self.base_dir, "orbital_elements_cache")
+
+    def apply_base_dir(self, base_dir: str) -> None:
+        """Update the base directory and recompute derived paths."""
+
+        self.base_dir = base_dir
+        self._apply_defaults(force=True)
+
+    def to_dict(self) -> Dict[str, str]:
+        return {
+            "base_dir": self.base_dir,
+            "data_dir": self.data_dir,
+            "orbital_dir": self.orbital_dir,
+            "output_dir": self.output_dir,
+            "cache_dir": self.cache_dir,
+            "log_file": self.log_file,
+            "cache_file": self.cache_file,
+        }
 
 @dataclass
 class ANEOSConfig:
     """Complete aNEOS configuration."""
     api: APIConfig = field(default_factory=APIConfig)
-    paths: PathConfig = field(default_factory=PathConfig)
+    directories: DirectoryConfig = field(default_factory=DirectoryConfig)
     thresholds: ThresholdConfig = field(default_factory=ThresholdConfig)
     weights: WeightConfig = field(default_factory=WeightConfig)
     
     # Processing settings
     max_workers: int = 10
     max_subpoint_workers: int = 20
+    analysis_parallel: bool = True
+    analysis_queue_size: int = 1000
+    analysis_timeout: int = 300
+    batch_processing_enabled: bool = True
     batch_size: int = 100
+    batch_max_size: int = 1000
+    batch_timeout: int = 3600
+    analysis_memory_limit: int = 4096
+    analysis_temp_dir: str = "/tmp/aneos"
+    analysis_cleanup_temp_files: bool = True
     cache_ttl: int = 3600  # 1 hour default TTL
     
     @classmethod
@@ -137,17 +186,86 @@ class ANEOSConfig:
         config.api.sbdb_url = os.getenv('ANEOS_SBDB_URL', config.api.sbdb_url)
         config.api.request_timeout = int(os.getenv('ANEOS_REQUEST_TIMEOUT', config.api.request_timeout))
         config.api.max_retries = int(os.getenv('ANEOS_MAX_RETRIES', config.api.max_retries))
-        
+
+        data_source_primary = os.getenv('ANEOS_DATA_SOURCES_PRIMARY')
+        data_source_fallback = os.getenv('ANEOS_DATA_SOURCES_FALLBACK')
+        if data_source_primary or data_source_fallback:
+            priority: List[str] = []
+            if data_source_primary:
+                priority.append(data_source_primary.strip())
+            if data_source_fallback:
+                priority.extend([
+                    source.strip() for source in data_source_fallback.split(',') if source.strip()
+                ])
+            if priority:
+                config.api.data_sources_priority = priority
+        data_sources_timeout = os.getenv('ANEOS_DATA_SOURCES_TIMEOUT')
+        if data_sources_timeout is not None:
+            config.api.request_timeout = int(data_sources_timeout)
+        data_sources_retries = os.getenv('ANEOS_DATA_SOURCES_RETRY_ATTEMPTS')
+        if data_sources_retries is not None:
+            config.api.max_retries = int(data_sources_retries)
+
         # Path configuration from environment
-        config.paths.data_neos_dir = os.getenv('ANEOS_DATA_DIR', config.paths.data_neos_dir)
-        config.paths.log_file = os.getenv('ANEOS_LOG_FILE', config.paths.log_file)
-        
+        base_dir_override = os.getenv('ANEOS_BASE_DIR')
+        if base_dir_override:
+            config.directories.apply_base_dir(base_dir_override)
+
+        data_dir_override = os.getenv('ANEOS_DATA_DIR')
+        if data_dir_override:
+            config.directories.data_dir = data_dir_override
+        orbital_dir_override = os.getenv('ANEOS_ORBITAL_DIR')
+        if orbital_dir_override:
+            config.directories.orbital_dir = orbital_dir_override
+        output_dir_override = os.getenv('ANEOS_OUTPUT_DIR')
+        if output_dir_override:
+            config.directories.output_dir = output_dir_override
+        cache_file_override = os.getenv('ANEOS_CACHE_FILE')
+        if cache_file_override:
+            config.directories.cache_file = cache_file_override
+        log_file_override = os.getenv('ANEOS_LOG_FILE')
+        if log_file_override:
+            config.directories.log_file = log_file_override
+
         # Processing settings
-        config.max_workers = int(os.getenv('ANEOS_MAX_WORKERS', config.max_workers))
+        analysis_max_workers = os.getenv('ANEOS_ANALYSIS_MAX_WORKERS')
+        if analysis_max_workers is not None:
+            config.max_workers = int(analysis_max_workers)
+        else:
+            config.max_workers = int(os.getenv('ANEOS_MAX_WORKERS', config.max_workers))
+
+        config.analysis_parallel = _get_bool_env('ANEOS_ANALYSIS_PARALLEL', config.analysis_parallel)
+        config.analysis_queue_size = int(os.getenv('ANEOS_ANALYSIS_QUEUE_SIZE', config.analysis_queue_size))
+        config.analysis_timeout = int(os.getenv('ANEOS_ANALYSIS_TIMEOUT', config.analysis_timeout))
+
+        config.batch_processing_enabled = _get_bool_env('ANEOS_BATCH_PROCESSING_ENABLED', config.batch_processing_enabled)
         config.batch_size = int(os.getenv('ANEOS_BATCH_SIZE', config.batch_size))
+        config.batch_max_size = int(os.getenv('ANEOS_BATCH_MAX_SIZE', config.batch_max_size))
+        config.batch_timeout = int(os.getenv('ANEOS_BATCH_TIMEOUT', config.batch_timeout))
+
+        config.analysis_memory_limit = int(os.getenv('ANEOS_ANALYSIS_MEMORY_LIMIT', config.analysis_memory_limit))
+        config.analysis_temp_dir = os.getenv('ANEOS_ANALYSIS_TEMP_DIR', config.analysis_temp_dir)
+        config.analysis_cleanup_temp_files = _get_bool_env(
+            'ANEOS_ANALYSIS_CLEANUP_TEMP_FILES', config.analysis_cleanup_temp_files
+        )
+
         config.cache_ttl = int(os.getenv('ANEOS_CACHE_TTL', config.cache_ttl))
-        
+
+        eccentricity_override = os.getenv('ANEOS_ECCENTRICITY_THRESHOLD')
+        if eccentricity_override is not None:
+            config.thresholds.eccentricity = float(eccentricity_override)
+
         return config
+
+    @property
+    def paths(self) -> DirectoryConfig:
+        """Backward compatible alias for the renamed directory settings."""
+
+        return self.directories
+
+    @paths.setter
+    def paths(self, value: DirectoryConfig) -> None:
+        self.directories = value
     
     @classmethod
     def _from_dict(cls, data: Dict[str, Any]) -> 'ANEOSConfig':
@@ -155,17 +273,38 @@ class ANEOSConfig:
         # Extract nested configurations
         api_data = data.get('api', {})
         paths_data = data.get('paths', {})
+        directories_data = data.get('directories')
         thresholds_data = data.get('thresholds', {})
         weights_data = data.get('weights', {})
-        
+
+        if not directories_data and paths_data:
+            directories_data = {
+                'base_dir': paths_data.get('data_neos_dir') or paths_data.get('base_dir', 'dataneos'),
+                'data_dir': paths_data.get('data_dir'),
+                'orbital_dir': paths_data.get('orbital_dir'),
+                'output_dir': paths_data.get('output_dir'),
+                'cache_dir': paths_data.get('cache_dir'),
+                'log_file': paths_data.get('log_file'),
+                'cache_file': paths_data.get('cache_file'),
+            }
+
         return cls(
             api=APIConfig(**api_data),
-            paths=PathConfig(**paths_data),
+            directories=DirectoryConfig(**(directories_data or {})),
             thresholds=ThresholdConfig(**thresholds_data),
             weights=WeightConfig(**weights_data),
             max_workers=data.get('max_workers', 10),
             max_subpoint_workers=data.get('max_subpoint_workers', 20),
+            analysis_parallel=data.get('analysis_parallel', True),
+            analysis_queue_size=data.get('analysis_queue_size', 1000),
+            analysis_timeout=data.get('analysis_timeout', 300),
+            batch_processing_enabled=data.get('batch_processing_enabled', True),
             batch_size=data.get('batch_size', 100),
+            batch_max_size=data.get('batch_max_size', 1000),
+            batch_timeout=data.get('batch_timeout', 3600),
+            analysis_memory_limit=data.get('analysis_memory_limit', 4096),
+            analysis_temp_dir=data.get('analysis_temp_dir', "/tmp/aneos"),
+            analysis_cleanup_temp_files=data.get('analysis_cleanup_temp_files', True),
             cache_ttl=data.get('cache_ttl', 3600)
         )
     
@@ -173,12 +312,21 @@ class ANEOSConfig:
         """Convert configuration to dictionary."""
         return {
             'api': self.api.__dict__,
-            'paths': self.paths.__dict__,
+            'directories': self.directories.to_dict(),
             'thresholds': self.thresholds.__dict__,
             'weights': self.weights.__dict__,
             'max_workers': self.max_workers,
             'max_subpoint_workers': self.max_subpoint_workers,
+            'analysis_parallel': self.analysis_parallel,
+            'analysis_queue_size': self.analysis_queue_size,
+            'analysis_timeout': self.analysis_timeout,
+            'batch_processing_enabled': self.batch_processing_enabled,
             'batch_size': self.batch_size,
+            'batch_max_size': self.batch_max_size,
+            'batch_timeout': self.batch_timeout,
+            'analysis_memory_limit': self.analysis_memory_limit,
+            'analysis_temp_dir': self.analysis_temp_dir,
+            'analysis_cleanup_temp_files': self.analysis_cleanup_temp_files,
             'cache_ttl': self.cache_ttl
         }
     
@@ -204,10 +352,10 @@ class ANEOSConfig:
 
 class ConfigManager:
     """Manages aNEOS configuration with multiple loading strategies."""
-    
-    def __init__(self, config_path: Optional[str] = None):
+
+    def __init__(self, config_path: Optional[str] = None, *, config_file: Optional[str] = None):
         self._config = None
-        self._config_path = config_path
+        self._config_path = config_file or config_path
         self._load_config()
     
     def _load_config(self) -> None:
@@ -218,47 +366,73 @@ class ConfigManager:
         else:
             logger.info("Loading configuration from environment variables")
             self._config = ANEOSConfig.from_env()
-        
+
         # Validate configuration
         self._validate_config()
-    
-    def _validate_config(self) -> None:
-        """Validate configuration parameters."""
+
+    def _collect_validation_errors(self) -> List[str]:
+        """Return a list of validation issues for the current configuration."""
         errors = []
-        
+
         # Validate thresholds
         if not (0 < self._config.thresholds.eccentricity <= 1):
             errors.append("eccentricity threshold must be between 0 and 1")
-        
+
         if not (0 <= self._config.thresholds.inclination <= 180):
             errors.append("inclination threshold must be between 0 and 180 degrees")
-        
+
         if self._config.api.request_timeout <= 0:
             errors.append("request_timeout must be positive")
-        
+
         if self._config.api.max_retries < 0:
             errors.append("max_retries must be non-negative")
-        
+
         if self._config.max_workers <= 0:
             errors.append("max_workers must be positive")
-        
+
+        return errors
+
+    def _validate_config(self) -> None:
+        """Validate configuration parameters."""
+        errors = self._collect_validation_errors()
+
         if errors:
             error_msg = "Configuration validation errors: " + "; ".join(errors)
             logger.error(error_msg)
             raise ValueError(error_msg)
-        
+
         logger.info("Configuration validation passed")
-    
+
     @property
     def config(self) -> ANEOSConfig:
         """Get the current configuration."""
         return self._config
-    
+
+    @property
+    def thresholds(self) -> ThresholdConfig:
+        return self._config.thresholds
+
+    @property
+    def weights(self) -> WeightConfig:
+        return self._config.weights
+
+    @property
+    def api(self) -> APIConfig:
+        return self._config.api
+
+    @property
+    def directories(self) -> DirectoryConfig:
+        return self._config.directories
+
+    @property
+    def data_sources_priority(self) -> List[str]:
+        return list(self._config.api.data_sources_priority)
+
     def reload(self) -> None:
         """Reload configuration from source."""
         logger.info("Reloading configuration")
         self._load_config()
-    
+
     def update_config(self, **kwargs) -> None:
         """Update configuration parameters programmatically."""
         for key, value in kwargs.items():
@@ -267,18 +441,27 @@ class ConfigManager:
                 logger.info(f"Updated config parameter: {key} = {value}")
             else:
                 logger.warning(f"Unknown config parameter: {key}")
-        
+
         self._validate_config()
-    
+
+    def validate_configuration(self) -> bool:
+        """Public validation helper used by the regression tests."""
+
+        errors = self._collect_validation_errors()
+        if errors:
+            logger.error("Configuration validation errors: %s", "; ".join(errors))
+            return False
+        return True
+
     def get_legacy_config(self) -> Dict[str, Any]:
         """Get configuration in legacy format for backwards compatibility."""
         return {
-            "DATA_NEOS_DIR": self._config.paths.data_neos_dir,
-            "DATA_DIR": self._config.paths.data_dir,
-            "ORBITAL_DIR": self._config.paths.orbital_dir,
-            "LOG_FILE": self._config.paths.log_file,
-            "OUTPUT_DIR": self._config.paths.output_dir,
-            "CACHE_FILE": self._config.paths.cache_file,
+            "DATA_NEOS_DIR": self._config.directories.base_dir,
+            "DATA_DIR": self._config.directories.data_dir,
+            "ORBITAL_DIR": self._config.directories.orbital_dir,
+            "LOG_FILE": self._config.directories.log_file,
+            "OUTPUT_DIR": self._config.directories.output_dir,
+            "CACHE_FILE": self._config.directories.cache_file,
             "NEODYS_API_URL": self._config.api.neodys_url,
             "MPC_API_URL": self._config.api.mpc_url,
             "HORIZONS_API_URL": self._config.api.horizons_url,
@@ -289,6 +472,19 @@ class ConfigManager:
             "MAX_RETRIES": self._config.api.max_retries,
             "INITIAL_RETRY_DELAY": self._config.api.initial_retry_delay
         }
+
+    def save_to_file(self, config_path: str) -> None:
+        """Persist the active configuration to a JSON/YAML file."""
+
+        self._config.save(config_path)
+
+    def __str__(self) -> str:  # pragma: no cover - trivial formatting
+        return (
+            "ConfigManager(base_dir={base}, data_sources={sources})"
+        ).format(
+            base=self._config.directories.base_dir,
+            sources=",".join(self._config.api.data_sources_priority),
+        )
 
 # Global instance for backwards compatibility
 _global_config_manager = None

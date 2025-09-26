@@ -33,12 +33,17 @@ Welcome to the comprehensive documentation for the aNEOS (Advanced Near Earth Ob
 - **[Contributing Guide](development/contributing.md)** - How to contribute to the project
 - **[Testing Guide](development/testing.md)** - Testing frameworks and procedures
 - **[Phase Completion Reports](development/)** - Development phase documentation
+- **[Maturity Assessment](engineering/maturity_assessment.md)** - Current stabilization
+  findings and outstanding risks
 
 ### 🔧 Troubleshooting
 - **[Common Issues](troubleshooting/common-issues.md)** - Frequently encountered problems
 - **[Installation Issues](troubleshooting/installation.md)** - Installation-specific troubleshooting
 - **[Performance Issues](troubleshooting/performance.md)** - Performance optimization
 - **[FAQ](troubleshooting/faq.md)** - Frequently asked questions
+
+### 📦 Release Notes
+- **[v0.7.0 Release Notes](releases/v0.7.0.md)** - Summary of the 0.7 stabilization update and legacy branch information
 
 ## 🎯 Quick Navigation
 

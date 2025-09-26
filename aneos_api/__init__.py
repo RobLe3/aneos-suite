@@ -14,7 +14,7 @@ from .models import APIResponse, ErrorResponse, PaginatedResponse
 from .auth import AuthManager, APIKeyAuth
 from .middleware import RateLimiter, RequestLogger, ErrorHandler
 
-__version__ = "2.0.0"
+__version__ = "0.7.0"
 __author__ = "aNEOS Project"
 
 __all__ = [

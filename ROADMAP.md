@@ -3,7 +3,7 @@
 
 This document outlines the completed development phases and future enhancements for the aNEOS platform, building upon the foundational work from the [neo-analyzer-repo](https://github.com/RobLe3/neo-analyzer-repo).
 
-## ✅ Completed Phases (August 2025)
+## ✅ Stabilized Phases (August 2025)
 
 ### Phase 1: Core System Foundation ✅
 - **✅ Installation System**: Comprehensive installer with dependency management (`install.py`)
@@ -29,12 +29,17 @@ This document outlines the completed development phases and future enhancements 
 - **✅ Import Resolution**: Fixed NumPy 2.x compatibility and authentication issues
 - **✅ End-to-End Validation**: All core functionality operational
 
-## 🎯 Current Status: Production Ready
+## 🎯 Current Status: Stabilization In Progress
 
-**System State**: Fully operational for core NEO analysis functionality
-**Test Coverage**: 100% pass rate for basic features
-**Documentation**: Complete installation guides and user documentation
-**Stability**: All critical bugs resolved, graceful error handling implemented
+**System State**: Core flows operate in development, but real-data polling still
+leans on mock fallbacks when optional integrations are absent.
+**Test Coverage**: 61 automated tests cover cache, configuration, detection,
+and integration harnesses; further operational drills are planned.
+**Documentation**: Installation and quick-start guides exist, yet several
+sections still overstate production readiness and need revision.
+**Stability**: Critical regressions from the 0.7 upgrade have been mitigated,
+while external dependency monitoring and sigma-5 validation remain on the
+roadmap.
 
 ### Available Capabilities
 ```bash
@@ -143,10 +148,15 @@ python aneos.py                           # Full menu system
 
 ---
 
-**Evolution from neo-analyzer-repo**: This roadmap represents the complete transformation from the foundational theoretical work to a production-ready scientific platform for detecting artificial Near Earth Objects.
+**Evolution from neo-analyzer-repo**: This roadmap traces the path from the
+foundational theoretical work toward an operationally verified sigma-5
+detection platform. Additional hardening is required before claiming full
+production readiness.
 
-**Next Review**: When Phase 5 (Academic Enhancement) development begins
+**Next Review**: After integration health checks and end-to-end sigma-5
+validations are documented.
 
 ---
 
-*This roadmap reflects the current production-ready state of aNEOS and outlines the path toward full academic publication standards for artificial NEO detection research.*
+*This roadmap reflects the stabilization goals for aNEOS and outlines the work
+still needed to reach publication-grade artificial NEO detection.*

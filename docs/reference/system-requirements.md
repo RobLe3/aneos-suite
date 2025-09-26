@@ -117,7 +117,7 @@ aNEOS is designed to operate across various computing environments, from develop
 
 ### Software Environment
 
-#### Operating System
+#### Operating Systems
 - **Linux**: Ubuntu 20.04 LTS, CentOS 8, RHEL 8
 - **macOS**: macOS 11 (Big Sur) or later
 - **Windows**: Windows 10 Pro, Windows Server 2019
@@ -573,7 +573,7 @@ Batch Processing        1000+/hr       Large datasets
 
 ### System Hardening
 
-#### Operating System
+#### Operating Systems
 - **Updates**: Security patches within 30 days
 - **Services**: Minimal required services only
 - **Firewall**: Host-based firewall configured

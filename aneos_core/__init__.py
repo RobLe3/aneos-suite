@@ -11,11 +11,11 @@ Key Components:
 - reporting: Report generation and visualization
 - utils: Common utilities and helper functions
 
-Version: 2.0.0 (Modular Refactor)
+Version: 0.7.0 (Stabilization Series)
 Original: neos_o3high_v6.19.1.py
 """
 
-__version__ = "2.0.0"
+__version__ = "0.7.0"
 __author__ = "aNEOS Development Team"
 
 from .config.settings import ANEOSConfig, ConfigManager
