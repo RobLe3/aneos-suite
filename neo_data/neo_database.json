@@ -1533,5 +1533,115 @@
       "diameter": null,
       "albedo": null
     }
+  },
+  "2025 SP10": {
+    "designation": "2025 SP10",
+    "first_seen": "2025-09-26T17:02:37.826715",
+    "last_updated": "2025-09-26T17:02:37.826735",
+    "enrichment_attempts": 1,
+    "sources_attempted": [
+      "SBDB",
+      "MPC"
+    ],
+    "best_completeness": 0.7777777777777778,
+    "combined_data": {
+      "eccentricity": 0.2859564,
+      "inclination": 19.55666,
+      "semi_major_axis": 1.41771,
+      "ra_of_ascending_node": 0.2932337,
+      "arg_of_periapsis": 26.20187,
+      "mean_anomaly": 19.84051,
+      "epoch": "2025-11-21.0",
+      "diameter": null,
+      "albedo": null
+    }
+  },
+  "2025 RX3": {
+    "designation": "2025 RX3",
+    "first_seen": "2025-09-26T17:02:38.129887",
+    "last_updated": "2025-09-26T17:02:38.129902",
+    "enrichment_attempts": 1,
+    "sources_attempted": [
+      "SBDB",
+      "MPC"
+    ],
+    "best_completeness": 0.7777777777777778,
+    "combined_data": {
+      "eccentricity": 0.4223429,
+      "inclination": 0.6719,
+      "semi_major_axis": 1.184,
+      "ra_of_ascending_node": 221.2244901,
+      "arg_of_periapsis": 232.885,
+      "mean_anomaly": 357.11623,
+      "epoch": "2025-11-21.0",
+      "diameter": null,
+      "albedo": null
+    }
+  },
+  "2025 SW": {
+    "designation": "2025 SW",
+    "first_seen": "2025-09-26T17:02:38.165294",
+    "last_updated": "2025-09-26T17:02:38.165307",
+    "enrichment_attempts": 1,
+    "sources_attempted": [
+      "SBDB",
+      "MPC"
+    ],
+    "best_completeness": 0.7777777777777778,
+    "combined_data": {
+      "eccentricity": 0.5712094,
+      "inclination": 5.11227,
+      "semi_major_axis": 2.36038,
+      "ra_of_ascending_node": 0.0422434,
+      "arg_of_periapsis": 359.80527,
+      "mean_anomaly": 15.86506,
+      "epoch": "2025-11-21.0",
+      "diameter": null,
+      "albedo": null
+    }
+  },
+  "2025 SB4": {
+    "designation": "2025 SB4",
+    "first_seen": "2025-09-26T17:02:38.179282",
+    "last_updated": "2025-09-26T17:02:38.179300",
+    "enrichment_attempts": 1,
+    "sources_attempted": [
+      "SBDB",
+      "MPC"
+    ],
+    "best_completeness": 0.7777777777777778,
+    "combined_data": {
+      "eccentricity": 0.6436897,
+      "inclination": 20.56291,
+      "semi_major_axis": 2.42302,
+      "ra_of_ascending_node": 181.8447163,
+      "arg_of_periapsis": 231.80889,
+      "mean_anomaly": 5.31603,
+      "epoch": "2025-11-21.0",
+      "diameter": null,
+      "albedo": null
+    }
+  },
+  "2025 RX4": {
+    "designation": "2025 RX4",
+    "first_seen": "2025-09-26T17:02:38.215305",
+    "last_updated": "2025-09-26T17:02:38.215318",
+    "enrichment_attempts": 1,
+    "sources_attempted": [
+      "SBDB",
+      "MPC"
+    ],
+    "best_completeness": 0.7777777777777778,
+    "combined_data": {
+      "eccentricity": 0.5503383,
+      "inclination": 2.61515,
+      "semi_major_axis": 2.0556,
+      "ra_of_ascending_node": 356.4678397,
+      "arg_of_periapsis": 43.5406,
+      "mean_anomaly": 9.20669,
+      "epoch": "2025-11-21.0",
+      "diameter": null,
+      "albedo": null
+    }
   }
 }

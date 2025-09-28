@@ -20,18 +20,73 @@ class NEODySSource(DataSourceBase):
     from the University of Pisa's NEODyS service.
     """
     
-    def __init__(self, timeout: int = 10):
+    def __init__(self, config=None, cache_manager=None, timeout: int = 10):
         """
         Initialize NEODyS data source.
         
         Args:
+            config: API configuration
+            cache_manager: Cache manager instance
             timeout: Request timeout in seconds
         """
+        from ...config.settings import APIConfig
+        if config is None:
+            config = APIConfig()
         super().__init__(
             name="NEODyS",
-            base_url="https://newton.spacedys.com/neodys/api",
-            timeout=timeout
+            config=config,
+            cache_manager=cache_manager
         )
+        self.timeout = timeout
+        self.base_url = config.neodys_url
+    
+    def get_base_url(self) -> str:
+        """Get the base URL for NEODyS API."""
+        return self.base_url
+    
+    async def fetch_orbital_elements(self, designation: str):
+        """
+        Fetch orbital elements from NEODyS API.
+        
+        Args:
+            designation: NEO designation
+            
+        Returns:
+            FetchResult with orbital elements data
+        """
+        from .base import FetchResult
+        
+        try:
+            # For now, return a placeholder implementation
+            # TODO: Implement actual NEODyS API integration
+            return FetchResult(
+                success=False,
+                error_message="NEODyS API integration not yet implemented",
+                source=self.name
+            )
+        except Exception as e:
+            logger.error(f"NEODyS fetch failed for {designation}: {e}")
+            return FetchResult(
+                success=False,
+                error_message=str(e),
+                source=self.name
+            )
+    
+    async def health_check(self) -> bool:
+        """
+        Perform health check on NEODyS service.
+        
+        Returns:
+            True if service is available, False otherwise
+        """
+        try:
+            # Simple connectivity check
+            import aiohttp
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+                async with session.get(self.base_url) as response:
+                    return response.status == 200
+        except Exception:
+            return False
     
     def _get_health_check_endpoint(self) -> str:
         """Get health check endpoint for NEODyS API."""

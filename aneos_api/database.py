@@ -202,6 +202,73 @@ if HAS_SQLALCHEMY:
         # Request/response size
         request_size = Column(Integer)
         response_size = Column(Integer)
+
+    class EnrichedNEO(Base):
+        """Enriched NEO model for comprehensive multi-source data storage."""
+        __tablename__ = "enriched_neos"
+        
+        id = Column(Integer, primary_key=True, index=True)
+        designation = Column(String(50), unique=True, index=True)  # Primary identifier
+        
+        # Core metadata
+        first_discovered = Column(DateTime, index=True)
+        last_updated = Column(DateTime, default=datetime.utcnow, index=True)
+        data_sources = Column(JSON)  # List of all sources that provided data
+        data_quality_score = Column(Float, default=0.0)
+        
+        # NASA CAD data
+        nasa_cad_data = Column(JSON)
+        nasa_cad_last_update = Column(DateTime)
+        
+        # NASA SBDB data  
+        nasa_sbdb_data = Column(JSON)
+        nasa_sbdb_last_update = Column(DateTime)
+        
+        # MPC data
+        mpc_data = Column(JSON)
+        mpc_last_update = Column(DateTime)
+        
+        # NEODyS data
+        neodys_data = Column(JSON)
+        neodys_last_update = Column(DateTime)
+        
+        # Consolidated orbital elements (best available from all sources)
+        orbital_elements = Column(JSON)
+        orbital_elements_source = Column(String(50))  # Which source provided the best data
+        orbital_elements_quality = Column(Float, default=0.0)
+        
+        # Physical properties (consolidated)
+        physical_properties = Column(JSON)  # diameter, albedo, mass, rotation period, etc.
+        
+        # Close approach data (consolidated from all sources)
+        close_approaches = Column(JSON)
+        
+        # Discovery and observation history
+        discovery_data = Column(JSON)
+        observation_history = Column(JSON)
+        
+        # Classification and analysis results
+        pha_status = Column(Boolean, default=False)  # Potentially Hazardous Asteroid
+        neo_classification = Column(String(20))  # Atira, Aten, Apollo, Amor
+        artificial_probability = Column(Float, default=0.0)
+        artificial_analysis_date = Column(DateTime)
+        risk_factors = Column(JSON)
+        
+        # Data completeness tracking
+        has_orbital_elements = Column(Boolean, default=False)
+        has_physical_properties = Column(Boolean, default=False)
+        has_close_approaches = Column(Boolean, default=False)
+        has_discovery_data = Column(Boolean, default=False)
+        completeness_score = Column(Float, default=0.0)  # 0-1 score of data completeness
+        
+        # Polling metadata
+        polling_sessions = Column(JSON)  # Track which polling sessions included this NEO
+        total_detections = Column(Integer, default=1)  # How many times this NEO was detected
+        
+        # Analysis metadata
+        analyzed_count = Column(Integer, default=0)
+        last_analysis_date = Column(DateTime)
+        analysis_results = Column(JSON)  # Store analysis results history
     
 else:
     # Fallback models when SQLAlchemy is not available
@@ -213,6 +280,7 @@ else:
     Alert = None
     TrainingSession = None
     APIUsage = None
+    EnrichedNEO = None
 
 class DatabaseManager:
     """Manages database connections and operations."""
@@ -430,6 +498,368 @@ class MetricsService:
         except Exception as e:
             logger.error(f"Failed to get metrics history: {e}")
             return []
+
+class EnrichedNEOService:
+    """Service for managing enriched NEO data in database."""
+    
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def enrich_neo_data(self, polling_results: List[Dict[str, Any]], polling_session_id: str) -> Dict[str, Any]:
+        """
+        Enrich NEO database with polling results from multiple sources.
+        
+        Args:
+            polling_results: List of NEO data from polling
+            polling_session_id: Unique identifier for this polling session
+            
+        Returns:
+            Dict with enrichment statistics
+        """
+        if not HAS_SQLALCHEMY:
+            return {'error': 'Database not available'}
+        
+        stats = {
+            'new_neos': 0,
+            'updated_neos': 0,
+            'enriched_neos': 0,
+            'total_processed': len(polling_results),
+            'session_id': polling_session_id
+        }
+        
+        try:
+            # Track processed NEOs in this session to avoid duplicates
+            processed_in_session = {}
+            
+            for result in polling_results:
+                designation = result.get('designation', 'Unknown')
+                if designation == 'Unknown':
+                    continue
+                
+                # Check if already processed in this session
+                if designation in processed_in_session:
+                    # Update the in-session NEO with additional source data
+                    existing_neo = processed_in_session[designation]
+                    self._update_existing_neo(existing_neo, result, polling_session_id)
+                    stats['enriched_neos'] += 1
+                    continue
+                
+                # Check if NEO already exists in database
+                existing_neo = self.db.query(EnrichedNEO).filter(
+                    EnrichedNEO.designation == designation
+                ).first()
+                
+                if existing_neo:
+                    # Update existing NEO with new data
+                    self._update_existing_neo(existing_neo, result, polling_session_id)
+                    stats['updated_neos'] += 1
+                    stats['enriched_neos'] += 1
+                    processed_in_session[designation] = existing_neo
+                else:
+                    # Create new NEO record
+                    new_neo = self._create_new_neo(result, polling_session_id)
+                    stats['new_neos'] += 1
+                    processed_in_session[designation] = new_neo
+            
+            self.db.commit()
+            return stats
+            
+        except Exception as e:
+            logger.error(f"Failed to enrich NEO data: {e}")
+            self.db.rollback()
+            return {'error': str(e)}
+    
+    def _create_new_neo(self, result: Dict[str, Any], polling_session_id: str) -> EnrichedNEO:
+        """Create a new enriched NEO record."""
+        designation = result['designation']
+        data_source = result.get('data_source', 'Unknown')
+        
+        # Initialize source-specific data
+        source_data = {
+            'nasa_cad_data': None,
+            'nasa_sbdb_data': None, 
+            'mpc_data': None,
+            'neodys_data': None
+        }
+        
+        source_updates = {
+            'nasa_cad_last_update': None,
+            'nasa_sbdb_last_update': None,
+            'mpc_last_update': None,
+            'neodys_last_update': None
+        }
+        
+        # Set data for the specific source
+        now = datetime.utcnow()
+        if data_source == 'NASA_CAD':
+            source_data['nasa_cad_data'] = result
+            source_updates['nasa_cad_last_update'] = now
+        elif data_source == 'NASA_SBDB':
+            source_data['nasa_sbdb_data'] = result
+            source_updates['nasa_sbdb_last_update'] = now
+        elif data_source == 'MPC':
+            source_data['mpc_data'] = result
+            source_updates['mpc_last_update'] = now
+        elif data_source == 'NEODyS':
+            source_data['neodys_data'] = result
+            source_updates['neodys_last_update'] = now
+        
+        # Calculate data completeness
+        completeness = self._calculate_completeness(result)
+        
+        new_neo = EnrichedNEO(
+            designation=designation,
+            first_discovered=now,
+            last_updated=now,
+            data_sources=[data_source],
+            data_quality_score=result.get('data_quality_score', 0.5),
+            orbital_elements=result.get('orbital_elements', {}),
+            orbital_elements_source=data_source,
+            orbital_elements_quality=self._assess_orbital_quality(result.get('orbital_elements', {})),
+            physical_properties=result.get('physical_properties', {}),
+            close_approaches=result.get('close_approaches', []),
+            discovery_data=result.get('discovery_data', {}),
+            artificial_probability=result.get('artificial_probability', 0.0),
+            risk_factors=result.get('risk_factors', []),
+            has_orbital_elements=bool(result.get('orbital_elements')),
+            has_physical_properties=bool(result.get('physical_properties')),
+            has_close_approaches=bool(result.get('close_approaches')),
+            has_discovery_data=bool(result.get('discovery_data')),
+            completeness_score=completeness,
+            polling_sessions=[polling_session_id],
+            total_detections=1,
+            **source_data,
+            **source_updates
+        )
+        
+        self.db.add(new_neo)
+        return new_neo
+    
+    def _update_existing_neo(self, existing_neo: EnrichedNEO, result: Dict[str, Any], polling_session_id: str):
+        """Update existing NEO with new data from polling."""
+        data_source = result.get('data_source', 'Unknown')
+        now = datetime.utcnow()
+        
+        # Update last updated timestamp
+        existing_neo.last_updated = now
+        
+        # Add data source if not already present
+        if data_source not in existing_neo.data_sources:
+            existing_neo.data_sources.append(data_source)
+        
+        # Update source-specific data
+        if data_source == 'NASA_CAD':
+            existing_neo.nasa_cad_data = result
+            existing_neo.nasa_cad_last_update = now
+        elif data_source == 'NASA_SBDB':
+            existing_neo.nasa_sbdb_data = result
+            existing_neo.nasa_sbdb_last_update = now
+        elif data_source == 'MPC':
+            existing_neo.mpc_data = result
+            existing_neo.mpc_last_update = now
+        elif data_source == 'NEODyS':
+            existing_neo.neodys_data = result
+            existing_neo.neodys_last_update = now
+        
+        # Update consolidated data with best available
+        self._update_consolidated_data(existing_neo, result, data_source)
+        
+        # Update completeness tracking
+        if result.get('orbital_elements'):
+            existing_neo.has_orbital_elements = True
+        if result.get('physical_properties'):
+            existing_neo.has_physical_properties = True
+        if result.get('close_approaches'):
+            existing_neo.has_close_approaches = True
+        if result.get('discovery_data'):
+            existing_neo.has_discovery_data = True
+        
+        # Recalculate completeness score
+        existing_neo.completeness_score = self._calculate_completeness_from_existing(existing_neo)
+        
+        # Update artificial analysis if present
+        if result.get('artificial_probability', 0) > existing_neo.artificial_probability:
+            existing_neo.artificial_probability = result['artificial_probability']
+            existing_neo.artificial_analysis_date = now
+        
+        # Add risk factors
+        if result.get('risk_factors'):
+            existing_risk_factors = existing_neo.risk_factors or []
+            for factor in result['risk_factors']:
+                if factor not in existing_risk_factors:
+                    existing_risk_factors.append(factor)
+            existing_neo.risk_factors = existing_risk_factors
+        
+        # Update polling session tracking
+        polling_sessions = existing_neo.polling_sessions or []
+        if polling_session_id not in polling_sessions:
+            polling_sessions.append(polling_session_id)
+            existing_neo.polling_sessions = polling_sessions
+        
+        existing_neo.total_detections += 1
+    
+    def _update_consolidated_data(self, neo: EnrichedNEO, result: Dict[str, Any], source: str):
+        """Update consolidated orbital elements with best available data."""
+        result_orbitals = result.get('orbital_elements', {})
+        if not result_orbitals:
+            return
+        
+        # Assess quality of new orbital data
+        new_quality = self._assess_orbital_quality(result_orbitals)
+        
+        # Update if this source has better quality data
+        if new_quality > neo.orbital_elements_quality:
+            neo.orbital_elements = result_orbitals
+            neo.orbital_elements_source = source
+            neo.orbital_elements_quality = new_quality
+    
+    def _assess_orbital_quality(self, orbital_elements: Dict[str, Any]) -> float:
+        """Assess the quality of orbital elements data."""
+        if not orbital_elements:
+            return 0.0
+        
+        # Quality based on completeness and precision
+        required_elements = ['e', 'i', 'a', 'q']  # eccentricity, inclination, semi-major axis, perihelion
+        quality = 0.0
+        
+        for element in required_elements:
+            if element in orbital_elements:
+                quality += 0.25  # Each required element adds 25%
+        
+        # Bonus for additional elements
+        bonus_elements = ['ma', 'om', 'w', 'epoch']  # mean anomaly, longitude of ascending node, argument of perihelion, epoch
+        for element in bonus_elements:
+            if element in orbital_elements:
+                quality += 0.05  # Each bonus element adds 5%
+        
+        return min(quality, 1.0)
+    
+    def _calculate_completeness(self, result: Dict[str, Any]) -> float:
+        """Calculate data completeness score for a new NEO."""
+        score = 0.0
+        
+        # Orbital elements (40% of score)
+        if result.get('orbital_elements'):
+            score += 0.4
+        
+        # Physical properties (20% of score)
+        if result.get('physical_properties'):
+            score += 0.2
+        
+        # Close approaches (20% of score)
+        if result.get('close_approaches'):
+            score += 0.2
+        
+        # Discovery data (20% of score)
+        if result.get('discovery_data'):
+            score += 0.2
+        
+        return score
+    
+    def _calculate_completeness_from_existing(self, neo: EnrichedNEO) -> float:
+        """Calculate completeness score from existing NEO record."""
+        score = 0.0
+        
+        if neo.has_orbital_elements:
+            score += 0.4
+        if neo.has_physical_properties:
+            score += 0.2
+        if neo.has_close_approaches:
+            score += 0.2
+        if neo.has_discovery_data:
+            score += 0.2
+        
+        return score
+    
+    def get_enriched_neo(self, designation: str) -> Optional[Dict[str, Any]]:
+        """Get enriched NEO data by designation."""
+        if not HAS_SQLALCHEMY:
+            return None
+        
+        try:
+            neo = self.db.query(EnrichedNEO).filter(
+                EnrichedNEO.designation == designation
+            ).first()
+            
+            if not neo:
+                return None
+            
+            return {
+                'designation': neo.designation,
+                'first_discovered': neo.first_discovered,
+                'last_updated': neo.last_updated,
+                'data_sources': neo.data_sources,
+                'data_quality_score': neo.data_quality_score,
+                'orbital_elements': neo.orbital_elements,
+                'orbital_elements_source': neo.orbital_elements_source,
+                'physical_properties': neo.physical_properties,
+                'close_approaches': neo.close_approaches,
+                'discovery_data': neo.discovery_data,
+                'artificial_probability': neo.artificial_probability,
+                'risk_factors': neo.risk_factors,
+                'completeness_score': neo.completeness_score,
+                'total_detections': neo.total_detections,
+                'source_data': {
+                    'nasa_cad': neo.nasa_cad_data,
+                    'nasa_sbdb': neo.nasa_sbdb_data,
+                    'mpc': neo.mpc_data,
+                    'neodys': neo.neodys_data
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get enriched NEO {designation}: {e}")
+            return None
+    
+    def get_database_stats(self) -> Dict[str, Any]:
+        """Get statistics about the enriched NEO database."""
+        if not HAS_SQLALCHEMY:
+            return {'error': 'Database not available'}
+        
+        try:
+            total_neos = self.db.query(EnrichedNEO).count()
+            
+            # Count by completeness
+            high_completeness = self.db.query(EnrichedNEO).filter(
+                EnrichedNEO.completeness_score >= 0.8
+            ).count()
+            
+            medium_completeness = self.db.query(EnrichedNEO).filter(
+                EnrichedNEO.completeness_score >= 0.5,
+                EnrichedNEO.completeness_score < 0.8
+            ).count()
+            
+            # Count by artificial probability
+            high_artificial = self.db.query(EnrichedNEO).filter(
+                EnrichedNEO.artificial_probability >= 0.8
+            ).count()
+            
+            suspicious = self.db.query(EnrichedNEO).filter(
+                EnrichedNEO.artificial_probability >= 0.5,
+                EnrichedNEO.artificial_probability < 0.8
+            ).count()
+            
+            # Count by data sources
+            multi_source = self.db.query(EnrichedNEO).filter(
+                EnrichedNEO.total_detections > 1
+            ).count()
+            
+            return {
+                'total_neos': total_neos,
+                'high_completeness': high_completeness,
+                'medium_completeness': medium_completeness,
+                'high_artificial_probability': high_artificial,
+                'suspicious_objects': suspicious,
+                'multi_source_detections': multi_source,
+                'database_coverage': {
+                    'complete': high_completeness / total_neos if total_neos > 0 else 0,
+                    'partial': medium_completeness / total_neos if total_neos > 0 else 0
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get database stats: {e}")
+            return {'error': str(e)}
 
 # Global database manager
 db_manager = DatabaseManager()

@@ -51,7 +51,10 @@ class DataFetcher:
         self.logger = logging.getLogger(__name__)
         
         # Initialize cache manager
-        self.cache_manager = cache_manager or CacheManager()
+        from pathlib import Path
+        cache_dir = Path("neo_data/cache")
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_manager = cache_manager or CacheManager(cache_dir)
         self.cache_ttl = cache_ttl
         
         # Thread pool for concurrent operations

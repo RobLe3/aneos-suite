@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Multi-Modal Sigma 5 Artificial NEO Detector - Final Remediation Solution
+Multi-Modal Experimental Artificial NEO Detector - Research Implementation
 
-This detector combines multiple detection modalities to achieve sigma 5 statistical
-confidence for artificial object detection. Addresses the fundamental limitation
-that orbital statistics alone are insufficient for Tesla Roadster detection.
+This detector combines multiple analysis modalities for experimental artificial
+object detection research. IMPORTANT: This is research-grade software under
+development and has not been validated against confirmed artificial objects.
 
 Multi-modal approach combines:
-1. Orbital dynamics analysis (corrected empirical parameters)
+1. Orbital dynamics analysis (experimental parameter estimates)
 2. Physical property analysis (size, mass, spectral characteristics)
 3. Temporal signature analysis (observation patterns)
-4. Launch correlation analysis (known launch windows and trajectories)
-5. Bayesian fusion of evidence sources
+4. Launch correlation analysis (theoretical launch windows)
+5. Experimental evidence fusion
 
-Key innovation: Uses complementary evidence sources to overcome individual 
-method limitations and achieve required σ≥5.0 for known artificial objects.
+WARNING: No validation against confirmed artificial objects has been performed.
+Statistical confidence claims are theoretical, not empirically validated.
 """
 
 import numpy as np

@@ -14,7 +14,7 @@ system's capabilities. Any future change to the README must be reflected here to
   classifications.
 - **False-Positive Ceiling**: Maintain a false-positive rate below 5.7×10⁻⁷ (approximately 1 in 1.74 million) as advertised in
   the README.
-- **Validated Exemplars**: Reproduce the documented Tesla Roadster validation outcome, which the README states reaches σ = 5.16.
+- **Validation Requirement**: Develop validated exemplars using confirmed artificial objects (NOTE: Tesla Roadster claim was removed as no such validation exists in current documentation).
 
 ## Verification Log
 - 2025-09-25: README review performed during Phase 0 alignment; criteria captured verbatim for ongoing reference.

@@ -17,7 +17,7 @@ Key Features:
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Generator, Tuple
+from typing import Dict, List, Any, Optional, Generator, Tuple, Union
 from dataclasses import dataclass
 from pathlib import Path
 import json
@@ -255,7 +255,7 @@ class HistoricalChunkedPoller:
                 period_str = f"{int((end_date - start_date).days)}d"
             
             # Fetch raw NEO data
-            raw_data = await self._fetch_chunk_data(start_date, end_date, period_str)
+            raw_data = await self._fetch_chunk_data(start_date, end_date)
             
             if not raw_data:
                 return ChunkResult(
@@ -314,63 +314,162 @@ class HistoricalChunkedPoller:
                 error_message=str(e)
             )
     
-    async def _fetch_chunk_data(self, start_date: datetime, end_date: datetime, period_str: str) -> List[Dict]:
+    async def _fetch_chunk_data(self, start_date: datetime, end_date: datetime) -> List[Dict]:
         """
         Fetch raw NEO data for a time chunk using real API sources.
         """
         try:
             if self.base_poller:
                 # Use the enhanced NEO poller to fetch real data
-                self.logger.info(f"Fetching real NEO data for period {period_str}")
+                years_span = (end_date - start_date).days / 365.25
+                self.logger.info(f"Fetching real NEO data for {years_span:.1f} years ({start_date.year}-{end_date.year})")
                 
-                try:
-                    # Call the enhanced poller's main polling method
-                    poller_result = await self._call_enhanced_poller(period_str)
-                    
-                    if poller_result and 'neos' in poller_result:
-                        neo_list = poller_result['neos']
-                        self.logger.info(f"Fetched {len(neo_list)} NEO objects from APIs")
-                        return neo_list
-                    else:
-                        self.logger.warning("Enhanced poller returned no data, using fallback")
-                        
-                except Exception as e:
-                    self.logger.error(f"Enhanced poller failed: {e}")
-                    
-            # Fallback: Use NASA CAD API directly for real data
-            return await self._fetch_nasa_cad_data(start_date, end_date)
+                # Call the enhanced poller's main polling method
+                poller_result = await self._call_enhanced_poller(start_date, end_date)
+                
+                if poller_result and 'neos' in poller_result:
+                    neo_list = poller_result['neos']
+                    self.logger.info(f"Fetched {len(neo_list)} NEO objects from enhanced poller")
+                    return neo_list
+                else:
+                    self.logger.warning("Enhanced poller returned no data")
+                    return []
             
         except Exception as e:
             self.logger.error(f"Failed to fetch chunk data: {e}")
             return []
     
-    async def _call_enhanced_poller(self, period_str: str) -> Dict:
+    async def _call_enhanced_poller(self, start_date: datetime, end_date: datetime) -> Dict:
         """Call the enhanced NEO poller for real data."""
         try:
-            # The enhanced poller expects different method calls
-            # Let's try to use its polling capabilities
+            # Convert dates to string format expected by NEOPoller
+            start_date_str = start_date.strftime("%Y-%m-%d")
+            end_date_str = end_date.strftime("%Y-%m-%d")
             
-            if hasattr(self.base_poller, 'poll_neo_apis_enhanced'):
-                # Call the enhanced polling method
-                return await asyncio.to_thread(
-                    self.base_poller.poll_neo_apis_enhanced,
-                    time_period=period_str,
-                    api_selections=['NASA_CAD'],  # Start with NASA CAD
-                    enable_validation=True
-                )
-            elif hasattr(self.base_poller, 'fetch_cad_data'):
-                # Fallback to direct CAD data fetching
-                return await asyncio.to_thread(
+            self.logger.info(f"Calling enhanced poller with dates: {start_date_str} to {end_date_str}")
+            
+            # Use direct CAD data fetching with explicit date ranges
+            # This ensures we get the exact historical time periods we want
+            if hasattr(self.base_poller, 'fetch_cad_data'):
+                # Calculate and display the actual time span for this chunk
+                years_span = (end_date - start_date).days / 365.25
+                
+                if years_span >= 1:
+                    period_display = f"{years_span:.1f} Years" if years_span != int(years_span) else f"{int(years_span)} Years"
+                else:
+                    days_span = (end_date - start_date).days
+                    period_display = f"{days_span} Days"
+                
+                # Display polling information in the same format as the regular poller
+                if self.console:
+                    self.console.print(f"\n🔍 Polling NASA Close Approach Data")
+                    self.console.print(f"📅 Period: {start_date_str} to {end_date_str} ({period_display})")
+                    self.console.print(f"🎯 Max results: 5000")
+                else:
+                    print(f"\n🔍 Polling NASA Close Approach Data")
+                    print(f"📅 Period: {start_date_str} to {end_date_str} ({period_display})")
+                    print(f"🎯 Max results: 5000")
+                
+                # Also log for debugging
+                self.logger.info(f"Polling CAD data: {start_date_str} to {end_date_str} ({period_display})")
+                
+                cad_data = await asyncio.to_thread(
                     self.base_poller.fetch_cad_data,
-                    time_period=period_str
+                    start_date_str,
+                    end_date_str,
+                    5000  # Limit per chunk
                 )
+                
+                if cad_data and 'data' in cad_data:
+                    # Display results in the same format as the regular poller
+                    if self.console:
+                        self.console.print(f"✅ Found {len(cad_data['data'])} NEO close approaches")
+                    else:
+                        print(f"✅ Found {len(cad_data['data'])} NEO close approaches")
+                    
+                    # Convert CAD data to NEO format
+                    neo_list = []
+                    fields = cad_data.get('fields', [])
+                    
+                    # Convert data without nested progress bars to avoid Rich conflicts
+                    if self.console:
+                        self.console.print("  Analyzing NEOs...", end="")
+                    else:
+                        print("  Analyzing NEOs...", end="")
+                    
+                    # Process all rows without progress bar to avoid conflicts
+                    for row in cad_data['data']:
+                        try:
+                            neo_obj = self._convert_cad_to_neo_format(row, fields, start_date)
+                            if neo_obj:
+                                neo_list.append(neo_obj)
+                        except Exception as e:
+                            self.logger.debug(f"Failed to convert CAD row: {e}")
+                            continue
+                    
+                    # Complete the line
+                    if self.console:
+                        self.console.print(f" ✅ Converted {len(neo_list)} objects")
+                    else:
+                        print(f" ✅ Converted {len(neo_list)} objects")
+                    
+                    return {'neos': neo_list}
+                else:
+                    warning_msg = f"⚠️ No data found for period {start_date_str} to {end_date_str}"
+                    if self.console:
+                        self.console.print(warning_msg)
+                    else:
+                        print(warning_msg)
+                    return {'neos': []}
             else:
                 self.logger.warning("Enhanced poller doesn't have expected methods")
-                return {}
+                return {'neos': []}
                 
         except Exception as e:
             self.logger.error(f"Enhanced poller call failed: {e}")
-            return {}
+            # Return empty neos list instead of empty dict to maintain interface
+            return {'neos': []}
+    
+    def _convert_cad_to_neo_format(self, row: List, fields: List[str], discovery_date: datetime) -> Optional[Dict]:
+        """Convert NASA CAD data row to NEO format."""
+        try:
+            # NASA CAD fields typically: des, orbit_id, jd, cd, dist, dist_min, dist_max, v_rel, v_inf, t_sigma_f, h
+            designation = row[0] if len(row) > 0 else f'NEO_{id(row)}'
+            
+            # Parse close approach date
+            if len(row) > 3 and row[3]:
+                try:
+                    # NASA CAD close approach date format
+                    ca_date_str = str(row[3])
+                    ca_date = datetime.strptime(ca_date_str, "%Y-%b-%d %H:%M") if ":" in ca_date_str else discovery_date
+                except (ValueError, IndexError):
+                    ca_date = discovery_date
+            else:
+                ca_date = discovery_date
+            
+            neo_obj = {
+                'designation': designation,
+                'discovery_date': discovery_date,
+                'orbital_elements': {
+                    'eccentricity': 0.1,  # Default values - will be enriched later
+                    'inclination': 10.0,
+                    'semi_major_axis': 1.0
+                },
+                'close_approach': {
+                    'date': ca_date.isoformat(),
+                    'distance': float(row[4]) if len(row) > 4 and row[4] else 1.0,
+                    'velocity': float(row[7]) if len(row) > 7 and row[7] else 10.0
+                },
+                'data_source': 'NASA_CAD',
+                'raw_cad_data': row,
+                'h_magnitude': float(row[10]) if len(row) > 10 and row[10] else None
+            }
+            
+            return neo_obj
+            
+        except Exception as e:
+            self.logger.warning(f"Failed to convert CAD row to NEO format: {e}")
+            return None
     
     async def _fetch_nasa_cad_data(self, start_date: datetime, end_date: datetime) -> List[Dict]:
         """Direct NASA CAD API fetch as fallback."""

@@ -71,7 +71,7 @@ class CacheEntry:
             return False
         reference = reference_time or _utcnow()
         expires_at = self.expires_at
-        return _ensure_utc(reference) >= _ensure_utc(expires_at)
+        return _ensure_utc(reference) > _ensure_utc(expires_at)
 
     def touch(self) -> None:
         """Update the access metadata after a successful retrieval."""

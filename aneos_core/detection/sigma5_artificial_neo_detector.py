@@ -1,8 +1,9 @@
 """
-Sigma 5 Artificial NEO Detector - 99.99994% Statistical Certainty
+Experimental Artificial NEO Detector - Statistical Anomaly Analysis
 
-This detector implements sigma 5 (5-sigma) statistical confidence for artificial
-object detection, meeting the gold standard for astronomical discovery claims.
+This detector implements experimental statistical analysis for potential artificial
+object detection. IMPORTANT: This is research-grade software under development
+and has not been validated against confirmed artificial objects.
 """
 
 import numpy as np
@@ -26,18 +27,19 @@ class Sigma5DetectionResult:
     analysis: Dict[str, Any]
 
 class Sigma5ArtificialNEODetector:
-    """Artificial NEO detector with sigma 5 statistical certainty (99.99994%)."""
+    """Experimental artificial NEO detector using statistical anomaly analysis."""
     
-    # Sigma 5 corresponds to 99.99994% certainty (5.7e-7 false positive rate)
-    SIGMA_5_THRESHOLD = 5.0
-    SIGMA_5_CERTAINTY = 0.9999994
-    SIGMA_5_FALSE_POSITIVE_RATE = 5.7e-7
+    # Statistical thresholds for experimental analysis (not validated)
+    ANOMALY_THRESHOLD = 5.0  # Z-score threshold for statistical outliers
+    # Note: These are theoretical values, not empirically validated confidence levels
+    THEORETICAL_CERTAINTY = 0.9999994  # Theoretical normal distribution value
+    THEORETICAL_FALSE_POSITIVE_RATE = 5.7e-7  # Theoretical normal distribution value
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
-        # Statistical parameters for natural NEO population (CORRECTED - stricter baseline)
-        # Based on main NEO population excluding artificial objects
+        # Estimated statistical parameters for natural NEO population (EXPERIMENTAL)
+        # WARNING: These are rough estimates, not empirically validated parameters
         self.natural_neo_stats = {
             'semi_major_axis': {
                 'mean': 1.05,   # AU - corrected typical NEO semi-major axis
@@ -91,7 +93,7 @@ class Sigma5ArtificialNEODetector:
             'p_value': sma_pvalue,
             'sigma_level': sma_sigma,
             'natural_range': f"{sma_stats['min']:.1f}-{sma_stats['max']:.1f} AU",
-            'sigma_5_threshold_met': sma_sigma >= self.SIGMA_5_THRESHOLD
+            'anomaly_threshold_met': sma_sigma >= self.ANOMALY_THRESHOLD
         })
         
         analysis['semi_major_axis_test'] = {
@@ -101,7 +103,7 @@ class Sigma5ArtificialNEODetector:
             'sigma_level': sma_sigma,
             'natural_population_mean': sma_stats['mean'],
             'natural_population_std': sma_stats['std'],
-            'sigma_5_met': sma_sigma >= self.SIGMA_5_THRESHOLD,
+            'anomaly_threshold_met': sma_sigma >= self.ANOMALY_THRESHOLD,
             'reasoning': f"Semi-major axis {a:.3f} AU has {sma_sigma:.2f}σ deviation from natural NEO population"
         }
         
@@ -187,25 +189,25 @@ class Sigma5ArtificialNEODetector:
         # SIGMA 5 FINAL DETERMINATION
         final_sigma = combined_sigma
         
-        # Calculate statistical certainty based on sigma level
-        if final_sigma >= self.SIGMA_5_THRESHOLD:
-            statistical_certainty = self.SIGMA_5_CERTAINTY
-            false_positive_rate = self.SIGMA_5_FALSE_POSITIVE_RATE
+        # Calculate statistical certainty based on Z-score level (EXPERIMENTAL)
+        if final_sigma >= self.ANOMALY_THRESHOLD:
+            statistical_certainty = self.THEORETICAL_CERTAINTY
+            false_positive_rate = self.THEORETICAL_FALSE_POSITIVE_RATE
         else:
             # Calculate actual certainty based on achieved sigma level
             p_value_two_tailed = 2 * (1 - stats.norm.cdf(final_sigma))
             statistical_certainty = 1 - p_value_two_tailed
             false_positive_rate = p_value_two_tailed
         
-        # Decision: Require sigma 5 for artificial classification
-        is_artificial = final_sigma >= self.SIGMA_5_THRESHOLD
+        # Decision: Require anomaly threshold for artificial classification
+        is_artificial = final_sigma >= self.ANOMALY_THRESHOLD
         confidence = statistical_certainty
         
         analysis['overall'] = {
             'final_sigma_level': final_sigma,
             'statistical_certainty': statistical_certainty,
             'false_positive_rate': false_positive_rate,
-            'sigma_5_threshold': self.SIGMA_5_THRESHOLD,
+            'anomaly_threshold': self.ANOMALY_THRESHOLD,
             'sigma_5_threshold_met': is_artificial,
             'analysis_components': len([k for k in analysis.keys() if k != 'overall']),
             'statistical_tests_performed': len(statistical_tests),
@@ -235,7 +237,7 @@ class Sigma5ArtificialNEODetector:
     def get_sigma_threshold_info(self) -> Dict[str, Any]:
         """Return information about sigma 5 threshold and its meaning."""
         return {
-            'sigma_5_threshold': self.SIGMA_5_THRESHOLD,
+            'anomaly_threshold': self.ANOMALY_THRESHOLD,
             'statistical_certainty': self.SIGMA_5_CERTAINTY,
             'false_positive_rate': self.SIGMA_5_FALSE_POSITIVE_RATE,
             'meaning': 'Sigma 5 corresponds to 99.99994% certainty',
@@ -258,6 +260,6 @@ class Sigma5ArtificialNEODetector:
             'input_sigma': test_sigma,
             'calculated_p_value': p_value,
             'calculated_certainty': certainty,
-            'meets_sigma_5': test_sigma >= self.SIGMA_5_THRESHOLD,
+            'meets_anomaly_threshold': test_sigma >= self.ANOMALY_THRESHOLD,
             'sigma_level_meaning': f"{test_sigma:.2f}σ corresponds to {certainty:.7f} certainty"
         }

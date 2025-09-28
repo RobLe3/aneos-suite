@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """
-Corrected Sigma 5 Artificial NEO Detector - Empirically Validated Parameters
+Experimental Artificial NEO Detector - Revised Parameter Estimates
 
-This detector implements sigma 5 statistical confidence using empirically validated
-NEO population parameters instead of hardcoded assumptions. Addresses the critical
-failure where Tesla Roadster only achieved σ=2.41 instead of required σ≥5.0.
+This detector implements experimental statistical analysis with revised parameter
+estimates for potential artificial object detection. 
 
-Key improvements:
-1. Empirically validated population parameters from literature/SBDB
-2. Corrected statistical baselines for natural NEO population
-3. Enhanced artificial object detectability for known cases
-4. Validated false positive rates through Monte Carlo simulation
+IMPORTANT DISCLAIMERS:
+1. Parameters are literature-derived estimates, not empirically validated for this use
+2. No confirmed artificial object validation has been performed
+3. Statistical confidence claims are theoretical, not validated
+4. This is research-grade software under active development
 """
 
 import numpy as np
@@ -45,9 +44,9 @@ class CorrectedSigma5ArtificialNEODetector:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
-        # CORRECTED EMPIRICALLY VALIDATED PARAMETERS
-        # Based on literature (Bottke et al. 2002, Stuart & Binzel 2004, Granvik et al. 2018)
-        # and synthetic population analysis
+        # LITERATURE-DERIVED PARAMETER ESTIMATES (EXPERIMENTAL)
+        # Based on literature estimates (Bottke et al. 2002, Stuart & Binzel 2004, Granvik et al. 2018)
+        # WARNING: Not validated for artificial object detection use case
         self.natural_neo_stats = {
             'semi_major_axis': {
                 'mean': 1.6451,   # AU - corrected from empirical validation (was 1.05)

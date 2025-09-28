@@ -35,7 +35,8 @@ class TestCacheEntry:
     
     def test_is_expired(self):
         """Test expiration check."""
-        now = datetime.now()
+        from datetime import UTC
+        now = datetime.now(UTC)
         
         # Not expired
         future_expire = CacheEntry(
