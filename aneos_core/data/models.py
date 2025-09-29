@@ -6,7 +6,7 @@ approach in the original monolithic script.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any, Union, Tuple
 from datetime import UTC, datetime
 import json
 from pathlib import Path
@@ -546,3 +546,236 @@ class PhysicalProperties:
             measurement_method=data.get("measurement_method"),
             reference_source=data.get("reference_source")
         )
+
+@dataclass
+class ImpactAssessment:
+    """
+    Comprehensive Earth impact probability assessment for a NEO.
+    
+    This model encapsulates all impact-related calculations and provides
+    scientific rationale for impact risk evaluation.
+    """
+    
+    designation: str
+    calculation_method: str
+    last_updated: datetime = field(default_factory=_utcnow)
+    
+    # Core impact metrics
+    collision_probability: float = 0.0  # Overall probability of Earth impact
+    collision_probability_per_year: float = 0.0  # Annual impact rate
+    time_to_impact_years: Optional[float] = None  # Most probable impact time
+    
+    # Uncertainty and confidence
+    probability_uncertainty: Tuple[float, float] = (0.0, 0.0)  # (lower, upper bounds)
+    calculation_confidence: float = 0.0  # 0-1, quality of calculation
+    data_arc_years: float = 0.0  # Observation arc length
+    
+    # Physical impact assessment
+    impact_energy_mt: Optional[float] = None  # Megatons TNT equivalent
+    impact_velocity_km_s: Optional[float] = None  # Impact velocity
+    crater_diameter_km: Optional[float] = None  # Expected crater size
+    damage_radius_km: Optional[float] = None  # Damage radius estimate
+    
+    # Spatial distribution
+    impact_latitude_distribution: Dict[str, float] = field(default_factory=dict)
+    most_probable_impact_region: Optional[str] = None
+    
+    # Temporal evolution
+    impact_probability_by_decade: Dict[str, float] = field(default_factory=dict)
+    peak_risk_period: Optional[Tuple[int, int]] = None  # (start_year, end_year)
+    
+    # Special considerations
+    keyhole_passages: List[Dict[str, Any]] = field(default_factory=list)
+    artificial_object_considerations: Optional[Dict[str, Any]] = None
+    
+    # Scientific rationale
+    primary_risk_factors: List[str] = field(default_factory=list)
+    calculation_assumptions: List[str] = field(default_factory=list)
+    limitations: List[str] = field(default_factory=list)
+    
+    # Risk classification
+    risk_level: str = "negligible"  # negligible, very_low, low, moderate, high, extreme
+    comparative_risk: str = "Much lower than everyday risks"
+    
+    # Moon impact assessment
+    moon_collision_probability: Optional[float] = None  # Probability of Moon impact
+    moon_impact_energy_mt: Optional[float] = None  # Moon impact energy
+    earth_vs_moon_impact_ratio: Optional[float] = None  # Relative likelihood
+    moon_impact_effects: Optional[Dict[str, Any]] = None  # Moon impact consequences
+    
+    def __post_init__(self):
+        """Validate impact assessment data."""
+        if not (0 <= self.collision_probability <= 1):
+            raise ValueError(f"Collision probability {self.collision_probability} must be in [0,1]")
+        
+        if not (0 <= self.calculation_confidence <= 1):
+            raise ValueError(f"Calculation confidence {self.calculation_confidence} must be in [0,1]")
+        
+        # Ensure last_updated is UTC-aware
+        self.last_updated = _ensure_utc(self.last_updated)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary format."""
+        return {
+            "designation": self.designation,
+            "calculation_method": self.calculation_method,
+            "last_updated": self.last_updated.isoformat(),
+            
+            # Core metrics
+            "collision_probability": self.collision_probability,
+            "collision_probability_per_year": self.collision_probability_per_year,
+            "time_to_impact_years": self.time_to_impact_years,
+            
+            # Uncertainty
+            "probability_uncertainty": list(self.probability_uncertainty),
+            "calculation_confidence": self.calculation_confidence,
+            "data_arc_years": self.data_arc_years,
+            
+            # Physical assessment
+            "impact_energy_mt": self.impact_energy_mt,
+            "impact_velocity_km_s": self.impact_velocity_km_s,
+            "crater_diameter_km": self.crater_diameter_km,
+            "damage_radius_km": self.damage_radius_km,
+            
+            # Spatial/temporal
+            "impact_latitude_distribution": self.impact_latitude_distribution,
+            "most_probable_impact_region": self.most_probable_impact_region,
+            "impact_probability_by_decade": self.impact_probability_by_decade,
+            "peak_risk_period": list(self.peak_risk_period) if self.peak_risk_period else None,
+            
+            # Special analysis
+            "keyhole_passages": self.keyhole_passages,
+            "artificial_object_considerations": self.artificial_object_considerations,
+            
+            # Scientific rationale
+            "primary_risk_factors": self.primary_risk_factors,
+            "calculation_assumptions": self.calculation_assumptions,
+            "limitations": self.limitations,
+            
+            # Risk classification
+            "risk_level": self.risk_level,
+            "comparative_risk": self.comparative_risk,
+            
+            # Moon impact assessment
+            "moon_collision_probability": self.moon_collision_probability,
+            "moon_impact_energy_mt": self.moon_impact_energy_mt,
+            "earth_vs_moon_impact_ratio": self.earth_vs_moon_impact_ratio,
+            "moon_impact_effects": self.moon_impact_effects
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ImpactAssessment':
+        """Create from dictionary data."""
+        
+        # Handle datetime conversion
+        last_updated = data.get("last_updated")
+        if isinstance(last_updated, str):
+            last_updated = datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
+        elif last_updated is None:
+            last_updated = _utcnow()
+        
+        # Handle tuple conversion
+        uncertainty = data.get("probability_uncertainty", [0.0, 0.0])
+        if isinstance(uncertainty, list):
+            uncertainty = tuple(uncertainty)
+        
+        peak_risk = data.get("peak_risk_period")
+        if isinstance(peak_risk, list) and len(peak_risk) == 2:
+            peak_risk = tuple(peak_risk)
+        
+        return cls(
+            designation=data.get("designation", "Unknown"),
+            calculation_method=data.get("calculation_method", "unknown"),
+            last_updated=last_updated,
+            
+            collision_probability=data.get("collision_probability", 0.0),
+            collision_probability_per_year=data.get("collision_probability_per_year", 0.0),
+            time_to_impact_years=data.get("time_to_impact_years"),
+            
+            probability_uncertainty=uncertainty,
+            calculation_confidence=data.get("calculation_confidence", 0.0),
+            data_arc_years=data.get("data_arc_years", 0.0),
+            
+            impact_energy_mt=data.get("impact_energy_mt"),
+            impact_velocity_km_s=data.get("impact_velocity_km_s"),
+            crater_diameter_km=data.get("crater_diameter_km"),
+            damage_radius_km=data.get("damage_radius_km"),
+            
+            impact_latitude_distribution=data.get("impact_latitude_distribution", {}),
+            most_probable_impact_region=data.get("most_probable_impact_region"),
+            impact_probability_by_decade=data.get("impact_probability_by_decade", {}),
+            peak_risk_period=peak_risk,
+            
+            keyhole_passages=data.get("keyhole_passages", []),
+            artificial_object_considerations=data.get("artificial_object_considerations"),
+            
+            primary_risk_factors=data.get("primary_risk_factors", []),
+            calculation_assumptions=data.get("calculation_assumptions", []),
+            limitations=data.get("limitations", []),
+            
+            risk_level=data.get("risk_level", "negligible"),
+            comparative_risk=data.get("comparative_risk", "Much lower than everyday risks"),
+            
+            moon_collision_probability=data.get("moon_collision_probability"),
+            moon_impact_energy_mt=data.get("moon_impact_energy_mt"),
+            earth_vs_moon_impact_ratio=data.get("earth_vs_moon_impact_ratio"),
+            moon_impact_effects=data.get("moon_impact_effects")
+        )
+
+@dataclass
+class ImpactScenario:
+    """
+    Specific impact scenario analysis for detailed risk assessment.
+    
+    This model represents a particular impact scenario with specific
+    conditions and consequences.
+    """
+    
+    impact_date: datetime
+    probability: float  # Probability of this specific scenario
+    impact_location: Tuple[float, float]  # (latitude, longitude) in degrees
+    impact_velocity: float  # km/s
+    impact_angle: float  # degrees from horizontal
+    energy_mt: float  # Megatons TNT equivalent
+    scenario_type: str  # direct, resonant_return, keyhole_passage
+    
+    # Consequence assessment
+    crater_size_km: Optional[float] = None
+    damage_assessment: Optional[Dict[str, Any]] = None
+    affected_population: Optional[int] = None
+    economic_impact_usd: Optional[float] = None
+    
+    # Environmental effects
+    dust_injection_atmosphere: Optional[float] = None  # Tons of material
+    climate_impact_duration_years: Optional[float] = None
+    tsunami_risk: Optional[bool] = None  # If ocean impact
+    
+    def __post_init__(self):
+        """Validate impact scenario data."""
+        if not (0 <= self.probability <= 1):
+            raise ValueError(f"Scenario probability {self.probability} must be in [0,1]")
+        
+        lat, lon = self.impact_location
+        if not (-90 <= lat <= 90):
+            raise ValueError(f"Latitude {lat} must be in [-90, 90]")
+        if not (-180 <= lon <= 180):
+            raise ValueError(f"Longitude {lon} must be in [-180, 180]")
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary format."""
+        return {
+            "impact_date": self.impact_date.isoformat(),
+            "probability": self.probability,
+            "impact_location": list(self.impact_location),
+            "impact_velocity": self.impact_velocity,
+            "impact_angle": self.impact_angle,
+            "energy_mt": self.energy_mt,
+            "scenario_type": self.scenario_type,
+            "crater_size_km": self.crater_size_km,
+            "damage_assessment": self.damage_assessment,
+            "affected_population": self.affected_population,
+            "economic_impact_usd": self.economic_impact_usd,
+            "dust_injection_atmosphere": self.dust_injection_atmosphere,
+            "climate_impact_duration_years": self.climate_impact_duration_years,
+            "tsunami_risk": self.tsunami_risk
+        }

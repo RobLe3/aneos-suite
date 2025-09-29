@@ -465,3 +465,39 @@ class DataSourceManager:
         await asyncio.gather(*cleanup_tasks, return_exceptions=True)
         
         logger.info("All data sources cleaned up")
+    
+    async def get_neo_data(self, designation: str) -> Optional['NEOData']:
+        """
+        Fetch comprehensive NEO data and convert to NEOData object.
+        
+        This method bridges the gap between raw data fetching and structured data models.
+        """
+        try:
+            # Fetch orbital elements from all sources
+            results = await self.fetch_orbital_elements(designation)
+            
+            # Get the best merged result
+            merged_data = self.merge_results(results)
+            
+            if not merged_data:
+                logger.warning(f"No data found for {designation}")
+                return None
+            
+            # Import NEOData here to avoid circular imports
+            from ..models import NEOData
+            
+            # Convert merged data to NEOData object
+            neo_data = NEOData(
+                designation=designation,
+                orbital_elements=merged_data,
+                data_sources=merged_data.get('_sources_used', []),
+                fetch_timestamp=datetime.now(),
+                data_quality_score=max(merged_data.get('_completeness_scores', {}).values(), default=0.0)
+            )
+            
+            logger.info(f"Successfully fetched NEO data for {designation} from sources: {neo_data.data_sources}")
+            return neo_data
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch NEO data for {designation}: {e}")
+            return None

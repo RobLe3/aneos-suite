@@ -60,39 +60,285 @@ def main():
         designation = sys.argv[2]
         print(f"🔬 Analyzing NEO: {designation}")
         
-        # Quick analysis script
+        # Enhanced analysis script with comprehensive details
         analysis_script = f"""
 import sys
 sys.path.insert(0, '.')
 try:
-    from aneos_core.analysis.pipeline import create_analysis_pipeline
+    from simple_neo_analyzer import SimpleNEOAnalyzer
     import asyncio
+    from aneos_core.analysis.pipeline import create_analysis_pipeline
     
-    async def quick_analysis():
-        pipeline = create_analysis_pipeline()
-        result = await pipeline.analyze_neo('{designation}')
+    async def comprehensive_analysis():
+        print("=" * 80)
         
-        if result:
-            print(f"\\n📊 Analysis Results for {designation}:")
-            print(f"Overall Score: {{result.anomaly_score.overall_score:.3f}}")
-            print(f"Classification: {{result.anomaly_score.classification}}")
-            print(f"Confidence: {{result.anomaly_score.confidence:.3f}}")
-            print(f"Processing Time: {{result.processing_time:.2f}}s")
+        # Try comprehensive analysis first
+        analyzer = SimpleNEOAnalyzer()
+        
+        try:
+            print("🔍 Attempting comprehensive analysis...")
+            result = analyzer.analyze_neo_comprehensive('{designation}')
             
-            if result.anomaly_score.risk_factors:
-                print(f"\\n🚨 Risk Factors:")
-                for factor in result.anomaly_score.risk_factors:
-                    print(f"  • {{factor}}")
-        else:
-            print(f"❌ Analysis failed for {{designation}}")
+            if 'error' in result:
+                print(f"⚠️  Comprehensive analysis failed: {{result['error']}}")
+                print("🔄 Falling back to pipeline analysis...")
+                
+                # Fallback to pipeline analysis
+                pipeline = create_analysis_pipeline()
+                pipeline_result = await pipeline.analyze_neo('{designation}')
+                
+                if pipeline_result:
+                    print(f"\\n📊 Pipeline Analysis Results for {designation}:")
+                    print(f"Overall Score: {{pipeline_result.anomaly_score.overall_score:.3f}}")
+                    print(f"Classification: {{pipeline_result.anomaly_score.classification}}")
+                    print(f"Confidence: {{pipeline_result.anomaly_score.confidence:.3f}}")
+                    print(f"Processing Time: {{pipeline_result.processing_time:.2f}}s")
+                    
+                    if pipeline_result.anomaly_score.risk_factors:
+                        print(f"\\n🚨 Risk Factors:")
+                        for factor in pipeline_result.anomaly_score.risk_factors:
+                            print(f"  • {{factor}}")
+                            
+                    if hasattr(pipeline_result, 'errors') and pipeline_result.errors:
+                        print(f"\\n⚠️  Errors encountered:")
+                        for error in pipeline_result.errors:
+                            print(f"  • {{error}}")
+                else:
+                    print(f"❌ Both comprehensive and pipeline analysis failed for {designation}")
+                    print("\\nℹ️  The NEO may not be in any available databases.")
+                    print("💡 Try polling for recent discoveries or check the designation format.")
+            else:
+                # Display comprehensive results
+                print(f"\\n🎯 COMPREHENSIVE ANALYSIS RESULTS")
+                print(f"  Designation: {{result.get('designation', '{designation}')}}")
+                print(f"  Artificial Probability: {{result.get('artificial_probability', 0.0):.6f}}")
+                print(f"  Classification: {{result.get('classification', 'UNKNOWN')}}")
+                print(f"  Is Artificial: {{'YES' if result.get('is_artificial', False) else 'NO'}}")
+                print(f"  Confidence Level: {{result.get('confidence_level', 'unknown')}}")
+                
+                if result.get('sigma_statistical_level'):
+                    print(f"  Sigma Level: {{result.get('sigma_statistical_level'):.2f}}σ")
+                
+                print(f"\\n🚨 RISK ASSESSMENT")
+                print(f"  Risk Level: {{result.get('risk_assessment', 'unknown')}}")
+                print(f"  Threat Level: {{result.get('threat_level', 'unknown')}}")
+                
+                print(f"\\n📊 ANALYSIS QUALITY")
+                print(f"  Method: {{result.get('analysis_method', 'unknown')}}")
+                print(f"  Detector: {{result.get('detector_used', 'unknown')}}")
+                print(f"  Data Completeness: {{result.get('data_completeness', 'unknown')}}")
+                print(f"  Analysis Quality: {{result.get('analysis_quality', 'unknown')}}")
+                print(f"  Validation Status: {{result.get('validation_status', 'unknown')}}")
+                
+                if result.get('processing_time_ms'):
+                    print(f"  Processing Time: {{result.get('processing_time_ms'):.2f}} ms")
+                
+                risk_factors = result.get('risk_factors', [])
+                if risk_factors:
+                    print(f"\\n⚠️  RISK FACTORS")
+                    for factor in risk_factors:
+                        print(f"  • {{factor}}")
+                
+                anomaly_indicators = result.get('anomaly_indicators', [])
+                if anomaly_indicators:
+                    print(f"\\n🔍 ANOMALY INDICATORS")
+                    for indicator in anomaly_indicators:
+                        print(f"  • {{indicator}}")
+                
+                metadata = result.get('metadata', {{}})
+                if metadata:
+                    print(f"\\n📋 ADDITIONAL METADATA")
+                    for key, value in metadata.items():
+                        if isinstance(value, dict):
+                            print(f"  {{key}}:")
+                            for sub_key, sub_value in value.items():
+                                print(f"    {{sub_key}}: {{sub_value}}")
+                        else:
+                            print(f"  {{key}}: {{value}}")
+                
+                # Detailed Explanations
+                explanations = result.get('explanations', {{}})
+                if explanations:
+                    
+                    # Classification reasoning
+                    reasoning = explanations.get('classification_reasoning', [])
+                    if reasoning:
+                        print(f"\\n💭 CLASSIFICATION REASONING")
+                        for reason in reasoning:
+                            print(f"  • {{reason}}")
+                    
+                    # Suspicious indicators with explanations
+                    suspicious = explanations.get('suspicious_indicators', [])
+                    if suspicious:
+                        print(f"\\n🔍 WHY THIS IS CONSIDERED SUSPICIOUS")
+                        for indicator in suspicious:
+                            print(f"  • {{indicator}}")
+                    
+                    # Data quality notes
+                    data_quality = explanations.get('data_quality_notes', [])
+                    if data_quality:
+                        print(f"\\n📊 DATA QUALITY NOTES")
+                        for note in data_quality:
+                            print(f"  • {{note}}")
+                    
+                    # Confidence factors
+                    confidence_factors = explanations.get('confidence_factors', [])
+                    if confidence_factors:
+                        print(f"\\n🎯 CONFIDENCE FACTORS")
+                        for factor in confidence_factors:
+                            print(f"  • {{factor}}")
+                
+                # Calibrated Assessment (new section)
+                calibrated = result.get('calibrated_assessment', {{}})
+                if calibrated and not calibrated.get('error'):
+                    print(f"\\n🎯 CALIBRATED ASSESSMENT (CORRECTED)")
+                    print(f"  Statistical Significance: {{calibrated.get('statistical_significance', 0.0):.1%}}")
+                    print(f"  Sigma Level: {{calibrated.get('sigma_level', 0.0):.1f}}σ")
+                    print(f"  Significance Meaning: {{calibrated.get('significance_interpretation', 'Unknown')}}")
+                    
+                    calibrated_prob = calibrated.get('calibrated_artificial_probability', 0.0)
+                    print(f"  Calibrated Artificial Probability: {{calibrated_prob:.1%}}")
+                    print(f"  Calibrated Classification: {{calibrated.get('calibrated_classification', 'unknown')}}")
+                    
+                    print(f"\\n📚 METHODOLOGY NOTES")
+                    print(f"  • Statistical significance ≠ Artificial probability")
+                    print(f"  • Uses Bayesian inference with base rates")
+                    print(f"  • Includes multiple testing correction")
+                    print(f"  • Prior artificial rate: {{calibrated.get('prior_artificial_rate', 0.001):.1%}}")
+                    print(f"  • Testing {{calibrated.get('multiple_testing_factor', 1):,}} NEOs")
+                
+                # Impact Probability Assessment (NEW FEATURE)
+                impact = result.get('impact_assessment', {{}})
+                if impact and impact.get('status') == 'calculated':
+                    print(f"\\n💥 EARTH IMPACT PROBABILITY ASSESSMENT")
+                    print(f"  Collision Probability: {{impact.get('collision_probability', 0.0):.2e}}")
+                    print(f"  Risk Level: {{impact.get('risk_level', 'unknown').upper()}}")
+                    print(f"  Comparative Risk: {{impact.get('comparative_risk', 'Unknown')}}")
+                    
+                    if impact.get('time_to_impact_years'):
+                        print(f"  Most Probable Impact Time: {{impact.get('time_to_impact_years'):.0f}} years")
+                    
+                    print(f"  Calculation Confidence: {{impact.get('calculation_confidence', 0.0):.1%}}")
+                    print(f"  Methodology: {{impact.get('methodology', 'unknown')}}")
+                    
+                    # Physical impact effects
+                    if impact.get('impact_energy_mt'):
+                        print(f"\\n💥 POTENTIAL IMPACT EFFECTS")
+                        print(f"  Impact Energy: {{impact.get('impact_energy_mt'):.1f}} Megatons TNT")
+                        print(f"  Impact Velocity: {{impact.get('impact_velocity_km_s', 0):.1f}} km/s")
+                        
+                        if impact.get('crater_diameter_km'):
+                            print(f"  Crater Diameter: {{impact.get('crater_diameter_km'):.1f}} km")
+                        if impact.get('damage_radius_km'):
+                            print(f"  Damage Radius: {{impact.get('damage_radius_km'):.0f}} km")
+                        
+                        if impact.get('most_probable_impact_region'):
+                            print(f"  Most Probable Region: {{impact.get('most_probable_impact_region')}}")
+                    
+                    # Risk factors and rationale
+                    risk_factors = impact.get('primary_risk_factors', [])
+                    if risk_factors:
+                        print(f"\\n🎯 IMPACT RISK FACTORS")
+                        for factor in risk_factors[:5]:  # Show top 5
+                            print(f"  • {{factor}}")
+                    
+                    rationale = impact.get('rationale', [])
+                    if rationale:
+                        print(f"\\n🧠 SCIENTIFIC RATIONALE")
+                        for reason in rationale[:5]:  # Show top 5 rationales
+                            print(f"  • {{reason}}")
+                    
+                    # Special considerations
+                    if impact.get('keyhole_passages', 0) > 0:
+                        print(f"\\n🌀 GRAVITATIONAL KEYHOLES")
+                        print(f"  Detected Keyhole Passages: {{impact.get('keyhole_passages')}}")
+                        print(f"  Note: Close approaches may alter future trajectory")
+                    
+                    if impact.get('artificial_considerations'):
+                        print(f"\\n🛰️  ARTIFICIAL OBJECT CONSIDERATIONS")
+                        print(f"  Propulsive uncertainty affects trajectory prediction")
+                        print(f"  Mission status and control capabilities unknown")
+                    
+                    # Moon Impact Assessment (NEW FEATURE)
+                    if impact.get('moon_collision_probability') is not None:
+                        print(f"\\n🌙 MOON IMPACT ASSESSMENT")
+                        moon_prob = impact.get('moon_collision_probability', 0.0)
+                        print(f"  Moon Collision Probability: {{moon_prob:.2e}}")
+                        
+                        earth_moon_ratio = impact.get('earth_vs_moon_impact_ratio', 1.0)
+                        if earth_moon_ratio < 1.0:
+                            print(f"  Moon impact {{1/earth_moon_ratio:.1f}}x MORE likely than Earth impact")
+                        elif earth_moon_ratio > 1.0:
+                            print(f"  Earth impact {{earth_moon_ratio:.1f}}x more likely than Moon impact")
+                        else:
+                            print(f"  Earth and Moon impact probabilities similar")
+                        
+                        if impact.get('moon_impact_energy_mt'):
+                            print(f"  Moon Impact Energy: {{impact.get('moon_impact_energy_mt'):.1f}} Megatons TNT")
+                        
+                        # Moon impact effects
+                        moon_effects = impact.get('moon_impact_effects', {{}})
+                        if moon_effects:
+                            if moon_effects.get('visible_from_earth'):
+                                print(f"  Impact would be VISIBLE from Earth")
+                            if moon_effects.get('crater_diameter_km'):
+                                print(f"  Would create {{moon_effects.get('crater_diameter_km'):.1f}} km crater on Moon")
+                            if moon_effects.get('lunar_mission_impact') != 'unknown':
+                                print(f"  Lunar mission impact: {{moon_effects.get('lunar_mission_impact').upper()}}")
+                    
+                    # Calculation details
+                    uncertainty = impact.get('probability_uncertainty_range', (0, 0))
+                    if uncertainty and uncertainty != (0, 0):
+                        print(f"\\n📊 UNCERTAINTY ANALYSIS")
+                        print(f"  Probability Range: {{uncertainty[0]:.2e}} to {{uncertainty[1]:.2e}}")
+                        print(f"  Confidence Interval: {{impact.get('calculation_confidence', 0):.0%}}")
+                
+                elif impact and impact.get('status') == 'calculator_unavailable':
+                    print(f"\\n💥 EARTH IMPACT PROBABILITY ASSESSMENT")
+                    print(f"  Status: Impact calculator not available")
+                    print(f"  Note: Install impact probability module for full assessment")
+                
+                elif impact and impact.get('status') == 'no_orbital_data':
+                    print(f"\\n💥 EARTH IMPACT PROBABILITY ASSESSMENT")
+                    print(f"  Status: Insufficient orbital data")
+                    print(f"  Note: Impact assessment requires orbital elements")
+                    
+                elif impact and impact.get('status') == 'calculation_failed':
+                    print(f"\\n💥 EARTH IMPACT PROBABILITY ASSESSMENT")
+                    print(f"  Status: Calculation failed")
+                    if impact.get('error'):
+                        print(f"  Error: {{impact.get('error')}}")
+                
+                else:
+                    # No impact assessment available
+                    print(f"\\n💥 EARTH IMPACT PROBABILITY ASSESSMENT")
+                    print(f"  Status: Assessment not performed")
+                    print(f"  Note: Impact assessment available for Earth-crossing asteroids")
+                
+                timestamp = result.get('analysis_timestamp')
+                if timestamp:
+                    print(f"\\n🕐 Analysis completed at: {{timestamp}}")
+                    
+        except Exception as e:
+            print(f"❌ Analysis error: {{e}}")
+            print(f"\\nℹ️  This could indicate:")
+            print(f"  • NEO not found in available databases")
+            print(f"  • Invalid designation format")
+            print(f"  • Data source connectivity issues")
+            print(f"\\n💡 Suggestions:")
+            print(f"  • Verify the designation format (e.g., '2024 AB123')")
+            print(f"  • Check if this is a recent discovery")
+            print(f"  • Try using the interactive menu for more options")
+        
+        print("=" * 80)
             
-    asyncio.run(quick_analysis())
+    asyncio.run(comprehensive_analysis())
     
 except ImportError as e:
     print(f"❌ Error: Missing dependencies - {{e}}")
     print("Please run: pip install -r requirements.txt")
 except Exception as e:
-    print(f"❌ Analysis error: {{e}}")
+    print(f"❌ Unexpected error: {{e}}")
 """
         
         # Execute the analysis

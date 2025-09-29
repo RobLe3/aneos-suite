@@ -245,28 +245,103 @@ class AdvancedaNEOSAnalyzer(aNEOSAnalysisInterface):
         
         Uses intelligent source selection and fallback strategies.
         """
-        if not self.data_fetcher:
+        # Try direct API fetching first
+        real_data = self._fetch_real_neo_data(designation)
+        if real_data:
+            self.logger.info(f"Successfully fetched real data for {designation} from NASA/JPL")
+            return real_data
+            
+        # Fallback to data fetcher if available
+        if self.data_fetcher:
+            try:
+                # Use DataFetcher for real multi-source fetching
+                fetch_result = self.data_fetcher.fetch_neo_data(designation)
+                
+                if fetch_result.success and fetch_result.neo_data:
+                    return {
+                        'orbital_elements': fetch_result.neo_data.orbital_elements.__dict__ if fetch_result.neo_data.orbital_elements else {},
+                        'physical_data': {},  # Would be populated from real sources
+                        'data_sources': fetch_result.sources_used,
+                        'completeness': fetch_result.neo_data.completeness
+                    }
+                else:
+                    self.logger.warning(f"Multi-source fetch failed for {designation}, using mock data")
+                    return self._generate_mock_neo_data(designation)
+                    
+            except Exception as e:
+                self.logger.error(f"Multi-source fetch error for {designation}: {e}")
+                return self._generate_mock_neo_data(designation)
+        else:
             self.logger.warning("Multi-source data fetcher not available, using mock data")
             return self._generate_mock_neo_data(designation)
-        
+    
+    def _fetch_real_neo_data(self, designation: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch real NEO data from NASA/JPL SBDB API.
+        """
         try:
-            # Use DataFetcher for real multi-source fetching
-            fetch_result = self.data_fetcher.fetch_neo_data(designation)
+            import requests
+            import json
             
-            if fetch_result.success and fetch_result.neo_data:
-                return {
-                    'orbital_elements': fetch_result.neo_data.orbital_elements.__dict__ if fetch_result.neo_data.orbital_elements else {},
-                    'physical_data': {},  # Would be populated from real sources
-                    'data_sources': fetch_result.sources_used,
-                    'completeness': fetch_result.neo_data.completeness
-                }
-            else:
-                self.logger.warning(f"Multi-source fetch failed for {designation}, using mock data")
-                return self._generate_mock_neo_data(designation)
+            # NASA/JPL Small-Body Database (SBDB) API
+            sbdb_url = f"https://ssd-api.jpl.nasa.gov/sbdb.api"
+            params = {
+                'sstr': designation,
+                'full-prec': 'true'
+            }
+            
+            self.logger.info(f"Fetching real data for {designation} from NASA/JPL SBDB...")
+            response = requests.get(sbdb_url, params=params, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
                 
+                if 'orbit' in data and data['orbit']:
+                    orbit_data = data['orbit']
+                    elements = orbit_data.get('elements', [])
+                    
+                    if elements:
+                        # Parse orbital elements
+                        orbital_elements = {}
+                        for element in elements:
+                            name = element.get('name', '')
+                            value = element.get('value')
+                            if name and value is not None:
+                                try:
+                                    orbital_elements[name.lower()] = float(value)
+                                except (ValueError, TypeError):
+                                    orbital_elements[name.lower()] = value
+                        
+                        # Get physical data if available
+                        physical_data = {}
+                        if 'phys_par' in data and data['phys_par']:
+                            for param in data['phys_par']:
+                                name = param.get('name', '')
+                                value = param.get('value')
+                                if name and value is not None:
+                                    try:
+                                        physical_data[name.lower()] = float(value)
+                                    except (ValueError, TypeError):
+                                        physical_data[name.lower()] = value
+                        
+                        result = {
+                            'orbital_elements': orbital_elements,
+                            'physical_data': physical_data,
+                            'data_sources': ['NASA_SBDB'],
+                            'completeness': len(orbital_elements) / 10.0,  # Rough completeness estimate
+                            'real_data': True,
+                            'fetch_timestamp': datetime.now().isoformat()
+                        }
+                        
+                        self.logger.info(f"Successfully fetched real orbital data for {designation}")
+                        return result
+                        
+            self.logger.warning(f"No real data found for {designation} in NASA/JPL SBDB")
+            return None
+            
         except Exception as e:
-            self.logger.error(f"Multi-source fetch error for {designation}: {e}")
-            return self._generate_mock_neo_data(designation)
+            self.logger.error(f"Failed to fetch real data for {designation}: {e}")
+            return None
     
     def enrich_neo_data_comprehensive(self, neo_data: Dict[str, Any]) -> Dict[str, Any]:
         """

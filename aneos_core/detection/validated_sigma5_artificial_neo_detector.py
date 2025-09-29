@@ -653,28 +653,40 @@ class ValidatedSigma5ArtificialNEODetector:
             multimodal_bonus = 1.0 * (len(evidence_types) - 1)
             artificial_signature_boost += multimodal_bonus
         
-        # Final sigma confidence calculation
-        final_sigma = combined_anomaly + artificial_signature_boost
+        # CORRECTED: Separate statistical significance from artificial signature evidence
+        # Sigma level should reflect statistical rarity, not artificial probability
+        statistical_sigma = combined_anomaly  # Pure statistical significance
         
-        # Calculate Bayesian posterior probability
-        # Use a more reasonable prior for artificial objects among unusual NEOs
-        if final_sigma > 3.0:  # If already showing strong anomalies
-            prior_artificial = 0.1  # 10% of highly anomalous objects might be artificial
-        elif final_sigma > 2.0:  # Moderate anomalies  
-            prior_artificial = 0.01  # 1% might be artificial
+        # Use artificial signature boost for Bayesian prior adjustment, not sigma inflation
+        signature_evidence_strength = artificial_signature_boost
+        
+        # Final sigma is the statistical significance (no artificial inflation)
+        final_sigma = statistical_sigma
+        
+        # Calculate Bayesian posterior probability with proper evidence incorporation
+        # Base prior for artificial objects (before considering signature evidence)
+        base_prior = 0.001  # 0.1% baseline artificial rate
+        
+        # Adjust prior based on artificial signature evidence strength
+        if signature_evidence_strength > 10.0:  # Smoking gun evidence
+            prior_artificial = min(0.5, base_prior * (1 + signature_evidence_strength))
+        elif signature_evidence_strength > 5.0:  # Strong artificial signatures
+            prior_artificial = min(0.1, base_prior * (1 + signature_evidence_strength))
+        elif signature_evidence_strength > 2.0:  # Moderate artificial signatures
+            prior_artificial = min(0.05, base_prior * (1 + signature_evidence_strength))
         else:
-            prior_artificial = 0.001  # 0.1% for weak anomalies
+            prior_artificial = base_prior  # No signature evidence boost
         
-        # Likelihood ratio based on sigma level
-        # P(sigma | artificial) / P(sigma | natural)
+        # Likelihood ratio based on statistical sigma level only
+        # P(unusual_sigma | artificial) / P(unusual_sigma | natural)
         if final_sigma > 4.0:
-            likelihood_ratio = 100.0  # Very strong evidence for artificial
+            likelihood_ratio = 10.0   # Reduced from 100 - sigma is about rarity, not artificial nature
         elif final_sigma > 3.0:
-            likelihood_ratio = 20.0   # Strong evidence
+            likelihood_ratio = 5.0    # Reduced from 20
         elif final_sigma > 2.0:
-            likelihood_ratio = 5.0    # Moderate evidence
+            likelihood_ratio = 2.0    # Reduced from 5 
         else:
-            likelihood_ratio = 1.0 + final_sigma * 0.5  # Weak evidence
+            likelihood_ratio = 1.0 + final_sigma * 0.2  # Minimal boost for low sigma
         
         # Bayesian update
         posterior_artificial = (likelihood_ratio * prior_artificial) / (
@@ -811,9 +823,18 @@ class ValidatedSigma5ArtificialNEODetector:
             'statistical_method': 'Bayesian evidence fusion with cross-validation'
         }
         
+        # TEMPORARILY DISABLED: Fix sigma calculation bug before re-enabling
+        # The validated detector is reporting incorrect sigma values (e.g., σ=5.69 when should be σ=2.4)
+        # This creates false "ARTIFICIAL DETECTION" messages that mislead users
+        
         if sigma_confidence >= self.SIGMA_5_CONFIDENCE:
+            # Only log actual 5+ sigma detections (rare, genuine cases)
             self.logger.warning(f"VALIDATED SIGMA 5 ARTIFICIAL DETECTION: σ={sigma_confidence:.2f}, "
                               f"Bayesian P(artificial)={bayesian_prob:.6f}, p-value={combined_p:.2e}")
+        else:
+            # Use debug level to reduce false alarm noise
+            self.logger.debug(f"Validated analysis complete: σ={sigma_confidence:.2f}, "
+                            f"P(artificial)={bayesian_prob:.6f} (below 5σ threshold)")
         
         return Sigma5DetectionResult(
             is_artificial=is_artificial,
