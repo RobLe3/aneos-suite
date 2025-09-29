@@ -141,6 +141,17 @@ DIPLOMATIC_TRANSMISSION.md
 HUMANITARIAN_MISSION_PROTOCOL.md
 STARFLEET_TRANSMISSION.md
 
+# Development reports and analysis files
+*_report_*.md
+*_analysis_*.md
+*_evaluation_*.md
+*_assessment_*.md
+*_review_*.md
+*_maturity_*.md
+development_*.md
+progress_*.md
+status_*.md
+
 # Neo data files
 neo_poll_*.json
 enhanced_neo_poll_*.json
