@@ -48,6 +48,12 @@ from .gaia_astrometric_calibration import (
     enhance_stage2_with_gaia_precision,
     create_gaia_performance_tester
 )
+from .physical_sanity import (
+    PhysicalSanityValidator,
+    PhysicalValidationResult,
+    ValidationResult,
+    validate_neo_analysis_output
+)
 
 __all__ = [
     'MultiStageValidator',
@@ -85,7 +91,11 @@ __all__ = [
     'AstrometricPrecision',
     'ArtificialObjectSignature',
     'enhance_stage2_with_gaia_precision',
-    'create_gaia_performance_tester'
+    'create_gaia_performance_tester',
+    'PhysicalSanityValidator',
+    'PhysicalValidationResult',
+    'ValidationResult',
+    'validate_neo_analysis_output'
 ]
 
 # Version information

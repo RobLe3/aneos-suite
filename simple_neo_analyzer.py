@@ -189,6 +189,15 @@ class SimpleNEOAnalyzer:
                 # Add impact probability assessment (NEW FEATURE)
                 impact_assessment = self._calculate_impact_probability(result, designation)
                 
+                # Add physical sanity validation (Calibration Plan v1.2)
+                orbital_elements_dict = self._get_mock_orbital_elements(designation)
+                validation_result = self._validate_analysis_output({
+                    'designation': designation,
+                    'orbital_elements': orbital_elements_dict,
+                    'impact_assessment': impact_assessment,
+                    'calibrated_assessment': calibrated_assessment
+                })
+                
                 # Convert to dictionary for compatibility
                 return {
                     'designation': result.designation,
@@ -211,7 +220,8 @@ class SimpleNEOAnalyzer:
                     'metadata': result.metadata,
                     'explanations': explanations,
                     'calibrated_assessment': calibrated_assessment,  # Safe addition - new field
-                    'impact_assessment': impact_assessment  # NEW: Impact probability analysis
+                    'impact_assessment': impact_assessment,  # NEW: Impact probability analysis
+                    'physical_validation': validation_result  # NEW: Physical sanity validation
                 }
                 
             except Exception as e:
@@ -786,7 +796,13 @@ class SimpleNEOAnalyzer:
             return None
     
     def _create_mock_orbital_elements_for_impact(self, designation: str) -> 'OrbitalElements':
-        """Create mock orbital elements for impact demonstration."""
+        """
+        Create mock orbital elements for impact demonstration.
+        
+        IMPORTANT: Per Calibration Plan v1.2, diameter should NOT be estimated
+        without real H-magnitude and albedo data. This method should only be used
+        for demonstration when real data is unavailable.
+        """
         
         from aneos_core.data.models import OrbitalElements
         from datetime import datetime
@@ -799,6 +815,19 @@ class SimpleNEOAnalyzer:
         eccentricity = 0.2 + (designation_hash % 300) / 1000.0     # 0.2-0.5
         inclination = (designation_hash % 30)                      # 0-30 degrees
         
+        # Special handling for known objects from Calibration Plan v1.2
+        diameter = None  # Default: no diameter estimation
+        
+        if '2024 YR4' in designation.upper():
+            # From Calibration Plan: 2024 YR4 is approximately 60m
+            diameter = 0.060  # 60 meters = 0.060 km
+        elif 'BENNU' in designation.upper():
+            # From Calibration Plan: Bennu is ~500m
+            diameter = 0.500  # 500 meters = 0.500 km
+        elif 'APOPHIS' in designation.upper():
+            # Apophis is ~340m
+            diameter = 0.340  # 340 meters = 0.340 km
+        
         return OrbitalElements(
             semi_major_axis=semi_major_axis,
             eccentricity=eccentricity,
@@ -807,7 +836,7 @@ class SimpleNEOAnalyzer:
             arg_of_periapsis=float((designation_hash * 2) % 360),
             mean_anomaly=float((designation_hash * 3) % 360),
             epoch=datetime.now(),
-            diameter=0.1 + (designation_hash % 100) / 100.0  # 0.1-1.1 km
+            diameter=diameter  # Only set for known objects, None otherwise
         )
     
     def _extract_close_approaches_for_impact(self, result) -> List:
@@ -924,6 +953,51 @@ class SimpleNEOAnalyzer:
                 rationale.append(f"Moderate impact energy ({energy:.0f} MT) would cause local damage")
         
         impact_assessment['rationale'] = rationale
+    
+    def _validate_analysis_output(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Validate analysis output for physical consistency using Calibration Plan v1.2.
+        
+        Args:
+            analysis_data: Complete analysis data dictionary
+            
+        Returns:
+            Dict containing validation results
+        """
+        
+        try:
+            from aneos_core.validation.physical_sanity import validate_neo_analysis_output
+            
+            # Perform comprehensive validation
+            validation = validate_neo_analysis_output(analysis_data)
+            
+            return {
+                'status': validation.status.value,
+                'issues': validation.issues,
+                'warnings': validation.warnings,
+                'corrected_values': validation.corrected_values,
+                'notes': validation.validation_notes,
+                'validator_version': 'v1.2'  # Calibration Plan version
+            }
+            
+        except ImportError:
+            return {
+                'status': 'validator_unavailable',
+                'issues': [],
+                'warnings': ['Physical sanity validator not available'],
+                'corrected_values': {},
+                'notes': ['Install validation module for physical consistency checks'],
+                'validator_version': 'unavailable'
+            }
+        except Exception as e:
+            return {
+                'status': 'validation_failed',
+                'issues': [f"Validation error: {e}"],
+                'warnings': [],
+                'corrected_values': {},
+                'notes': ['Validation failed - results may need manual review'],
+                'validator_version': 'error'
+            }
 
 def main():
     """Main entry point for command-line usage."""
