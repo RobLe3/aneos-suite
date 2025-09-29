@@ -570,7 +570,7 @@ class SimpleNEOAnalyzer:
                 # Calculate statistical significance (how unusual it is)
                 import scipy.stats as stats
                 p_value = 2 * (1 - stats.norm.cdf(sigma_level))
-                statistical_significance = 1 - p_value
+                statistical_significance = p_value  # FIXED: p-value IS the statistical significance
                 
                 # Bayesian calculation with realistic priors
                 # Base rate: Estimate ~0.1% of NEOs could be artificial (very conservative)
