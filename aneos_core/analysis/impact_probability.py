@@ -222,7 +222,7 @@ class ImpactProbabilityCalculator:
         # Physical impact assessment
         impact_energy = self._calculate_impact_energy(orbital_elements)
         impact_velocity = self._estimate_impact_velocity(orbital_elements)
-        crater_size = self._estimate_crater_diameter(impact_energy)
+        crater_size = self._estimate_crater_diameter_proper(orbital_elements, impact_energy)
         damage_radius = self._estimate_damage_radius(impact_energy)
         
         # Spatial distribution analysis
@@ -652,8 +652,9 @@ class ImpactProbabilityCalculator:
         Estimate crater diameter using scaling laws.
         
         Scientific Rationale:
-        Crater diameter follows empirical scaling laws based on impact energy.
-        Used for damage assessment and geological impact studies.
+        Per Calibration Plan v1.2, crater scaling should follow:
+        - Earth rocky surface → crater = 10-20× impactor diameter
+        - This method attempts to reverse-calculate from energy when needed
         
         Schmidt-Housen scaling: D ∝ E^0.22 for large craters
         """
@@ -661,11 +662,39 @@ class ImpactProbabilityCalculator:
         if not impact_energy_mt:
             return None
         
-        # Empirical scaling law (simplified)
+        # Try to use proper diameter-based scaling if available
+        # This is a fallback energy-based calculation
+        # Empirical scaling law (simplified) 
         # D (km) ≈ 0.1 * E(MT)^0.22
         crater_diameter = 0.1 * (impact_energy_mt ** 0.22)
         
         return crater_diameter
+    
+    def _estimate_crater_diameter_proper(self, orbital_elements: OrbitalElements, 
+                                        impact_energy_mt: Optional[float]) -> Optional[float]:
+        """
+        Estimate crater diameter using proper scaling laws from Calibration Plan v1.2.
+        
+        Scientific Rationale:
+        - Earth rocky surface → crater = 10-20× impactor diameter
+        - Uses impactor diameter directly when available
+        - Falls back to energy-based calculation when diameter unknown
+        """
+        
+        # Method 1: Use impactor diameter directly (preferred per Calibration Plan)
+        if orbital_elements.diameter:
+            # Convert km to m for diameter
+            impactor_diameter_m = orbital_elements.diameter * 1000
+            
+            # Use middle of Calibration Plan range: 15x scaling factor
+            crater_diameter_m = impactor_diameter_m * 15.0
+            crater_diameter_km = crater_diameter_m / 1000.0
+            
+            return crater_diameter_km
+        
+        # Method 2: Fallback to energy-based calculation
+        else:
+            return self._estimate_crater_diameter(impact_energy_mt)
     
     def _estimate_damage_radius(self, impact_energy_mt: Optional[float]) -> Optional[float]:
         """
@@ -1296,8 +1325,16 @@ class ImpactProbabilityCalculator:
                 effects['visible_from_earth'] = True
                 effects['flash_visible'] = True
             
-            # Crater size on Moon (larger due to no atmosphere)
-            crater_diameter_km = 0.15 * (impact_energy_mt ** 0.25)  # Scaling for Moon
+            # Crater size on Moon using proper scaling (Calibration Plan v1.2)
+            if orbital_elements.diameter:
+                # Moon: 15-25× impactor diameter (use 20× as middle value)
+                impactor_diameter_m = orbital_elements.diameter * 1000
+                crater_diameter_m = impactor_diameter_m * 20.0
+                crater_diameter_km = crater_diameter_m / 1000.0
+            else:
+                # Fallback: energy-based calculation
+                crater_diameter_km = 0.15 * (impact_energy_mt ** 0.25)  # Scaling for Moon
+            
             effects['crater_diameter_km'] = crater_diameter_km
             
             # Ejecta effects
