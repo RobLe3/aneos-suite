@@ -31,6 +31,9 @@ def _ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
 class OrbitalElements:
     """Orbital elements for a Near Earth Object."""
     
+    # Identification
+    designation: Optional[str] = None  # NEO designation (e.g., "2024 YR4")
+    
     # Primary orbital elements
     eccentricity: Optional[float] = None
     inclination: Optional[float] = None  # degrees

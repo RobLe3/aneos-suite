@@ -1592,8 +1592,8 @@ class ANEOSMenu:
             table.add_row("🎯 Classification", result.classification, "✅ VALIDATED" if result.is_artificial else "🌍 NATURAL")
             table.add_row("📈 Sigma Level", f"{result.sigma_level:.2f}σ", 
                          "🚨 EXTREME" if result.sigma_level >= 10 else "✅ SIGMA 5+" if result.sigma_level >= 5 else "⚠️ SUB-SIGMA5")
-            table.add_row("🎲 Artificial Probability", f"{result.artificial_probability:.6f}", 
-                         "🔴 HIGH" if result.artificial_probability > 0.9 else "🟡 MODERATE" if result.artificial_probability > 0.5 else "🟢 LOW")
+            # Raw artificial probability hidden per interim assessment
+            # Only show calibrated posterior when available
             
             # Metadata
             detector_type = result.metadata.get('detector_type', 'unknown')

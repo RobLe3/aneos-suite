@@ -111,16 +111,19 @@ try:
                 # Display comprehensive results
                 print(f"\\n🎯 COMPREHENSIVE ANALYSIS RESULTS")
                 print(f"  Designation: {{result.get('designation', '{designation}')}}")
-                print(f"  Artificial Probability: {{result.get('artificial_probability', 0.0):.6f}}")
-                print(f"  Classification: {{result.get('classification', 'UNKNOWN')}}")
+                # Raw artificial probability hidden per interim assessment - show only calibrated posterior
+                # Use calibrated classification if available, fallback to original
+                calibrated = result.get('calibrated_assessment', {{}})
+                classification = calibrated.get('calibrated_classification') or result.get('classification', 'UNKNOWN')
+                print(f"  Classification: {{classification}}")
                 print(f"  Is Artificial: {{'YES' if result.get('is_artificial', False) else 'NO'}}")
-                print(f"  Confidence Level: {{result.get('confidence_level', 'unknown')}}")
+                print(f"  Anomaly Confidence: {{result.get('confidence_level', 'unknown')}}")
                 
                 if result.get('sigma_statistical_level'):
                     print(f"  Sigma Level: {{result.get('sigma_statistical_level'):.2f}}σ")
                 
                 print(f"\\n🚨 RISK ASSESSMENT")
-                print(f"  Risk Level: {{result.get('risk_assessment', 'unknown')}}")
+                # Risk level removed - only show single risk label driven by P(impact) per interim assessment
                 print(f"  Threat Level: {{result.get('threat_level', 'unknown')}}")
                 
                 print(f"\\n📊 ANALYSIS QUALITY")
@@ -147,8 +150,16 @@ try:
                 
                 metadata = result.get('metadata', {{}})
                 if metadata:
+                    # Hide debug info in production
+                    display_metadata = {{k: v for k, v in metadata.items() if k not in ['capabilities_used']}}
+                    # Also hide false_positive_rate from detection_metadata
+                    if 'detection_metadata' in display_metadata and isinstance(display_metadata['detection_metadata'], dict):
+                        display_metadata['detection_metadata'] = {{
+                            k: v for k, v in display_metadata['detection_metadata'].items() 
+                            if k != 'false_positive_rate'
+                        }}
                     print(f"\\n📋 ADDITIONAL METADATA")
-                    for key, value in metadata.items():
+                    for key, value in display_metadata.items():
                         if isinstance(value, dict):
                             print(f"  {{key}}:")
                             for sub_key, sub_value in value.items():
@@ -192,19 +203,37 @@ try:
                 calibrated = result.get('calibrated_assessment', {{}})
                 if calibrated and not calibrated.get('error'):
                     print(f"\\n🎯 CALIBRATED ASSESSMENT (CORRECTED)")
-                    print(f"  Statistical Significance: {{calibrated.get('statistical_significance', 0.0):.1%}}")
-                    print(f"  Sigma Level: {{calibrated.get('sigma_level', 0.0):.1f}}σ")
+                    print(f"  Statistical Significance: {{calibrated.get('statistical_significance', 0.0):.1f}}%")
+                    print(f"  Sigma Level: {{calibrated.get('sigma_level', 0.0):.2f}}σ")
                     print(f"  Significance Meaning: {{calibrated.get('significance_interpretation', 'Unknown')}}")
                     
                     calibrated_prob = calibrated.get('calibrated_artificial_probability', 0.0)
-                    print(f"  Calibrated Artificial Probability: {{calibrated_prob:.1%}}")
+                    prior = calibrated.get('prior_artificial_rate', 1e-5)
+                    
+                    # Calculate likelihood ratio from Bayesian components
+                    if prior > 0 and calibrated_prob > 0:
+                        # LR ≈ posterior/(1-posterior) * (1-prior)/prior  
+                        odds_posterior = calibrated_prob / (1 - calibrated_prob)
+                        odds_prior = prior / (1 - prior)
+                        likelihood_ratio = odds_posterior / odds_prior if odds_prior > 0 else 0
+                    else:
+                        likelihood_ratio = 0
+                    
+                    if calibrated_prob < 0.001:  # Less than 0.1%
+                        print(f"  Calibrated Artificial Probability: {{calibrated_prob:.4%}} (prior: {{prior:.0e}}, LR: {{likelihood_ratio:.1f}})")
+                    else:
+                        print(f"  Calibrated Artificial Probability: {{calibrated_prob:.1%}} (prior: {{prior:.0e}}, LR: {{likelihood_ratio:.1f}})")
                     print(f"  Calibrated Classification: {{calibrated.get('calibrated_classification', 'unknown')}}")
                     
                     print(f"\\n📚 METHODOLOGY NOTES")
                     print(f"  • Statistical significance ≠ Artificial probability")
                     print(f"  • Uses Bayesian inference with base rates")
                     print(f"  • Includes multiple testing correction")
-                    print(f"  • Prior artificial rate: {{calibrated.get('prior_artificial_rate', 0.001):.1%}}")
+                    prior_rate = calibrated.get('prior_artificial_rate', 0.001)
+                    if prior_rate <= 1e-4:  # Very small prior
+                        print(f"  • Prior artificial rate: {{prior_rate:.2e}} ({{prior_rate*100:.4f}}%)")
+                    else:
+                        print(f"  • Prior artificial rate: {{prior_rate:.1%}}")
                     print(f"  • Testing {{calibrated.get('multiple_testing_factor', 1):,}} NEOs")
                 
                 # Impact Probability Assessment (NEW FEATURE)
@@ -215,8 +244,13 @@ try:
                     print(f"  Risk Level: {{impact.get('risk_level', 'unknown').upper()}}")
                     print(f"  Comparative Risk: {{impact.get('comparative_risk', 'Unknown')}}")
                     
-                    if impact.get('time_to_impact_years'):
-                        print(f"  Most Probable Impact Time: {{impact.get('time_to_impact_years'):.0f}} years")
+                    # Only show impact time for meaningful probabilities  
+                    impact_time = impact.get('time_to_impact_years')
+                    collision_prob = impact.get('collision_probability', 0.0)
+                    if impact_time and collision_prob > 1e-10:
+                        print(f"  Most Probable Impact Time: {{impact_time:.0f}} years")
+                    elif collision_prob <= 1e-10:
+                        print(f"  Most Probable Impact Time: N/A (probability too low)")
                     
                     print(f"  Calculation Confidence: {{impact.get('calculation_confidence', 0.0):.1%}}")
                     print(f"  Methodology: {{impact.get('methodology', 'unknown')}}")
@@ -224,6 +258,10 @@ try:
                     # Physical impact effects
                     if impact.get('impact_energy_mt'):
                         print(f"\\n💥 POTENTIAL IMPACT EFFECTS")
+                        # Add hypothetical note for negligible risk
+                        risk_level = impact.get('risk_level', '').lower()
+                        if risk_level == 'negligible':
+                            print(f"  Note: Effects are hypothetical, not a forecast")
                         print(f"  Impact Energy: {{impact.get('impact_energy_mt'):.1f}} Megatons TNT")
                         print(f"  Impact Velocity: {{impact.get('impact_velocity_km_s', 0):.1f}} km/s")
                         
@@ -248,11 +286,18 @@ try:
                         for reason in rationale[:5]:  # Show top 5 rationales
                             print(f"  • {{reason}}")
                     
-                    # Special considerations
-                    if impact.get('keyhole_passages', 0) > 0:
-                        print(f"\\n🌀 GRAVITATIONAL KEYHOLES")
-                        print(f"  Detected Keyhole Passages: {{impact.get('keyhole_passages')}}")
-                        print(f"  Note: Close approaches may alter future trajectory")
+                    # Special considerations - only show keyholes with concrete numbers
+                    keyholes = impact.get('keyhole_passages', 0)
+                    if keyholes > 0:
+                        # Only show keyhole if we have concrete parameters
+                        keyhole_data = impact.get('keyhole_details', {{}})
+                        if keyhole_data.get('epoch') and keyhole_data.get('ca_distance_km') and keyhole_data.get('corridor_width_km'):
+                            print(f"\\n🌀 GRAVITATIONAL KEYHOLES")
+                            print(f"  Detected Passages: {{keyholes}}")
+                            print(f"  Epoch: {{keyhole_data['epoch']}}")
+                            print(f"  CA Distance: {{keyhole_data['ca_distance_km']:.0f}} km")
+                            print(f"  Corridor Width: {{keyhole_data['corridor_width_km']:.1f}} km")
+                        # Otherwise omit keyhole block entirely
                     
                     if impact.get('artificial_considerations'):
                         print(f"\\n🛰️  ARTIFICIAL OBJECT CONSIDERATIONS")
@@ -260,7 +305,13 @@ try:
                         print(f"  Mission status and control capabilities unknown")
                     
                     # Moon Impact Assessment (NEW FEATURE)
-                    if impact.get('moon_collision_probability') is not None:
+                    # Per interim assessment: Only show if actual calculation ran with authority alignment
+                    moon_status = impact.get('moon_status', 'calculated')
+                    if moon_status == 'not_modeled':
+                        print(f"\\n🌙 MOON IMPACT ASSESSMENT")  
+                        print(f"  Moon probability: Not modeled (authority alignment required)")
+                        print(f"  Will be populated when Moon module runs with authoritative ephemerides")
+                    elif impact.get('moon_collision_probability') is not None:
                         print(f"\\n🌙 MOON IMPACT ASSESSMENT")
                         moon_prob = impact.get('moon_collision_probability', 0.0)
                         print(f"  Moon Collision Probability: {{moon_prob:.2e}}")

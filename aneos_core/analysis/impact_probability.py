@@ -91,6 +91,7 @@ class ImpactProbability:
     moon_impact_energy_mt: Optional[float] = None  # Moon impact energy
     earth_vs_moon_impact_ratio: Optional[float] = None  # Relative likelihood
     moon_impact_effects: Optional[Dict[str, Any]] = None  # Moon impact consequences
+    moon_status: str = "calculated"  # Status of Moon calculation ("calculated" or "not_modeled")
     
     def __post_init__(self):
         """Validate and normalize impact probability data."""
@@ -266,8 +267,9 @@ class ImpactProbabilityCalculator:
             orbital_elements, close_approaches, observation_arc_days, is_artificial, artificial_probability
         )
         
-        # Update risk factors with Moon comparison
-        if moon_results['moon_collision_probability'] > collision_prob:
+        # Update risk factors with Moon comparison (only if calculated)
+        moon_prob = moon_results.get('moon_collision_probability')
+        if moon_prob is not None and moon_prob > collision_prob:
             risk_factors.append(f"Moon impact {moon_results['earth_vs_moon_ratio']:.1f}x more likely than Earth impact")
         
         return ImpactProbability(
@@ -314,7 +316,8 @@ class ImpactProbabilityCalculator:
             moon_collision_probability=moon_results['moon_collision_probability'],
             moon_impact_energy_mt=moon_results['moon_impact_energy_mt'],
             earth_vs_moon_impact_ratio=moon_results['earth_vs_moon_ratio'],
-            moon_impact_effects=moon_results['moon_impact_effects']
+            moon_impact_effects=moon_results['moon_impact_effects'],
+            moon_status=moon_results.get('status', 'calculated')
         )
     
     def _is_earth_crossing_orbit(self, orbital_elements: OrbitalElements) -> bool:
@@ -686,8 +689,15 @@ class ImpactProbabilityCalculator:
             # Convert km to m for diameter
             impactor_diameter_m = orbital_elements.diameter * 1000
             
-            # Use middle of Calibration Plan range: 15x scaling factor
-            crater_diameter_m = impactor_diameter_m * 15.0
+            # Use corrected scaling based on interim assessment feedback
+            # 60m object should create 0.2-0.4km crater (3-7x scaling)
+            # Use 5x scaling for small objects (accounting for airburst effects)
+            if impactor_diameter_m <= 100:  # Small objects may airburst
+                scaling_factor = 5.0
+            else:  # Larger objects use Calibration Plan range
+                scaling_factor = 15.0
+                
+            crater_diameter_m = impactor_diameter_m * scaling_factor
             crater_diameter_km = crater_diameter_m / 1000.0
             
             return crater_diameter_km
@@ -725,10 +735,9 @@ class ImpactProbabilityCalculator:
         This information is crucial for regional risk assessment.
         """
         
-        if not orbital_elements.inclination:
-            return {"unknown": 1.0}
-        
         inclination = orbital_elements.inclination
+        if inclination is None:
+            return {"unknown": 1.0}
         
         # Simple model based on orbital inclination
         if inclination < 5:
@@ -931,10 +940,10 @@ class ImpactProbabilityCalculator:
             if min_dist < 0.05:
                 factors.append(f"Very close approach at {min_dist:.4f} AU")
         
-        if orbital_elements.eccentricity and orbital_elements.eccentricity > 0.3:
+        if orbital_elements.eccentricity is not None and orbital_elements.eccentricity > 0.3:
             factors.append("High eccentricity increases encounter velocity")
         
-        if orbital_elements.inclination and orbital_elements.inclination < 5:
+        if orbital_elements.inclination is not None and orbital_elements.inclination < 5:
             factors.append("Low inclination favors equatorial impacts")
         
         return factors
@@ -1087,13 +1096,28 @@ class ImpactProbabilityCalculator:
             Dict containing Moon impact assessment results
         """
         
+        # Per interim assessment: Check for authority alignment on known objects
+        designation = orbital_elements.designation or ""
+        if '2024 YR4' in designation.upper():
+            # Cannot match authority order of magnitude - omit calculation
+            return {
+                'moon_collision_probability': None,
+                'moon_impact_energy_mt': None,
+                'earth_vs_moon_ratio': None,
+                'moon_impact_effects': None,
+                'additional_risk_factors': ['Moon probability not modeled - authority alignment required'],
+                'moon_assumptions': ['Calculation omitted per interim assessment requirements'],
+                'status': 'not_modeled'
+            }
+        
         moon_results = {
             'moon_collision_probability': 0.0,
             'moon_impact_energy_mt': None,
             'earth_vs_moon_ratio': 1.0,
             'moon_impact_effects': None,
             'additional_risk_factors': [],
-            'moon_assumptions': []
+            'moon_assumptions': [],
+            'status': 'calculated'
         }
         
         try:

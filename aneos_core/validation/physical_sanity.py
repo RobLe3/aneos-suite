@@ -58,9 +58,11 @@ class PhysicalSanityValidator:
     EARTH_ESCAPE_VELOCITY = 11.2  # km/s
     MOON_ESCAPE_VELOCITY = 2.4  # km/s
     
-    # Scaling factors from Calibration Plan
-    EARTH_CRATER_SCALING_MIN = 10  # Minimum crater/impactor diameter ratio
-    EARTH_CRATER_SCALING_MAX = 20  # Maximum crater/impactor diameter ratio
+    # Scaling factors from Calibration Plan (updated per interim assessment)
+    EARTH_CRATER_SCALING_MIN_SMALL = 3   # Minimum for small objects (airburst effects)
+    EARTH_CRATER_SCALING_MAX_SMALL = 7   # Maximum for small objects
+    EARTH_CRATER_SCALING_MIN = 10  # Minimum crater/impactor diameter ratio for large objects
+    EARTH_CRATER_SCALING_MAX = 20  # Maximum crater/impactor diameter ratio for large objects
     MOON_CRATER_SCALING_MIN = 15   # Minimum crater/impactor diameter ratio for Moon
     MOON_CRATER_SCALING_MAX = 25   # Maximum crater/impactor diameter ratio for Moon
     
@@ -107,15 +109,27 @@ class PhysicalSanityValidator:
         # 2. Crater scaling validation
         if diameter_km and crater_diameter_km:
             crater_ratio = crater_diameter_km / (diameter_km / 1000)  # Convert km to m for diameter
-            if crater_ratio < self.EARTH_CRATER_SCALING_MIN or crater_ratio > self.EARTH_CRATER_SCALING_MAX:
+            diameter_m = diameter_km * 1000
+            
+            # Use different scaling ranges for small vs large objects
+            if diameter_m <= 100:  # Small objects (airburst effects)
+                min_scaling = self.EARTH_CRATER_SCALING_MIN_SMALL
+                max_scaling = self.EARTH_CRATER_SCALING_MAX_SMALL
+                default_scaling = 5.0
+            else:  # Large objects
+                min_scaling = self.EARTH_CRATER_SCALING_MIN
+                max_scaling = self.EARTH_CRATER_SCALING_MAX
+                default_scaling = 15.0
+                
+            if crater_ratio < min_scaling or crater_ratio > max_scaling:
                 issues.append(
                     f"Earth crater scaling violation: {crater_ratio:.1f}x impactor diameter "
-                    f"(expected {self.EARTH_CRATER_SCALING_MIN}-{self.EARTH_CRATER_SCALING_MAX}x)"
+                    f"(expected {min_scaling}-{max_scaling}x for {diameter_m:.0f}m object)"
                 )
-                # Correct to middle of range
-                corrected_crater = (diameter_km / 1000) * (self.EARTH_CRATER_SCALING_MIN + self.EARTH_CRATER_SCALING_MAX) / 2
+                # Correct to appropriate scaling
+                corrected_crater = (diameter_km / 1000) * default_scaling
                 corrected_values['crater_diameter_km'] = corrected_crater
-                notes.append(f"Earth crater diameter corrected using 15x scaling factor")
+                notes.append(f"Earth crater diameter corrected using {default_scaling}x scaling factor")
         
         # 3. Moon crater scaling validation
         if diameter_km and moon_crater_diameter_km:
@@ -301,10 +315,8 @@ class PhysicalSanityValidator:
     
     def _sigma_to_significance(self, sigma: float) -> float:
         """Convert sigma level to two-sided statistical significance."""
-        # Using calibration plan mapping:
-        # 2σ → ~4.6%, 3σ → ~0.27%, 5σ → ~5.7e-7
-        from scipy import stats
-        return 2 * (1 - stats.norm.cdf(abs(sigma)))  # Two-sided p-value
+        from aneos_core.utils.statistical_utils import sigma_to_p_value
+        return sigma_to_p_value(sigma)
     
     def create_validation_report(self, validation_result: PhysicalValidationResult) -> str:
         """Create a human-readable validation report."""

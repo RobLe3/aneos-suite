@@ -567,14 +567,14 @@ class SimpleNEOAnalyzer:
             sigma_level = getattr(result, 'sigma_statistical_level', 0.0)
             
             if sigma_level > 0:
-                # Calculate statistical significance (how unusual it is)
-                import scipy.stats as stats
-                p_value = 2 * (1 - stats.norm.cdf(sigma_level))
-                statistical_significance = p_value  # FIXED: p-value IS the statistical significance
+                # Calculate statistical significance using centralized utility
+                from aneos_core.utils.statistical_utils import sigma_to_p_value, sigma_to_confidence_level
+                p_value = sigma_to_p_value(sigma_level)
+                statistical_significance = sigma_to_confidence_level(sigma_level)  # Confidence level as percentage
                 
-                # Bayesian calculation with realistic priors
-                # Base rate: Estimate ~0.1% of NEOs could be artificial (very conservative)
-                prior_artificial = 0.001
+                # Bayesian calculation with very conservative priors (per interim assessment)
+                # Base rate: Set ≤1e-5 as required (0.001% of NEOs could be artificial)
+                prior_artificial = 1e-5
                 
                 # Likelihood: If artificial, probability of appearing unusual
                 likelihood_unusual_if_artificial = 0.90  # High but not perfect
@@ -755,7 +755,8 @@ class SimpleNEOAnalyzer:
                 'moon_collision_probability': impact_result.moon_collision_probability,
                 'moon_impact_energy_mt': impact_result.moon_impact_energy_mt,
                 'earth_vs_moon_impact_ratio': impact_result.earth_vs_moon_impact_ratio,
-                'moon_impact_effects': impact_result.moon_impact_effects
+                'moon_impact_effects': impact_result.moon_impact_effects,
+                'moon_status': getattr(impact_result, 'moon_status', 'calculated')
             })
             
             # Add scientific rationale based on results
@@ -829,6 +830,7 @@ class SimpleNEOAnalyzer:
             diameter = 0.340  # 340 meters = 0.340 km
         
         return OrbitalElements(
+            designation=designation,  # Fixed: Include designation
             semi_major_axis=semi_major_axis,
             eccentricity=eccentricity,
             inclination=inclination,
@@ -906,6 +908,31 @@ class SimpleNEOAnalyzer:
         # Default conservative estimate
         return 30.0
     
+    def _generate_concrete_orbital_explanations(self, orbital_elements, sigma_level: float) -> List[str]:
+        """Generate concrete orbital parameter explanations with values and z-scores."""
+        explanations = []
+        
+        if orbital_elements:
+            # Estimate MOID (simplified)
+            if orbital_elements.semi_major_axis and orbital_elements.eccentricity:
+                perihelion = orbital_elements.semi_major_axis * (1 - orbital_elements.eccentricity)
+                moid_estimate = abs(1.0 - perihelion)  # Rough MOID estimate
+                explanations.append(f"MOID ≈ {moid_estimate:.3f} AU")
+            
+            # Inclination with z-score estimate
+            if orbital_elements.inclination is not None:
+                # Typical NEO inclination ~10°, std ~8°
+                z_score_i = (orbital_elements.inclination - 10.0) / 8.0
+                explanations.append(f"Inclination = {orbital_elements.inclination:.1f}°, z = {z_score_i:.1f}")
+            
+            # Eccentricity with z-score estimate  
+            if orbital_elements.eccentricity is not None:
+                # Typical NEO eccentricity ~0.5, std ~0.2
+                z_score_e = (orbital_elements.eccentricity - 0.5) / 0.2
+                explanations.append(f"Eccentricity = {orbital_elements.eccentricity:.3f}, z = {z_score_e:.1f}")
+                
+        return explanations
+    
     def _add_impact_assessment_rationale(self, impact_assessment: Dict[str, Any], 
                                        impact_result, designation: str):
         """Add scientific rationale for impact assessment results."""
@@ -938,6 +965,18 @@ class SimpleNEOAnalyzer:
         if impact_assessment.get('keyhole_passages', 0) > 0:
             rationale.append("Gravitational keyhole passages detected - resonant return possible")
         
+        # Add concrete orbital parameter explanations  
+        try:
+            # Create a mock result object to extract orbital elements
+            from types import SimpleNamespace
+            mock_result = SimpleNamespace(designation=designation)
+            orbital_elements = self._extract_orbital_elements_for_impact(mock_result)
+            if orbital_elements:
+                concrete_explanations = self._generate_concrete_orbital_explanations(orbital_elements, 0)
+                rationale.extend([f"Orbital: {exp}" for exp in concrete_explanations])
+        except Exception as e:
+            logger.debug(f"Could not add concrete orbital explanations: {e}")
+        
         # Artificial object rationale
         if impact_assessment.get('artificial_considerations'):
             rationale.append("Artificial object considerations: propulsive uncertainty affects trajectory")
@@ -967,15 +1006,31 @@ class SimpleNEOAnalyzer:
         
         try:
             from aneos_core.validation.physical_sanity import validate_neo_analysis_output
+            from aneos_core.validation.consistency_validator import validate_analysis_consistency
             
             # Perform comprehensive validation
             validation = validate_neo_analysis_output(analysis_data)
             
+            # Consistency validation (per interim assessment)
+            consistency = validate_analysis_consistency(analysis_data)
+            
+            # Block report if critical consistency violations
+            if consistency.blocked_report:
+                return {
+                    'status': 'blocked',
+                    'issues': validation.issues + consistency.errors,
+                    'warnings': validation.warnings + consistency.warnings,
+                    'corrected_values': {**validation.corrected_values, **consistency.corrected_values},
+                    'notes': validation.validation_notes + [f"Report blocked: {len(consistency.violations)} consistency violations"],
+                    'validator_version': 'v1.2',
+                    'consistency_violations': [v.value for v in consistency.violations]
+                }
+            
             return {
                 'status': validation.status.value,
-                'issues': validation.issues,
-                'warnings': validation.warnings,
-                'corrected_values': validation.corrected_values,
+                'issues': validation.issues + consistency.errors,
+                'warnings': validation.warnings + consistency.warnings,
+                'corrected_values': {**validation.corrected_values, **consistency.corrected_values},
                 'notes': validation.validation_notes,
                 'validator_version': 'v1.2'  # Calibration Plan version
             }
@@ -1127,19 +1182,26 @@ def main():
             calibrated = result.get('calibrated_assessment', {})
             if calibrated and not calibrated.get('error'):
                 print(f"\n🎯 CALIBRATED ASSESSMENT (CORRECTED)")
-                print(f"  Statistical Significance: {calibrated.get('statistical_significance', 0.0):.1%}")
+                print(f"  Statistical Significance: {calibrated.get('statistical_significance', 0.0):.1f}%")
                 print(f"  Sigma Level: {calibrated.get('sigma_level', 0.0):.1f}σ")
                 print(f"  Significance Meaning: {calibrated.get('significance_interpretation', 'Unknown')}")
                 
                 calibrated_prob = calibrated.get('calibrated_artificial_probability', 0.0)
-                print(f"  Calibrated Artificial Probability: {calibrated_prob:.1%}")
+                if calibrated_prob < 0.001:  # Less than 0.1%
+                    print(f"  Calibrated Artificial Probability: {calibrated_prob:.4%} (very low)")
+                else:
+                    print(f"  Calibrated Artificial Probability: {calibrated_prob:.1%}")
                 print(f"  Calibrated Classification: {calibrated.get('calibrated_classification', 'unknown')}")
                 
                 print(f"\n📚 METHODOLOGY NOTES")
                 print(f"  • Statistical significance ≠ Artificial probability")
                 print(f"  • Uses Bayesian inference with base rates")
                 print(f"  • Includes multiple testing correction")
-                print(f"  • Prior artificial rate: {calibrated.get('prior_artificial_rate', 0.001):.1%}")
+                prior_rate = calibrated.get('prior_artificial_rate', 0.001)
+                if prior_rate <= 1e-4:  # Very small prior
+                    print(f"  • Prior artificial rate: {prior_rate:.2e} ({prior_rate*100:.4f}%)")
+                else:
+                    print(f"  • Prior artificial rate: {prior_rate:.1%}")
                 print(f"  • Testing {calibrated.get('multiple_testing_factor', 1):,} NEOs")
             
             # Timestamp
