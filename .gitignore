@@ -139,6 +139,8 @@ docker-compose.override.yml
 CC_*.md
 *_COMPLETION*.md
 *_IMPLEMENTATION*.md
+!docs/architecture/PHASE4_IMPLEMENTATION_PLAN.md
+!docs/architecture/IMPLEMENTATION_PLAN.md
 *_DEPLOYMENT*.md
 CAPTAINS_LOG.md
 DIPLOMATIC_TRANSMISSION.md
