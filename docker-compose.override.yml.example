@@ -1,0 +1,13 @@
+# docker-compose.override.yml.example
+#
+# Copy this file to docker-compose.override.yml to enable HTTPS.
+# Requires ssl/cert.pem and ssl/key.pem (see ssl/README.md).
+
+version: '3.8'
+
+services:
+  nginx:
+    ports:
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl

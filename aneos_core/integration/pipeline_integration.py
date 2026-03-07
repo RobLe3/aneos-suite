@@ -20,10 +20,12 @@ from typing import Dict, List, Any, Optional, Tuple
 from pathlib import Path
 
 # Core aNEOS imports
+from ..utils.errors import IntegrationError
+
 try:
     from ..pipeline.automatic_review_pipeline import (
         AutomaticReviewPipeline,
-        PipelineConfig, 
+        PipelineConfig,
         create_automatic_pipeline
     )
     from ..polling.historical_chunked_poller import (
@@ -33,10 +35,10 @@ try:
     from ..analysis.enhanced_pipeline import EnhancedAnalysisPipeline
     from ..analysis.advanced_scoring import AdvancedScoreCalculator
     from ..validation.multi_stage_validator import MultiStageValidator
-    HAS_PIPELINE_COMPONENTS = True
 except ImportError as e:
-    HAS_PIPELINE_COMPONENTS = False
-    PIPELINE_IMPORT_ERROR = str(e)
+    raise IntegrationError(
+        f"Pipeline component missing: {e}. Run: pip install -r requirements.txt"
+    ) from e
 
 try:
     from rich.console import Console
@@ -82,10 +84,6 @@ class PipelineIntegration:
             True if successful, False if fallback mode needed
         """
         try:
-            if not HAS_PIPELINE_COMPONENTS:
-                self.integration_errors.append(f"Pipeline components not available: {PIPELINE_IMPORT_ERROR}")
-                return False
-            
             self.logger.info("Initializing pipeline components...")
             
             # Initialize chunked poller
@@ -174,7 +172,7 @@ class PipelineIntegration:
             Dictionary with integration status information
         """
         return {
-            'pipeline_components_available': HAS_PIPELINE_COMPONENTS,
+            'pipeline_components_available': True,
             'components_initialized': self.components_initialized,
             'automatic_pipeline_ready': self.automatic_pipeline is not None,
             'chunked_poller_ready': self.chunked_poller is not None,
@@ -203,9 +201,7 @@ class PipelineIntegration:
         try:
             # Ensure components are initialized
             if not self.components_initialized:
-                success = await self.initialize_components()
-                if not success and interactive:
-                    return await self._run_fallback_workflow(years_back)
+                await self.initialize_components()
             
             if self.console and interactive:
                 self.console.print(Panel(
@@ -225,11 +221,11 @@ class PipelineIntegration:
             # Run the complete pipeline
             if self.automatic_pipeline:
                 self.logger.info(f"Starting complete pipeline for {years_back} years")
-                
+
                 result = await self.automatic_pipeline.run_complete_pipeline(
                     years_back=years_back
                 )
-                
+
                 return {
                     'status': 'success',
                     'pipeline_result': result,
@@ -239,7 +235,7 @@ class PipelineIntegration:
                     'compression_ratio': result.pipeline_metrics.get('funnel_compression_ratio', 0)
                 }
             else:
-                return await self._run_fallback_workflow(years_back)
+                raise IntegrationError("AutomaticReviewPipeline failed to initialize.")
                 
         except Exception as e:
             self.logger.error(f"Historical polling workflow failed: {e}")
@@ -247,55 +243,6 @@ class PipelineIntegration:
                 'status': 'error',
                 'error_message': str(e),
                 'fallback_available': True
-            }
-    
-    async def _run_fallback_workflow(self, years_back: int) -> Dict[str, Any]:
-        """
-        Run fallback workflow when full pipeline is not available.
-        
-        Args:
-            years_back: Number of years to search
-            
-        Returns:
-            Dictionary with fallback results
-        """
-        try:
-            if self.console:
-                self.console.print(Panel(
-                    "[yellow]Running fallback mode - limited functionality available[/]",
-                    style="yellow"
-                ))
-            
-            # Try basic chunked polling if available
-            if self.chunked_poller:
-                self.logger.info("Running basic chunked polling")
-                
-                result = await self.chunked_poller.poll_historical_data(years_back)
-                
-                return {
-                    'status': 'fallback_success',
-                    'mode': 'basic_chunked_polling',
-                    'total_objects': result.total_objects_found,
-                    'candidates_flagged': result.total_candidates_flagged,
-                    'chunks_processed': result.total_chunks_processed,
-                    'message': 'Basic historical polling completed - advanced analysis not available'
-                }
-            else:
-                # Most basic fallback
-                return {
-                    'status': 'fallback_limited',
-                    'mode': 'mock_simulation',
-                    'message': f'Simulated {years_back}-year poll - pipeline components not available',
-                    'estimated_objects': years_back * 1000,  # Rough estimate
-                    'note': 'This is a simulation - real polling requires component initialization'
-                }
-                
-        except Exception as e:
-            self.logger.error(f"Fallback workflow failed: {e}")
-            return {
-                'status': 'fallback_error',
-                'error_message': str(e),
-                'message': 'Both primary and fallback workflows failed'
             }
     
     def _display_component_status(self):

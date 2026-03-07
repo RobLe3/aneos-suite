@@ -11,12 +11,13 @@ from typing import Dict, Any, Optional, List, Union
 from datetime import datetime
 
 from .cache import CacheManager
-from .models import NEOData, OrbitalElements, PhysicalProperties
+from .models import NEOData, OrbitalElements
 from .sources.base import DataSourceBase
 from .sources.sbdb import SBDBSource
 from .sources.neodys import NEODySSource
 from .sources.mpc import MPCSource
 from .sources.horizons import HorizonsSource
+from ..utils.errors import DataSourceUnavailableError
 
 
 class DataFetcher:
@@ -60,16 +61,27 @@ class DataFetcher:
         # Thread pool for concurrent operations
         self.max_workers = max_workers
         
-        # Initialize data sources
-        self.sources: Dict[str, DataSourceBase] = {
-            "SBDB": SBDBSource(),
-            "NEODyS": NEODySSource(),
-            "MPC": MPCSource(),
-            "Horizons": HorizonsSource()
-        }
-        
-        # Source priority (default order)
-        self.source_priority = source_priority or ["SBDB", "NEODyS", "MPC", "Horizons"]
+        # Initialize data sources — each source is guarded so a single
+        # broken source does not prevent the others from loading.
+        from ..config.settings import get_config
+        _cfg = get_config()
+
+        self.sources: Dict[str, DataSourceBase] = {}
+        _source_defs = [
+            ("SBDB",    lambda: SBDBSource(_cfg.api, self.cache_manager)),
+            ("NEODyS",  lambda: NEODySSource(_cfg.api, self.cache_manager)),
+            ("MPC",     lambda: MPCSource(_cfg.api, self.cache_manager)),
+            ("Horizons", lambda: HorizonsSource(_cfg.api, self.cache_manager)),
+        ]
+        for _name, _factory in _source_defs:
+            try:
+                self.sources[_name] = _factory()
+            except Exception as _exc:
+                self.logger.warning(f"Data source {_name} failed to initialize: {_exc}")
+
+        # Source priority (default order, restricted to those that loaded)
+        default_priority = [n for n, _ in _source_defs if n in self.sources]
+        self.source_priority = source_priority or default_priority
         
         # Statistics tracking
         self.fetch_stats = {
@@ -80,7 +92,7 @@ class DataFetcher:
             "source_failures": {source: 0 for source in self.sources}
         }
     
-    def fetch_neo_data(self, designation: str, force_refresh: bool = False) -> Optional[NEOData]:
+    def fetch_neo_data(self, designation: str, force_refresh: bool = False) -> NEOData:
         """
         Fetch comprehensive NEO data from all available sources.
         
@@ -104,18 +116,14 @@ class DataFetcher:
         
         self.fetch_stats["cache_misses"] += 1
         
-        # Fetch from all sources concurrently
+        # Fetch from all sources concurrently — raises DataSourceUnavailableError if all fail
         neo_data = self._fetch_from_all_sources(designation)
-        
-        if neo_data:
-            # Cache the result
-            serialized_data = self._serialize_neo_data(neo_data)
-            self.cache_manager.set(cache_key, serialized_data, ttl=self.cache_ttl)
-            
-            self.logger.info(f"Successfully fetched data for {designation} from {len(neo_data.data_sources)} sources")
-        else:
-            self.logger.warning(f"No data found for {designation}")
-        
+
+        # Cache the result
+        serialized_data = self._serialize_neo_data(neo_data)
+        self.cache_manager.set(cache_key, serialized_data, ttl=self.cache_ttl)
+
+        self.logger.info(f"Successfully fetched data for {designation} from {len(neo_data.sources_used)} sources")
         return neo_data
     
     def _fetch_from_all_sources(self, designation: str) -> Optional[NEOData]:
@@ -140,8 +148,10 @@ class DataFetcher:
                         if neo_data is None:
                             neo_data = source_data
                         else:
-                            # Merge data based on source priority
-                            neo_data.merge_from_source(source_data, self.source_priority)
+                            # Merge: accumulate sources; first successful result wins for orbital data
+                            for s in source_data.sources_used:
+                                if s not in neo_data.sources_used:
+                                    neo_data.sources_used.append(s)
                     else:
                         self.fetch_stats["source_failures"][source_name] += 1
                         
@@ -149,51 +159,66 @@ class DataFetcher:
                     self.fetch_stats["source_failures"][source_name] += 1
                     self.logger.error(f"Error fetching from {source_name}: {e}")
         
+        if neo_data is None:
+            raise DataSourceUnavailableError(
+                f"All data sources failed for '{designation}'. "
+                f"Tried: {', '.join(self.source_priority)}. "
+                f"Check network access and API availability."
+            )
         return neo_data
-    
+
     def _fetch_from_source(self, source_name: str, source: DataSourceBase, designation: str) -> Optional[NEOData]:
-        """Fetch data from a single source."""
+        """Fetch data from a single source, handling both async and sync source implementations."""
+        import asyncio
+        import inspect
+
+        def _run(value):
+            """Execute a value that may be a coroutine."""
+            if inspect.isawaitable(value):
+                return asyncio.run(value)
+            return value
+
         try:
-            # Check source health
-            if not source.health_check():
+            # Health check — sources may be async; run coroutines if needed
+            healthy = _run(source.health_check())
+            if not healthy:
                 self.logger.warning(f"Source {source_name} health check failed")
                 return None
-            
-            # Fetch orbital elements
-            orbital_elements_data = source.fetch_orbital_elements(designation)
+
+            # Fetch orbital elements — result may be a FetchResult or a plain dict
+            raw = _run(source.fetch_orbital_elements(designation))
+            orbital_elements_data = None
+            if raw is not None:
+                if hasattr(raw, 'success'):
+                    # FetchResult (returned by HTTPDataSource subclasses like SBDB)
+                    if raw.success and raw.data:
+                        orbital_elements_data = raw.data
+                else:
+                    # Plain dict (returned by sync-only sources)
+                    orbital_elements_data = raw
+
             orbital_elements = None
             if orbital_elements_data:
-                orbital_elements = OrbitalElements(**orbital_elements_data)
-            
-            # Fetch physical properties
-            physical_properties_data = source.fetch_physical_properties(designation)
-            physical_properties = None
-            if physical_properties_data:
-                # Convert string spectral type to enum if needed
-                if "spectral_type" in physical_properties_data:
-                    from .models import SpectralType
-                    spectral_str = physical_properties_data.get("spectral_type")
-                    if spectral_str:
-                        try:
-                            physical_properties_data["spectral_type"] = SpectralType(spectral_str)
-                        except ValueError:
-                            physical_properties_data["spectral_type"] = SpectralType.UNKNOWN
-                
-                physical_properties = PhysicalProperties(**physical_properties_data)
-            
-            # Create NEOData instance
-            if orbital_elements or physical_properties:
+                # Keep only keys that OrbitalElements accepts; drop internal metadata (_source, etc.)
+                valid_fields = OrbitalElements.__dataclass_fields__
+                oe_kwargs = {k: v for k, v in orbital_elements_data.items() if k in valid_fields}
+                try:
+                    orbital_elements = OrbitalElements(**oe_kwargs)
+                except Exception as exc:
+                    self.logger.debug(f"OrbitalElements construction failed for {source_name}/{designation}: {exc}")
+
+            # Create NEOData instance (physical data — diameter, albedo, etc. — lives inside OrbitalElements)
+            if orbital_elements:
                 neo_data = NEOData(
                     designation=designation,
                     orbital_elements=orbital_elements,
-                    physical_properties=physical_properties,
-                    data_sources=[source_name]
+                    sources_used=[source_name],
                 )
                 return neo_data
-            
+
         except Exception as e:
             self.logger.error(f"Error fetching from {source_name} for {designation}: {e}")
-        
+
         return None
     
     def fetch_multiple(self, designations: List[str], force_refresh: bool = False) -> Dict[str, Optional[NEOData]]:
@@ -236,7 +261,17 @@ class DataFetcher:
         
         for source_name, source in self.sources.items():
             try:
-                health_status[source_name] = source.get_health_status()
+                status = source.get_status()
+                health_status[source_name] = {
+                    "name": status.name,
+                    "status": "healthy" if status.available else "unhealthy",
+                    "last_check": status.last_check.isoformat() if status.last_check else None,
+                    "response_time_ms": status.response_time_ms,
+                    "success_rate": status.success_rate,
+                    "total_requests": status.total_requests,
+                    "failed_requests": status.failed_requests,
+                    "error": status.error_message,
+                }
             except Exception as e:
                 health_status[source_name] = {
                     "name": source_name,
@@ -308,9 +343,14 @@ class DataFetcher:
             "source_failures": {source: 0 for source in self.sources}
         }
         
-        # Reset source statistics
+        # Reset source statistics (method is optional on each source)
         for source in self.sources.values():
-            source.reset_metrics()
+            reset = getattr(source, 'reset_metrics', None)
+            if reset is not None:
+                try:
+                    reset()
+                except Exception:
+                    pass
         
         self.logger.info("Reset all fetch statistics")
     
@@ -319,42 +359,8 @@ class DataFetcher:
         return neo_data.to_dict()
     
     def _deserialize_neo_data(self, data: Dict[str, Any]) -> NEOData:
-        """Deserialize NEOData from cache."""
-        # Create NEOData from dictionary
-        neo_data = NEOData(designation=data["designation"])
-        
-        # Restore data from serialized form
-        if data.get("name"):
-            neo_data.name = data["name"]
-        
-        if data.get("orbital_elements"):
-            oe_data = data["orbital_elements"]
-            # Convert epoch string back to datetime if present
-            if oe_data.get("epoch"):
-                oe_data["epoch"] = datetime.fromisoformat(oe_data["epoch"])
-            neo_data.orbital_elements = OrbitalElements(**oe_data)
-        
-        if data.get("physical_properties"):
-            pp_data = data["physical_properties"]
-            # Convert spectral type back to enum if present
-            if pp_data.get("spectral_type"):
-                from .models import SpectralType
-                try:
-                    pp_data["spectral_type"] = SpectralType(pp_data["spectral_type"])
-                except ValueError:
-                    pp_data["spectral_type"] = SpectralType.UNKNOWN
-            neo_data.physical_properties = PhysicalProperties(**pp_data)
-        
-        # Restore other attributes
-        neo_data.data_sources = data.get("data_sources", [])
-        neo_data.anomaly_scores = data.get("anomaly_scores", {})
-        neo_data.total_anomaly_score = data.get("total_anomaly_score")
-        neo_data.is_artificial_candidate = data.get("is_artificial_candidate", False)
-        
-        if data.get("last_updated"):
-            neo_data.last_updated = datetime.fromisoformat(data["last_updated"])
-        
-        return neo_data
+        """Deserialize NEOData from cache using the model's own from_dict method."""
+        return NEOData.from_dict(data)
     
     def add_custom_source(self, name: str, source: DataSourceBase):
         """

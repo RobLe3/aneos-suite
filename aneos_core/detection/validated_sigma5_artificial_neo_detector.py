@@ -139,8 +139,8 @@ class ValidatedSigma5ArtificialNEODetector:
                     'source': 'WISE/NEOWISE survey data'
                 },
                 'diameter': {
-                    'mean': 0.8,     # km (log-normal distribution)
-                    'std': 1.2,      # km (in log space)
+                    'mean': 800.0,   # metres (log-normal; 0.8 km median WISE survey)
+                    'std': 1.2,      # dimensionless log-space std
                     'n_samples': 50000,
                     'source': 'WISE diameter measurements'
                 },
@@ -166,10 +166,10 @@ class ValidatedSigma5ArtificialNEODetector:
                     'i': 1.077   # degrees (JPL Horizons)
                 },
                 'physical_data': {
-                    'mass_kg': 1350,  # Tesla + Falcon Heavy upper stage
-                    'diameter_m': 12,  # Approximate vehicle dimensions
-                    'absolute_magnitude': 28.0,  # Very faint
-                    'radar_cross_section': 15.0  # Enhanced due to metallic structure
+                    'mass_estimate': 1350,    # kg — Tesla + Falcon Heavy upper stage
+                    'diameter': 12,           # m — approximate vehicle dimensions
+                    'absolute_magnitude': 28.0,
+                    'radar_cross_section': 15.0
                 },
                 'launch_date': datetime(2018, 2, 6),
                 'source': 'SpaceX Falcon Heavy demo mission',
@@ -183,8 +183,8 @@ class ValidatedSigma5ArtificialNEODetector:
                     'i': 0.1     # degrees (very low inclination)
                 },
                 'physical_data': {
-                    'mass_kg': 570,   # Spacecraft mass
-                    'diameter_m': 1.8, # Spacecraft dimensions
+                    'mass_estimate': 570,     # kg — spacecraft mass
+                    'diameter': 1.8,          # m — spacecraft dimensions
                     'absolute_magnitude': 25.5,
                     'radar_cross_section': 8.0
                 },
@@ -206,39 +206,39 @@ class ValidatedSigma5ArtificialNEODetector:
                 'name': '99942 Apophis',
                 'orbital_elements': {
                     'a': 0.922,  # AU
-                    'e': 0.191,  # 
+                    'e': 0.191,
                     'i': 3.331   # degrees
                 },
                 'physical_data': {
-                    'mass_kg': 2.7e10,  # Estimated from size and density
-                    'diameter_m': 370,   # Radar measurements
+                    'mass_estimate': 2.7e10,  # kg — estimated from size and density
+                    'diameter': 370,          # m — radar measurements
                     'absolute_magnitude': 19.7,
-                    'density_kg_m3': 3200,  # Typical S-type asteroid
-                    'radar_cross_section': 0.23  # Radar albedo typical of rock
+                    'density_estimate': 3200, # kg/m³ — typical S-type
+                    'radar_cross_section': 0.23
                 },
                 'discovery_date': datetime(2004, 6, 19),
                 'source': 'LINEAR survey',
-                'spectral_type': 'Sq',  # S-complex asteroid
-                'confidence': 1.0  # Confirmed natural
+                'spectral_type': 'Sq',
+                'confidence': 1.0
             },
             {
-                'name': '101955 Bennu', 
+                'name': '101955 Bennu',
                 'orbital_elements': {
                     'a': 1.126,  # AU
-                    'e': 0.204,  #
+                    'e': 0.204,
                     'i': 6.035   # degrees
                 },
                 'physical_data': {
-                    'mass_kg': 7.8e10,   # OSIRIS-REx measurements
-                    'diameter_m': 492,    # High precision shape model
+                    'mass_estimate': 7.8e10,  # kg — OSIRIS-REx measurement
+                    'diameter': 492,          # m — high precision shape model
                     'absolute_magnitude': 20.9,
-                    'density_kg_m3': 1190,  # Low density rubble pile
+                    'density_estimate': 1190, # kg/m³ — rubble pile
                     'radar_cross_section': 0.054
                 },
                 'discovery_date': datetime(1999, 9, 11),
-                'source': 'LINEAR survey', 
-                'spectral_type': 'B',  # Carbonaceous asteroid
-                'confidence': 1.0  # Confirmed natural, visited by spacecraft
+                'source': 'LINEAR survey',
+                'spectral_type': 'B',
+                'confidence': 1.0
             }
             # Additional confirmed natural objects would be added here
         ]

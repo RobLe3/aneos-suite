@@ -1,333 +1,146 @@
 """
 MPC (Minor Planet Center) data source implementation.
 
-Minor Planet Center API implementation for fetching orbital elements
-and observational data of Near-Earth Objects.
+Uses the astroquery.mpc module to query the IAU Minor Planet Center for
+orbital elements and observational data of Near-Earth Objects.
 """
 
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 from .base import DataSourceBase
+from ...config.settings import APIConfig
+from ..cache import CacheManager
+
+logger = logging.getLogger(__name__)
+
+
+def _safe_float(v: Any) -> Optional[float]:
+    """Convert value to float, returning None on failure."""
+    if v is None or v == "" or v != v:  # last check: NaN
+        return None
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        return None
 
 
 class MPCSource(DataSourceBase):
     """
-    Minor Planet Center (MPC) data source.
-    
-    Provides access to orbital elements and observational data
-    from the IAU Minor Planet Center.
+    Minor Planet Center (MPC) data source via astroquery.
+
+    Provides orbital elements, absolute magnitude, MOID, and arc data
+    from the IAU Minor Planet Center database.
     """
-    
-    def __init__(self, config=None, cache_manager=None, timeout: int = 10):
-        """
-        Initialize MPC data source.
-        
-        Args:
-            config: API configuration
-            cache_manager: Cache manager instance
-            timeout: Request timeout in seconds
-        """
-        from ...config.settings import APIConfig
+
+    def __init__(self, config: Optional[APIConfig] = None, cache_manager: Optional[CacheManager] = None):
         if config is None:
             config = APIConfig()
-        super().__init__(
-            name="MPC",
-            config=config,
-            cache_manager=cache_manager
-        )
-        self.timeout = timeout
+        super().__init__(name="MPC", config=config, cache_manager=cache_manager)
         self.base_url = config.mpc_url
-    
+
     def get_base_url(self) -> str:
-        """Get the base URL for MPC API."""
         return self.base_url
-    
-    async def fetch_orbital_elements(self, designation: str):
-        """
-        Fetch orbital elements from MPC API.
-        
-        Args:
-            designation: NEO designation
-            
-        Returns:
-            FetchResult with orbital elements data
-        """
-        from .base import FetchResult
-        
-        try:
-            # For now, return a placeholder implementation
-            # TODO: Implement actual MPC API integration
-            return FetchResult(
-                success=False,
-                error_message="MPC API integration not yet implemented",
-                source=self.name
-            )
-        except Exception as e:
-            logger.error(f"MPC fetch failed for {designation}: {e}")
-            return FetchResult(
-                success=False,
-                error_message=str(e),
-                source=self.name
-            )
-    
+
     async def health_check(self) -> bool:
-        """
-        Perform health check on MPC service.
-        
-        Returns:
-            True if service is available, False otherwise
-        """
+        """Connectivity check — try fetching a known object."""
+        import aiohttp
         try:
-            # Simple connectivity check
-            import aiohttp
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=8)) as session:
                 async with session.get(self.base_url) as response:
-                    return response.status == 200
+                    return response.status in (200, 301, 302)
         except Exception:
             return False
-    
-    def _get_health_check_endpoint(self) -> str:
-        """Get health check endpoint for MPC API."""
-        return "search_orbits"
-    
+
+    # ------------------------------------------------------------------ #
+    # Synchronous implementation (overrides the abstract async stub)      #
+    # ------------------------------------------------------------------ #
+
     def fetch_orbital_elements(self, designation: str) -> Optional[Dict[str, Any]]:
-        """
-        Fetch orbital elements from MPC API.
-        
-        Args:
-            designation: NEO designation or name
-            
-        Returns:
-            Dictionary containing orbital elements or None if not found
-        """
+        """Fetch orbital elements from MPC via astroquery."""
         try:
-            params = {
-                "designation": designation,
-                "format": "json"
-            }
-            
-            response = self._make_request("GET", "search_orbits", params=params)
-            data = response.json()
-            
-            if not data or len(data) == 0:
-                self.logger.warning(f"No MPC data found for {designation}")
+            row = self._query_mpc(designation)
+            if row is None:
                 return None
-            
-            # MPC returns array of results, take first match
-            mpc_data = data[0]
-            
-            orbital_elements = {
-                "semi_major_axis": self._safe_float(mpc_data.get("a")),
-                "eccentricity": self._safe_float(mpc_data.get("e")),
-                "inclination": self._safe_float(mpc_data.get("i")),
-                "longitude_of_ascending_node": self._safe_float(mpc_data.get("Node")),
-                "argument_of_periapsis": self._safe_float(mpc_data.get("Peri")),
-                "mean_anomaly": self._safe_float(mpc_data.get("M")),
-                "epoch_jd": self._safe_float(mpc_data.get("Epoch")),
-                "perihelion_distance": self._safe_float(mpc_data.get("q")),
-                "orbital_period": self._safe_float(mpc_data.get("P")),
-                "data_source": "MPC"
+
+            return {
+                "semi_major_axis":     _safe_float(row.get("semimajor_axis")),
+                "eccentricity":        _safe_float(row.get("eccentricity")),
+                "inclination":         _safe_float(row.get("inclination")),
+                "ra_of_ascending_node": _safe_float(row.get("ascending_node")),
+                "arg_of_periapsis":    _safe_float(row.get("argument_of_perihelion")),
+                "mean_anomaly":        _safe_float(row.get("mean_anomaly")),
+                # Physical fields that OrbitalElements also carries
+                "albedo":              _safe_float(row.get("albedo")),
             }
-            
-            # Calculate aphelion distance if not provided
-            if (orbital_elements["semi_major_axis"] and 
-                orbital_elements["eccentricity"] and 
-                not orbital_elements.get("aphelion_distance")):
-                a = orbital_elements["semi_major_axis"]
-                e = orbital_elements["eccentricity"]
-                orbital_elements["aphelion_distance"] = a * (1 + e)
-            
-            return orbital_elements
-            
         except Exception as e:
-            self.logger.error(f"Error fetching MPC orbital elements for {designation}: {e}")
+            self.logger.error(f"MPC fetch_orbital_elements error for {designation}: {e}")
             return None
-    
+
     def fetch_physical_properties(self, designation: str) -> Optional[Dict[str, Any]]:
-        """
-        Fetch physical properties from MPC.
-        
-        Note: MPC has limited physical property data.
-        
-        Args:
-            designation: NEO designation or name
-            
-        Returns:
-            Dictionary containing physical properties or None if not found
-        """
+        """Fetch absolute magnitude and MOID from MPC."""
         try:
-            params = {
-                "designation": designation,
-                "format": "json"
-            }
-            
-            response = self._make_request("GET", "search_orbits", params=params)
-            data = response.json()
-            
-            if not data or len(data) == 0:
+            row = self._query_mpc(designation)
+            if row is None:
                 return None
-            
-            mpc_data = data[0]
-            
-            properties = {
-                "absolute_magnitude": self._safe_float(mpc_data.get("H")),
-                "data_source": "MPC"
+
+            return {
+                "absolute_magnitude": _safe_float(row.get("absolute_magnitude")),
+                "earth_moid":         _safe_float(row.get("earth_moid")),
+                "delta_v":            _safe_float(row.get("delta_v")),
             }
-            
-            # MPC occasionally has additional physical parameters
-            if "G" in mpc_data:
-                properties["slope_parameter"] = self._safe_float(mpc_data["G"])
-            
-            return properties
-            
         except Exception as e:
-            self.logger.error(f"Error fetching MPC physical properties for {designation}: {e}")
+            self.logger.error(f"MPC fetch_physical_properties error for {designation}: {e}")
             return None
-    
-    def fetch_observations(self, designation: str, limit: int = 100) -> Optional[List[Dict[str, Any]]]:
+
+    # ------------------------------------------------------------------ #
+    # Internal helpers                                                     #
+    # ------------------------------------------------------------------ #
+
+    def _query_mpc(self, designation: str) -> Optional[Dict[str, Any]]:
         """
-        Fetch observational data from MPC.
-        
-        Args:
-            designation: NEO designation or name
-            limit: Maximum number of observations to fetch
-            
-        Returns:
-            List of observation dictionaries
+        Query MPC via astroquery for a single object.
+
+        Tries by name first; falls back to parsing the designation as a
+        catalogue number (e.g. '99942' or '99942 Apophis').
         """
+        from astroquery.mpc import MPC as _MPC  # lazy import
+
+        result_list = None
+
+        # Try as a name string
         try:
-            params = {
-                "designation": designation,
-                "limit": limit,
-                "format": "json"
-            }
-            
-            response = self._make_request("GET", "search_observations", params=params)
-            data = response.json()
-            
-            if not data:
-                self.logger.warning(f"No MPC observations found for {designation}")
-                return None
-            
-            observations = []
-            for obs in data:
-                observation = {
-                    "date": self._parse_date(obs.get("Date")),
-                    "ra": self._safe_float(obs.get("RA")),  # Right ascension
-                    "dec": self._safe_float(obs.get("Dec")),  # Declination
-                    "magnitude": self._safe_float(obs.get("Mag")),
-                    "observatory_code": obs.get("Obs"),
-                    "note": obs.get("Note"),
-                    "data_source": "MPC"
-                }
-                observations.append(observation)
-            
-            return observations
-            
-        except Exception as e:
-            self.logger.error(f"Error fetching MPC observations for {designation}: {e}")
+            result_list = _MPC.query_object("asteroid", name=designation)
+        except Exception:
+            pass
+
+        # Try as a number (handles '99942', '99942 Apophis', etc.)
+        if not result_list:
+            try:
+                number = int(designation.strip().split()[0])
+                result_list = _MPC.query_object("asteroid", number=number)
+            except Exception:
+                pass
+
+        if not result_list:
+            self.logger.warning(f"MPC: no result for {designation!r}")
             return None
-    
-    def search_neos(self, **criteria) -> Optional[List[str]]:
-        """
-        Search for NEOs matching criteria.
-        
-        Args:
-            **criteria: Search criteria
-            
-        Returns:
-            List of designations matching criteria
-        """
-        try:
-            params = {
-                "format": "json",
-                "neo": "true"  # Search for NEOs only
-            }
-            params.update(criteria)
-            
-            response = self._make_request("GET", "search_orbits", params=params)
-            data = response.json()
-            
-            if not data:
-                return []
-            
-            designations = []
-            for obj in data:
-                if "Principal_desig" in obj:
-                    designations.append(obj["Principal_desig"])
-                elif "Name" in obj:
-                    designations.append(obj["Name"])
-            
-            return designations
-            
-        except Exception as e:
-            self.logger.error(f"Error searching MPC NEOs: {e}")
-            return None
-    
-    def _safe_float(self, value: Any) -> Optional[float]:
-        """Safely convert value to float."""
-        if value is None or value == "":
-            return None
-        try:
-            return float(value)
-        except (ValueError, TypeError):
-            return None
-    
-    def _parse_date(self, date_str: str) -> Optional[datetime]:
-        """Parse date string to datetime object."""
-        if not date_str:
-            return None
-        
-        try:
-            # MPC date format: "2023 01 01.12345"
-            if " " in date_str:
-                parts = date_str.strip().split()
-                if len(parts) >= 3:
-                    year = int(parts[0])
-                    month = int(parts[1])
-                    day_frac = float(parts[2])
-                    day = int(day_frac)
-                    hour_frac = (day_frac - day) * 24
-                    hour = int(hour_frac)
-                    minute = int((hour_frac - hour) * 60)
-                    
-                    return datetime(year, month, day, hour, minute)
-            
-            # Fallback to ISO format
-            return datetime.fromisoformat(date_str)
-            
-        except (ValueError, IndexError):
-            self.logger.warning(f"Could not parse MPC date: {date_str}")
-            return None
-    
+
+        return result_list[0]  # astroquery returns a list of dicts
+
     def get_object_summary(self, designation: str) -> Optional[Dict[str, Any]]:
-        """
-        Get comprehensive object summary from MPC.
-        
-        Args:
-            designation: NEO designation or name
-            
-        Returns:
-            Dictionary containing all available data
-        """
+        """Return a combined orbital + physical summary dict."""
         try:
-            orbital_elements = self.fetch_orbital_elements(designation)
-            physical_properties = self.fetch_physical_properties(designation)
-            observations = self.fetch_observations(designation, limit=10)
-            
-            summary = {
+            orbital = self.fetch_orbital_elements(designation)
+            physical = self.fetch_physical_properties(designation)
+            return {
                 "designation": designation,
-                "orbital_elements": orbital_elements,
-                "physical_properties": physical_properties,
-                "observations": observations,
+                "orbital_elements": orbital,
+                "physical_properties": physical,
                 "data_source": "MPC",
-                "retrieved_at": datetime.now().isoformat()
+                "retrieved_at": datetime.now().isoformat(),
             }
-            
-            return summary
-            
         except Exception as e:
-            self.logger.error(f"Error getting MPC summary for {designation}: {e}")
+            self.logger.error(f"MPC summary error for {designation}: {e}")
             return None

@@ -30,8 +30,8 @@ class SBDBSource(HTTPDataSource):
         """Fetch orbital elements from SBDB API."""
         try:
             params = {
-                "des": designation,
-                "phys_par": 1  # Include physical parameters
+                "sstr": designation,
+                "phys-par": "true",
             }
             
             response_data = await self._http_get("", params)
@@ -65,66 +65,49 @@ class SBDBSource(HTTPDataSource):
     def _parse_sbdb_response(self, data: Dict[str, Any], designation: str) -> Dict[str, Any]:
         """Parse SBDB API response into standardized format."""
         orbital_data = {}
-        
-        # Extract orbital elements
+
+        # Extract orbital elements (list of {name, value, ...} dicts)
         if "orbit" in data:
-            orbit = data["orbit"]
-            elements = orbit.get("elements", [])
-            
-            # Map SBDB element names to our standard names
+            elements = data["orbit"].get("elements", [])
+
+            # Maps the SBDB 'name' field to OrbitalElements field names
             element_mapping = {
-                "e": "eccentricity",
-                "i": "inclination", 
-                "a": "semi_major_axis",
-                "node": "ra_of_ascending_node",
-                "w": "arg_of_periapsis",
-                "M": "mean_anomaly",
-                "epoch": "epoch"
+                "e":  "eccentricity",
+                "i":  "inclination",
+                "a":  "semi_major_axis",
+                "om": "ra_of_ascending_node",
+                "w":  "arg_of_periapsis",
+                "ma": "mean_anomaly",
             }
-            
+
             for element in elements:
-                name = element.get("name")
+                sbdb_name = element.get("name")
                 value = element.get("value")
-                
-                if name in element_mapping and value is not None:
-                    standard_name = element_mapping[name]
-                    
+                if sbdb_name in element_mapping and value is not None:
                     try:
-                        if name == "epoch":
-                            # Parse epoch date
-                            orbital_data[standard_name] = self._parse_epoch(value)
-                        else:
-                            orbital_data[standard_name] = float(value)
+                        orbital_data[element_mapping[sbdb_name]] = float(value)
                     except (ValueError, TypeError) as e:
-                        logger.warning(f"Error parsing {name} value '{value}' for {designation}: {e}")
-        
-        # Extract physical parameters
-        if "phys_par" in data:
-            phys_par = data["phys_par"]
-            
-            if "diameter" in phys_par and phys_par["diameter"]:
+                        logger.warning(f"Error parsing {sbdb_name}='{value}' for {designation}: {e}")
+
+        # Extract physical parameters (list of {name, value, ...} dicts → convert to dict)
+        phys_list = data.get("phys_par", [])
+        phys_par = {p["name"]: p.get("value") for p in phys_list if p.get("value") is not None}
+
+        for float_field in ("diameter", "albedo", "rot_per"):
+            if float_field in phys_par:
                 try:
-                    orbital_data["diameter"] = float(phys_par["diameter"])
+                    orbital_data[float_field] = float(phys_par[float_field])
                 except (ValueError, TypeError):
                     pass
-            
-            if "albedo" in phys_par and phys_par["albedo"]:
-                try:
-                    orbital_data["albedo"] = float(phys_par["albedo"])
-                except (ValueError, TypeError):
-                    pass
-            
-            if "rot_per" in phys_par and phys_par["rot_per"]:
-                try:
-                    orbital_data["rot_per"] = float(phys_par["rot_per"])
-                except (ValueError, TypeError):
-                    pass
-        
-        # Add source metadata
+
+        if "spec_T" in phys_par:
+            orbital_data["spectral_type"] = str(phys_par["spec_T"])
+
+        # Source metadata (filtered out before OrbitalElements construction)
         orbital_data["_source"] = self.name
         orbital_data["_designation"] = designation
         orbital_data["_fetched_at"] = datetime.utcnow().isoformat()
-        
+
         return orbital_data
     
     def _parse_epoch(self, epoch_str: str) -> Optional[str]:

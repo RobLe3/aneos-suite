@@ -404,61 +404,11 @@ except Exception as e:
         print("📈 Grafana: http://localhost:3000")
         
     elif command in ['status', 'health', 'check']:
-        print("🔍 Checking aNEOS system status...")
-        
-        status_script = """
-import sys
-import os
-from pathlib import Path
-sys.path.insert(0, '.')
-
-try:
-    from aneos_api.database import get_database_status
-    
-    print("📊 System Status Check:")
-    print("=" * 40)
-    
-    # Check core components
-    try:
-        from aneos_core.analysis.pipeline import create_analysis_pipeline
-        print("✅ Core Analysis: Available")
-    except ImportError:
-        print("❌ Core Analysis: Missing dependencies")
-        
-    # Check API components
-    try:
-        from aneos_api.app import create_app
-        print("✅ API Services: Available")
-    except ImportError:
-        print("❌ API Services: Missing dependencies")
-        
-    # Check database
-    try:
-        db_status = get_database_status()
-        if db_status.get('available'):
-            print(f"✅ Database: Connected ({db_status.get('engine', 'Unknown')})")
-        else:
-            print(f"⚠️  Database: {db_status.get('error', 'Not connected')}")
-    except Exception as e:
-        print(f"❌ Database: Error - {e}")
-        
-    # Check required directories
-    from pathlib import Path
-    dirs = ['data', 'logs', 'models', 'cache', 'neo_data', 'exports']
-    missing = [d for d in dirs if not Path(d).exists()]
-    
-    if not missing:
-        print("✅ File System: All directories exist")
-    else:
-        print(f"⚠️  File System: Missing directories: {', '.join(missing)}")
-        
-    print("=" * 40)
-    
-except Exception as e:
-    print(f"❌ Status check failed: {e}")
-"""
-        
-        subprocess.run([sys.executable, "-c", status_script])
+        sys.path.insert(0, str(Path(__file__).parent))
+        from aneos_core.utils.health import preflight_check, print_preflight_table
+        results = preflight_check()
+        print_preflight_table(results)
+        sys.exit(0 if all(v["status"] == "ok" for v in results.values()) else 1)
         
     elif command in ['install', 'setup', 'i']:
         print("📦 Starting aNEOS Installation...")

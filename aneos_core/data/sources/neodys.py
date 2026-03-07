@@ -1,373 +1,239 @@
 """
 NEODyS data source implementation.
 
-NEODyS (Near Earth Objects Dynamic Site) API implementation for fetching
-orbital elements and dynamic properties of Near-Earth Objects.
+Fetches osculating orbital elements from the University of Pisa NEODyS-2
+catalogue.  Objects are stored as equinoctial-element files (.eq0) at:
+  https://newton.spacedys.com/~neodys2/epoch/{number}.eq0
+
+Equinoctial elements are converted to classical Keplerian elements
+(a, e, i, Omega, omega, M) for use with the rest of the pipeline.
 """
 
+import math
 import logging
-from typing import Dict, Any, Optional, List
+import re
+from typing import Dict, Any, Optional
 from datetime import datetime
 
+import requests
+
 from .base import DataSourceBase
+from ...config.settings import APIConfig
+from ..cache import CacheManager
+
+logger = logging.getLogger(__name__)
+
+_NEODYS_EPOCH_BASE = "https://newton.spacedys.com/~neodys2/epoch/"
 
 
 class NEODySSource(DataSourceBase):
     """
-    NEODyS (Near Earth Objects Dynamic Site) data source.
-    
-    Provides access to orbital elements and dynamic properties
-    from the University of Pisa's NEODyS service.
+    NEODyS-2 (Near Earth Objects Dynamic Site) data source.
+
+    Downloads the osculating .eq0 element file for each object and converts
+    the equinoctial elements to classical orbital elements.
     """
-    
-    def __init__(self, config=None, cache_manager=None, timeout: int = 10):
-        """
-        Initialize NEODyS data source.
-        
-        Args:
-            config: API configuration
-            cache_manager: Cache manager instance
-            timeout: Request timeout in seconds
-        """
-        from ...config.settings import APIConfig
+
+    def __init__(self, config: Optional[APIConfig] = None, cache_manager: Optional[CacheManager] = None):
         if config is None:
             config = APIConfig()
-        super().__init__(
-            name="NEODyS",
-            config=config,
-            cache_manager=cache_manager
-        )
-        self.timeout = timeout
-        self.base_url = config.neodys_url
-    
+        super().__init__(name="NEODyS", config=config, cache_manager=cache_manager)
+        self.base_url = _NEODYS_EPOCH_BASE
+
     def get_base_url(self) -> str:
-        """Get the base URL for NEODyS API."""
         return self.base_url
-    
-    async def fetch_orbital_elements(self, designation: str):
-        """
-        Fetch orbital elements from NEODyS API.
-        
-        Args:
-            designation: NEO designation
-            
-        Returns:
-            FetchResult with orbital elements data
-        """
-        from .base import FetchResult
-        
-        try:
-            # For now, return a placeholder implementation
-            # TODO: Implement actual NEODyS API integration
-            return FetchResult(
-                success=False,
-                error_message="NEODyS API integration not yet implemented",
-                source=self.name
-            )
-        except Exception as e:
-            logger.error(f"NEODyS fetch failed for {designation}: {e}")
-            return FetchResult(
-                success=False,
-                error_message=str(e),
-                source=self.name
-            )
-    
+
     async def health_check(self) -> bool:
-        """
-        Perform health check on NEODyS service.
-        
-        Returns:
-            True if service is available, False otherwise
-        """
+        """Check that the NEODyS epoch directory is accessible."""
+        import aiohttp
         try:
-            # Simple connectivity check
-            import aiohttp
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as session:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=8)) as session:
                 async with session.get(self.base_url) as response:
                     return response.status == 200
         except Exception:
             return False
-    
-    def _get_health_check_endpoint(self) -> str:
-        """Get health check endpoint for NEODyS API."""
-        return ""  # Use base URL for health check
-    
+
+    # ------------------------------------------------------------------ #
+    # Synchronous implementation (overrides the abstract async stub)      #
+    # ------------------------------------------------------------------ #
+
     def fetch_orbital_elements(self, designation: str) -> Optional[Dict[str, Any]]:
         """
-        Fetch orbital elements from NEODyS API.
-        
-        Args:
-            designation: NEO designation or name
-            
-        Returns:
-            Dictionary containing orbital elements or None if not found
+        Fetch and convert equinoctial elements from NEODyS.
+
+        The catalogue number is resolved via astroquery.mpc when the
+        designation is a name rather than a plain integer.
         """
         try:
-            params = {
-                "name": designation,
-                "format": "json"
-            }
-            
-            response = self._make_request("GET", "", params=params)
-            data = response.json()
-            
-            if not data or "error" in data:
-                self.logger.warning(f"No NEODyS data found for {designation}")
+            number = self._resolve_number(designation)
+            if number is None:
+                self.logger.debug(f"NEODyS: could not resolve number for {designation!r}")
                 return None
-            
-            # NEODyS returns orbital elements in their specific format
-            orbital_elements = {
-                "semi_major_axis": self._safe_float(data.get("a")),
-                "eccentricity": self._safe_float(data.get("e")),
-                "inclination": self._safe_float(data.get("i")),
-                "longitude_of_ascending_node": self._safe_float(data.get("Omega")),
-                "argument_of_periapsis": self._safe_float(data.get("omega")),
-                "mean_anomaly": self._safe_float(data.get("M")),
-                "epoch_jd": self._safe_float(data.get("epoch")),
-                "perihelion_distance": self._safe_float(data.get("q")),
-                "aphelion_distance": self._safe_float(data.get("Q")),
-                "orbital_period": self._safe_float(data.get("P")),
-                "mean_motion": self._safe_float(data.get("n")),
-                "minimum_orbit_intersection_distance": self._safe_float(data.get("MOID")),
-                "tisserand_parameter": self._safe_float(data.get("Tj")),
-                "data_source": "NEODyS"
-            }
-            
-            # Add NEODyS-specific properties
-            if "sigma_a" in data:
-                orbital_elements["uncertainty_a"] = self._safe_float(data["sigma_a"])
-            if "sigma_e" in data:
-                orbital_elements["uncertainty_e"] = self._safe_float(data["sigma_e"])
-            if "sigma_i" in data:
-                orbital_elements["uncertainty_i"] = self._safe_float(data["sigma_i"])
-            
-            return orbital_elements
-            
-        except Exception as e:
-            self.logger.error(f"Error fetching NEODyS orbital elements for {designation}: {e}")
-            return None
-    
-    def fetch_physical_properties(self, designation: str) -> Optional[Dict[str, Any]]:
-        """
-        Fetch physical properties from NEODyS API.
-        
-        Note: NEODyS focuses on orbital dynamics, limited physical properties available.
-        
-        Args:
-            designation: NEO designation or name
-            
-        Returns:
-            Dictionary containing physical properties or None if not found
-        """
-        try:
-            params = {
-                "name": designation,
-                "format": "json",
-                "phys": "true"  # Request physical parameters
-            }
-            
-            response = self._make_request("GET", "", params=params)
-            data = response.json()
-            
-            if not data or "error" in data:
-                self.logger.warning(f"No NEODyS physical data found for {designation}")
+
+            raw = self._fetch_eq0(number)
+            if raw is None:
                 return None
-            
-            # Extract available physical properties
-            properties = {
-                "absolute_magnitude": self._safe_float(data.get("H")),
-                "data_source": "NEODyS"
-            }
-            
-            # NEODyS may provide additional physical parameters in some cases
-            if "diameter" in data:
-                properties["diameter"] = self._safe_float(data["diameter"])
-            
-            if "albedo" in data:
-                properties["albedo"] = self._safe_float(data["albedo"])
-            
-            return properties
-            
+
+            return raw  # _fetch_eq0 → _parse_eq0 already converts to Keplerian elements
         except Exception as e:
-            self.logger.error(f"Error fetching NEODyS physical properties for {designation}: {e}")
+            self.logger.error(f"NEODyS fetch_orbital_elements error for {designation}: {e}")
             return None
-    
-    def fetch_impact_probability(self, designation: str) -> Optional[Dict[str, Any]]:
+
+    # ------------------------------------------------------------------ #
+    # Internal helpers                                                     #
+    # ------------------------------------------------------------------ #
+
+    def _resolve_number(self, designation: str) -> Optional[int]:
         """
-        Fetch impact probability data from NEODyS.
-        
-        NEODyS specializes in impact risk assessment.
-        
-        Args:
-            designation: NEO designation or name
-            
-        Returns:
-            Dictionary containing impact probability data
+        Convert a designation string to an asteroid number.
+
+        Handles:
+        - Plain integers:  '99942'
+        - Number + name:   '99942 Apophis'
+        - Name only:       'Apophis'  (queries MPC)
+        - Provisional:     '2004 MN4' (queries MPC)
         """
+        stripped = designation.strip()
+
+        # Try leading integer
+        m = re.match(r'^(\d+)', stripped)
+        if m:
+            return int(m.group(1))
+
+        # Fall back to MPC name lookup
         try:
-            params = {
-                "name": designation,
-                "format": "json",
-                "impact": "true"
-            }
-            
-            response = self._make_request("GET", "", params=params)
-            data = response.json()
-            
-            if not data or "error" in data:
-                self.logger.warning(f"No NEODyS impact data found for {designation}")
-                return None
-            
-            impact_data = {
-                "impact_probability": self._safe_float(data.get("impact_prob")),
-                "impact_date": self._parse_date(data.get("impact_date")),
-                "impact_energy": self._safe_float(data.get("impact_energy")),
-                "torino_scale": self._safe_int(data.get("torino_scale")),
-                "palermo_scale": self._safe_float(data.get("palermo_scale")),
-                "data_source": "NEODyS"
-            }
-            
-            return impact_data
-            
+            from astroquery.mpc import MPC as _MPC
+            results = _MPC.query_object("asteroid", name=stripped)
+            if results:
+                num = results[0].get("number")
+                if num is not None:
+                    return int(num)
+        except Exception:
+            pass
+
+        return None
+
+    def _fetch_eq0(self, number: int) -> Optional[Dict[str, Any]]:
+        """Download the .eq0 file for the given asteroid number."""
+        url = f"{self.base_url}{number}.eq0"
+        try:
+            resp = requests.get(url, timeout=self.config.request_timeout)
+            resp.raise_for_status()
+            return self._parse_eq0(resp.text, number)
+        except requests.HTTPError as e:
+            self.logger.warning(f"NEODyS .eq0 not found for {number}: {e}")
+            return None
         except Exception as e:
-            self.logger.error(f"Error fetching NEODyS impact data for {designation}: {e}")
+            self.logger.error(f"NEODyS fetch failed for {number}: {e}")
             return None
-    
-    def fetch_close_approaches(self, designation: str, limit: int = 10) -> Optional[List[Dict[str, Any]]]:
+
+    def _parse_eq0(self, text: str, number: int) -> Optional[Dict[str, Any]]:
         """
-        Fetch close approach data from NEODyS.
-        
-        Args:
-            designation: NEO designation or name
-            limit: Maximum number of close approaches to fetch
-            
-        Returns:
-            List of close approach dictionaries
+        Parse OEF2.0 equinoctial element file.
+
+        File format (after END_OF_HEADER):
+          {number}
+          ! comment
+           EQU  a  e*sin(LP)  e*cos(LP)  tan(i/2)*sin(LN)  tan(i/2)*cos(LN)  mean_long
+           MJD  epoch_mjd  TDT
+           MAG  H  G
         """
+        lines = [l.rstrip() for l in text.splitlines()]
+        # Skip header
         try:
-            params = {
-                "name": designation,
-                "format": "json",
-                "ca": "true",
-                "limit": limit
-            }
-            
-            response = self._make_request("GET", "", params=params)
-            data = response.json()
-            
-            if not data or "error" in data or "close_approaches" not in data:
-                self.logger.warning(f"No NEODyS close approach data found for {designation}")
-                return None
-            
-            close_approaches = []
-            for ca in data["close_approaches"]:
-                approach = {
-                    "date": self._parse_date(ca.get("date")),
-                    "distance_au": self._safe_float(ca.get("distance_au")),
-                    "distance_km": self._safe_float(ca.get("distance_km")),
-                    "velocity_km_s": self._safe_float(ca.get("velocity")),
-                    "uncertainty_km": self._safe_float(ca.get("uncertainty"))
-                }
-                close_approaches.append(approach)
-            
-            return close_approaches
-            
-        except Exception as e:
-            self.logger.error(f"Error fetching NEODyS close approaches for {designation}: {e}")
+            header_end = next(i for i, l in enumerate(lines) if "END_OF_HEADER" in l)
+        except StopIteration:
             return None
-    
-    def search_risk_objects(self, min_torino: int = 0) -> Optional[List[str]]:
+
+        data_lines = [l for l in lines[header_end + 1:] if l and not l.startswith("!")]
+
+        equ_line = mjd_line = mag_line = None
+        for line in data_lines:
+            tokens = line.split()
+            if not tokens:
+                continue
+            if tokens[0] == "EQU" and len(tokens) >= 7:
+                equ_line = tokens
+            elif tokens[0] == "MJD" and len(tokens) >= 2:
+                mjd_line = tokens
+            elif tokens[0] == "MAG" and len(tokens) >= 3:
+                mag_line = tokens
+
+        if equ_line is None:
+            return None
+
+        a       = float(equ_line[1])
+        esinLP  = float(equ_line[2])
+        ecosLP  = float(equ_line[3])
+        hLN     = float(equ_line[4])   # tan(i/2)*sin(LN)
+        kLN     = float(equ_line[5])   # tan(i/2)*cos(LN)
+        mean_L  = float(equ_line[6])   # mean longitude
+
+        result = self._equinoctial_to_keplerian(a, esinLP, ecosLP, hLN, kLN, mean_L)
+
+        if mjd_line:
+            result["_epoch_mjd"] = float(mjd_line[1])
+
+        if mag_line:
+            result["_H"] = float(mag_line[1])
+            result["_G"] = float(mag_line[2]) if len(mag_line) > 2 else None
+
+        return result
+
+    @staticmethod
+    def _equinoctial_to_keplerian(
+        a: float,
+        esinLP: float, ecosLP: float,
+        hLN: float, kLN: float,
+        mean_L: float,
+    ) -> Dict[str, float]:
         """
-        Search for objects with impact risk.
-        
-        Args:
-            min_torino: Minimum Torino scale value
-            
-        Returns:
-            List of designations with impact risk
+        Convert OEF2.0 equinoctial elements to classical Keplerian elements.
+
+        Equinoctial elements:
+          a         — semi-major axis (AU)
+          e*sin(LP) — where LP = omega + Omega (longitude of perihelion)
+          e*cos(LP)
+          tan(i/2)*sin(LN)  — where LN = Omega (longitude of ascending node)
+          tan(i/2)*cos(LN)
+          L = mean longitude = M + LP
+
+        Output (degrees):
+          a, e, i, ra_of_ascending_node (Omega), arg_of_periapsis (omega), mean_anomaly (M)
         """
-        try:
-            params = {
-                "format": "json",
-                "search": "risk",
-                "min_torino": min_torino
-            }
-            
-            response = self._make_request("GET", "search", params=params)
-            data = response.json()
-            
-            if not data or "objects" not in data:
-                return []
-            
-            return [obj["designation"] for obj in data["objects"]]
-            
-        except Exception as e:
-            self.logger.error(f"Error searching NEODyS risk objects: {e}")
-            return None
-    
-    def _safe_float(self, value: Any) -> Optional[float]:
-        """Safely convert value to float."""
-        if value is None or value == "":
-            return None
-        try:
-            return float(value)
-        except (ValueError, TypeError):
-            return None
-    
-    def _safe_int(self, value: Any) -> Optional[int]:
-        """Safely convert value to int."""
-        if value is None or value == "":
-            return None
-        try:
-            return int(value)
-        except (ValueError, TypeError):
-            return None
-    
-    def _parse_date(self, date_str: str) -> Optional[datetime]:
-        """Parse date string to datetime object."""
-        if not date_str:
-            return None
-        
-        try:
-            # Handle various date formats from NEODyS
-            if "T" in date_str:
-                # ISO format: "2023-01-01T12:00:00"
-                return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-            else:
-                # Format: "2023-01-01"
-                return datetime.strptime(date_str, "%Y-%m-%d")
-        except ValueError:
-            self.logger.warning(f"Could not parse date: {date_str}")
-            return None
-    
+        e = math.sqrt(esinLP ** 2 + ecosLP ** 2)
+
+        LP_rad = math.atan2(esinLP, ecosLP)          # longitude of perihelion
+        LN_rad = math.atan2(hLN, kLN)               # longitude of ascending node
+        i_rad  = 2.0 * math.atan(math.sqrt(hLN ** 2 + kLN ** 2))
+
+        omega_deg = math.degrees(LP_rad - LN_rad)    # argument of perihelion
+        Omega_deg = math.degrees(LN_rad)             # longitude of ascending node
+        i_deg     = math.degrees(i_rad)
+
+        # Mean anomaly M = L - LP  (all in degrees)
+        LP_deg = math.degrees(LP_rad)
+        M_deg  = (mean_L - LP_deg) % 360.0
+
+        return {
+            "semi_major_axis":      a,
+            "eccentricity":         e,
+            "inclination":          i_deg % 180.0,
+            "ra_of_ascending_node": Omega_deg % 360.0,
+            "arg_of_periapsis":     omega_deg % 360.0,
+            "mean_anomaly":         M_deg,
+        }
+
     def get_object_summary(self, designation: str) -> Optional[Dict[str, Any]]:
-        """
-        Get comprehensive object summary from NEODyS.
-        
-        Args:
-            designation: NEO designation or name
-            
-        Returns:
-            Dictionary containing all available data
-        """
+        """Return a combined summary dict."""
         try:
-            orbital_elements = self.fetch_orbital_elements(designation)
-            physical_properties = self.fetch_physical_properties(designation)
-            impact_data = self.fetch_impact_probability(designation)
-            close_approaches = self.fetch_close_approaches(designation, limit=5)
-            
-            summary = {
+            orbital = self.fetch_orbital_elements(designation)
+            return {
                 "designation": designation,
-                "orbital_elements": orbital_elements,
-                "physical_properties": physical_properties,
-                "impact_data": impact_data,
-                "close_approaches": close_approaches,
+                "orbital_elements": orbital,
                 "data_source": "NEODyS",
-                "retrieved_at": datetime.now().isoformat()
+                "retrieved_at": datetime.now().isoformat(),
             }
-            
-            return summary
-            
         except Exception as e:
-            self.logger.error(f"Error getting NEODyS summary for {designation}: {e}")
+            self.logger.error(f"NEODyS summary error for {designation}: {e}")
             return None

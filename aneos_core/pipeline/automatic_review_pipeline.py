@@ -48,8 +48,8 @@ except ImportError:
     HAS_RICH = False
     console = None
 
-# Import real artificial NEO detection
-from ..detection.multimodal_sigma5_artificial_neo_detector import MultiModalSigma5ArtificialNEODetector
+# Import detection manager (unified entry point for all detectors)
+from ..detection.detection_manager import DetectionManager, DetectorType
 
 logger = logging.getLogger(__name__)
 
@@ -149,21 +149,29 @@ class AutomaticReviewPipeline:
         self.config = config or PipelineConfig()
         self.logger = logging.getLogger(__name__)
         self.console = console if HAS_RICH else None
-        
+
+        # Preflight: abort early if core components are broken
+        from ..utils.health import preflight_check
+        from ..utils.errors import IntegrationError
+        _pf = preflight_check()
+        _failed = [k for k, v in _pf.items() if v["status"] == "error" and k in ("pipeline", "analysis")]
+        if _failed:
+            raise IntegrationError(f"Required components unavailable: {_failed}")
+
         # Initialize storage
         self.results_dir = Path("neo_data/pipeline_results")
         self.cache_dir = Path("neo_data/pipeline_cache")
         self._ensure_directories()
-        
+
         # Initialize components (to be set externally)
         self.chunked_poller: Optional[HistoricalChunkedPoller] = None
         self.xviii_swarm_scorer = None
         self.multi_stage_validator = None
         self.enhanced_pipeline = None
-        
-        # Initialize real artificial NEO detector
-        self.artificial_neo_detector = MultiModalSigma5ArtificialNEODetector()
-        self.logger.info("Multi-Modal Sigma 5 Artificial NEO Detector initialized")
+
+        # Initialize detection manager (auto-selects best available detector)
+        self.artificial_neo_detector = DetectionManager(preferred_detector=DetectorType.AUTO)
+        self.logger.info("DetectionManager initialized (AUTO mode)")
         
     def _ensure_directories(self):
         """Create necessary directories."""
@@ -453,9 +461,9 @@ class AutomaticReviewPipeline:
                 if artificial_analysis and artificial_analysis.is_artificial:
                     # SIGMA 5 DETECTION: Maximum scoring for 99.99994% certainty
                     base_score = score_result.get('overall_score', 0.0)
-                    sigma_level = artificial_analysis.sigma_level
-                    certainty = artificial_analysis.statistical_certainty
-                    
+                    sigma_level = artificial_analysis.sigma_level or 0.0
+                    certainty = artificial_analysis.artificial_probability
+
                     # Sigma 5 gets maximum scoring priority
                     if sigma_level >= 5.0:
                         # Override score completely - sigma 5 is definitive
@@ -467,16 +475,16 @@ class AutomaticReviewPipeline:
                         # Lower sigma levels get proportional boost
                         boost_factor = min(sigma_level / 5.0, 0.8)  # Scale to sigma 5
                         score_result['overall_score'] = min(
-                            base_score + boost_factor, 
+                            base_score + boost_factor,
                             1.0
                         )
-                    
+
                     # Always include sigma analysis results
                     score_result['artificial_neo_detected'] = True
                     score_result['artificial_confidence'] = artificial_analysis.confidence
                     score_result['sigma_level'] = sigma_level
                     score_result['statistical_certainty'] = certainty
-                    score_result['false_positive_rate'] = artificial_analysis.false_positive_rate
+                    score_result['false_positive_rate'] = artificial_analysis.metadata.get('false_positive_rate', 0.0)
                     score_result['artificial_analysis'] = artificial_analysis.analysis
                     score_result['boost_applied'] = boost_factor
                     score_result['original_score'] = base_score
@@ -671,7 +679,10 @@ class AutomaticReviewPipeline:
                 except:
                     observation_date = None
                     
-            result = self.artificial_neo_detector.analyze_neo_multimodal(orbital_elements, physical_data, observation_date)
+            result = self.artificial_neo_detector.analyze_neo(
+                orbital_elements, physical_data,
+                additional_data={"observation_date": observation_date}
+            )
             
             return result
             
@@ -707,8 +718,8 @@ class AutomaticReviewPipeline:
                     
                     if artificial_analysis and artificial_analysis.is_artificial:
                         # SIGMA 5 VALIDATION: Apply rigorous statistical standards
-                        sigma_level = artificial_analysis.sigma_level
-                        certainty = artificial_analysis.statistical_certainty
+                        sigma_level = artificial_analysis.sigma_level or 0.0
+                        certainty = artificial_analysis.artificial_probability
                         confidence = artificial_analysis.confidence
                         
                         if sigma_level >= 5.0:
@@ -744,7 +755,7 @@ class AutomaticReviewPipeline:
                         candidate['multi_stage_validation'] = {
                             'validation_score': validation_score,
                             'sigma_level': sigma_level if artificial_analysis else 0.0,
-                            'statistical_certainty': artificial_analysis.statistical_certainty if artificial_analysis else 0.0,
+                            'statistical_certainty': artificial_analysis.artificial_probability if artificial_analysis else 0.0,
                             'artificial_confidence': artificial_analysis.confidence if artificial_analysis else 0.0,
                             'fp_probability': 1.0 - validation_score,
                             'confidence': validation_score,

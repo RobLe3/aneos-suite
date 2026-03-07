@@ -29,6 +29,9 @@ from .indicators.temporal import (
 from .indicators.geographic import (
     SubpointClusteringIndicator, GeographicBiasIndicator
 )
+from .indicators.physical import (
+    DiameterAnomalyIndicator, AlbedoAnomalyIndicator, SpectralAnomalyIndicator
+)
 from .scoring import ScoreCalculator, StatisticalAnalyzer, AnomalyScore
 from ..data.models import NEOData, AnalysisResult
 from ..data.sources.base import DataSourceManager
@@ -59,7 +62,8 @@ class PipelineConfig:
                 'eccentricity', 'inclination', 'semi_major_axis', 'orbital_resonance', 'orbital_stability',
                 'velocity_shifts', 'acceleration_anomalies', 'velocity_consistency', 'infinity_velocity',
                 'approach_regularity', 'observation_gaps', 'periodicity', 'temporal_inertia',
-                'subpoint_clustering', 'geographic_bias'
+                'subpoint_clustering', 'geographic_bias',
+                'diameter_anomalies', 'albedo_anomalies', 'spectral_anomalies',
             ]
             
             for name in indicator_names:
@@ -205,7 +209,12 @@ class AnalysisPipeline:
             
             # Geographic indicators
             'subpoint_clustering': SubpointClusteringIndicator,
-            'geographic_bias': GeographicBiasIndicator
+            'geographic_bias': GeographicBiasIndicator,
+
+            # Physical indicators
+            'diameter_anomalies': DiameterAnomalyIndicator,
+            'albedo_anomalies': AlbedoAnomalyIndicator,
+            'spectral_anomalies': SpectralAnomalyIndicator,
         }
         
         for name, indicator_class in indicator_classes.items():

@@ -130,20 +130,12 @@ class ArtificialNEODashboard:
         
         # Enhanced analysis using detection system
         try:
-            from ..detection.multimodal_sigma5_artificial_neo_detector import MultiModalSigma5ArtificialNEODetector
-            detector = MultiModalSigma5ArtificialNEODetector()
-            
-            # Run enhanced detection if orbital elements available
+            from ..detection.detection_manager import DetectionManager, DetectorType
+            detector = DetectionManager(preferred_detector=DetectorType.AUTO)
             if orbital_elements:
-                enhanced_result = await detector.analyze_neo_data({
-                    'designation': designation,
-                    'orbital_elements': orbital_elements
-                })
-                
-                if enhanced_result:
-                    artificial_prob = max(artificial_prob, enhanced_result.get('artificial_probability', 0.0))
-                    additional_factors = enhanced_result.get('risk_factors', [])
-                    risk_factors.extend(additional_factors)
+                enhanced_result = detector.analyze_neo(orbital_elements)
+                artificial_prob = max(artificial_prob, enhanced_result.artificial_probability)
+                risk_factors.extend(enhanced_result.risk_factors)
         except Exception as e:
             logger.debug(f"Enhanced detection failed for {designation}: {e}")
         

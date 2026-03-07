@@ -6,9 +6,9 @@ aNEOS is a sophisticated, multi-component platform that advances the **Artificia
 
 ## Release Status
 
-- **Current development:** v1.0.0 - Production Ready
-- **System maturity:** Advanced level with comprehensive planetary defense capabilities  
-- **Production status:** Research and operational ready with validated impact assessment
+- **Current development:** v0.7.0 - Pre-Production — Stabilization Series
+- **System maturity:** Advanced level with comprehensive planetary defense capabilities
+- **Production status:** Research use; see [Known Limitations](docs/engineering/maturity_assessment.md)
 
 ## Dual Mission: Intelligence Detection + Planetary Defense
 
@@ -94,7 +94,7 @@ aNEOS includes **Moon impact probability calculations** that can show objects ar
 - **Multi-Modal Analysis**: Orbital + Physical + Temporal evidence fusion with Bayesian methods
 - **Artificial Probability**: Realistic 0.1% base rates
 - **Quality Assurance**: Comprehensive testing with validated ground truth integration
-- **Categorization System**: 5 categories with scientific basis
+- **Categorization System**: 6 indicator categories (orbital, velocity, temporal, geographic, physical, behavioral) with scientific basis
 
 ### **💥 Impact Assessment Capabilities**
 - **Earth Impact Assessment**: 
@@ -226,23 +226,23 @@ python aneos.py help                   # View all available commands
 
 This system directly evolves from the theoretical framework established in [neo-analyzer-repo](https://github.com/RobLe3/neo-analyzer-repo). Major advances include:
 
-### **From Theory to Production**
+### **From Theory to Pre-Production**
 - **Original**: Foundational theoretical framework and proof-of-concept scripts
-- **aNEOS v1.0**: Production-ready platform with statistics and impact assessment
+- **aNEOS v0.7**: Pre-production stabilization — statistics and impact assessment (ground truth validation in progress)
 
-### **Statistical Methodology**  
+### **Statistical Methodology**
 - **Original**: Basic anomaly detection with simple scoring systems
-- **aNEOS v1.0**: Multi-modal evidence fusion with Bayesian inference
+- **aNEOS v0.7**: Multi-modal evidence fusion with Bayesian inference
 
 ### **Planetary Defense Integration**
 - **Original**: Focus solely on artificial object detection
-- **aNEOS v1.0**: Comprehensive planetary defense with Earth and Moon impact assessment
+- **aNEOS v0.7**: Comprehensive planetary defense with Earth and Moon impact assessment
 
 ### **Scientific Accuracy**
 - **Original**: Exploratory analysis establishing the theoretical foundation
-- **aNEOS v1.0**: Statistical methodology with validation framework
+- **aNEOS v0.7**: Statistical methodology with validation framework (accuracy unproven until ground truth validation completes)
 
-## System Status: Production Ready
+## System Status: Pre-Production (v0.7 Stabilization Series)
 
 ### **✅ Core Capabilities**
 - **Artificial Detection**: Statistical framework with Bayesian inference
@@ -299,4 +299,4 @@ Scientific research and educational use. See `LICENSE` for complete terms.
 
 ---
 
-*aNEOS v1.0 represents the evolution of work begun in neo-analyzer-repo, now enhanced with statistical methodology and comprehensive planetary defense capabilities. The search for artificial intelligence continues with scientific rigor, while providing tools for protecting Earth and the Moon from cosmic threats.*
+*aNEOS v0.7 (Pre-Production) represents the evolution of work begun in neo-analyzer-repo, now enhanced with statistical methodology and comprehensive planetary defense capabilities. The search for artificial intelligence continues with scientific rigour, while providing tools for protecting Earth and the Moon from cosmic threats.*

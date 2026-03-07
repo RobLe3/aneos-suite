@@ -10,14 +10,20 @@ from .orbital import (
     EccentricityIndicator, InclinationIndicator, SemiMajorAxisIndicator,
     OrbitalResonanceIndicator, OrbitalStabilityIndicator
 )
+from .physical import (
+    DiameterAnomalyIndicator, AlbedoAnomalyIndicator, SpectralAnomalyIndicator
+)
 
 __all__ = [
     "AnomalyIndicator",
-    "IndicatorResult", 
+    "IndicatorResult",
     "IndicatorConfig",
     "EccentricityIndicator",
-    "InclinationIndicator", 
+    "InclinationIndicator",
     "SemiMajorAxisIndicator",
     "OrbitalResonanceIndicator",
-    "OrbitalStabilityIndicator"
+    "OrbitalStabilityIndicator",
+    "DiameterAnomalyIndicator",
+    "AlbedoAnomalyIndicator",
+    "SpectralAnomalyIndicator",
 ]

@@ -5,10 +5,11 @@ from .patterns import (
     RateLimiter, circuit_breaker, async_circuit_breaker,
     retry, async_retry, rate_limited, async_rate_limited
 )
+from .errors import IntegrationError, DataSourceUnavailableError
 
 __all__ = [
     'CircuitBreaker',
-    'CircuitBreakerConfig', 
+    'CircuitBreakerConfig',
     'RetryConfig',
     'RateLimiter',
     'circuit_breaker',
@@ -16,5 +17,7 @@ __all__ = [
     'retry',
     'async_retry',
     'rate_limited',
-    'async_rate_limited'
+    'async_rate_limited',
+    'IntegrationError',
+    'DataSourceUnavailableError',
 ]

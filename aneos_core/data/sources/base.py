@@ -61,6 +61,7 @@ class DataSourceBase(ABC):
         self.name = name
         self.config = config
         self.cache_manager = cache_manager
+        self.logger = logging.getLogger(f"{__name__}.{name}")
         
         # Circuit breaker for reliability
         self._circuit_breaker = CircuitBreaker(
@@ -268,25 +269,20 @@ class HTTPDataSource(DataSourceBase):
     async def health_check(self) -> bool:
         """Perform HTTP health check."""
         try:
-            session = await self._get_async_session()
-            async with session.get(self.base_url) as response:
-                is_healthy = response.status in [200, 400]  # 400 might be expected for some APIs
-                
-                self._status.available = is_healthy
-                self._status.last_check = datetime.utcnow()
-                
-                if not is_healthy:
-                    self._status.error_message = f"HTTP {response.status}"
-                else:
-                    self._status.error_message = None
-                
-                return is_healthy
-                
+            timeout = aiohttp.ClientTimeout(total=5)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(self.base_url) as response:
+                    is_healthy = response.status in [200, 400]  # 400 expected for some APIs
+
+                    self._status.available = is_healthy
+                    self._status.last_check = datetime.utcnow()
+                    self._status.error_message = None if is_healthy else f"HTTP {response.status}"
+                    return is_healthy
+
         except Exception as e:
             self._status.available = False
             self._status.last_check = datetime.utcnow()
             self._status.error_message = str(e)
-            
             logger.error(f"Health check failed for {self.name}: {e}")
             return False
     
@@ -302,13 +298,13 @@ class HTTPDataSource(DataSourceBase):
         return url
     
     async def _http_get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Perform HTTP GET request."""
+        """Perform HTTP GET request with a per-request session to avoid event-loop reuse issues."""
         url = self._build_url(endpoint, params)
-        
-        session = await self._get_async_session()
-        async with session.get(url) as response:
-            response.raise_for_status()
-            return await response.json()
+        timeout = aiohttp.ClientTimeout(total=self.config.request_timeout)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                return await response.json()
 
 class DataSourceManager:
     """Manages multiple data sources with fallback capabilities."""

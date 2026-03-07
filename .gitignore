@@ -97,6 +97,10 @@ exports/
 *_analysis_summary_*.json
 test_*.py
 !tests/test_multimodal_sigma5_detector.py
+!tests/test_validated_sigma5_detector.py
+!tests/test_physical_indicators.py
+!tests/test_detection_manager.py
+!tests/test_monitoring_no_ml.py
 
 # Development directory - track structure, ignore contents
 development/**/*

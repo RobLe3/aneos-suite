@@ -5,7 +5,7 @@ This module provides comprehensive alerting capabilities including
 rule-based alerts, notification management, and alert correlation.
 """
 
-from typing import Dict, List, Optional, Any, Callable, Set
+from typing import Dict, List, Optional, Any, Callable, Set, TYPE_CHECKING
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
@@ -19,7 +19,14 @@ from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 import threading
 
-from ..ml.prediction import Alert as MLAlert, PredictionResult
+try:
+    from ..ml.prediction import Alert as MLAlert, PredictionResult
+    _HAS_ML_ALERTS = True
+except ImportError:
+    MLAlert = None
+    PredictionResult = None
+    _HAS_ML_ALERTS = False
+
 from ..analysis.scoring import AnomalyScore
 
 logger = logging.getLogger(__name__)
@@ -281,8 +288,10 @@ class AlertManager:
         self.notification_channels[channel.channel_id] = channel
         logger.info(f"Added notification channel: {channel.channel_id}")
     
-    def check_anomaly_alert(self, prediction_result: PredictionResult, anomaly_score: AnomalyScore) -> None:
+    def check_anomaly_alert(self, prediction_result: Any, anomaly_score: AnomalyScore) -> None:
         """Check if NEO analysis results warrant an alert."""
+        if not _HAS_ML_ALERTS:
+            return
         data = {
             'designation': prediction_result.designation,
             'ml_probability': prediction_result.anomaly_probability,

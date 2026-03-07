@@ -1,0 +1,843 @@
+# Domain-Driven Design — aNEOS Suite
+
+_Derived: 2026-03-06 | Codebase Version: 0.7.0 (Stabilization Series)_
+_Concept documents: README.md, docs/scientific/scientific-documentation.md,
+docs/engineering/sigma5_success_criteria.md, Calibration Plan v1.2_
+
+---
+
+## Ubiquitous Language
+
+The following terms have precise, agreed meaning across all bounded contexts.
+All developers, scientists, and stakeholders must use these terms consistently.
+
+| Term | Definition |
+|------|-----------|
+| **NEO** | Near Earth Object — any asteroid or comet with perihelion < 1.3 AU |
+| **Artificial NEO** | An NEO exhibiting multi-indicator anomalies consistent with external engineering at sigma >= 5 confidence |
+| **Natural NEO** | An NEO whose orbital and physical properties are consistent with solar system formation and gravitational evolution |
+| **Sigma score** | Standard deviations from the mean of the reference natural NEO population for a given observable |
+| **Clue** | A single measurable anomaly contributing to the composite sigma score |
+| **SWARM** | A named, specialized analytical agent responsible for one physical domain of evidence |
+| **ATLAS** | Advanced automated first-stage screening system (used in `advanced_scoring.py`) |
+| **Candidate** | An NEO that has passed at least one stage of filtering and is under active investigation |
+| **Classification** | One of: `natural | suspicious | highly_suspicious | artificial` |
+| **Calibrated probability** | Bayesian posterior P(artificial | evidence) using realistic 0.1% prior |
+| **Ground truth** | A verified dataset of objects with known true labels (artificial vs natural) |
+| **FPR** | False Positive Rate — probability of classifying a natural object as artificial |
+| **Keyhole** | A small region of orbital space whose traversal leads to a resonant Earth-collision return |
+
+---
+
+## Context Map
+
+```
+  [External]             [aNEOS Bounded Contexts]
+  NASA/ESA APIs  ──ACL──▶  Data Acquisition
+  Gaia Catalog   ──ACL──▶  Multi-Modal Validation (MU SWARM)
+  TLE Databases  ──ACL──▶  Multi-Modal Validation (THETA SWARM)
+  Gaia TAP       ──ACL──▶  Multi-Modal Validation (MU SWARM)
+
+  Data Acquisition ──────▶ NEO Core Domain (Core)
+                                   │
+                    ┌──────────────┼──────────────┐
+                    ▼              ▼               ▼
+             Anomaly Scoring  Multi-Modal      Ground Truth
+                              Validation         Context
+                    │              │               │
+                    └──────────────┴───────────────┘
+                                   │
+                                   ▼
+                         Detection & Classification
+                                   │
+                    ┌──────────────┴──────────────┐
+                    ▼                             ▼
+             Reporting &                  API & External
+             Visualization               Integration
+                                               │
+                                    Infrastructure &
+                                       Monitoring
+```
+
+ACL = Anti-Corruption Layer (each SWARM translates external formats to domain types)
+
+---
+
+## Bounded Context 1: Data Acquisition
+
+**Purpose**: Source, cache, and deliver clean NEO data objects to the domain.
+Owns all interaction with external APIs.
+
+**Code**: `aneos_core/data/`, `aneos_core/polling/`
+
+---
+
+### Aggregate Root: `DataFetchSession`
+Owns the lifecycle of a single data retrieval operation from query
+parameters through cache write to domain model delivery.
+
+### Entities
+
+| Entity | Code Location | Description |
+|--------|--------------|-------------|
+| `DataFetchSession` | `data/fetcher.py:DataFetcher` | Orchestrates multi-source parallel fetch |
+| `DataChunk` | `polling/historical_chunked_poller.py` | A time-bounded (5-year) slice of historical NEO data |
+| `CachedResult` | `data/cache.py:CacheEntry` | Persisted fetch result keyed by query fingerprint |
+| `SBDBSource` | `data/sources/sbdb.py` | NASA JPL Small Body Database API client |
+| `NEODySSource` | `data/sources/neodys.py` | ESA NEO Dynamics Site API client |
+| `MPCSource` | `data/sources/mpc.py` | Minor Planet Center API client |
+| `HorizonsSource` | `data/sources/horizons.py` | JPL Horizons System API client |
+
+### Value Objects
+
+| Value Object | Code | Description |
+|-------------|------|-------------|
+| `TimeRange` | `ChunkConfig` fields | Immutable (start_date, end_date) query window |
+| `ChunkConfig` | `polling/historical_chunked_poller.py` | chunk_size_years=5, overlap_days=7, max_objects_per_chunk=50K |
+| `APIEndpoint` | `config/settings.py:APIConfig` | URL + timeout + retry parameters per source |
+| `CacheKey` | `data/cache.py:_safe_key()` | Filesystem-safe query fingerprint |
+| `CacheStats` | `data/cache.py:CacheStats` | hit_count, miss_count, eviction_count |
+| `DataQualityScore` | `data/fetcher.py` | Completeness metric for source merger decisions |
+
+### Domain Services
+
+| Service | Purpose |
+|---------|---------|
+| `DataFetcher` | Multi-source orchestrator; parallel ThreadPoolExecutor; priority-based merge |
+| `CacheManager` | RLock thread-safe LRU + TTL; JSON/pickle disk persistence |
+| `CircuitBreaker` | Three-state (CLOSED/OPEN/HALF_OPEN) failure isolation per API source |
+| `HistoricalChunkedPoller` | 200-year window decomposition with boundary overlap |
+
+### Domain Events
+
+| Event | Trigger |
+|-------|---------|
+| `DataFetched(source, object_count, timestamp)` | Successful API response |
+| `ChunkCached(chunk_id, time_range, object_count)` | Chunk written to disk cache |
+| `APIHealthChanged(source_name, is_healthy, timestamp)` | Circuit breaker state change |
+| `FallbackToSimulation(reason)` | **Currently silent** — should be an explicit observable event |
+
+### Anti-Corruption Layer
+Each `DataSourceBase` subclass translates the source-specific JSON format into
+internal `NEOData` / `OrbitalElements` types, preventing external schema changes
+from propagating into the domain.
+
+### Context Boundary Issues
+- No `physical.py` indicators fed from physical data (see ADR-007): the data
+  acquisition layer delivers physical properties but they are not consumed by
+  the indicator pipeline
+- `DataFetcher` performs inline deserialization — the ACL is embedded in the
+  fetcher rather than being a separate translation layer
+
+---
+
+## Bounded Context 2: NEO Core Domain (Core Domain)
+
+**Purpose**: Define the canonical representation of a Near Earth Object and all
+observable properties. This is the central domain; all other contexts operate
+on projections of it.
+
+**Code**: `aneos_core/data/models.py`, `aneos_core/config/`
+
+---
+
+### Aggregate Root: `NEOObject` (implemented as `NEOData`)
+The primary entity. Identity is the `designation` string (MPC/JPL provisional
+or permanent identifier). All analysis contexts receive a `NEOData` instance.
+
+### Entities
+
+| Entity | Code | Key Fields |
+|--------|------|-----------|
+| `NEOData` | `data/models.py:NEOData` | designation, orbital_elements, physical_properties, close_approaches, analysis_results |
+| `OrbitalElements` | `data/models.py:OrbitalElements` | eccentricity, inclination, semi_major_axis, ra_of_ascending_node, arg_of_periapsis, mean_anomaly, epoch |
+| `PhysicalProperties` | `data/models.py:PhysicalProperties` | diameter, albedo, rot_per, spectral_type, absolute_magnitude |
+| `CloseApproach` | `data/models.py:CloseApproach` | date, nominal_distance_AU, velocity_km_s, uncertainty_3sigma |
+| `AnalysisResult` | `data/models.py:AnalysisResult` | designation, overall_score, classification, indicator_scores, created_at |
+
+### Value Objects
+
+| Value Object | Validation Rule |
+|-------------|----------------|
+| `Designation` | Non-empty string; MPC format preferred |
+| `Eccentricity` | Must be in [0, 1) — enforced in `OrbitalElements._validate()` |
+| `Inclination` | Must be in [0°, 180°] |
+| `SemiMajorAxis` | Must be positive (AU) |
+| `Albedo` | Must be in [0, 1] |
+| `AbsoluteMagnitude` | H value (Johnson V band) |
+
+### Domain Events
+
+| Event | Trigger |
+|-------|---------|
+| `NEOIngested(designation, source, timestamp)` | First time object enters system |
+| `NEOUpdated(designation, fields_changed)` | Source data refresh improves fields |
+| `NEOFlaggedForAnalysis(designation, trigger_reason)` | Meets criteria for analysis run |
+
+### Configuration Entities
+
+| Entity | Code | Purpose |
+|--------|------|---------|
+| `ThresholdConfig` | `config/settings.py` | Per-indicator detection thresholds |
+| `WeightConfig` | `config/settings.py` | Per-category scoring weights |
+| `ANEOSConfig` | `config/settings.py` | Root configuration combining all sub-configs |
+| `ConfigManager` | `config/settings.py` | File + env var loading; YAML/JSON support |
+
+### Domain Issue
+`OrbitalElements` carries physical properties (diameter, albedo, rotation period,
+spectral type) that logically belong in `PhysicalProperties`. This violates
+single responsibility and makes it unclear which model to query for physical data.
+
+---
+
+## Bounded Context 3: Anomaly Scoring
+
+**Purpose**: Transform raw NEO observables into a weighted composite anomaly
+score across indicator categories. Produces the first-stage filter verdict.
+
+**Code**: `aneos_core/analysis/`
+
+---
+
+### Aggregate Root: `AnomalyAssessment`
+Ties NEO identity to all per-indicator and per-category scores into a single
+scorable unit for pipeline routing.
+
+### Entities
+
+| Entity | Code | Description |
+|--------|------|-------------|
+| `ScoreCalculator` | `analysis/scoring.py` | Weighted composite from IndicatorResults; 4-tier classification |
+| `AdvancedScoreCalculator` | `analysis/advanced_scoring.py` | ATLAS 6-clue continuous scoring |
+| `AnomalyScore` | `analysis/scoring.py:AnomalyScore` | designation, overall_score, confidence, classification, indicator_scores, risk_factors |
+| `AdvancedAnomalyScore` | `analysis/advanced_scoring.py` | overall_score, clue_contributions, debris_penalty_applied |
+| `StatisticalAnalyzer` | `analysis/scoring.py` | Population-level significance calculator |
+| `AnalysisPipeline` | `analysis/pipeline.py` | ThreadPoolExecutor(10) parallel indicator runner |
+| `EnhancedAnalysisPipeline` | `analysis/enhanced_pipeline.py` | Wrapper adding 5-stage validation |
+
+### Indicator Entities (Pluggable via `AnomalyIndicator` ABC)
+
+**Orbital Indicators** (`indicators/orbital.py`):
+| Indicator | Anomaly Detected |
+|-----------|-----------------|
+| `EccentricityIndicator` | e > 0.8 (normal), > 0.95 (extreme) |
+| `InclinationIndicator` | High inclination (polar or retrograde orbits) |
+| `SemiMajorAxisIndicator` | a outside 0.3–3.5 AU natural range |
+| `OrbitalResonanceIndicator` | Unusual mean motion resonance with planets |
+| `OrbitalStabilityIndicator` | Lyapunov instability indicators |
+
+**Velocity Indicators** (`indicators/velocity.py`):
+| Indicator | Anomaly Detected |
+|-----------|-----------------|
+| `VelocityShiftIndicator` | Delta-v between successive close approaches |
+| `AccelerationIndicator` | Non-gravitational acceleration A1/A2 beyond Yarkovsky |
+| `VelocityConsistencyIndicator` | V_inf consistency across observations |
+| `InfinityVelocityIndicator` | Hyperbolic excess velocity anomalies |
+
+**Temporal Indicators** (`indicators/temporal.py`):
+| Indicator | Anomaly Detected |
+|-----------|-----------------|
+| `CloseApproachRegularityIndicator` | Non-random temporal spacing of approaches |
+| `ObservationGapIndicator` | Suspicious gaps in observation history |
+| `PeriodicityIndicator` | Regular period suggesting station-keeping |
+| `TemporalInertiaIndicator` | Approach pattern persistence over decades |
+
+**Geographic Indicators** (`indicators/geographic.py`):
+| Indicator | Anomaly Detected |
+|-----------|-----------------|
+| `SubpointClusteringIndicator` | Ground track clustering over specific regions |
+| `GeographicBiasIndicator` | Non-uniform subpoint distribution |
+
+**Missing Physical Indicators** (`indicators/physical.py` — DOES NOT EXIST):
+| Intended Indicator | Status | Impact |
+|--------------------|--------|--------|
+| `DiameterAnomalyIndicator` | Missing | Physical category never scored |
+| `AlbedoAnomalyIndicator` | Missing | Physical category never scored |
+| `SpectralAnomalyIndicator` | Missing | Physical category never scored |
+
+This is a **concept-to-code misalignment**: `scoring.py` maps the `physical`
+category but no file implements its indicators.
+
+### Value Objects
+
+| Value Object | Description |
+|-------------|-------------|
+| `IndicatorResult` | raw_score, weighted_score, confidence, metadata, contributing_factors |
+| `IndicatorConfig` | weight, enabled, confidence_threshold, parameters |
+| `ClueContribution` | clue_id, raw_score, sigma_deviation, weight (ATLAS) |
+| `DebrisPenalty` | Applied when human_origin_confidence > 0.8; magnitude = 0.4 |
+
+### ATLAS Clue Category Weights (advanced_scoring.py)
+
+| Category | Default Weight | Scientific Basis |
+|----------|---------------|-----------------|
+| Encounter Geometry | 0.15 | Close approach distance + relative velocity |
+| Orbit Behavior | 0.25 | Repeat passes, non-gravitational acceleration |
+| Physical Traits | 0.20 | Area-to-mass ratio, radar cross-section, thermal |
+| Spectral Identity | 0.20 | Reflectance spectrum vs taxonomic class |
+| Dynamical Sanity | 0.15 | Yarkovsky drift coherence |
+| Human Origin | 0.05 | Debris/spacecraft cross-match (veto) |
+
+### Standard Category Weights (scoring.py / WeightConfig)
+
+| Category | Default Weight |
+|----------|---------------|
+| velocity_shifts | 2.0 |
+| close_approach_regularity | 2.0 |
+| purpose_driven | 2.0 |
+| acceleration_anomalies | 2.0 |
+| orbital_mechanics | 1.5 |
+| spectral_anomalies | 1.5 |
+| physical_anomalies | 1.0 |
+| temporal_anomalies | 1.0 |
+| geographic_clustering | 1.0 |
+
+### Classification Thresholds
+
+| Score Range | Classification | Source |
+|-------------|---------------|--------|
+| 0.0 – 0.30 | natural | scoring.py |
+| 0.30 – 0.59 | suspicious | scoring.py |
+| 0.60 – 0.79 | highly_suspicious | scoring.py |
+| ≥ 0.80 | artificial | scoring.py |
+
+### Domain Events
+
+| Event | Trigger |
+|-------|---------|
+| `CandidateFlagged(designation, composite_score, clue_breakdown)` | Score > first_stage threshold |
+| `CandidateRejected(designation, score, stage=1)` | Score ≤ first_stage threshold |
+| `DebrisPenaltyApplied(designation, penalty_magnitude, human_origin_confidence)` | THETA veto triggered |
+
+---
+
+## Bounded Context 4: Multi-Modal Validation
+
+**Purpose**: Subject stage-1 candidates to independent physical-domain
+validation. Each SWARM is an anti-corruption layer translating domain-specific
+measurements into sigma contributions.
+
+**Code**: `aneos_core/validation/`
+
+---
+
+### Aggregate Root: `ValidationReport`
+Collects all SWARM verdicts and the 5-stage pipeline result for a single
+candidate, determines final composite sigma, and may block output via
+`ConsistencyResult.blocked_report`.
+
+### Entities — Five-Stage Pipeline
+
+| Stage | Entity | File | FP Reduction Target |
+|-------|--------|------|---------------------|
+| 1 | Data Quality Filter | `multi_stage_validator.py` | 60% |
+| 2 | Known Object Cross-Match | `false_positive_prevention.py` | 80% |
+| 3 | Physical Plausibility + Delta-BIC | `physical_sanity.py`, `delta_bic_analysis.py` | 90% |
+| 4 | Statistical Significance | `statistical_testing.py` | 95% |
+| 5 | Expert Review Threshold | `multi_stage_validator.py` | >98% |
+
+`ValidationStageResult(stage_number, stage_name, passed, score, confidence,
+false_positive_reduction, details, processing_time_ms)` per stage.
+
+`EnhancedAnalysisResult` wraps original result + all stage results via
+`__getattr__` proxy.
+
+### SWARM Entities
+
+| SWARM | Entity | File | Physical Domain |
+|-------|--------|------|----------------|
+| KAPPA | `RadarPolarizationAnalyzer` | `radar_polarization_analysis.py` | SC/OC polarization ratio vs natural rock |
+| LAMBDA | `ThermalIRAnalyzer` | `thermal_ir_analysis.py` | NEATM beaming parameter deviation |
+| MU | `GaiaAstrometricCalibrator` | `gaia_astrometric_calibration.py` | Non-gravitational acceleration vs Yarkovsky |
+| CLAUDETTE | `StatisticalTesting` | `statistical_testing.py` | Multi-test correction; hypothesis testing |
+| CLAUDETTE | `FalsePositivePrevention` | `false_positive_prevention.py` | Debris cross-match; confusion matrix |
+| THETA | `HumanHardwareAnalyzer` | `human_hardware_analysis.py` | TLE database; known spacecraft catalog |
+| — | `SpectralOutlierAnalyzer` | `spectral_outlier_analysis.py` | Taxonomic class outlier scoring |
+| — | `DeltaBICAnalyzer` | `delta_bic_analysis.py` | Natural vs artificial model BIC comparison |
+| — | `LargeScaleMonteCarlo` | `large_scale_monte_carlo.py` | Synthetic FPR calibration |
+| — | `UncertaintyAnalysis` | `uncertainty_analysis.py` | Bootstrap + MC confidence propagation |
+| — | `PhysicalSanityValidator` | `physical_sanity.py` | Calibration Plan v1.2 physical checks |
+| — | `ConsistencyValidator` | `consistency_validator.py` | Cross-field contradiction blocking |
+
+### Value Objects
+
+| Value Object | Description |
+|-------------|-------------|
+| `PolarizationRatio` | SC/OC radar circular polarization ratio |
+| `ThermalSignature` | NEATM beaming parameter η and emissivity |
+| `AstrometricDeviation` | A1/A2 non-gravitational parameters vs Yarkovsky model |
+| `DeltaBICResult` | delta_bic, preferred_model, model_confidence |
+| `SpaceDebrisMatch` | Matched TLE entry + match confidence |
+| `HumanHardwareMatch` | Matched spacecraft + orbit correlation confidence |
+| `SpectralOutlierResult` | Taxonomic distance, closest class, outlier sigma |
+| `PhysicalValidationResult` | PASS/WARNING/FAIL + issues + corrected_values |
+| `ConsistencyResult` | is_valid, violations[], errors[], blocked_report |
+| `UncertaintyResult` | confidence_interval_95, confidence_interval_99, indicator_uncertainties |
+| `MonteCarloFPR` | Empirical false-positive rate from N synthetic runs |
+| `MultipleTestingResult` | Bonferroni/BH corrected p-values per indicator |
+
+### Consistency Violation Types
+
+| Type | Triggered When |
+|------|---------------|
+| `RISK_PROBABILITY_CONTRADICTION` | risk_label = "high" but P_impact = 0 |
+| `ARTIFICIAL_CLASSIFICATION_MISMATCH` | is_artificial=True but classification="natural" |
+| `PHYSICS_VIOLATION` | Crater < 1 km for a 500m+ impactor |
+| `SEVERE_INCONSISTENCY` | Multiple contradictions co-present |
+
+### Domain Events
+
+| Event | Trigger |
+|-------|---------|
+| `ValidationPassed(designation, composite_sigma, swarm_verdicts)` | All 5 stages pass |
+| `ValidationFailed(designation, failing_stages, composite_sigma)` | One or more stages fail |
+| `FalsePositiveDetected(designation, reason, triggering_swarm)` | Stage 2 or CLAUDETTE rejection |
+| `PhysicalInconsistencyBlocked(designation, violations)` | ConsistencyValidator blocks report |
+| `DebrisMatchFound(designation, matched_tle, confidence)` | THETA SWARM match |
+
+---
+
+## Bounded Context 5: Detection & Classification
+
+**Purpose**: Maintain the lifecycle of detection candidates from first sigma-5
+scoring through expert review queue. Owns the final artificial/natural verdict.
+
+**Code**: `aneos_core/detection/`, `aneos_core/interfaces/`
+
+---
+
+### Aggregate Root: `DetectionCandidate`
+Combines NEO identity + multi-modal evidence package + composite sigma score
++ Bayesian calibrated probability + queue status.
+
+### Entities
+
+| Entity | Code | Description |
+|--------|------|-------------|
+| `DetectionManager` | `detection/detection_manager.py` | Priority-based detector registry; unified entry point |
+| `ValidatedSigma5ArtificialNEODetector` | `detection/validated_sigma5_artificial_neo_detector.py` | **Canonical** (priority 0); Bayesian corrected; scientifically validated |
+| `MultiModalSigma5ArtificialNEODetector` | `detection/multimodal_sigma5_artificial_neo_detector.py` | Multi-modal evidence fusion; used directly by pipeline (priority 1) |
+| `ProductionArtificialNEODetector` | `detection/production_artificial_neo_detector.py` | Hard-coded production thresholds; a=1.5 AU, e=0.6, i=50°–80° |
+| `CorrectedSigma5ArtificialNEODetector` | `detection/corrected_sigma5_artificial_neo_detector.py` | First calibration correction pass |
+| `Sigma5ArtificialNEODetector` | `detection/sigma5_artificial_neo_detector.py` | Original basic implementation |
+| `Sigma5CorrectedStatisticalFramework` | `detection/sigma5_corrected_statistical_framework.py` | Statistical framework refactor (shared by detectors) |
+| `GroundTruthDatasetBuilder` | `datasets/ground_truth_dataset_preparation.py` | Stub — not yet operational |
+| `ArtificialNEOTestSuite` | `detection/artificial_neo_test_suite.py` | Unit test harness; should reside in `tests/` |
+
+### `ProductionArtificialNEODetector` Hard-Coded Parameters
+
+| Parameter | Value | Rationale |
+|-----------|-------|-----------|
+| `semi_major_axis_threshold` | 1.5 AU | Conservative (addresses false positives) |
+| `eccentricity_threshold` | 0.6 | Higher than natural mode |
+| `inclination_low_threshold` | 50° | More restrictive |
+| `inclination_high_threshold` | 80° | Captures polar orbits |
+| `confidence_threshold` | 0.60 | Balanced |
+| `combined_indicator_requirement` | 2 | Minimum strong indicators needed |
+
+### Value Objects
+
+| Value Object | Description |
+|-------------|-------------|
+| `DetectionResult` | is_artificial, confidence, sigma_level, artificial_probability, classification, analysis, risk_factors |
+| `CompositeScore` | Multi-modal weighted sigma (final) |
+| `CalibratedProbability` | Bayesian posterior P(artificial | evidence) |
+| `ConfidenceInterval` | (lower_95, upper_95) Bayesian bounds |
+| `FalsePositiveRisk` | Empirical FPR estimate for this detection |
+| `DetectorType` | Enum: BASIC, CORRECTED, MULTIMODAL, PRODUCTION, VALIDATED, AUTO |
+
+### Domain Services
+
+| Service | Purpose |
+|---------|---------|
+| `DetectionManager` | Registry + AUTO selection + per-detector output adapters |
+| `OrbitalElementsNormalizer` | Translates dual-naming (a/semi_major_axis, e/eccentricity) |
+
+### Interfaces (ABCs)
+
+| Interface | Purpose |
+|-----------|---------|
+| `ArtificialNEODetector` | Base contract: `detect(orbital_elements) -> DetectionResult` |
+| `EnhancedDetector` | Adds physical data to detection |
+| `MultiModalDetector` | Full multi-modal evidence fusion |
+
+### `aNEOSAnalysisResult` Fields (unified output)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `designation` | str | Object identifier |
+| `is_artificial` | bool | Binary classification |
+| `artificial_probability` | float | Calibrated Bayesian probability |
+| `confidence_level` | float | Statistical confidence |
+| `classification` | str | natural/suspicious/highly_suspicious/artificial |
+| `risk_assessment` | str | low/moderate/high/critical |
+| `sigma_statistical_level` | float? | Composite sigma score |
+| `orbital_analysis` | Dict? | Per-indicator orbital results |
+| `physical_analysis` | Dict? | Per-indicator physical results |
+| `temporal_analysis` | Dict? | Per-indicator temporal results |
+
+### `AnalysisCapability` Enum
+
+```
+ARTIFICIAL_DETECTION, ORBITAL_ANALYSIS, PHYSICAL_ANALYSIS,
+TEMPORAL_ANALYSIS, MULTI_SOURCE_ENRICHMENT, STATISTICAL_VALIDATION,
+REAL_TIME_MONITORING, HISTORICAL_ANALYSIS
+```
+
+### Domain Events
+
+| Event | Trigger |
+|-------|---------|
+| `CandidateDetected(designation, composite_sigma, evidence_package)` | sigma >= 5 |
+| `CandidateRejected(designation, sigma, stage)` | Below threshold at any stage |
+| `ExpertReviewQueued(designation, priority, sigma)` | Passes all stages; score >= 0.80 |
+| `GroundTruthValidated(designation, true_label, detector_label)` | **Future** — when dataset exists |
+
+### Critical Pipeline Inconsistency
+
+`automatic_review_pipeline.py` hardcodes:
+```python
+from ..detection.multimodal_sigma5_artificial_neo_detector import \
+    MultiModalSigma5ArtificialNEODetector
+```
+This bypasses `DetectionManager` and the `VALIDATED` detector (priority 0).
+The pipeline always uses MULTIMODAL regardless of `DetectorType.AUTO` setting.
+
+---
+
+## Bounded Context 6: Impact Assessment (Planetary Defense)
+
+**Purpose**: Calculate Earth and Moon impact probabilities for candidates and
+all Earth-crossing NEOs. This is the secondary mission defined in the concept
+document.
+
+**Code**: `aneos_core/analysis/impact_probability.py`,
+`aneos_core/analysis/impact_enhanced_pipeline.py`
+
+---
+
+### Aggregate Root: `ImpactAssessment`
+Complete impact risk profile for a single NEO covering both Earth and Moon
+scenarios.
+
+### Entities
+
+| Entity | Code | Description |
+|--------|------|-------------|
+| `ImpactProbabilityCalculator` | `analysis/impact_probability.py` | Core physics engine |
+| `ImpactEnhancedPipeline` | `analysis/impact_enhanced_pipeline.py` | Wires impact data into standard pipeline output |
+
+### `ImpactProbability` Value Object Fields
+
+| Field | Description |
+|-------|-------------|
+| `collision_probability` | Overall Earth impact probability |
+| `collision_probability_per_year` | Annual expected rate |
+| `time_to_impact_years` | Most probable impact time |
+| `probability_uncertainty` | 95% CI (lower, upper) |
+| `calculation_confidence` | 0–1 quality score |
+| `data_arc_years` | Observation arc length |
+| `earth_collision_cross_section_km2` | Geometric + gravitational focusing |
+| `moon_collision_probability` | Lunar impact probability |
+| `moon_earth_probability_ratio` | Comparative risk factor |
+| `impact_energy_mt_tnt` | Energy equivalent (megatons TNT) |
+| `crater_diameter_km` | Estimated crater via pi-scaling |
+| `damage_radius_km` | Overpressure damage radius |
+| `risk_level` | negligible/low/moderate/high/extreme |
+| `gravitational_keyholes` | List of keyhole orbital regions |
+| `regional_probability_distribution` | Geographic impact probability map |
+| `temporal_evolution` | Time-series of probability evolution |
+| `artificial_object_considerations` | Enhanced uncertainty for propulsive objects |
+
+### Calculation Methods
+
+| Method | Physics |
+|--------|---------|
+| Collision cross-section | Geometric + gravitational focusing: σ = πR²(1 + v_esc²/v_inf²) |
+| Moon impact | Separate lunar σ with Moon's v_esc and R_moon |
+| Keyhole analysis | Resonant return orbital element mapping |
+| Monte Carlo propagation | `scipy.integrate.solve_ivp` over orbital uncertainty ellipsoid |
+| Impact energy | E = ½mv² with bulk density assumptions |
+| Crater scaling | Pi-scaling laws (regime-dependent: simple, complex, basin) |
+
+### Domain Events
+
+| Event | Trigger |
+|-------|---------|
+| `ImpactRiskAssessed(designation, earth_prob, moon_prob, energy_mt)` | Assessment complete |
+| `HighRiskFlagged(designation, collision_probability, timeline)` | P_impact > threshold |
+| `KeyholeIdentified(designation, keyhole_date, orbital_region)` | Resonant return path found |
+
+---
+
+## Bounded Context 7: Reporting & Visualization
+
+**Purpose**: Transform detection and validation results into publication-ready
+reports, dashboards, and exportable data packages.
+
+**Code**: `aneos_core/reporting/`
+
+---
+
+### Aggregate Root: `AnalysisReport`
+A complete, exportable record of one analysis run including all candidates,
+scores, methodology references, and uncertainty bounds.
+
+### Entities
+
+| Entity | Code | Output Formats |
+|--------|------|---------------|
+| `ReportGenerator` | `reporting/generators.py` | Rich terminal, structured JSON |
+| `Exporter` | `reporting/exporters.py` | CSV, JSON, FITS |
+| `Visualizer` | `reporting/visualizers.py` | matplotlib, plotly charts |
+| `AIValidationAnnotator` | `reporting/ai_validation.py` | AI-generated academic-style notes |
+| `ProgressTracker` | `reporting/progress.py` | Real-time progress bars (Rich) |
+| `AnalyticsCalculator` | `reporting/analytics.py` | Aggregate statistics |
+| `ProfessionalSuite` | `reporting/professional_suite.py` | Bundled multi-format package |
+
+### Value Objects
+
+| Value Object | Description |
+|-------------|-------------|
+| `ReportFormat` | Enum: SUMMARY, DETAILED, PRIORITY, ANOMALY |
+| `ExportMetadata` | run_id, timestamp, object_count, methodology_version |
+
+### Domain Events
+
+| Event | Trigger |
+|-------|---------|
+| `ReportGenerated(run_id, format, path, timestamp)` | Report written to disk |
+| `ExportCompleted(run_id, format, path, object_count)` | Export file created |
+| `ProgressMilestone(stage, pct_complete, eta_seconds)` | Long-run status update |
+
+### Risk
+`AIValidationAnnotator` generates human-readable validation language. AI-generated
+text may overstate confidence and contribute to the documentation drift risk
+identified in `maturity_assessment.md`.
+
+---
+
+## Bounded Context 8: API & External Integration
+
+**Purpose**: Expose aNEOS capabilities over HTTP to external research consumers
+and provide a web dashboard.
+
+**Code**: `aneos_api/`
+
+---
+
+### Aggregate Root: `APIRequest`
+Validated, authenticated HTTP request with rate-limiting and CORS applied.
+
+### Entities
+
+| Entity | Code | Description |
+|--------|------|-------------|
+| `FastAPIApp` | `aneos_api/app.py` | Core application; CORS + GZip middleware; 52 endpoints |
+| `AuthToken` | `aneos_api/auth.py` | JWT token with expiry and scope |
+| `Dashboard` | `aneos_api/dashboard.py` | Real-time web UI |
+| `DatabaseSession` | `aneos_api/database.py` | SQLAlchemy 2.0 session management |
+| `EnhancedModel` | `aneos_api/enhanced_models.py` | Extended Pydantic response models |
+
+### Endpoint Groups
+
+| Group | File | Responsibility |
+|-------|------|---------------|
+| Analysis | `endpoints/analysis.py` | Trigger and retrieve analysis runs |
+| Enhanced Analysis | `endpoints/enhanced_analysis.py` | Advanced multi-modal analysis |
+| Monitoring | `endpoints/monitoring.py` | System health, component status |
+| Prediction | `endpoints/prediction.py` | ML inference (deferred — ADR-033) |
+| Streaming | `endpoints/streaming.py` | Real-time event streaming (Redis pub/sub) |
+| Admin | `endpoints/admin.py` | User management, configuration |
+
+### Value Objects
+
+| Value Object | Description |
+|-------------|-------------|
+| `APIEndpointSpec` | Path, method, auth requirement, rate limit |
+| `AuthScope` | Permission set encoded in JWT |
+
+### Context Boundary Issues
+- No DTO/schema separation: endpoint handlers use domain types directly,
+  coupling API versioning to domain model evolution
+- No OpenAPI spec maintained separately; auto-generated by FastAPI only when
+  installed, creating potential for drift with `docs/api/rest-api.md`
+- All imports wrapped in `HAS_FASTAPI` guard — API silently disabled if
+  FastAPI not installed (ADR-032)
+
+---
+
+## Bounded Context 9: Infrastructure & Monitoring
+
+**Purpose**: Maintain operational health, collect performance and analysis
+quality metrics, and surface alerts.
+
+**Code**: `aneos_core/monitoring/`, `docker-compose.yml`, `k8s/`,
+`prometheus.yml`
+
+---
+
+### Aggregate Root: `SystemHealthReport`
+Snapshot of all monitored components at a point in time.
+
+### Entities
+
+| Entity | Code | Description |
+|--------|------|-------------|
+| `MetricsCollector` | `monitoring/metrics.py` | psutil-based system metrics |
+| `AlertManager` | `monitoring/alerts.py` | Rule-based alerts; email notification |
+| `MonitoringDashboard` | `monitoring/dashboard.py` | Component health aggregator |
+| `PrometheusExporter` | `prometheus.yml` + API `/metrics` | Time-series metrics |
+| `GrafanaDashboard` | `docker-compose.yml:grafana` | Visualization |
+
+### `SystemMetrics` Value Object Fields
+
+| Field | Description |
+|-------|-------------|
+| `cpu_percent` | Process CPU utilization |
+| `memory_percent` | System memory usage |
+| `memory_used_mb` / `memory_available_mb` | Absolute memory |
+| `disk_usage_percent` / `disk_free_gb` | Storage health |
+| `network_bytes_sent/recv` | Network throughput |
+| `process_count` | Active process count |
+| `load_average` | System load (1/5/15 min) |
+
+### Alert Types
+
+| Alert Type | Trigger |
+|------------|---------|
+| `ANOMALOUS_NEO` | High-sigma candidate detected |
+| `SYSTEM_PERFORMANCE` | CPU/memory threshold breach |
+| `MODEL_DRIFT` | ML prediction distribution shift |
+| `DATA_QUALITY` | Incomplete or anomalous API data |
+| `SYSTEM_ERROR` | Unhandled exception in pipeline |
+
+### Alert Levels: `LOW | MEDIUM | HIGH | CRITICAL`
+
+### Notification Channels
+`AlertManager` supports SMTP email notifications via `smtplib`/`ssl`.
+No Slack, PagerDuty, or webhook integration exists yet.
+
+### Critical Dependency Issue
+`monitoring/alerts.py` imports `Alert` from `ml.prediction`:
+```python
+from ..ml.prediction import Alert as MLAlert, PredictionResult
+```
+This creates a hard dependency on the ML module from the monitoring layer.
+If ML is unavailable, alerting breaks (see ADR-033).
+
+### Infrastructure Components
+
+| Component | Image | Port |
+|-----------|-------|------|
+| aneos-api | Custom Dockerfile | 8000 |
+| postgres | postgres:15-alpine | 5432 |
+| redis | redis:7-alpine | 6379 |
+| nginx | nginx:alpine | 80, 443 |
+| prometheus | prom/prometheus | 9090 |
+| grafana | grafana/grafana | 3000 |
+
+### Kubernetes Manifests
+`k8s/deployment.yml`, `k8s/postgres.yml`, `k8s/redis.yml` — production-grade
+configuration. No service mesh or ingress controller configured.
+
+---
+
+## Bounded Context 10: Ground Truth (Future — P0 Priority)
+
+**Purpose**: Provide a verified, labelled dataset of confirmed artificial and
+natural objects to enable empirical accuracy, recall, and FPR measurement.
+
+**Status**: Stub implementation only (`datasets/ground_truth_dataset_preparation.py`).
+This context does not currently function.
+
+**Code**: `aneos_core/datasets/`
+
+---
+
+### Aggregate Root: `GroundTruthDataset`
+A versioned, immutable collection of labelled objects split into training,
+validation, and blind-test sets.
+
+### Entities (Planned)
+
+| Entity | Status | Description |
+|--------|--------|-------------|
+| `GroundTruthDatasetBuilder` | Stub | Compiles verified artificial (spacecraft/rocket bodies) + natural objects |
+| `GroundTruthObject` | Defined | object_id, is_artificial, orbital_elements, source, verification_notes |
+| `BlindTestSuite` | Not started | Randomized test set with withheld labels |
+| `AccuracyReport` | Not started | Precision, recall, FPR, FNR per detector |
+
+### Value Objects (Planned)
+
+| Value Object | Description |
+|-------------|-------------|
+| `TrueLabel` | `ARTIFICIAL | NATURAL | UNKNOWN` |
+| `PredictedLabel` | Detector output |
+| `ConfusionMatrix` | TP/TN/FP/FN counts |
+| `DetectionMetric` | precision, recall, F1, FPR at sigma-5 threshold |
+
+### Verification Sources (Planned)
+
+| Source | Object Types |
+|--------|-------------|
+| Space-Track.org TLE | Rocket bodies, dead satellites in heliocentric orbit |
+| JPL Horizons | Confirmed spacecraft trajectories (Voyager, Pioneer, etc.) |
+| MPC unusual objects | Oumuamua-class interlopers (natural anomalies) |
+| JPL SBDB | Natural NEO population sample |
+
+### Domain Events (Planned)
+
+| Event | Trigger |
+|-------|---------|
+| `DatasetVersionReleased(version, n_artificial, n_natural)` | New ground truth published |
+| `BlindTestCompleted(detector_type, precision, recall, fpr)` | Accuracy measurement done |
+| `GroundTruthValidated(designation, true_label, predicted_label)` | Single object labelled |
+
+---
+
+## Future Domain Evolution (Roadmap-Derived)
+
+### Phase 5 Additions
+- **Ground Truth Context** (activate the stub — P0)
+- **TLE Cross-Reference Integration** (extend THETA SWARM with live Space-Track feed)
+- **Physical Indicators** (implement `indicators/physical.py` — ADR-007 gap)
+- **CI/CD Pipeline Context** (quality gate on every commit)
+- **Pre-flight Health Check** (replace silent fallbacks with explicit failures)
+
+### Phase 6 Additions
+- **ML Classification Context** (activate `aneos_core/ml/` with labelled data)
+  - Supervised: `RandomForestClassifier` for binary classification
+  - Unsupervised: `IsolationForest`, `OneClassSVM` for novelty detection
+  - Deep learning: PyTorch autoencoder for representation learning
+- **Real-Time Streaming Context** (activate `endpoints/streaming.py` with Redis pub/sub)
+- **TLE Registry Context** (dedicated aggregate for known human hardware)
+
+### Phase 7 Additions
+- **Publication Pipeline Context** — evidence package → peer-review document
+- **Collaboration Context** — multi-institution data sharing and result federation
+
+---
+
+## Concept Document Alignment Matrix
+
+| Scientific Doc Requirement | Implementation | Status |
+|---------------------------|----------------|--------|
+| Primary mission: artificial detection | All detection modules | Implemented |
+| Secondary mission: planetary defense | `impact_probability.py` | Implemented |
+| Multi-modal Sigma-5 detection | All detectors | Implemented; not ground-truth validated |
+| 5 indicator categories | 4 categories implemented | **Gap: physical category missing** |
+| Bayesian base rate correction | `validated_sigma5` detector | Implemented |
+| Multiple testing correction | `statistical_testing.py` | Implemented |
+| Uncertainty quantification | `uncertainty_analysis.py` | Implemented |
+| Reproducible methodology | Version-controlled code + config | Implemented |
+| Peer-review ready output | Report generator | Implemented |
+| Ground truth validation | `ground_truth_dataset_preparation.py` | **Stub only** |
+| Real NASA/JPL data | `data/sources/` | Implemented; **silent fallback risk** |
+| Moon impact assessment | `impact_probability.py` | Implemented |
+| FPR < 5.7×10⁻⁷ | Monte Carlo validator | **Theoretically modeled, not empirically verified** |
+| Publication-standard sigma-5 | Detectors + `statistical_utils.py` | **Methodology correct; calibration unverified** |
+
+---
+
+_End of Domain-Driven Design Document_
