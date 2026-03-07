@@ -8,7 +8,7 @@ error handling, and data quality assessment.
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, Optional, List, Union
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .cache import CacheManager
 from .models import NEOData, OrbitalElements
@@ -165,7 +165,54 @@ class DataFetcher:
                 f"Tried: {', '.join(self.source_priority)}. "
                 f"Check network access and API availability."
             )
+
+        # Augment with close approach data from CAD API (supplemental — never blocks)
+        try:
+            approaches = self._fetch_close_approaches(designation)
+            for approach in approaches:
+                neo_data.add_close_approach(approach)
+        except Exception:
+            pass
+
         return neo_data
+
+    def _fetch_close_approaches(self, designation: str) -> List:
+        """Fetch upcoming close approaches from SBDB CAD API for a single designation."""
+        import requests
+        from datetime import datetime as _dt
+        from .models import CloseApproach
+        try:
+            resp = requests.get(
+                "https://ssd-api.jpl.nasa.gov/cad.api",
+                params={
+                    "des": designation,
+                    "date-min": "now",
+                    "dist-max": "0.2",
+                    "limit": "10",
+                    "fullname": "true",
+                },
+                timeout=15,
+            )
+            if not resp.ok:
+                return []
+            data = resp.json()
+            approaches = []
+            for row in data.get("data", []):
+                # CAD API columns: des,orbit_id,jd,cd,dist,dist_min,dist_max,v_rel,v_inf,t_sigma_f,body
+                try:
+                    ca = CloseApproach(
+                        designation=designation,
+                        close_approach_date=_dt.strptime(row[3].strip(), "%Y-%b-%d %H:%M"),
+                        distance_au=float(row[4]),
+                        relative_velocity_km_s=float(row[7]) if row[7] else None,
+                    )
+                    approaches.append(ca)
+                except Exception:
+                    continue
+            return approaches
+        except Exception as e:
+            self.logger.debug(f"CAD API fetch failed for {designation}: {e}")
+            return []
 
     def _fetch_from_source(self, source_name: str, source: DataSourceBase, designation: str) -> Optional[NEOData]:
         """Fetch data from a single source, handling both async and sync source implementations."""
@@ -230,6 +277,7 @@ class DataFetcher:
                     physical_properties=physical_properties,
                     sources_used=[source_name],
                 )
+                neo_data.fetched_at = datetime.now(timezone.utc)
                 return neo_data
 
         except Exception as e:

@@ -431,6 +431,24 @@ Some IP addresses of users launching heavy query showers have temporarily been d
         "title": "BatchPredictionRequest",
         "type": "object"
       },
+      "CheckResult": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "detail"
+        ],
+        "title": "CheckResult",
+        "type": "object"
+      },
       "CloseApproachResponse": {
         "description": "Close approach response model.",
         "properties": {
@@ -576,6 +594,12 @@ Some IP addresses of users launching heavy query showers have temporarily been d
       },
       "DetectionResponse": {
         "properties": {
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Analysis Metadata",
+            "type": "object"
+          },
           "artificial_probability": {
             "title": "Artificial Probability",
             "type": "number"
@@ -584,9 +608,42 @@ Some IP addresses of users launching heavy query showers have temporarily been d
             "title": "Classification",
             "type": "string"
           },
+          "combined_p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Combined P Value"
+          },
           "confidence": {
             "title": "Confidence",
             "type": "number"
+          },
+          "data_freshness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Freshness"
+          },
+          "data_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Source"
           },
           "designation": {
             "title": "Designation",
@@ -597,8 +654,27 @@ Some IP addresses of users launching heavy query showers have temporarily been d
             "title": "Evidence Count",
             "type": "integer"
           },
+          "evidence_sources": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/EvidenceSummary"
+            },
+            "title": "Evidence Sources",
+            "type": "array"
+          },
+          "false_discovery_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "False Discovery Rate"
+          },
           "interpretation": {
-            "default": "sigma_confidence = rarity under natural NEO null hypothesis. artificial_probability incorporates 0.1% base rate prior.",
+            "default": "",
             "title": "Interpretation",
             "type": "string"
           },
@@ -609,6 +685,27 @@ Some IP addresses of users launching heavy query showers have temporarily been d
           "sigma_confidence": {
             "title": "Sigma Confidence",
             "type": "number"
+          },
+          "sigma_tier": {
+            "default": "ROUTINE",
+            "title": "Sigma Tier",
+            "type": "string"
+          },
+          "spacecraft_veto": {
+            "default": false,
+            "title": "Spacecraft Veto",
+            "type": "boolean"
+          },
+          "veto_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Veto Reason"
           }
         },
         "required": [
@@ -620,6 +717,88 @@ Some IP addresses of users launching heavy query showers have temporarily been d
           "confidence"
         ],
         "title": "DetectionResponse",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "description": "Error response model.",
+        "properties": {
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "status_code": {
+            "title": "Status Code",
+            "type": "integer"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "status_code"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "EvidenceSummary": {
+        "properties": {
+          "anomaly_score": {
+            "title": "Anomaly Score",
+            "type": "number"
+          },
+          "confidence_interval": {
+            "default": [],
+            "items": {
+              "type": "number"
+            },
+            "title": "Confidence Interval",
+            "type": "array"
+          },
+          "effect_size": {
+            "title": "Effect Size",
+            "type": "number"
+          },
+          "p_value": {
+            "title": "P Value",
+            "type": "number"
+          },
+          "quality_score": {
+            "title": "Quality Score",
+            "type": "number"
+          },
+          "sample_size": {
+            "default": 0,
+            "title": "Sample Size",
+            "type": "integer"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "anomaly_score",
+          "p_value",
+          "quality_score",
+          "effect_size"
+        ],
+        "title": "EvidenceSummary",
         "type": "object"
       },
       "ExportFormat": {
@@ -788,6 +967,194 @@ Some IP addresses of users launching heavy query showers have temporarily been d
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HealthResponse": {
+        "properties": {
+          "checks": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CheckResult"
+            },
+            "title": "Checks",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "default": "0.7.0",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "ImpactResponse": {
+        "properties": {
+          "calculation_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation Confidence"
+          },
+          "collision_probability": {
+            "title": "Collision Probability",
+            "type": "number"
+          },
+          "comparative_risk": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comparative Risk"
+          },
+          "crater_diameter_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crater Diameter Km"
+          },
+          "damage_radius_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Damage Radius Km"
+          },
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "impact_energy_mt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact Energy Mt"
+          },
+          "impact_probability_by_decade": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "title": "Impact Probability By Decade",
+            "type": "object"
+          },
+          "keyhole_passages": {
+            "default": [],
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Keyhole Passages",
+            "type": "array"
+          },
+          "moon_collision_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moon Collision Probability"
+          },
+          "moon_earth_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moon Earth Ratio"
+          },
+          "peak_risk_period": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak Risk Period"
+          },
+          "primary_risk_factors": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Primary Risk Factors",
+            "type": "array"
+          },
+          "probability_uncertainty": {
+            "default": [],
+            "items": {
+              "type": "number"
+            },
+            "title": "Probability Uncertainty",
+            "type": "array"
+          },
+          "risk_level": {
+            "title": "Risk Level",
+            "type": "string"
+          },
+          "time_to_impact_years": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time To Impact Years"
+          }
+        },
+        "required": [
+          "designation",
+          "collision_probability",
+          "risk_level"
+        ],
+        "title": "ImpactResponse",
+        "type": "object"
+      },
       "IndicatorResultResponse": {
         "description": "Indicator result response model.",
         "properties": {
@@ -943,6 +1310,89 @@ Some IP addresses of users launching heavy query showers have temporarily been d
         "title": "MetricsResponse",
         "type": "object"
       },
+      "OrbitalElementPoint": {
+        "properties": {
+          "M": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "M"
+          },
+          "a": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "A"
+          },
+          "e": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "E"
+          },
+          "epoch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epoch"
+          },
+          "i": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "I"
+          },
+          "node": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Node"
+          },
+          "peri": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peri"
+          }
+        },
+        "title": "OrbitalElementPoint",
+        "type": "object"
+      },
       "OrbitalElementsResponse": {
         "description": "Orbital elements response model.",
         "properties": {
@@ -1037,6 +1487,108 @@ Some IP addresses of users launching heavy query showers have temporarily been d
           }
         },
         "title": "OrbitalElementsResponse",
+        "type": "object"
+      },
+      "OrbitalHistoryResponse": {
+        "properties": {
+          "data_source": {
+            "default": "JPL Horizons",
+            "title": "Data Source",
+            "type": "string"
+          },
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/OrbitalElementPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "years": {
+            "title": "Years",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "designation",
+          "years",
+          "points"
+        ],
+        "title": "OrbitalHistoryResponse",
+        "type": "object"
+      },
+      "OrbitalInput": {
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "number"
+          },
+          "albedo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Albedo"
+          },
+          "designation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Designation"
+          },
+          "diameter_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diameter Km"
+          },
+          "e": {
+            "title": "E",
+            "type": "number"
+          },
+          "i": {
+            "title": "I",
+            "type": "number"
+          },
+          "orbital_history": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orbital History"
+          }
+        },
+        "required": [
+          "a",
+          "e",
+          "i"
+        ],
+        "title": "OrbitalInput",
         "type": "object"
       },
       "PaginatedResponse": {
@@ -2263,7 +2815,7 @@ Some IP addresses of users launching heavy query showers have temporarily been d
     },
     "/api/v1/analysis/analyze/batch": {
       "post": {
-        "description": "Analyze multiple NEOs in batch mode.\n\nProcesses multiple NEO designations concurrently with progress tracking\nand optional webhook notifications.",
+        "description": "Analyze multiple NEOs for artificial signatures (batch mode).\nUses the same DataFetcher + ValidatedSigma5 path as GET /detect.",
         "operationId": "analyze_batch_api_v1_analysis_analyze_batch_post",
         "requestBody": {
           "content": {
@@ -2315,7 +2867,7 @@ Some IP addresses of users launching heavy query showers have temporarily been d
     },
     "/api/v1/analysis/batch/{batch_id}/status": {
       "get": {
-        "description": "Get status of a batch analysis job.",
+        "description": "Get status and results of a batch detection job.",
         "operationId": "get_batch_status_api_v1_analysis_batch__batch_id__status_get",
         "parameters": [
           {
@@ -2381,8 +2933,88 @@ Some IP addresses of users launching heavy query showers have temporarily been d
               "title": "Designation",
               "type": "string"
             }
+          },
+          {
+            "description": "Bypass cache and re-fetch from source",
+            "in": "query",
+            "name": "force_refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Bypass cache and re-fetch from source",
+              "title": "Force Refresh",
+              "type": "boolean"
+            }
           }
         ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "No orbital data for designation"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Detection pipeline failure"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Detect Neo",
+        "tags": [
+          "Analysis"
+        ]
+      },
+      "post": {
+        "description": "Run ValidatedSigma5 detector on caller-supplied orbital elements.\nNo data source lookup \u2014 use when you have elements from your own reduction.",
+        "operationId": "detect_neo_raw_api_v1_analysis_detect_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrbitalInput"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -2413,7 +3045,7 @@ Some IP addresses of users launching heavy query showers have temporarily been d
             "HTTPBearer": []
           }
         ],
-        "summary": "Detect Neo",
+        "summary": "Detect Neo Raw",
         "tags": [
           "Analysis"
         ]
@@ -2471,8 +3103,7 @@ Some IP addresses of users launching heavy query showers have temporarily been d
     },
     "/api/v1/analysis/export/{export_id}/download": {
       "get": {
-        "deprecated": true,
-        "description": "Download completed export file. Not yet implemented \u2014 returns placeholder data.",
+        "description": "Download completed export file (JSON or CSV).",
         "operationId": "download_export_api_v1_analysis_export__export_id__download_get",
         "parameters": [
           {
@@ -2565,6 +3196,146 @@ Some IP addresses of users launching heavy query showers have temporarily been d
           }
         ],
         "summary": "Get Export Status",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/history": {
+      "get": {
+        "description": "Fetch time-series Keplerian orbital elements from JPL Horizons.\nReturns one data point per year over the requested span.",
+        "operationId": "orbital_history_api_v1_analysis_history_get",
+        "parameters": [
+          {
+            "description": "NEO designation, e.g. 'Apophis'",
+            "in": "query",
+            "name": "designation",
+            "required": true,
+            "schema": {
+              "description": "NEO designation, e.g. 'Apophis'",
+              "title": "Designation",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Number of years to span",
+            "in": "query",
+            "name": "years",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "description": "Number of years to span",
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Years",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrbitalHistoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Orbital History",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/impact": {
+      "get": {
+        "description": "Calculate Earth/Moon impact probability for a named NEO.\n\nReturns collision_probability, moon_collision_probability, risk_level,\nimpact_energy_mt, and crater_diameter_km.",
+        "operationId": "impact_neo_api_v1_analysis_impact_get",
+        "parameters": [
+          {
+            "description": "NEO designation, e.g. '99942'",
+            "in": "query",
+            "name": "designation",
+            "required": true,
+            "schema": {
+              "description": "NEO designation, e.g. '99942'",
+              "title": "Designation",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "No orbital data for designation"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Impact calculation failure"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Impact Neo",
         "tags": [
           "Analysis"
         ]
@@ -3963,16 +4734,14 @@ Some IP addresses of users launching heavy query showers have temporarily been d
     },
     "/health": {
       "get": {
-        "description": "Health check endpoint with emergency life support.",
+        "description": "Health check endpoint.",
         "operationId": "health_check_health_get",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Health Check Health Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HealthResponse"
                 }
               }
             },

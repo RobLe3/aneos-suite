@@ -241,6 +241,7 @@ class NEOData:
     # Metadata
     created_at: datetime = field(default_factory=_utcnow)
     updated_at: datetime = field(default_factory=_utcnow)
+    fetched_at: Optional[datetime] = None  # Timestamp when data was fetched from source
     
     def __post_init__(self):
         """Post-initialization processing."""
@@ -314,7 +315,15 @@ class NEOData:
             "first_observation": self.first_observation.isoformat() if self.first_observation else None,
             "last_observation": self.last_observation.isoformat() if self.last_observation else None,
             "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat()
+            "updated_at": self.updated_at.isoformat(),
+            "physical_properties": {
+                "diameter_km":           self.physical_properties.diameter_km,
+                "albedo":                self.physical_properties.albedo,
+                "rotation_period_hours": self.physical_properties.rotation_period_hours,
+                "spectral_type":         self.physical_properties.spectral_type,
+                "absolute_magnitude_h":  self.physical_properties.absolute_magnitude_h,
+            } if self.physical_properties else None,
+            "fetched_at": self.fetched_at.isoformat() if self.fetched_at else None,
         }
     
     @classmethod
@@ -342,9 +351,22 @@ class NEOData:
                     return None
             return None
         
+        # Reconstruct PhysicalProperties from cache
+        pp_data = data.get("physical_properties")
+        physical_properties = None
+        if pp_data:
+            physical_properties = PhysicalProperties(
+                diameter_km=pp_data.get("diameter_km"),
+                albedo=pp_data.get("albedo"),
+                rotation_period_hours=pp_data.get("rotation_period_hours"),
+                spectral_type=pp_data.get("spectral_type"),
+                absolute_magnitude_h=pp_data.get("absolute_magnitude_h"),
+            )
+
         return cls(
             designation=data.get("designation", ""),
             orbital_elements=orbital_elements,
+            physical_properties=physical_properties,
             close_approaches=close_approaches,
             sources_used=data.get("sources_used", []),
             source_contributions=data.get("source_contributions", {}),
@@ -357,6 +379,7 @@ class NEOData:
             last_observation=_ensure_utc(parse_datetime(data.get("last_observation"))),
             created_at=_ensure_utc(parse_datetime(data.get("created_at")) or _utcnow()),
             updated_at=_ensure_utc(parse_datetime(data.get("updated_at")) or _utcnow()),
+            fetched_at=_ensure_utc(parse_datetime(data.get("fetched_at"))),
         )
     
     def save_to_file(self, file_path: Union[str, Path]) -> None:
