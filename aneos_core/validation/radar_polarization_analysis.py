@@ -279,9 +279,6 @@ class RadarPolarizationAnalyzer:
             'false_negative_rate': 0.0
         }
         
-        # EMERGENCY: Suppressed initialization logging
-        # self.logger.info("RadarPolarizationAnalyzer initialized successfully")
-    
     def _default_config(self) -> Dict[str, Any]:
         """Default configuration for radar polarization analysis."""
         return {
@@ -784,10 +781,7 @@ class RadarPolarizationAnalyzer:
             
             # Train models if we have data
             self._train_ml_models()
-            
-            # EMERGENCY: Suppressed initialization logging
-        # self.logger.info("RadarPolarizationAnalyzer initialized successfully")
-            
+
         except Exception as e:
             self.logger.warning(f"Failed to initialize ML models: {e}")
     

@@ -32,7 +32,7 @@ def preflight_check() -> Dict[str, Dict[str, str]]:
 
     api_targets = {
         "sbdb": "https://ssd-api.jpl.nasa.gov/sbdb.api",
-        "neodys": "https://newton.spacedys.com/neodys/api/",
+        "neodys": "https://newton.spacedys.com/~neodys2/epoch/99942.eq0",
         "mpc": "https://www.minorplanetcenter.net/",
         "horizons": "https://ssd.jpl.nasa.gov/api/horizons.api",
     }
@@ -43,6 +43,19 @@ def preflight_check() -> Dict[str, Dict[str, str]]:
             results[name] = {"status": "ok", "detail": f"HTTP {resp.status_code}"}
         except Exception as exc:
             results[name] = {"status": "error", "detail": str(exc)}
+
+    # --- Redis check (optional dependency) ---
+    try:
+        import redis as _redis
+        import os as _os
+        r = _redis.from_url(
+            _os.environ.get("ANEOS_REDIS_URL", "redis://localhost:6379/0"),
+            socket_timeout=2,
+        )
+        r.ping()
+        results["redis"] = {"status": "ok", "detail": "PING successful"}
+    except Exception as exc:
+        results["redis"] = {"status": "error", "detail": str(exc)}
 
     # --- Directory checks ---
     cache_dir = Path("neo_data/cache")

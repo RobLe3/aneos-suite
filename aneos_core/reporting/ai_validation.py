@@ -43,6 +43,13 @@ except ImportError:
     HAS_TQDM = False
 
 
+_INTERPRETATION_DISCLAIMER = (
+    "Statistical significance (σ) measures rarity under the natural NEO null hypothesis. "
+    "P(artificial) incorporates 0.1% base rate. Definitive classification requires "
+    "propulsion signatures or observed course corrections."
+)
+
+
 class AIAnomalyValidator:
     """
     Advanced AI-driven anomaly validation system.
@@ -398,9 +405,12 @@ class AIAnomalyValidator:
                     "anomaly_confidence": anomaly_confidence,
                     "ai_validated_anomaly": is_anomaly,
                     "is_verified_anomaly": is_verified,
-                    "verification_status": "[Verified]" if is_verified else "[Unverified]",
+                    "verification_status": (
+                        "[Statistically anomalous]" if is_verified else "[Within expected range]"
+                    ),
                     "dynamic_threshold": dynamic_threshold,
-                    "validation_timestamp": datetime.now().isoformat()
+                    "validation_timestamp": datetime.now().isoformat(),
+                    "interpretation": _INTERPRETATION_DISCLAIMER,
                 })
                 
                 enhanced_data.append(enhanced_neo)

@@ -75,6 +75,7 @@ except ImportError:
     get_config = lambda: {'api': {}, 'analysis': {}, 'ml': {}, 'monitoring': {}}
 
 from .models import APIResponse, ErrorResponse
+import aneos_api.schemas  # noqa: F401 — registers all schema types
 from .auth import AuthManager, get_current_user
 from .middleware import setup_middleware
 from .endpoints import analysis, prediction, monitoring, admin, streaming

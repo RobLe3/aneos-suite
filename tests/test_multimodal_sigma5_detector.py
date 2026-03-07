@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pytest
 
-from aneos_core.detection.multimodal_sigma5_artificial_neo_detector import (
+from aneos_core.detection._archive.multimodal_sigma5_artificial_neo_detector import (
     MultiModalSigma5ArtificialNEODetector,
 )
 

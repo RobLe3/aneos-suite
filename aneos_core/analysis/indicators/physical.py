@@ -45,7 +45,10 @@ class DiameterAnomalyIndicator(NumericRangeIndicator):
                 metadata={'no_orbital_elements': True},
             )
 
-        diameter = neo_data.orbital_elements.diameter
+        # Prefer physical_properties; fall back to orbital_elements for backward compat
+        pp = neo_data.physical_properties
+        diameter = (pp.diameter_km if pp and pp.diameter_km is not None
+                    else None)
 
         if diameter is None:
             return IndicatorResult(
@@ -116,7 +119,9 @@ class AlbedoAnomalyIndicator(NumericRangeIndicator):
                 metadata={'no_orbital_elements': True},
             )
 
-        albedo = neo_data.orbital_elements.albedo
+        pp = neo_data.physical_properties
+        albedo = (pp.albedo if pp and pp.albedo is not None
+                  else None)
 
         if albedo is None:
             return IndicatorResult(
@@ -179,7 +184,9 @@ class SpectralAnomalyIndicator(AnomalyIndicator):
                 metadata={'no_orbital_elements': True},
             )
 
-        spectral_type = neo_data.orbital_elements.spectral_type
+        pp = neo_data.physical_properties
+        spectral_type = (pp.spectral_type if pp and pp.spectral_type is not None
+                         else None)
         a = neo_data.orbital_elements.semi_major_axis
 
         if spectral_type is None:

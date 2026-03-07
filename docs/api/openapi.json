@@ -1,0 +1,3986 @@
+Some IP addresses of users launching heavy query showers have temporarily been disabled. Please contact the Gaia helpdesk (https://www.cosmos.esa.int/web/gaia/gaia-helpdesk) for advice. Workaround solutions for the Gaia Archive issues following the infrastructure upgrade: https://www.cosmos.esa.int/web/gaia/news#WorkaroundArchive
+{
+  "components": {
+    "schemas": {
+      "AlertResponse": {
+        "description": "Alert response model.",
+        "properties": {
+          "acknowledged": {
+            "default": false,
+            "title": "Acknowledged",
+            "type": "boolean"
+          },
+          "alert_id": {
+            "title": "Alert Id",
+            "type": "string"
+          },
+          "alert_level": {
+            "description": "low, medium, high, critical",
+            "title": "Alert Level",
+            "type": "string"
+          },
+          "alert_type": {
+            "title": "Alert Type",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Data",
+            "type": "object"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "resolved": {
+            "default": false,
+            "title": "Resolved",
+            "type": "boolean"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alert_id",
+          "alert_type",
+          "alert_level",
+          "title",
+          "message",
+          "timestamp"
+        ],
+        "title": "AlertResponse",
+        "type": "object"
+      },
+      "AnalysisFilter": {
+        "description": "Analysis results filter model.",
+        "properties": {
+          "classification": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter by classification",
+            "title": "Classification"
+          },
+          "date_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date From"
+          },
+          "date_to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date To"
+          },
+          "designations": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Designations"
+          },
+          "max_score": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Score"
+          },
+          "min_score": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Score"
+          }
+        },
+        "title": "AnalysisFilter",
+        "type": "object"
+      },
+      "AnalysisMetricsResponse": {
+        "description": "Analysis metrics response model.",
+        "properties": {
+          "anomaly_detection_rate": {
+            "title": "Anomaly Detection Rate",
+            "type": "number"
+          },
+          "average_processing_time": {
+            "title": "Average Processing Time",
+            "type": "number"
+          },
+          "cache_hit_rate": {
+            "title": "Cache Hit Rate",
+            "type": "number"
+          },
+          "failed_analyses": {
+            "title": "Failed Analyses",
+            "type": "integer"
+          },
+          "successful_analyses": {
+            "title": "Successful Analyses",
+            "type": "integer"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "total_analyses": {
+            "title": "Total Analyses",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "timestamp",
+          "total_analyses",
+          "successful_analyses",
+          "failed_analyses",
+          "average_processing_time",
+          "cache_hit_rate",
+          "anomaly_detection_rate"
+        ],
+        "title": "AnalysisMetricsResponse",
+        "type": "object"
+      },
+      "AnalysisRequest": {
+        "description": "Request model for NEO analysis.",
+        "properties": {
+          "designation": {
+            "description": "NEO designation (e.g., '2024 AB123')",
+            "title": "Designation",
+            "type": "string"
+          },
+          "force_refresh": {
+            "default": false,
+            "description": "Force refresh of cached data",
+            "title": "Force Refresh",
+            "type": "boolean"
+          },
+          "include_indicators": {
+            "default": true,
+            "description": "Include individual indicator results",
+            "title": "Include Indicators",
+            "type": "boolean"
+          },
+          "include_raw_data": {
+            "default": false,
+            "description": "Include raw NEO data in response",
+            "title": "Include Raw Data",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "designation"
+        ],
+        "title": "AnalysisRequest",
+        "type": "object"
+      },
+      "AnalysisResponse": {
+        "description": "Complete analysis response model.",
+        "properties": {
+          "anomaly_score": {
+            "$ref": "#/components/schemas/AnomalyScoreResponse"
+          },
+          "close_approaches": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CloseApproachResponse"
+            },
+            "title": "Close Approaches",
+            "type": "array"
+          },
+          "data_quality": {
+            "additionalProperties": true,
+            "title": "Data Quality",
+            "type": "object"
+          },
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "execution_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Time Ms"
+          },
+          "orbital_elements": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrbitalElementsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "processing_time": {
+            "title": "Processing Time",
+            "type": "number"
+          },
+          "raw_neo_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Neo Data"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "designation",
+          "anomaly_score",
+          "processing_time",
+          "data_quality"
+        ],
+        "title": "AnalysisResponse",
+        "type": "object"
+      },
+      "AnomalyScoreResponse": {
+        "description": "Anomaly score response model.",
+        "properties": {
+          "classification": {
+            "description": "natural, suspicious, highly_suspicious, or artificial",
+            "title": "Classification",
+            "type": "string"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "indicator_scores": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IndicatorResultResponse"
+            },
+            "default": {},
+            "title": "Indicator Scores",
+            "type": "object"
+          },
+          "overall_score": {
+            "title": "Overall Score",
+            "type": "number"
+          },
+          "risk_factors": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Risk Factors",
+            "type": "array"
+          },
+          "statistical_summary": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Statistical Summary",
+            "type": "object"
+          }
+        },
+        "required": [
+          "overall_score",
+          "confidence",
+          "classification"
+        ],
+        "title": "AnomalyScoreResponse",
+        "type": "object"
+      },
+      "BatchAnalysisRequest": {
+        "description": "Request model for batch NEO analysis.",
+        "properties": {
+          "designations": {
+            "description": "List of NEO designations",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Designations",
+            "type": "array"
+          },
+          "force_refresh": {
+            "default": false,
+            "description": "Force refresh of cached data",
+            "title": "Force Refresh",
+            "type": "boolean"
+          },
+          "include_raw_data": {
+            "default": false,
+            "description": "Include raw NEO data in responses",
+            "title": "Include Raw Data",
+            "type": "boolean"
+          },
+          "progress_webhook": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Webhook URL for progress updates",
+            "title": "Progress Webhook"
+          }
+        },
+        "required": [
+          "designations"
+        ],
+        "title": "BatchAnalysisRequest",
+        "type": "object"
+      },
+      "BatchPredictionRequest": {
+        "description": "Request model for batch ML prediction.",
+        "properties": {
+          "designations": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Designations",
+            "type": "array"
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Specific model ID to use",
+            "title": "Model Id"
+          },
+          "use_cache": {
+            "default": true,
+            "description": "Use cached predictions if available",
+            "title": "Use Cache",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "designations"
+        ],
+        "title": "BatchPredictionRequest",
+        "type": "object"
+      },
+      "CloseApproachResponse": {
+        "description": "Close approach response model.",
+        "properties": {
+          "close_approach_date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close Approach Date"
+          },
+          "distance_au": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance Au"
+          },
+          "distance_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance Km"
+          },
+          "infinity_velocity_km_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Infinity Velocity Km S"
+          },
+          "relative_velocity_km_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Velocity Km S"
+          },
+          "subpoint": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "[latitude, longitude]",
+            "title": "Subpoint"
+          }
+        },
+        "title": "CloseApproachResponse",
+        "type": "object"
+      },
+      "ConfigResponse": {
+        "description": "Configuration response model.",
+        "properties": {
+          "analysis_config": {
+            "additionalProperties": true,
+            "title": "Analysis Config",
+            "type": "object"
+          },
+          "api_config": {
+            "additionalProperties": true,
+            "title": "Api Config",
+            "type": "object"
+          },
+          "ml_config": {
+            "additionalProperties": true,
+            "title": "Ml Config",
+            "type": "object"
+          },
+          "monitoring_config": {
+            "additionalProperties": true,
+            "title": "Monitoring Config",
+            "type": "object"
+          }
+        },
+        "required": [
+          "api_config",
+          "analysis_config",
+          "ml_config",
+          "monitoring_config"
+        ],
+        "title": "ConfigResponse",
+        "type": "object"
+      },
+      "CreateUserRequest": {
+        "description": "Create user request model.",
+        "properties": {
+          "email": {
+            "pattern": "^[^@]+@[^@]+\\.[^@]+$",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole",
+            "default": "viewer"
+          },
+          "username": {
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "email",
+          "password"
+        ],
+        "title": "CreateUserRequest",
+        "type": "object"
+      },
+      "DetectionResponse": {
+        "properties": {
+          "artificial_probability": {
+            "title": "Artificial Probability",
+            "type": "number"
+          },
+          "classification": {
+            "title": "Classification",
+            "type": "string"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "evidence_count": {
+            "default": 0,
+            "title": "Evidence Count",
+            "type": "integer"
+          },
+          "interpretation": {
+            "default": "sigma_confidence = rarity under natural NEO null hypothesis. artificial_probability incorporates 0.1% base rate prior.",
+            "title": "Interpretation",
+            "type": "string"
+          },
+          "is_artificial": {
+            "title": "Is Artificial",
+            "type": "boolean"
+          },
+          "sigma_confidence": {
+            "title": "Sigma Confidence",
+            "type": "number"
+          }
+        },
+        "required": [
+          "designation",
+          "is_artificial",
+          "artificial_probability",
+          "sigma_confidence",
+          "classification",
+          "confidence"
+        ],
+        "title": "DetectionResponse",
+        "type": "object"
+      },
+      "ExportFormat": {
+        "description": "Export format enumeration.",
+        "enum": [
+          "json",
+          "csv",
+          "xlsx",
+          "pdf"
+        ],
+        "title": "ExportFormat",
+        "type": "string"
+      },
+      "ExportRequest": {
+        "description": "Export request model.",
+        "properties": {
+          "date_range": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Days of data to export",
+            "title": "Date Range"
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisFilter"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "format": {
+            "$ref": "#/components/schemas/ExportFormat",
+            "default": "json"
+          },
+          "include_raw_data": {
+            "default": false,
+            "description": "Include raw NEO data",
+            "title": "Include Raw Data",
+            "type": "boolean"
+          }
+        },
+        "title": "ExportRequest",
+        "type": "object"
+      },
+      "ExportResponse": {
+        "description": "Export response model.",
+        "properties": {
+          "download_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Download Url"
+          },
+          "execution_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Time Ms"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "export_id": {
+            "title": "Export Id",
+            "type": "string"
+          },
+          "file_size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Size Bytes"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ExportFormat"
+          },
+          "status": {
+            "description": "processing, completed, failed",
+            "title": "Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "export_id",
+          "format",
+          "status"
+        ],
+        "title": "ExportResponse",
+        "type": "object"
+      },
+      "FeatureContributionResponse": {
+        "description": "Feature contribution response model.",
+        "properties": {
+          "contribution": {
+            "title": "Contribution",
+            "type": "number"
+          },
+          "feature_name": {
+            "title": "Feature Name",
+            "type": "string"
+          },
+          "feature_value": {
+            "title": "Feature Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "feature_name",
+          "contribution",
+          "feature_value"
+        ],
+        "title": "FeatureContributionResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IndicatorResultResponse": {
+        "description": "Indicator result response model.",
+        "properties": {
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "contributing_factors": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Contributing Factors",
+            "type": "array"
+          },
+          "indicator_name": {
+            "title": "Indicator Name",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Metadata",
+            "type": "object"
+          },
+          "raw_score": {
+            "title": "Raw Score",
+            "type": "number"
+          },
+          "weighted_score": {
+            "title": "Weighted Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "indicator_name",
+          "raw_score",
+          "weighted_score",
+          "confidence"
+        ],
+        "title": "IndicatorResultResponse",
+        "type": "object"
+      },
+      "MLMetricsResponse": {
+        "description": "ML metrics response model.",
+        "properties": {
+          "alert_count": {
+            "title": "Alert Count",
+            "type": "integer"
+          },
+          "ensemble_agreement": {
+            "title": "Ensemble Agreement",
+            "type": "number"
+          },
+          "feature_quality": {
+            "title": "Feature Quality",
+            "type": "number"
+          },
+          "model_predictions": {
+            "title": "Model Predictions",
+            "type": "integer"
+          },
+          "prediction_latency": {
+            "title": "Prediction Latency",
+            "type": "number"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "timestamp",
+          "model_predictions",
+          "prediction_latency",
+          "feature_quality",
+          "ensemble_agreement",
+          "alert_count"
+        ],
+        "title": "MLMetricsResponse",
+        "type": "object"
+      },
+      "MetricsResponse": {
+        "description": "Comprehensive metrics response model.",
+        "properties": {
+          "analysis_metrics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisMetricsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execution_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Time Ms"
+          },
+          "ml_metrics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MLMetricsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "performance_summary": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Performance Summary",
+            "type": "object"
+          },
+          "recent_alerts": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AlertResponse"
+            },
+            "title": "Recent Alerts",
+            "type": "array"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "system_metrics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SystemMetricsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "title": "MetricsResponse",
+        "type": "object"
+      },
+      "OrbitalElementsResponse": {
+        "description": "Orbital elements response model.",
+        "properties": {
+          "argument_of_perihelion": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Argument Of Perihelion"
+          },
+          "ascending_node": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ascending Node"
+          },
+          "eccentricity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eccentricity"
+          },
+          "epoch": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epoch"
+          },
+          "inclination": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inclination"
+          },
+          "mean_anomaly": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Anomaly"
+          },
+          "orbital_period": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orbital Period"
+          },
+          "semi_major_axis": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Semi Major Axis"
+          }
+        },
+        "title": "OrbitalElementsResponse",
+        "type": "object"
+      },
+      "PaginatedResponse": {
+        "description": "Paginated response model.",
+        "properties": {
+          "items": {
+            "items": {},
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "default": 1,
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "default": 50,
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "total_pages"
+        ],
+        "title": "PaginatedResponse",
+        "type": "object"
+      },
+      "PredictionRequest": {
+        "description": "Request model for ML prediction.",
+        "properties": {
+          "designation": {
+            "description": "NEO designation",
+            "title": "Designation",
+            "type": "string"
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Specific model ID to use",
+            "title": "Model Id"
+          },
+          "use_cache": {
+            "default": true,
+            "description": "Use cached predictions if available",
+            "title": "Use Cache",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "designation"
+        ],
+        "title": "PredictionRequest",
+        "type": "object"
+      },
+      "PredictionResponse": {
+        "description": "ML prediction response model.",
+        "properties": {
+          "anomaly_probability": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Anomaly Probability",
+            "type": "number"
+          },
+          "anomaly_score": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Anomaly Score",
+            "type": "number"
+          },
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "execution_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Time Ms"
+          },
+          "feature_contributions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FeatureContributionResponse"
+            },
+            "title": "Feature Contributions",
+            "type": "array"
+          },
+          "is_anomaly": {
+            "title": "Is Anomaly",
+            "type": "boolean"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_predictions": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "description": "Individual model predictions in ensemble",
+            "title": "Model Predictions",
+            "type": "object"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "designation",
+          "anomaly_score",
+          "anomaly_probability",
+          "is_anomaly",
+          "confidence",
+          "model_id"
+        ],
+        "title": "PredictionResponse",
+        "type": "object"
+      },
+      "SortOrder": {
+        "description": "Sort order enumeration.",
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "title": "SortOrder",
+        "type": "string"
+      },
+      "SystemMetricsResponse": {
+        "description": "System metrics response model.",
+        "properties": {
+          "cpu_percent": {
+            "title": "Cpu Percent",
+            "type": "number"
+          },
+          "disk_usage_percent": {
+            "title": "Disk Usage Percent",
+            "type": "number"
+          },
+          "memory_percent": {
+            "title": "Memory Percent",
+            "type": "number"
+          },
+          "memory_used_mb": {
+            "title": "Memory Used Mb",
+            "type": "number"
+          },
+          "network_bytes_recv": {
+            "title": "Network Bytes Recv",
+            "type": "integer"
+          },
+          "network_bytes_sent": {
+            "title": "Network Bytes Sent",
+            "type": "integer"
+          },
+          "process_count": {
+            "title": "Process Count",
+            "type": "integer"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "timestamp",
+          "cpu_percent",
+          "memory_percent",
+          "memory_used_mb",
+          "disk_usage_percent",
+          "network_bytes_sent",
+          "network_bytes_recv",
+          "process_count"
+        ],
+        "title": "SystemMetricsResponse",
+        "type": "object"
+      },
+      "SystemStatusResponse": {
+        "description": "System status response model.",
+        "properties": {
+          "deployment_info": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Deployment Info",
+            "type": "object"
+          },
+          "execution_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Time Ms"
+          },
+          "services": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Services",
+            "type": "object"
+          },
+          "status": {
+            "description": "healthy, degraded, critical",
+            "title": "Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "uptime_seconds": {
+            "title": "Uptime Seconds",
+            "type": "number"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "uptime_seconds",
+          "services",
+          "version"
+        ],
+        "title": "SystemStatusResponse",
+        "type": "object"
+      },
+      "TrainingRequest": {
+        "description": "Request model for model training.",
+        "properties": {
+          "designations": {
+            "description": "NEO designations for training",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 50,
+            "title": "Designations",
+            "type": "array"
+          },
+          "hyperparameter_optimization": {
+            "default": true,
+            "description": "Optimize hyperparameters",
+            "title": "Hyperparameter Optimization",
+            "type": "boolean"
+          },
+          "model_types": {
+            "default": [
+              "isolation_forest"
+            ],
+            "description": "Model types to train",
+            "items": {
+              "type": "string"
+            },
+            "title": "Model Types",
+            "type": "array"
+          },
+          "use_ensemble": {
+            "default": true,
+            "description": "Create ensemble model",
+            "title": "Use Ensemble",
+            "type": "boolean"
+          },
+          "validation_split": {
+            "default": 0.2,
+            "description": "Validation split ratio",
+            "maximum": 0.4,
+            "minimum": 0.1,
+            "title": "Validation Split",
+            "type": "number"
+          }
+        },
+        "required": [
+          "designations"
+        ],
+        "title": "TrainingRequest",
+        "type": "object"
+      },
+      "TrainingResponse": {
+        "description": "Training response model.",
+        "properties": {
+          "execution_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Time Ms"
+          },
+          "model_paths": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Model Paths",
+            "type": "array"
+          },
+          "models_trained": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Models Trained",
+            "type": "array"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "status": {
+            "description": "training, completed, failed",
+            "title": "Status",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "training_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training Score"
+          },
+          "training_time": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training Time"
+          },
+          "validation_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Score"
+          }
+        },
+        "required": [
+          "session_id",
+          "status"
+        ],
+        "title": "TrainingResponse",
+        "type": "object"
+      },
+      "UserResponse": {
+        "description": "User response model.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "is_active": {
+            "default": true,
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "last_login": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "username",
+          "email",
+          "role",
+          "created_at"
+        ],
+        "title": "UserResponse",
+        "type": "object"
+      },
+      "UserRole": {
+        "description": "User role enumeration.",
+        "enum": [
+          "admin",
+          "analyst",
+          "viewer"
+        ],
+        "title": "UserRole",
+        "type": "string"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "in": "header",
+        "name": "X-API-Key",
+        "type": "apiKey"
+      },
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Advanced Near Earth Object detection System - RESTful API for artificial NEO detection",
+    "title": "aNEOS API",
+    "version": "2.0.0",
+    "x-logo": {
+      "url": "https://example.com/aneos-logo.png"
+    }
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/": {
+      "get": {
+        "description": "Root endpoint with API information.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Root  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Root"
+      }
+    },
+    "/api/v1/admin/config": {
+      "get": {
+        "description": "Get current system configuration.",
+        "operationId": "get_system_config_api_v1_admin_config_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get System Config",
+        "tags": [
+          "Administration"
+        ]
+      },
+      "post": {
+        "description": "Update system configuration (requires restart for some changes).",
+        "operationId": "update_system_config_api_v1_admin_config_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Config Updates",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Update System Config Api V1 Admin Config Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update System Config",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/logs": {
+      "get": {
+        "description": "Get recent system logs.",
+        "operationId": "get_system_logs_api_v1_admin_logs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lines",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Lines",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "default": "INFO",
+              "title": "Level",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get System Logs Api V1 Admin Logs Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get System Logs",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/maintenance/cache/clear": {
+      "post": {
+        "description": "Clear all system caches.",
+        "operationId": "clear_system_cache_api_v1_admin_maintenance_cache_clear_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Clear System Cache Api V1 Admin Maintenance Cache Clear Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear System Cache",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/maintenance/gc": {
+      "post": {
+        "description": "Force Python garbage collection.",
+        "operationId": "force_garbage_collection_api_v1_admin_maintenance_gc_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Force Garbage Collection Api V1 Admin Maintenance Gc Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Force Garbage Collection",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/status": {
+      "get": {
+        "description": "Get comprehensive system status for administrators.",
+        "operationId": "get_system_status_api_v1_admin_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get System Status",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/training/sessions": {
+      "get": {
+        "description": "List all training sessions.",
+        "operationId": "list_training_sessions_api_v1_admin_training_sessions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TrainingResponse"
+                  },
+                  "title": "Response List Training Sessions Api V1 Admin Training Sessions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Training Sessions",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/training/start": {
+      "post": {
+        "description": "Start ML model training with specified parameters.",
+        "operationId": "start_model_training_api_v1_admin_training_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Model Training",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/training/{session_id}": {
+      "delete": {
+        "description": "Cancel a running training session.",
+        "operationId": "cancel_training_session_api_v1_admin_training__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Cancel Training Session Api V1 Admin Training  Session Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Training Session",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/training/{session_id}/status": {
+      "get": {
+        "description": "Get status of a training session.",
+        "operationId": "get_training_status_api_v1_admin_training__session_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Training Status",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "description": "List all user accounts.",
+        "operationId": "list_users_api_v1_admin_users_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  },
+                  "title": "Response List Users Api V1 Admin Users Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Users",
+        "tags": [
+          "Administration"
+        ]
+      },
+      "post": {
+        "description": "Create a new user account.",
+        "operationId": "create_user_api_v1_admin_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create User",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{user_id}": {
+      "delete": {
+        "description": "Delete user account.",
+        "operationId": "delete_user_api_v1_admin_users__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete User Api V1 Admin Users  User Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete User",
+        "tags": [
+          "Administration"
+        ]
+      },
+      "put": {
+        "description": "Update user account details.",
+        "operationId": "update_user_api_v1_admin_users__user_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Updates",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update User",
+        "tags": [
+          "Administration"
+        ]
+      }
+    },
+    "/api/v1/analysis/analyze": {
+      "post": {
+        "description": "Analyze a single NEO for anomaly indicators.\n\nPerforms comprehensive analysis including orbital mechanics,\napproach patterns, and anomaly detection.",
+        "operationId": "analyze_neo_api_v1_analysis_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Analyze Neo",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/analyze/batch": {
+      "post": {
+        "description": "Analyze multiple NEOs in batch mode.\n\nProcesses multiple NEO designations concurrently with progress tracking\nand optional webhook notifications.",
+        "operationId": "analyze_batch_api_v1_analysis_analyze_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchAnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Analyze Batch Api V1 Analysis Analyze Batch Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Analyze Batch",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/batch/{batch_id}/status": {
+      "get": {
+        "description": "Get status of a batch analysis job.",
+        "operationId": "get_batch_status_api_v1_analysis_batch__batch_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Batch Status Api V1 Analysis Batch  Batch Id  Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Batch Status",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/detect": {
+      "get": {
+        "description": "Run the canonical ValidatedSigma5 artificial-NEO detector on a named object.\n\nFetches orbital elements from the data pipeline and returns a typed\nDetectionResponse with sigma_confidence and artificial_probability.",
+        "operationId": "detect_neo_api_v1_analysis_detect_get",
+        "parameters": [
+          {
+            "description": "NEO designation, e.g. '2020 SO'",
+            "in": "query",
+            "name": "designation",
+            "required": true,
+            "schema": {
+              "description": "NEO designation, e.g. '2020 SO'",
+              "title": "Designation",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Detect Neo",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/export": {
+      "post": {
+        "description": "Export analysis results in various formats.\n\nSupports JSON, CSV, XLSX, and PDF export formats with filtering options.",
+        "operationId": "export_analyses_api_v1_analysis_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export Analyses",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/export/{export_id}/download": {
+      "get": {
+        "deprecated": true,
+        "description": "Download completed export file. Not yet implemented \u2014 returns placeholder data.",
+        "operationId": "download_export_api_v1_analysis_export__export_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "export_id",
+            "required": true,
+            "schema": {
+              "title": "Export Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download Export",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/export/{export_id}/status": {
+      "get": {
+        "description": "Get status of an export job.",
+        "operationId": "get_export_status_api_v1_analysis_export__export_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "export_id",
+            "required": true,
+            "schema": {
+              "title": "Export Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Export Status",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/results/{designation}": {
+      "get": {
+        "description": "Get cached analysis result for a NEO.",
+        "operationId": "get_analysis_result_api_v1_analysis_results__designation__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "designation",
+            "required": true,
+            "schema": {
+              "title": "Designation",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Analysis Result",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/search": {
+      "get": {
+        "description": "Search and filter analysis results.\n\nSupports filtering by classification, score range, date range,\nand specific NEO designations.",
+        "operationId": "search_analyses_api_v1_analysis_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_by",
+            "required": false,
+            "schema": {
+              "default": "timestamp",
+              "title": "Sort By",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort_order",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortOrder",
+              "default": "desc"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AnalysisFilter"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Filters"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Search Analyses",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/stats": {
+      "get": {
+        "description": "Get analysis statistics and system metrics.",
+        "operationId": "get_analysis_stats_api_v1_analysis_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Analysis Stats Api V1 Analysis Stats Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Analysis Stats",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/monitoring/alerts": {
+      "get": {
+        "description": "Get system alerts with optional filtering.",
+        "operationId": "get_alerts_api_v1_monitoring_alerts_get",
+        "parameters": [
+          {
+            "description": "Filter by alert level",
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by alert level",
+              "title": "Level"
+            }
+          },
+          {
+            "description": "Filter by resolved status",
+            "in": "query",
+            "name": "resolved",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by resolved status",
+              "title": "Resolved"
+            }
+          },
+          {
+            "description": "Maximum number of alerts to return",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Maximum number of alerts to return",
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AlertResponse"
+                  },
+                  "title": "Response Get Alerts Api V1 Monitoring Alerts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Alerts",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/monitoring/alerts/{alert_id}/acknowledge": {
+      "post": {
+        "description": "Acknowledge an alert.",
+        "operationId": "acknowledge_alert_api_v1_monitoring_alerts__alert_id__acknowledge_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alert_id",
+            "required": true,
+            "schema": {
+              "title": "Alert Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Acknowledge Alert Api V1 Monitoring Alerts  Alert Id  Acknowledge Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Acknowledge Alert",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/monitoring/alerts/{alert_id}/resolve": {
+      "post": {
+        "description": "Resolve an alert.",
+        "operationId": "resolve_alert_api_v1_monitoring_alerts__alert_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "alert_id",
+            "required": true,
+            "schema": {
+              "title": "Alert Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Resolve Alert Api V1 Monitoring Alerts  Alert Id  Resolve Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Resolve Alert",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/monitoring/dashboard": {
+      "get": {
+        "description": "Get comprehensive dashboard data for monitoring interface.",
+        "operationId": "get_dashboard_data_api_v1_monitoring_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Dashboard Data Api V1 Monitoring Dashboard Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Dashboard Data",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/monitoring/metrics": {
+      "get": {
+        "description": "Get current system metrics including system, analysis, and ML metrics.",
+        "operationId": "get_current_metrics_api_v1_monitoring_metrics_get",
+        "parameters": [
+          {
+            "description": "Include historical metrics",
+            "in": "query",
+            "name": "include_history",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Include historical metrics",
+              "title": "Include History",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Current Metrics",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/monitoring/metrics/history": {
+      "get": {
+        "description": "Get historical metrics data for trending analysis.",
+        "operationId": "get_metrics_history_api_v1_monitoring_metrics_history_get",
+        "parameters": [
+          {
+            "description": "Hours of history to retrieve",
+            "in": "query",
+            "name": "hours",
+            "required": false,
+            "schema": {
+              "default": 24,
+              "description": "Hours of history to retrieve",
+              "maximum": 168,
+              "minimum": 1,
+              "title": "Hours",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Metrics History Api V1 Monitoring Metrics History Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Metrics History",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/monitoring/performance": {
+      "get": {
+        "description": "Get detailed performance metrics and benchmarks.",
+        "operationId": "get_performance_metrics_api_v1_monitoring_performance_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Performance Metrics Api V1 Monitoring Performance Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Performance Metrics",
+        "tags": [
+          "Monitoring"
+        ]
+      }
+    },
+    "/api/v1/prediction/batch/{batch_id}/results": {
+      "get": {
+        "description": "Get results of a completed batch prediction job.",
+        "operationId": "get_batch_prediction_results_api_v1_prediction_batch__batch_id__results_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PredictionResponse"
+                  },
+                  "title": "Response Get Batch Prediction Results Api V1 Prediction Batch  Batch Id  Results Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Batch Prediction Results",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/prediction/batch/{batch_id}/status": {
+      "get": {
+        "description": "Get status of a batch prediction job.",
+        "operationId": "get_batch_prediction_status_api_v1_prediction_batch__batch_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Batch Prediction Status Api V1 Prediction Batch  Batch Id  Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Batch Prediction Status",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/prediction/cache": {
+      "delete": {
+        "description": "Clear the prediction cache.",
+        "operationId": "clear_prediction_cache_api_v1_prediction_cache_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Clear Prediction Cache Api V1 Prediction Cache Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear Prediction Cache",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/prediction/features/{designation}": {
+      "get": {
+        "description": "Get extracted features for a NEO without making predictions.",
+        "operationId": "get_neo_features_api_v1_prediction_features__designation__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "designation",
+            "required": true,
+            "schema": {
+              "title": "Designation",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Neo Features Api V1 Prediction Features  Designation  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Neo Features",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/prediction/models": {
+      "get": {
+        "description": "List available ML models and their status.",
+        "operationId": "list_available_models_api_v1_prediction_models_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Available Models Api V1 Prediction Models Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Available Models",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/prediction/models/{model_id}/activate": {
+      "post": {
+        "description": "Activate a specific model for predictions.",
+        "operationId": "activate_model_api_v1_prediction_models__model_id__activate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "model_id",
+            "required": true,
+            "schema": {
+              "title": "Model Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Activate Model Api V1 Prediction Models  Model Id  Activate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Activate Model",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/prediction/models/{model_id}/info": {
+      "get": {
+        "description": "Get detailed information about a specific model.",
+        "operationId": "get_model_info_api_v1_prediction_models__model_id__info_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "model_id",
+            "required": true,
+            "schema": {
+              "title": "Model Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Model Info Api V1 Prediction Models  Model Id  Info Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Model Info",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/prediction/performance": {
+      "get": {
+        "description": "Get ML prediction performance metrics.",
+        "operationId": "get_prediction_performance_api_v1_prediction_performance_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Prediction Performance Api V1 Prediction Performance Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Prediction Performance",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/prediction/predict": {
+      "post": {
+        "description": "Predict anomaly score for a single NEO using ML models.\n\nUses trained ensemble models to provide real-time anomaly predictions\nwith confidence scores and feature contributions.",
+        "operationId": "predict_anomaly_api_v1_prediction_predict_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Predict Anomaly",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/prediction/predict/batch": {
+      "post": {
+        "description": "Predict anomaly scores for multiple NEOs in batch mode.\n\nProcesses multiple NEO predictions concurrently with progress tracking.",
+        "operationId": "predict_batch_api_v1_prediction_predict_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchPredictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Predict Batch Api V1 Prediction Predict Batch Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Predict Batch",
+        "tags": [
+          "ML Prediction"
+        ]
+      }
+    },
+    "/api/v1/stream/alerts/live": {
+      "get": {
+        "description": "Stream live alerts via Server-Sent Events.",
+        "operationId": "stream_live_alerts_api_v1_stream_alerts_live_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Live Alerts",
+        "tags": [
+          "Streaming"
+        ]
+      }
+    },
+    "/api/v1/stream/broadcast": {
+      "post": {
+        "description": "Broadcast a custom event to all connected WebSocket clients.",
+        "operationId": "broadcast_event_api_v1_stream_broadcast_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Event Data",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Broadcast Event Api V1 Stream Broadcast Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Broadcast Event",
+        "tags": [
+          "Streaming"
+        ]
+      }
+    },
+    "/api/v1/stream/connections": {
+      "get": {
+        "description": "Get information about active streaming connections.",
+        "operationId": "get_active_connections_api_v1_stream_connections_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Active Connections Api V1 Stream Connections Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Active Connections",
+        "tags": [
+          "Streaming"
+        ]
+      }
+    },
+    "/api/v1/stream/events": {
+      "get": {
+        "description": "Server-Sent Events endpoint for real-time updates.\n\nStreams events as they occur using SSE protocol.\nCompatible with EventSource JavaScript API.",
+        "operationId": "stream_events_api_v1_stream_events_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "event_types",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Event Types"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Events",
+        "tags": [
+          "Streaming"
+        ]
+      }
+    },
+    "/api/v1/stream/metrics/live": {
+      "get": {
+        "description": "Stream live system metrics via Server-Sent Events.",
+        "operationId": "stream_live_metrics_api_v1_stream_metrics_live_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stream Live Metrics",
+        "tags": [
+          "Streaming"
+        ]
+      }
+    },
+    "/dashboard/": {
+      "get": {
+        "description": "Main dashboard page.",
+        "operationId": "dashboard_home_dashboard__get",
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Dashboard Home",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/admin": {
+      "get": {
+        "description": "Administration dashboard.",
+        "operationId": "admin_dashboard_dashboard_admin_get",
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Dashboard",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/analysis": {
+      "get": {
+        "description": "NEO analysis dashboard.",
+        "operationId": "analysis_dashboard_dashboard_analysis_get",
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Analysis Dashboard",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/ml": {
+      "get": {
+        "description": "Machine Learning models dashboard.",
+        "operationId": "ml_dashboard_dashboard_ml_get",
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ml Dashboard",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/dashboard/monitoring": {
+      "get": {
+        "description": "System monitoring dashboard.",
+        "operationId": "monitoring_dashboard_dashboard_monitoring_get",
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Monitoring Dashboard",
+        "tags": [
+          "Dashboard"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Health check endpoint with emergency life support.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Health Check Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health Check"
+      }
+    }
+  }
+}

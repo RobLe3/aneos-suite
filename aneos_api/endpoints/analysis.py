@@ -31,6 +31,7 @@ from ..models import (
 # Import moved to avoid circular imports
 # from ..app import get_aneos_app
 from ..auth import get_current_user
+from ..schemas.detection import DetectionResponse
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +130,53 @@ async def analyze_neo(
     except Exception as e:
         logger.error(f"Analysis failed for {request.designation}: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+@router.get("/detect", response_model=DetectionResponse)
+async def detect_neo(
+    designation: str = Query(..., description="NEO designation, e.g. '2020 SO'"),
+    current_user: Optional[Dict] = Depends(get_current_user)
+):
+    """
+    Run the canonical ValidatedSigma5 artificial-NEO detector on a named object.
+
+    Fetches orbital elements from the data pipeline and returns a typed
+    DetectionResponse with sigma_confidence and artificial_probability.
+    """
+    try:
+        from aneos_core.data.fetcher import DataFetcher
+        from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
+            ValidatedSigma5ArtificialNEODetector,
+        )
+        fetcher = DataFetcher()
+        neo = fetcher.fetch_neo_data(designation)
+        oe = neo.orbital_elements
+        if oe is None:
+            raise HTTPException(status_code=404, detail=f"No orbital data for {designation}")
+
+        orbital_dict = {
+            "a": oe.semi_major_axis,
+            "e": oe.eccentricity,
+            "i": oe.inclination,
+        }
+        detector = ValidatedSigma5ArtificialNEODetector()
+        result = detector.analyze_neo_validated(orbital_dict)
+
+        classification = "ARTIFICIAL" if result.is_artificial else "NATURAL"
+        return DetectionResponse(
+            designation=designation,
+            is_artificial=result.is_artificial,
+            artificial_probability=result.bayesian_probability,
+            sigma_confidence=result.sigma_confidence,
+            classification=classification,
+            confidence=min(result.sigma_confidence / 5.0, 1.0),
+            evidence_count=len(result.evidence_sources),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Detection failed for {designation}: {e}")
+        raise HTTPException(status_code=500, detail=f"Detection failed: {str(e)}")
+
 
 @router.post("/analyze/batch", response_model=Dict[str, Any])
 async def analyze_batch(
@@ -327,12 +375,12 @@ async def get_export_status(
         expires_at=job.get('expires_at')
     )
 
-@router.get("/export/{export_id}/download")
+@router.get("/export/{export_id}/download", deprecated=True)
 async def download_export(
     export_id: str,
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
-    """Download completed export file."""
+    """Download completed export file. Not yet implemented — returns placeholder data."""
     if export_id not in _export_jobs:
         raise HTTPException(status_code=404, detail="Export job not found")
     

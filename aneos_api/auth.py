@@ -75,6 +75,26 @@ for user_data in MOCK_USERS.values():
     for api_key in user_data['api_keys']:
         API_KEY_MAP[api_key] = user_data
 
+
+def _assert_auth_configured() -> None:
+    """Raise if placeholder API keys are still in use outside development."""
+    if os.getenv('ANEOS_ENV', 'development') == 'development':
+        return
+    unconfigured = [
+        name for name in ('ANEOS_ADMIN_API_KEY', 'ANEOS_ANALYST_API_KEY', 'ANEOS_VIEWER_API_KEY')
+        if os.getenv(name, f'{name.split("_")[1].lower()}-key-not-configured')
+           .endswith('-not-configured')
+    ]
+    if unconfigured:
+        raise RuntimeError(
+            f"Placeholder API keys detected in non-development deployment: {unconfigured}. "
+            "Set these environment variables before starting the server. "
+            "See CONTRIBUTING.md for setup instructions."
+        )
+
+
+_assert_auth_configured()
+
 if HAS_FASTAPI:
     # Security schemes
     api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)

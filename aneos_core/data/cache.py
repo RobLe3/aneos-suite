@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 import os
-import pickle
 import tempfile
 import threading
 from dataclasses import dataclass
@@ -126,6 +125,17 @@ class CacheManager(MutableMapping[str, Any]):
         self._cache: Dict[str, CacheEntry] = {}
         self._lock = threading.RLock()
         self._stats = CacheStats()
+
+        # Remove legacy pickle cache files (migration from pickle → JSON)
+        for p in self.cache_dir.glob("*.pickle"):
+            try:
+                p.unlink()
+                import logging as _logging
+                _logging.getLogger(__name__).warning(
+                    f"Removing legacy pickle cache file: {p}"
+                )
+            except OSError:
+                pass
 
     # -- MutableMapping interface -------------------------------------------------
     def __getitem__(self, key: str) -> Any:
@@ -279,13 +289,9 @@ class CacheManager(MutableMapping[str, Any]):
         }
 
         try:
-            # Prefer JSON for simple values and fall back to pickle for complex
-            # objects that are not JSON serialisable.
-            try:
-                serialised = json.dumps(payload)
-                cache_path.write_text(serialised)
-            except TypeError:
-                cache_path.write_bytes(pickle.dumps(payload))
+            # JSON only — pickle removed for security and portability.
+            serialised = json.dumps(payload, default=str)
+            cache_path.write_text(serialised)
             self._stats.disk_writes += 1
         except OSError:
             # Disk persistence is best effort; ignore write failures but keep
@@ -298,11 +304,7 @@ class CacheManager(MutableMapping[str, Any]):
             return None
 
         try:
-            try:
-                payload = json.loads(cache_path.read_text())
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                payload = pickle.loads(cache_path.read_bytes())
-
+            payload = json.loads(cache_path.read_text())
             created_at = datetime.fromisoformat(payload["created_at"])
             expires_at_raw = payload.get("expires_at")
             expires_at = datetime.fromisoformat(expires_at_raw) if expires_at_raw else None
@@ -318,7 +320,7 @@ class CacheManager(MutableMapping[str, Any]):
                 cache_path.unlink(missing_ok=True)
                 return None
             return entry
-        except (OSError, pickle.PickleError, ValueError):
+        except (OSError, json.JSONDecodeError, ValueError):
             cache_path.unlink(missing_ok=True)
             return None
 

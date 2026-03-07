@@ -18,8 +18,8 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 import logging
 
-from .multimodal_sigma5_artificial_neo_detector import MultiModalSigma5ArtificialNEODetector
-from .production_artificial_neo_detector import ProductionArtificialNEODetector
+from aneos_core.detection._archive.multimodal_sigma5_artificial_neo_detector import MultiModalSigma5ArtificialNEODetector
+from aneos_core.detection._archive.production_artificial_neo_detector import ProductionArtificialNEODetector
 
 logger = logging.getLogger(__name__)
 
@@ -420,9 +420,9 @@ class ArtificialNEOTestSuite:
         return MockNEOData(test_case)
     
     def _evaluate_test_result(
-        self, 
-        test_case: TestNEO, 
-        result: ArtificialNEOIdentification
+        self,
+        test_case: TestNEO,
+        result: Any,
     ) -> Tuple[bool, str]:
         """Evaluate if test result matches expectations."""
         expected = test_case.expected_classification

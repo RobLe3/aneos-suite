@@ -182,28 +182,28 @@ class MultiStageValidator:
         try:
             self.spectral_analyzer = SpectralOutlierAnalyzer() if self.config.get('enable_spectral_analysis', True) else None
         except Exception as e:
-            # EMERGENCY: Suppress spectral analyzer warnings
+            logger.warning("IOTA SWARM (spectral) init failed: %s — analysis disabled", e)
             self.spectral_analyzer = None
-        
+
         # Initialize KAPPA SWARM radar polarization analyzer
         try:
             self.radar_analyzer = RadarPolarizationAnalyzer() if self.config.get('enable_radar_analysis', True) else None
         except Exception as e:
-            # EMERGENCY: Suppress radar analyzer warnings
+            logger.warning("KAPPA SWARM (radar) init failed: %s — analysis disabled", e)
             self.radar_analyzer = None
-        
+
         # Initialize LAMBDA SWARM thermal-IR analyzer
         try:
             self.thermal_ir_analyzer = ThermalIRAnalyzer() if self.config.get('enable_thermal_ir_analysis', True) else None
         except Exception as e:
-            # EMERGENCY: Suppress thermal analyzer warnings
+            logger.warning("LAMBDA SWARM (thermal-IR) init failed: %s — analysis disabled", e)
             self.thermal_ir_analyzer = None
-        
+
         # Initialize MU SWARM Gaia astrometric calibrator
         try:
             self.gaia_calibrator = GaiaAstrometricCalibrator() if self.config.get('enable_gaia_astrometry', True) else None
         except Exception as e:
-            # EMERGENCY: Suppress gaia calibrator warnings
+            logger.warning("MU SWARM (Gaia) init failed: %s — analysis disabled", e)
             self.gaia_calibrator = None
         
         self.logger = logging.getLogger(__name__)

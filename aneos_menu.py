@@ -137,7 +137,9 @@ class ANEOSMenu:
                         "Pipeline features may not function correctly.",
                         style="red"
                     ))
-                    _Confirm.ask("Continue anyway?", default=True)
+                    if not _Confirm.ask("Continue anyway?", default=True):
+                        import sys
+                        sys.exit(1)
             except Exception:
                 self._preflight = {}
 
@@ -1644,7 +1646,11 @@ class ANEOSMenu:
                 table.add_row("📊 False Discovery Rate", f"{fdr:.3f}", "✅ LOW" if fdr < 0.1 else "⚠️ HIGH")
             
             self.console.print(table)
-            
+            self.console.print(
+                "[dim]σ = statistical rarity (null hypothesis); "
+                "P(artificial) = Bayesian posterior with 0.1% base rate.[/dim]"
+            )
+
             # Smoking gun evidence
             if hasattr(result, 'risk_factors') and result.risk_factors:
                 smoking_gun_table = Table(title="🔥 Smoking Gun Evidence")
@@ -1815,7 +1821,11 @@ class ANEOSMenu:
                                        "Validated" if result.metadata.get('validation_available') else "Unvalidated")
                     
                     self.console.print(report_table)
-                    
+                    self.console.print(
+                        "[dim]σ = statistical rarity (null hypothesis); "
+                        "P(artificial) = Bayesian posterior with 0.1% base rate.[/dim]"
+                    )
+
                     # Final verdict
                     if result.is_artificial and result.sigma_level >= 5.0:
                         self.console.print("\n🎉 [bold green]INVESTIGATION CONCLUSION: ARTIFICIAL OBJECT CONFIRMED[/bold green]")
@@ -2020,19 +2030,63 @@ class ANEOSMenu:
             print("Advanced orbital analysis not available in basic mode.")
     
     def _generate_orbital_history(self, designation, base_elements):
-        """Return current-epoch orbital elements from real data.
+        """Fetch multi-epoch osculating elements from JPL Horizons.
 
-        Historical osculating element time series are not available from the
-        standard REST APIs without a dedicated Horizons ELEMENTS ephemeris
-        query. We return a single current-epoch snapshot so the delta-V table
-        is empty and clearly shows zero modelled manoeuvres rather than
-        fabricated ones.
+        Falls back to a single current-epoch snapshot when Horizons is unavailable.
         """
-        current = {'epoch': 0, '_label': '[OBSERVED - current epoch only]'}
-        for k in ('a', 'e', 'i', 'om', 'w', 'M'):
+        try:
+            import requests
+            resp = requests.get(
+                "https://ssd.jpl.nasa.gov/api/horizons.api",
+                params={
+                    "format": "json", "COMMAND": f"'{designation}'",
+                    "OBJ_DATA": "NO", "MAKE_EPHEM": "YES",
+                    "EPHEM_TYPE": "ELEMENTS", "CENTER": "500@10",
+                    "START_TIME": "2010-01-01", "STOP_TIME": "2030-01-01",
+                    "STEP_SIZE": "365d", "OUT_UNITS": "AU-D",
+                }, timeout=10
+            )
+            if resp.status_code == 200:
+                history = self._parse_horizons_element_table(resp.json().get("result", ""))
+                if history:
+                    return history
+        except Exception:
+            pass  # fall through to single-epoch fallback
+
+        current = {"epoch": 0, "_label": "[OBSERVED - current epoch only; Horizons unavailable]"}
+        for k in ("a", "e", "i", "om", "w", "M"):
             if k in base_elements:
                 current[k] = base_elements[k]
         return [current]
+
+    def _parse_horizons_element_table(self, result_text: str) -> list:
+        """Parse multi-epoch element table from Horizons text output."""
+        rows = []
+        in_table = False
+        for line in result_text.splitlines():
+            if "$$SOE" in line:
+                in_table = True
+                continue
+            if "$$EOE" in line:
+                break
+            if not in_table or not line.strip():
+                continue
+            elements = {}
+            for part in line.split():
+                if "=" in part:
+                    k, _, v = part.partition("=")
+                    try:
+                        elements[k.strip()] = float(v.strip())
+                    except ValueError:
+                        pass
+            if "A" in elements:
+                rows.append({
+                    "epoch": len(rows), "_label": "[OBSERVED]",
+                    "a": elements.get("A", 0), "e": elements.get("EC", 0),
+                    "i": elements.get("IN", 0), "omega": elements.get("OM", 0),
+                    "w": elements.get("W", 0),  "M": elements.get("MA", 0),
+                })
+        return rows
     
     def _generate_approach_history(self, designation):
         """Fetch real close approach data from the JPL SBDB CAD API.

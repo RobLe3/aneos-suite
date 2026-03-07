@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import logging
+logger = logging.getLogger(__name__)
 from abc import ABC, abstractmethod
-import pickle
 import joblib
 from pathlib import Path
 
@@ -41,8 +41,6 @@ except ImportError:
     HAS_TORCH = False
 
 from .features import FeatureVector
-
-logger = logging.getLogger(__name__)
 
 @dataclass
 class ModelConfig:
@@ -139,37 +137,29 @@ class AnomalyDetectionModel(ABC):
         return X_processed
     
     def save_model(self, filepath: str) -> None:
-        """Save model to file."""
-        model_data = {
+        """Save model to file using joblib."""
+        joblib.dump({
             'model': self.model,
             'scaler': self.scaler,
             'config': self.config,
             'feature_names': self.feature_names,
             'model_id': self.model_id,
             'is_trained': self.is_trained,
-            'outlier_bounds': getattr(self, 'outlier_bounds', None)
-        }
-        
-        with open(filepath, 'wb') as f:
-            pickle.dump(model_data, f)
-        
+            'outlier_bounds': getattr(self, 'outlier_bounds', None),
+        }, filepath)
         logger.info(f"Model saved to {filepath}")
-    
+
     def load_model(self, filepath: str) -> None:
-        """Load model from file."""
-        with open(filepath, 'rb') as f:
-            model_data = pickle.load(f)
-        
+        """Load model from file using joblib."""
+        model_data = joblib.load(filepath)
         self.model = model_data['model']
         self.scaler = model_data['scaler']
         self.config = model_data['config']
         self.feature_names = model_data['feature_names']
         self.model_id = model_data['model_id']
         self.is_trained = model_data['is_trained']
-        
         if 'outlier_bounds' in model_data:
             self.outlier_bounds = model_data['outlier_bounds']
-        
         logger.info(f"Model loaded from {filepath}")
 
 class IsolationForestModel(AnomalyDetectionModel):
@@ -602,20 +592,34 @@ class ModelEnsemble:
             'model_types': [model.config.model_type for model in self.models]
         }
         
-        metadata_path = ensemble_dir / "ensemble_metadata.pkl"
-        with open(metadata_path, 'wb') as f:
-            pickle.dump(metadata, f)
-        
+        import json as _json
+        metadata_path = ensemble_dir / "ensemble_metadata.json"
+        with open(metadata_path, 'w') as f:
+            _json.dump(metadata, f)
+
         logger.info(f"Ensemble saved to {directory}")
     
     def load_ensemble(self, directory: str, model_configs: List[ModelConfig]) -> None:
         """Load ensemble from directory."""
         ensemble_dir = Path(directory)
         
-        # Load metadata
-        metadata_path = ensemble_dir / "ensemble_metadata.pkl"
-        with open(metadata_path, 'rb') as f:
-            metadata = pickle.load(f)
+        # Load metadata — JSON preferred; migrate legacy .pkl if present
+        import json as _json
+        metadata_path = ensemble_dir / "ensemble_metadata.json"
+        if not metadata_path.exists():
+            legacy = ensemble_dir / "ensemble_metadata.pkl"
+            if legacy.exists():
+                import pickle as _p
+                with open(legacy, 'rb') as f:
+                    metadata = _p.load(f)
+                with open(metadata_path, 'w') as f:
+                    _json.dump(metadata, f)
+                legacy.unlink()
+            else:
+                raise FileNotFoundError(f"Ensemble metadata not found in {ensemble_dir}")
+        else:
+            with open(metadata_path, 'r') as f:
+                metadata = _json.load(f)
         
         self.ensemble_id = metadata['ensemble_id']
         self.weights = metadata['weights']

@@ -67,7 +67,7 @@ class AdvancedScoringConfig:
             
             return cls(**valid_params)
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            # EMERGENCY: Suppress configuration loading warnings
+            logger.debug(f"Config file not found or invalid ({e}); using defaults")
             return cls()
     
     def save_to_file(self, config_path: Path) -> None:
@@ -189,8 +189,7 @@ class AdvancedScoreCalculator:
             'launch_correlation': 'L'  # Launch correlation
         }
         
-        # EMERGENCY: Suppress initialization logging
-        # logger.info(f"AdvancedScoreCalculator initialized with {len(self.clue_processors)} clue categories")
+        logger.debug(f"AdvancedScoreCalculator initialized with {len(self.clue_processors)} clue categories")
     
     def calculate_score(self, neo_data: Dict[str, Any], 
                        indicator_results: Dict[str, Any]) -> AdvancedAnomalyScore:

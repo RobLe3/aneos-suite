@@ -150,13 +150,23 @@ class ImpactProbabilityCalculator:
     def __init__(self):
         """Initialize the impact probability calculator."""
         self.logger = logging.getLogger(__name__)
-        
+
         # Gravitational parameters (km³/s²)
         self.GM_sun = 1.32712442018e11
         self.GM_earth = 3.986004418e5
-        
+
         # Impact cross-section enhancement factors
         self.gravitational_focusing_factor = 1.0  # Will be calculated per object
+
+    @staticmethod
+    def _get_diameter_km(orbital_elements: "OrbitalElements",
+                         physical_props=None) -> Optional[float]:
+        """Prefer PhysicalProperties.diameter_km over OrbitalElements.diameter."""
+        if physical_props is not None:
+            d = getattr(physical_props, "diameter_km", None)
+            if d:
+                return d
+        return getattr(orbital_elements, "diameter", None) or None
         
     def calculate_comprehensive_impact_probability(self, 
                                                  orbital_elements: OrbitalElements,
@@ -587,22 +597,23 @@ class ImpactProbabilityCalculator:
         
         return evolution
     
-    def _calculate_impact_energy(self, orbital_elements: OrbitalElements) -> Optional[float]:
+    def _calculate_impact_energy(self, orbital_elements: OrbitalElements,
+                                 physical_props=None) -> Optional[float]:
         """
         Estimate kinetic energy of impact in megatons TNT equivalent.
-        
+
         Scientific Rationale:
         Impact energy determines damage potential and is crucial for
         risk assessment. Energy = 0.5 * m * v²
-        
+
         Conversion: 1 megaton TNT = 4.184 × 10¹⁵ Joules
         """
-        
-        if not orbital_elements.diameter:
+        diameter_km = self._get_diameter_km(orbital_elements, physical_props)
+        if not diameter_km:
             return None
-        
+
         # Estimate mass from diameter (assume rocky composition)
-        diameter_m = orbital_elements.diameter * 1000  # km to m
+        diameter_m = diameter_km * 1000  # km to m
         volume_m3 = (4/3) * np.pi * (diameter_m/2)**3
         density_kg_m3 = 2500  # Typical rocky asteroid density
         mass_kg = volume_m3 * density_kg_m3
@@ -673,21 +684,22 @@ class ImpactProbabilityCalculator:
         
         return crater_diameter
     
-    def _estimate_crater_diameter_proper(self, orbital_elements: OrbitalElements, 
-                                        impact_energy_mt: Optional[float]) -> Optional[float]:
+    def _estimate_crater_diameter_proper(self, orbital_elements: OrbitalElements,
+                                         impact_energy_mt: Optional[float],
+                                         physical_props=None) -> Optional[float]:
         """
         Estimate crater diameter using proper scaling laws from Calibration Plan v1.2.
-        
+
         Scientific Rationale:
         - Earth rocky surface → crater = 10-20× impactor diameter
         - Uses impactor diameter directly when available
         - Falls back to energy-based calculation when diameter unknown
         """
-        
         # Method 1: Use impactor diameter directly (preferred per Calibration Plan)
-        if orbital_elements.diameter:
+        diameter_km = self._get_diameter_km(orbital_elements, physical_props)
+        if diameter_km:
             # Convert km to m for diameter
-            impactor_diameter_m = orbital_elements.diameter * 1000
+            impactor_diameter_m = diameter_km * 1000
             
             # Use corrected scaling based on interim assessment feedback
             # 60m object should create 0.2-0.4km crater (3-7x scaling)
@@ -948,9 +960,10 @@ class ImpactProbabilityCalculator:
         
         return factors
     
-    def _document_calculation_assumptions(self, 
-                                        orbital_elements: OrbitalElements,
-                                        close_approaches: List[CloseApproach]) -> List[str]:
+    def _document_calculation_assumptions(self,
+                                          orbital_elements: OrbitalElements,
+                                          close_approaches: List[CloseApproach],
+                                          physical_props=None) -> List[str]:
         """Document key assumptions in the calculation."""
         assumptions = [
             "Purely gravitational dynamics (no non-gravitational forces)",
@@ -958,11 +971,11 @@ class ImpactProbabilityCalculator:
             "Earth treated as point mass for distant encounters",
             "Linear uncertainty propagation for short time periods"
         ]
-        
+
         if not close_approaches:
             assumptions.append("No close approach data available")
-        
-        if not orbital_elements.diameter:
+
+        if not self._get_diameter_km(orbital_elements, physical_props):
             assumptions.append("Object size estimated from absolute magnitude")
         
         return assumptions
@@ -1298,14 +1311,15 @@ class ImpactProbabilityCalculator:
         
         return lunar_transfer_criteria
     
-    def _calculate_moon_impact_energy(self, orbital_elements: OrbitalElements) -> Optional[float]:
+    def _calculate_moon_impact_energy(self, orbital_elements: OrbitalElements,
+                                      physical_props=None) -> Optional[float]:
         """Calculate Moon impact energy in megatons TNT equivalent."""
-        
-        if not orbital_elements.diameter:
+        diameter_km = self._get_diameter_km(orbital_elements, physical_props)
+        if not diameter_km:
             return None
-        
+
         # Estimate mass (same as Earth impact calculation)
-        diameter_m = orbital_elements.diameter * 1000
+        diameter_m = diameter_km * 1000
         volume_m3 = (4/3) * np.pi * (diameter_m/2)**3
         density_kg_m3 = 2500  # Rocky asteroid
         mass_kg = volume_m3 * density_kg_m3
@@ -1331,10 +1345,10 @@ class ImpactProbabilityCalculator:
         
         return megatons_tnt
     
-    def _assess_moon_impact_effects(self, orbital_elements: OrbitalElements, 
-                                  impact_energy_mt: Optional[float]) -> Dict[str, Any]:
+    def _assess_moon_impact_effects(self, orbital_elements: OrbitalElements,
+                                    impact_energy_mt: Optional[float],
+                                    physical_props=None) -> Dict[str, Any]:
         """Assess the effects of a Moon impact."""
-        
         effects = {
             'crater_formation': True,
             'ejecta_production': True,
@@ -1342,17 +1356,18 @@ class ImpactProbabilityCalculator:
             'visible_from_earth': False,
             'lunar_mission_impact': 'unknown'
         }
-        
+
         if impact_energy_mt:
             # Large impacts are visible from Earth
             if impact_energy_mt > 0.1:
                 effects['visible_from_earth'] = True
                 effects['flash_visible'] = True
-            
+
             # Crater size on Moon using proper scaling (Calibration Plan v1.2)
-            if orbital_elements.diameter:
+            diameter_km = self._get_diameter_km(orbital_elements, physical_props)
+            if diameter_km:
                 # Moon: 15-25× impactor diameter (use 20× as middle value)
-                impactor_diameter_m = orbital_elements.diameter * 1000
+                impactor_diameter_m = diameter_km * 1000
                 crater_diameter_m = impactor_diameter_m * 20.0
                 crater_diameter_km = crater_diameter_m / 1000.0
             else:

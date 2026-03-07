@@ -93,15 +93,26 @@ class SBDBSource(HTTPDataSource):
         phys_list = data.get("phys_par", [])
         phys_par = {p["name"]: p.get("value") for p in phys_list if p.get("value") is not None}
 
+        # Build physical sub-dict for PhysicalProperties construction
+        physical_data: Dict[str, Any] = {}
         for float_field in ("diameter", "albedo", "rot_per"):
             if float_field in phys_par:
                 try:
-                    orbital_data[float_field] = float(phys_par[float_field])
+                    physical_data[float_field] = float(phys_par[float_field])
                 except (ValueError, TypeError):
                     pass
 
         if "spec_T" in phys_par:
-            orbital_data["spectral_type"] = str(phys_par["spec_T"])
+            physical_data["spectral_type"] = str(phys_par["spec_T"])
+
+        if "H" in phys_par:
+            try:
+                physical_data["absolute_magnitude_h"] = float(phys_par["H"])
+            except (ValueError, TypeError):
+                pass
+
+        # Store physical data separately for consumers that use NEOData.physical_properties
+        orbital_data["_physical"] = physical_data
 
         # Source metadata (filtered out before OrbitalElements construction)
         orbital_data["_source"] = self.name

@@ -101,6 +101,10 @@ test_*.py
 !tests/test_physical_indicators.py
 !tests/test_detection_manager.py
 !tests/test_monitoring_no_ml.py
+!tests/detection/test_artificial_neo_suite.py
+!tests/test_chunk_boundaries.py
+!tests/test_horizons_parser.py
+!tests/test_data_sources_network.py
 
 # Development directory - track structure, ignore contents
 development/**/*

@@ -67,7 +67,8 @@ class WeightConfig:
 @dataclass
 class APIConfig:
     """API endpoints and connection settings."""
-    neodys_url: str = "https://newton.spacedys.com/neodys/api/"
+    neodys_url: str = "https://newton.spacedys.com/~neodys2/epoch/"
+    neodys_rest_url: str = "https://newton.spacedys.com/neodys2/objects/"
     mpc_url: str = "https://www.minorplanetcenter.net/"
     horizons_url: str = "https://ssd.jpl.nasa.gov/api/horizons.api"
     sbdb_url: str = "https://ssd-api.jpl.nasa.gov/sbdb.api"

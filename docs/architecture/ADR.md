@@ -265,6 +265,17 @@ Encounter Geometry category has no explicit counterpart in the concept document.
 **Files**: `aneos_core/analysis/scoring.py`,
 `aneos_core/analysis/advanced_scoring.py`
 
+### ADR-008 Update (2026-03-07)
+**Decision**: `ValidatedSigma5ArtificialNEODetector` designated as the canonical
+production detector (DetectorType.VALIDATED, priority 0 in DetectionManager).
+Four superseded detectors archived to `detection/_archive/`. ATLAS
+(`AdvancedScoreCalculator`) designated canonical for full-data pipeline scenarios
+where close-approach geometry and physical traits are available; Standard
+`ScoreCalculator` retired from new production use. EMERGENCY suppressions removed
+from `advanced_scoring.py`; configuration now logs at DEBUG level.
+**Empirical basis**: Ground truth validation (Phase 3) confirms ValidatedSigma5 achieves
+sensitivity=1.00, specificity=1.00 on 3 artificials + 20 natural JPL NEOs.
+
 ---
 
 ### ADR-009: Analysis Pipeline with ThreadPoolExecutor Concurrency

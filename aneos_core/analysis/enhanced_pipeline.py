@@ -69,18 +69,11 @@ class EnhancedAnalysisPipeline:
                 self.advanced_scorer = AdvancedScoreCalculator(config_path)
                 
                 self.validation_available = True
-                # EMERGENCY: Suppress initialization logging spam
-                # self.logger.info("Enhanced validation system initialized successfully")
-                # self.logger.info("ATLAS advanced scoring system initialized")
             except Exception as e:
-                # EMERGENCY: Suppress initialization warnings
-                # self.logger.warning(f"Validation system initialization failed: {e}")
-                # self.logger.warning("Enhanced features will be disabled, original functionality preserved")
+                logger.warning("Enhanced validation init failed: %s — features disabled", e)
                 self.validation_available = False
         else:
             self.validation_available = False
-            # EMERGENCY: Suppress configuration logging
-            # self.logger.info("Enhanced validation disabled by configuration")
     
     async def analyze_neo(
         self, 

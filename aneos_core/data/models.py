@@ -46,12 +46,6 @@ class OrbitalElements:
     mean_anomaly: Optional[float] = None  # degrees
     epoch: Optional[datetime] = None
     
-    # Physical parameters
-    diameter: Optional[float] = None  # km
-    albedo: Optional[float] = None
-    rot_per: Optional[float] = None  # rotation period in hours
-    spectral_type: Optional[str] = None
-    
     def __post_init__(self):
         """Normalize alternate field names and validate values."""
         self._synchronize_aliases()
@@ -74,24 +68,19 @@ class OrbitalElements:
         errors = []
         
         if self.eccentricity is not None:
-            if not (0 <= self.eccentricity < 1):
-                errors.append(f"Eccentricity {self.eccentricity} outside valid range [0, 1)")
-        
+            if self.eccentricity < 0:
+                errors.append(f"Eccentricity {self.eccentricity} must be non-negative")
+
         if self.inclination is not None:
             if not (0 <= self.inclination <= 180):
                 errors.append(f"Inclination {self.inclination} outside valid range [0, 180] degrees")
-        
+
         if self.semi_major_axis is not None:
-            if self.semi_major_axis <= 0:
-                errors.append(f"Semi-major axis {self.semi_major_axis} must be positive")
-        
-        if self.albedo is not None:
-            if not (0 <= self.albedo <= 1):
-                errors.append(f"Albedo {self.albedo} outside valid range [0, 1]")
-        
-        if self.diameter is not None:
-            if self.diameter <= 0:
-                errors.append(f"Diameter {self.diameter} must be positive")
+            # Hyperbolic orbits (e >= 1) have negative semi-major axis — physically valid.
+            # Reject negative a only for elliptical orbits (e < 1 or e unknown).
+            is_hyperbolic = self.eccentricity is not None and self.eccentricity >= 1
+            if self.semi_major_axis <= 0 and not is_hyperbolic:
+                errors.append(f"Semi-major axis {self.semi_major_axis} must be positive for elliptical orbits")
         
         if errors:
             raise ValueError("Orbital elements validation failed: " + "; ".join(errors))
@@ -109,7 +98,7 @@ class OrbitalElements:
         all_fields = [
             self.eccentricity, self.inclination, self.semi_major_axis,
             self.ascending_node, self.argument_of_perihelion, self.mean_anomaly,
-            self.epoch, self.diameter, self.albedo
+            self.epoch
         ]
         present_count = sum(1 for field in all_fields if field is not None)
         return present_count / len(all_fields)
@@ -126,10 +115,6 @@ class OrbitalElements:
             "argument_of_perihelion": self.argument_of_perihelion,
             "mean_anomaly": self.mean_anomaly,
             "epoch": self.epoch.isoformat() if self.epoch else None,
-            "diameter": self.diameter,
-            "albedo": self.albedo,
-            "rot_per": self.rot_per,
-            "spectral_type": self.spectral_type
         }
     
     @classmethod
@@ -163,10 +148,6 @@ class OrbitalElements:
             argument_of_perihelion=data.get("argument_of_perihelion"),
             mean_anomaly=data.get("mean_anomaly"),
             epoch=epoch,
-            diameter=data.get("diameter"),
-            albedo=data.get("albedo"),
-            rot_per=data.get("rot_per"),
-            spectral_type=data.get("spectral_type")
         )
 
 @dataclass
@@ -236,9 +217,10 @@ class CloseApproach:
 @dataclass
 class NEOData:
     """Complete Near Earth Object data structure."""
-    
+
     designation: str
     orbital_elements: Optional[OrbitalElements] = None
+    physical_properties: Optional["PhysicalProperties"] = None  # Canonical physical data location
     close_approaches: List[CloseApproach] = field(default_factory=list)
     
     # Data source information

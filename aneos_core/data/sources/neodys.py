@@ -38,7 +38,8 @@ class NEODySSource(DataSourceBase):
         if config is None:
             config = APIConfig()
         super().__init__(name="NEODyS", config=config, cache_manager=cache_manager)
-        self.base_url = _NEODYS_EPOCH_BASE
+        self.base_url = config.neodys_url
+        self.rest_url = config.neodys_rest_url
 
     def get_base_url(self) -> str:
         return self.base_url
@@ -223,6 +224,36 @@ class NEODySSource(DataSourceBase):
             "arg_of_periapsis":     omega_deg % 360.0,
             "mean_anomaly":         M_deg,
         }
+
+    def _make_request(self, designation: str) -> Optional[Dict]:
+        """Query the NEODyS-2 REST API for nominal orbital elements.
+
+        Uses the NEODyS-2 JSON endpoint. Returns a Keplerian element dict or None.
+        JSON keys: {"a":..., "e":..., "i":..., "node":..., "peri":..., "M":...}
+        """
+        import requests as _req
+        clean = designation.strip().replace(" ", "")
+        url = f"{self.rest_url}{clean}/orbits/nominal"
+        try:
+            resp = _req.get(url, timeout=10,
+                            headers={"User-Agent": "aNEOS/0.7 scientific research",
+                                     "Accept": "application/json"})
+            resp.raise_for_status()
+            data = resp.json()
+            if not data:
+                return None
+            return {
+                "a":     float(data.get("a",    0)),
+                "e":     float(data.get("e",    0)),
+                "i":     float(data.get("i",    0)),
+                "omega": float(data.get("node", 0)),
+                "w":     float(data.get("peri", 0)),
+                "M":     float(data.get("M",    0)),
+                "source": "NEODyS",
+            }
+        except Exception as exc:
+            self.logger.debug(f"NEODyS _make_request failed for {designation}: {exc}")
+            return None
 
     def get_object_summary(self, designation: str) -> Optional[Dict[str, Any]]:
         """Return a combined summary dict."""

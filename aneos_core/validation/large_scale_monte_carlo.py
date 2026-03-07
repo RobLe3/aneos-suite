@@ -29,11 +29,9 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import sys
 import os
 
-# Add project root to path
-sys.path.append('/Users/roble/Documents/Python/claude_flow/aneos-project')
-
-from aneos_core.detection.corrected_sigma5_artificial_neo_detector import CorrectedSigma5ArtificialNEODetector
-from aneos_core.detection.sigma5_artificial_neo_detector import Sigma5ArtificialNEODetector
+from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
+    ValidatedSigma5ArtificialNEODetector,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -144,23 +142,17 @@ class LargeScaleMonteCarloValidator:
         
         neo_chunk, detector_type, use_corrected_params, chunk_id = args
         
-        # Initialize detector in worker process
-        if detector_type == "corrected":
-            detector = CorrectedSigma5ArtificialNEODetector()
-        else:
-            detector = Sigma5ArtificialNEODetector()
-        
+        # Initialize canonical detector in worker process
+        detector = ValidatedSigma5ArtificialNEODetector()
+
         false_positives = 0
         sigma_levels = []
-        
+
         for neo in neo_chunk:
             try:
-                if detector_type == "corrected":
-                    result = detector.analyze_neo(neo, use_corrected_params=use_corrected_params)
-                else:
-                    result = detector.analyze_neo(neo)
-                
-                sigma_levels.append(result.sigma_level)
+                result = detector.analyze_neo_validated(neo)
+
+                sigma_levels.append(result.sigma_confidence)
                 
                 # Count false positives (natural objects classified as artificial)
                 if result.is_artificial:

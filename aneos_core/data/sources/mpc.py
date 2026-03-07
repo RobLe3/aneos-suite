@@ -64,16 +64,18 @@ class MPCSource(DataSourceBase):
             if row is None:
                 return None
 
-            return {
-                "semi_major_axis":     _safe_float(row.get("semimajor_axis")),
-                "eccentricity":        _safe_float(row.get("eccentricity")),
-                "inclination":         _safe_float(row.get("inclination")),
+            result = {
+                "semi_major_axis":      _safe_float(row.get("semimajor_axis")),
+                "eccentricity":         _safe_float(row.get("eccentricity")),
+                "inclination":          _safe_float(row.get("inclination")),
                 "ra_of_ascending_node": _safe_float(row.get("ascending_node")),
-                "arg_of_periapsis":    _safe_float(row.get("argument_of_perihelion")),
-                "mean_anomaly":        _safe_float(row.get("mean_anomaly")),
-                # Physical fields that OrbitalElements also carries
-                "albedo":              _safe_float(row.get("albedo")),
+                "arg_of_periapsis":     _safe_float(row.get("argument_of_perihelion")),
+                "mean_anomaly":         _safe_float(row.get("mean_anomaly")),
             }
+            albedo = _safe_float(row.get("albedo"))
+            if albedo is not None:
+                result["_physical"] = {"albedo": albedo}
+            return result
         except Exception as e:
             self.logger.error(f"MPC fetch_orbital_elements error for {designation}: {e}")
             return None
@@ -128,6 +130,40 @@ class MPCSource(DataSourceBase):
             return None
 
         return result_list[0]  # astroquery returns a list of dicts
+
+    def _make_request(self, designation: str) -> Optional[Dict]:
+        """Query the MPC web service for a designation.
+
+        Uses the MPC search_orbits endpoint as a direct HTTP fallback
+        independent of astroquery. Returns a Keplerian element dict or None.
+        """
+        import requests as _req
+        try:
+            resp = _req.get(
+                "https://minorplanetcenter.net/web_service/search_orbits",
+                params={"object_designation": designation},
+                timeout=10,
+                headers={"User-Agent": "aNEOS/0.7 scientific research",
+                         "Accept": "application/json"},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if not data:
+                return None
+            obj = data[0] if isinstance(data, list) else data
+            return {
+                "a":     float(obj.get("a",    0)),
+                "e":     float(obj.get("e",    0)),
+                "i":     float(obj.get("i",    0)),
+                "omega": float(obj.get("Node", 0)),
+                "w":     float(obj.get("Peri", 0)),
+                "M":     float(obj.get("M",    0)),
+                "H":     float(obj["H"]) if obj.get("H") else None,
+                "source": "MPC",
+            }
+        except Exception as exc:
+            self.logger.debug(f"MPC _make_request failed for {designation}: {exc}")
+            return None
 
     def get_object_summary(self, designation: str) -> Optional[Dict[str, Any]]:
         """Return a combined orbital + physical summary dict."""

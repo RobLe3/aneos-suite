@@ -99,8 +99,6 @@ class FalsePositivePrevention:
             self.human_hardware_analyzer = HumanHardwareAnalyzer(
                 config=hardware_analysis_config or self._default_hardware_config()
             )
-            # EMERGENCY: Suppress initialization logging
-            # self.logger.info("Advanced human hardware analyzer initialized successfully")
         except Exception as e:
             self.logger.warning(f"Failed to initialize human hardware analyzer: {e}")
             self.human_hardware_analyzer = None

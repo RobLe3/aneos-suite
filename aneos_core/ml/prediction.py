@@ -139,15 +139,21 @@ class ModelManager:
             ensemble_dir = ensemble_dirs[0]
             
             try:
-                # Load ensemble metadata to determine model configs
+                # Load ensemble metadata — JSON preferred; migrate legacy .pkl if present
+                import json as _json
+                from pathlib import Path as _Path
                 metadata_file = ensemble_dir / "ensemble_metadata.pkl"
-                if not metadata_file.exists():
+                json_meta = ensemble_dir / "ensemble_metadata.json"
+                if json_meta.exists():
+                    with open(json_meta, 'r') as f:
+                        metadata = _json.load(f)
+                elif metadata_file.exists():
+                    import pickle as _p
+                    with open(metadata_file, 'rb') as f:
+                        metadata = _p.load(f)
+                else:
                     logger.warning(f"Ensemble metadata not found: {metadata_file}")
                     return None
-                
-                import pickle
-                with open(metadata_file, 'rb') as f:
-                    metadata = pickle.load(f)
                 
                 # Create model configs based on metadata
                 model_configs = []

@@ -21,7 +21,17 @@ jobs:
         run: pip install -r requirements-core.txt
 
       - name: Run tests
-        run: python -m pytest tests/ -v --tb=short
+        run: python -m pytest tests/ -m "not network" -v --tb=short
+
+      - name: Verify OpenAPI spec is up to date
+        run: |
+          make spec
+          if ! git diff --exit-code docs/api/openapi.json; then
+            echo ""
+            echo "ERROR: docs/api/openapi.json is out of date."
+            echo "Run 'make spec' locally and commit the updated file."
+            exit 1
+          fi
 
   docker-build:
     name: Docker build

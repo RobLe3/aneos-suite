@@ -86,9 +86,7 @@ class SpectralOutlierAnalyzer:
             # Initialize PCA
             self.pca_model = PCA(n_components=min(4, scaled_data.shape[1]))
             self.pca_model.fit(scaled_data)
-            
-            # EMERGENCY: Suppressed initialization logging
-    
+
     async def analyze_spectral_outliers(
         self,
         designation: str,

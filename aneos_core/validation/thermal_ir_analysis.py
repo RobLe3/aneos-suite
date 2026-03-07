@@ -250,9 +250,6 @@ class ThermalIRAnalyzer:
         # Initialize thermal models
         self._initialize_thermal_models()
         
-        # EMERGENCY: Suppressed initialization logging
-        # self.logger.info("LAMBDA SWARM Thermal-IR Analyzer initialized successfully")
-    
     def _default_config(self) -> Dict[str, Any]:
         """Default configuration for thermal-IR analysis."""
         return {
@@ -481,11 +478,12 @@ class ThermalIRAnalyzer:
         Artificial objects often show η > 1.5 due to processed materials.
         """
         try:
-            # Extract physical parameters
-            diameter = getattr(neo_data, 'diameter', None)
-            if hasattr(neo_data, 'orbital_elements') and neo_data.orbital_elements:
-                diameter = neo_data.orbital_elements.diameter
-            
+            # Extract physical parameters — prefer PhysicalProperties over OrbitalElements
+            _pp = getattr(neo_data, 'physical_properties', None)
+            diameter = (_pp.diameter_km if _pp and getattr(_pp, 'diameter_km', None)
+                        else None)
+            if not diameter:
+                diameter = getattr(neo_data, 'diameter', None)
             # Estimate diameter from thermal flux if not available
             if not diameter:
                 diameter = self._estimate_diameter_from_thermal_flux(thermal_observations)
@@ -644,8 +642,9 @@ class ThermalIRAnalyzer:
             
             # Estimate physical parameters
             diameter = self._extract_diameter(neo_data, thermal_observations)
-            rotation_period = getattr(neo_data, 'rotation_period', 
-                                    neo_data.orbital_elements.rot_per if hasattr(neo_data, 'orbital_elements') and neo_data.orbital_elements else 12.0)  # hours
+            _pp = getattr(neo_data, 'physical_properties', None)
+            _rot = getattr(_pp, 'rotation_period', None) if _pp else None
+            rotation_period = _rot if _rot else 12.0  # hours
             
             # Calculate Yarkovsky acceleration
             yarkovsky_acc = self._calculate_yarkovsky_acceleration(
@@ -1347,12 +1346,10 @@ class ThermalIRAnalyzer:
     
     def _extract_diameter(self, neo_data: Any, thermal_observations: List[ThermalObservation]) -> float:
         """Extract or estimate diameter."""
-        # Try to get diameter from various sources
-        diameter = None
-        
-        if hasattr(neo_data, 'orbital_elements') and neo_data.orbital_elements:
-            diameter = neo_data.orbital_elements.diameter
-        
+        # Prefer PhysicalProperties.diameter_km, then fallback chain
+        _pp = getattr(neo_data, 'physical_properties', None)
+        diameter = (_pp.diameter_km if _pp and getattr(_pp, 'diameter_km', None) else None)
+
         if not diameter and hasattr(neo_data, 'diameter'):
             diameter = neo_data.diameter
         

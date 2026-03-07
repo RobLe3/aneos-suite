@@ -4,7 +4,7 @@ from aneos_core.analysis.indicators.physical import (
     DiameterAnomalyIndicator, AlbedoAnomalyIndicator, SpectralAnomalyIndicator
 )
 from aneos_core.analysis.indicators.base import IndicatorConfig
-from aneos_core.data.models import NEOData, OrbitalElements
+from aneos_core.data.models import NEOData, OrbitalElements, PhysicalProperties
 
 
 def _config():
@@ -12,11 +12,13 @@ def _config():
 
 
 def _neo(diameter=None, albedo=None, spectral_type=None, a=1.2, e=0.2, i=5.0):
-    oe = OrbitalElements(
-        eccentricity=e, inclination=i, semi_major_axis=a,
-        diameter=diameter, albedo=albedo, spectral_type=spectral_type
-    )
-    return NEOData(designation="TEST001", orbital_elements=oe)
+    oe = OrbitalElements(eccentricity=e, inclination=i, semi_major_axis=a)
+    pp = PhysicalProperties(
+        diameter_km=diameter,
+        albedo=albedo,
+        spectral_type=spectral_type,
+    ) if any(v is not None for v in (diameter, albedo, spectral_type)) else None
+    return NEOData(designation="TEST001", orbital_elements=oe, physical_properties=pp)
 
 
 def test_diameter_normal():

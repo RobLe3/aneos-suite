@@ -198,6 +198,7 @@ class DataFetcher:
                     orbital_elements_data = raw
 
             orbital_elements = None
+            physical_properties = None
             if orbital_elements_data:
                 # Keep only keys that OrbitalElements accepts; drop internal metadata (_source, etc.)
                 valid_fields = OrbitalElements.__dataclass_fields__
@@ -207,11 +208,26 @@ class DataFetcher:
                 except Exception as exc:
                     self.logger.debug(f"OrbitalElements construction failed for {source_name}/{designation}: {exc}")
 
-            # Create NEOData instance (physical data — diameter, albedo, etc. — lives inside OrbitalElements)
+                # Build PhysicalProperties from the _physical sub-dict if present
+                phys_raw = orbital_elements_data.get("_physical", {})
+                if phys_raw:
+                    from .models import PhysicalProperties
+                    try:
+                        physical_properties = PhysicalProperties(
+                            diameter_km=phys_raw.get("diameter"),
+                            albedo=phys_raw.get("albedo"),
+                            rotation_period_hours=phys_raw.get("rot_per"),
+                            spectral_type=phys_raw.get("spectral_type"),
+                            absolute_magnitude_h=phys_raw.get("absolute_magnitude_h"),
+                        )
+                    except Exception:
+                        pass
+
             if orbital_elements:
                 neo_data = NEOData(
                     designation=designation,
                     orbital_elements=orbital_elements,
+                    physical_properties=physical_properties,
                     sources_used=[source_name],
                 )
                 return neo_data

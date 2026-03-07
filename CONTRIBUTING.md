@@ -37,6 +37,16 @@ Thank you for your interest in improving this project! Whether you’re fixing b
 7. **Open a Pull Request:**  
    Submit your pull request to the main repository’s `main` branch and provide a detailed description of your changes, ensuring they align with the scientific approach of the project.
 
+## API Development
+
+When adding or modifying a FastAPI endpoint, regenerate the OpenAPI spec before committing:
+
+    make spec
+    git add docs/api/openapi.json
+    git commit -m "chore: regenerate openapi.json"
+
+CI will fail with a clear error message if the spec is stale.
+
 ## Code Style & Standards
 
 - Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for Python code.

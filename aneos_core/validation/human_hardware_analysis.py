@@ -475,8 +475,7 @@ class HumanHardwareAnalyzer:
             self._train_synthetic_models()
             
         except Exception as e:
-            # EMERGENCY: Suppress ML model initialization warnings
-            # self.logger.warning(f"ML model initialization failed: {e}")
+            logger.warning("ML model init failed in THETA SWARM: %s", e)
             self.object_classifier = None
             self.constellation_classifier = None
     

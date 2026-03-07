@@ -148,13 +148,10 @@ def run_detector_on_batch(neo_batch: List[Dict[str, float]], detector_params: Di
     This function is designed for parallel processing.
     """
     # Import detector locally to avoid serialization issues
-    import sys
-    sys.path.append('/Users/roble/Documents/Python/claude_flow/aneos-project')
-    
     try:
-        from aneos_core.detection.sigma5_artificial_neo_detector import Sigma5ArtificialNEODetector
-        
-        detector = Sigma5ArtificialNEODetector()
+        from aneos_core.detection.validated_sigma5_artificial_neo_detector import ValidatedSigma5ArtificialNEODetector
+
+        detector = ValidatedSigma5ArtificialNEODetector()
         results = []
         
         for neo in neo_batch:
@@ -165,7 +162,7 @@ def run_detector_on_batch(neo_batch: List[Dict[str, float]], detector_params: Di
             }
             
             try:
-                detection_result = detector.analyze_neo(orbital_elements)
+                detection_result = detector.analyze_neo_validated(orbital_elements)
                 results.append(detection_result.is_artificial)
             except Exception as e:
                 # Log error and mark as not artificial (conservative approach)

@@ -24,7 +24,14 @@ test:
 	python -m pytest tests/ -v --tb=short
 
 spec:
-	@echo "OpenAPI spec generation is a Phase 3 target — not yet implemented."
+	@mkdir -p docs/api
+	python -c "\
+import sys, json; sys.path.insert(0, '.'); \
+from aneos_api.app import create_app; \
+app = create_app(); \
+print(json.dumps(app.openapi(), indent=2, sort_keys=True))" \
+	> docs/api/openapi.json
+	@echo "OpenAPI spec written to docs/api/openapi.json"
 
 lint:
 	@if command -v ruff >/dev/null 2>&1; then \

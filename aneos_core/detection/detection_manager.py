@@ -20,12 +20,12 @@ logger = logging.getLogger(__name__)
 
 class DetectorType(Enum):
     """Available detector types."""
-    BASIC = "basic"
-    CORRECTED = "corrected"
-    MULTIMODAL = "multimodal"
-    PRODUCTION = "production"
-    VALIDATED = "validated"  # New scientifically validated detector
-    AUTO = "auto"  # Automatically select best detector
+    BASIC = "basic"        # DEPRECATED — see detection/_archive/
+    CORRECTED = "corrected"  # DEPRECATED — see detection/_archive/
+    MULTIMODAL = "multimodal"  # DEPRECATED — see detection/_archive/
+    PRODUCTION = "production"  # DEPRECATED — see detection/_archive/
+    VALIDATED = "validated"  # Canonical: scientifically validated detector
+    AUTO = "auto"  # Automatically select best detector (resolves to VALIDATED)
 
 
 class DetectionManager:
@@ -54,30 +54,30 @@ class DetectionManager:
             },
             {
                 'type': DetectorType.MULTIMODAL,
-                'class_path': 'aneos_core.detection.multimodal_sigma5_artificial_neo_detector',
+                'class_path': 'aneos_core.detection._archive.multimodal_sigma5_artificial_neo_detector',
                 'class_name': 'MultiModalSigma5ArtificialNEODetector',
-                'priority': 1,  # Second priority - experimental multimodal
+                'priority': 1,  # DEPRECATED — archived; falls back gracefully
                 'wrapper': self._wrap_multimodal_detector
             },
             {
                 'type': DetectorType.PRODUCTION,
-                'class_path': 'aneos_core.detection.production_artificial_neo_detector',
+                'class_path': 'aneos_core.detection._archive.production_artificial_neo_detector',
                 'class_name': 'ProductionArtificialNEODetector',
-                'priority': 2,  # Second priority - production calibrated
+                'priority': 2,  # DEPRECATED — archived; falls back gracefully
                 'wrapper': self._wrap_production_detector
             },
             {
                 'type': DetectorType.CORRECTED,
-                'class_path': 'aneos_core.detection.corrected_sigma5_artificial_neo_detector',
+                'class_path': 'aneos_core.detection._archive.corrected_sigma5_artificial_neo_detector',
                 'class_name': 'CorrectedSigma5ArtificialNEODetector',
-                'priority': 3,  # Third priority - corrected version
+                'priority': 3,  # DEPRECATED — archived; falls back gracefully
                 'wrapper': self._wrap_corrected_detector
             },
             {
                 'type': DetectorType.BASIC,
-                'class_path': 'aneos_core.detection.sigma5_artificial_neo_detector',
+                'class_path': 'aneos_core.detection._archive.sigma5_artificial_neo_detector',
                 'class_name': 'Sigma5ArtificialNEODetector',
-                'priority': 4,  # Lowest priority - basic implementation
+                'priority': 4,  # DEPRECATED — archived; falls back gracefully
                 'wrapper': self._wrap_basic_detector
             }
         ]

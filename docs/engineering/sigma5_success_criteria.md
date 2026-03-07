@@ -29,3 +29,14 @@ system's capabilities. Any future change to the README must be reflected here to
     orbital+physical evidence alone; that level requires propulsion/manoeuvre observations. The σ≥5
     detection threshold is met; the posterior probability is correctly calibrated to the 0.1% base rate.
   - Validation exemplars now exist for Tesla Roadster (confirmed artificial object).
+
+## Detection Interpretation Framework
+
+| Metric | Meaning | Bound |
+|--------|---------|-------|
+| σ level | Rarity under natural NEO null hypothesis | Unbounded above 0 |
+| P(artificial) | Bayesian posterior, 0.1% base prior | ~1–5% from orbital+physical |
+| Classification | σ ≥ 5.0 → flagged artificial | p < 5.7×10⁻⁷ |
+
+Smoking-gun evidence (course corrections, propulsion burns, specular radar) needed
+to push posterior above 10%. "σ=5 detection" means "extremely unusual", not "probably artificial".

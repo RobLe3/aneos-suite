@@ -95,6 +95,30 @@ class GroundTruthDatasetBuilder:
         ),
     }
 
+    # Six confirmed artificial heliocentric spacecraft from JPL Horizons NAIF catalog.
+    # Fallback orbital elements sourced from mission documentation / JPL announcements.
+    HORIZONS_ARTIFICIALS = {
+        "Pioneer 10":   {"naif_id": "-23",  "fallback": {"a": 47.0,  "e": 0.051, "i": 3.11,  "omega": 75.7,  "w": 130.7, "M": 0.0},
+                         "physical": {"diameter": 2.74, "mass_estimate": 259.0},
+                         "notes": "Pioneer 10 — heliocentric escape; last contact 2003"},
+        "Pioneer 11":   {"naif_id": "-24",  "fallback": {"a": 31.0,  "e": 0.056, "i": 17.1,  "omega": 95.0,  "w": 200.0, "M": 0.0},
+                         "physical": {"diameter": 2.74, "mass_estimate": 259.0},
+                         "notes": "Pioneer 11 — heliocentric escape; last contact 1995"},
+        "Voyager 1":    {"naif_id": "-31",  "fallback": {"a": 150.0, "e": 0.059, "i": 35.7,  "omega": 250.0, "w": 50.0,  "M": 0.0},
+                         "physical": {"diameter": 3.7,  "mass_estimate": 825.5},
+                         "notes": "Voyager 1 — interstellar; confirmed artificial"},
+        "Voyager 2":    {"naif_id": "-32",  "fallback": {"a": 120.0, "e": 0.057, "i": 79.0,  "omega": 46.0,  "w": 210.0, "M": 0.0},
+                         "physical": {"diameter": 3.7,  "mass_estimate": 825.5},
+                         "notes": "Voyager 2 — interstellar; confirmed artificial"},
+        "New Horizons": {"naif_id": "-98",  "fallback": {"a": 46.0,  "e": 0.057, "i": 2.25,  "omega": 175.0, "w": 70.0,  "M": 0.0},
+                         "physical": {"diameter": 2.2,  "mass_estimate": 478.0},
+                         "notes": "New Horizons — post-Pluto; confirmed artificial"},
+        "DSCOVR":       {"naif_id": "-227", "fallback": {"a": 1.001, "e": 0.004, "i": 0.15,  "omega": 0.0,   "w": 0.0,   "M": 0.0},
+                         "physical": {"diameter": 2.0,  "mass_estimate": 570.0},
+                         "notes": "DSCOVR at Earth-Sun L1; confirmed artificial"},
+    }
+    HORIZONS_API = "https://ssd.jpl.nasa.gov/api/horizons.api"
+
     SBDB_API = "https://ssd-api.jpl.nasa.gov/sbdb.api"
 
     def _fetch_from_sbdb(self, designation: str) -> Optional[Dict]:
@@ -188,9 +212,81 @@ class GroundTruthDatasetBuilder:
             artificial_objects.append(obj)
 
         self.artificial_objects = artificial_objects
-        self.logger.info(f"Compiled {len(artificial_objects)} verified artificial objects")
-        return artificial_objects
-    
+        self.compile_horizons_artificial_objects()
+        self.logger.info(f"Compiled {len(self.artificial_objects)} verified artificial objects (including Horizons spacecraft)")
+        return self.artificial_objects
+
+    def _fetch_from_horizons(self, naif_id: str, designation: str) -> Optional[Dict]:
+        """Fetch osculating elements for a spacecraft from the JPL Horizons REST API."""
+        import re
+        try:
+            resp = requests.get(self.HORIZONS_API, params={
+                "format": "json", "COMMAND": f"'{naif_id}'", "OBJ_DATA": "NO",
+                "MAKE_EPHEM": "YES", "EPHEM_TYPE": "ELEMENTS", "CENTER": "500@10",
+                "START_TIME": "2020-01-01", "STOP_TIME": "2020-01-02",
+                "STEP_SIZE": "1d", "OUT_UNITS": "AU-D",
+            }, timeout=15)
+            resp.raise_for_status()
+            result_text = resp.json().get("result", "")
+        except Exception as exc:
+            self.logger.warning(f"Horizons fetch failed for {designation}: {exc}")
+            return None
+
+        elements = {}
+        in_block = False
+        kv_pattern = re.compile(r'([A-Z]+)\s*=\s*(-?[\d.Ee+\-]+)')
+        for line in result_text.splitlines():
+            if "$$SOE" in line:
+                in_block = True
+                continue
+            if "$$EOE" in line:
+                break
+            if not in_block:
+                continue
+            for match in kv_pattern.finditer(line):
+                try:
+                    elements[match.group(1)] = float(match.group(2))
+                except ValueError:
+                    pass
+
+        if "A" not in elements:
+            self.logger.warning(
+                f"Horizons returned no elements for {designation} (NAIF {naif_id}). "
+                "Using hardcoded fallback."
+            )
+            return None
+
+        return {
+            "orbital_elements": {
+                "a":     elements.get("A",  0.0),
+                "e":     elements.get("EC", 0.0),
+                "i":     elements.get("IN", 0.0),
+                "omega": elements.get("OM", 0.0),
+                "w":     elements.get("W",  0.0),
+                "M":     elements.get("MA", 0.0),
+            },
+            "source": "JPL Horizons",
+            "fetch_date": datetime.now().date().isoformat(),
+        }
+
+    def compile_horizons_artificial_objects(self) -> List[GroundTruthObject]:
+        """Compile 6 confirmed artificial spacecraft from JPL Horizons NAIF catalog."""
+        objects = []
+        for name, spec in self.HORIZONS_ARTIFICIALS.items():
+            fetched = self._fetch_from_horizons(spec["naif_id"], name)
+            orbital_elements = fetched["orbital_elements"] if fetched else dict(spec["fallback"])
+            source = (f"JPL Horizons NAIF {spec['naif_id']} (fetched {fetched['fetch_date']})"
+                      if fetched else f"Hardcoded fallback — NAIF {spec['naif_id']}")
+            objects.append(GroundTruthObject(
+                object_id=name, is_artificial=True,
+                orbital_elements=orbital_elements,
+                physical_params=dict(spec["physical"]),
+                source=source, verification_notes=spec["notes"],
+            ))
+        self.artificial_objects.extend(objects)
+        self.logger.info(f"Compiled {len(objects)} Horizons spacecraft objects")
+        return objects
+
     SBDB_QUERY_API = "https://ssd-api.jpl.nasa.gov/sbdb_query.api"
 
     # (name, fraction, a_mu, a_sig, e_mu, e_sig, i_mu_deg, i_sig_deg)

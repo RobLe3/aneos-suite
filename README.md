@@ -91,6 +91,10 @@ aNEOS includes **Moon impact probability calculations** that can show objects ar
 
 ### **🎯 Detection Capabilities**
 - **Statistical Framework**: Sigma calculations without inflation
+- **Detection Interpretation**: σ measures rarity under the natural NEO null hypothesis.
+  P(artificial) incorporates a 0.1% base rate; orbital+physical evidence alone bounds
+  the posterior to ~1–5%. Propulsion signatures or observed course corrections are
+  required to push P(artificial) above 10%.
 - **Multi-Modal Analysis**: Orbital + Physical + Temporal evidence fusion with Bayesian methods
 - **Artificial Probability**: Realistic 0.1% base rates
 - **Quality Assurance**: Comprehensive testing with validated ground truth integration
@@ -242,15 +246,17 @@ This system directly evolves from the theoretical framework established in [neo-
 - **Original**: Exploratory analysis establishing the theoretical foundation
 - **aNEOS v0.7**: Statistical methodology validated against confirmed artificial objects (Tesla Roadster, Centaur/2020 SO, Apollo 12 S-IVB); sensitivity=1.00, specificity=1.00 at calibrated threshold
 
-## System Status: Pre-Production (v0.7 Stabilization Series)
+## System Status: Pre-Production (v0.7 Stabilization Series — Phase 7 complete)
 
 ### **✅ Core Capabilities**
 - **Artificial Detection**: Statistical framework with Bayesian inference
+- **Hyperbolic Orbit Support**: `OrbitalElements` accepts e≥1, a<0 — Voyager/Pioneer class objects fully supported
 - **Impact Assessment**: Earth and Moon impact probability framework
 - **Statistical Accuracy**: Sigma calculation methodology and probability separation
 - **Real Data Integration**: NASA/JPL data with comprehensive explanations
 - **Scientific Rigor**: Methodology with why/where/when rationale
 - **User Interface**: CLI integration with all features
+- **REST API**: `GET /detect` endpoint returns typed `DetectionResponse` with `sigma_confidence`
 
 ### **🌟 Key Features**
 - **Statistical Methodology**: Separation of significance vs probability
@@ -258,13 +264,15 @@ This system directly evolves from the theoretical framework established in [neo-
 - **Artificial Object Enhancement**: Consideration of propulsive uncertainty
 - **Scientific Rationale**: Complete documentation of assessment criteria
 - **Planetary Defense**: Comprehensive threat evaluation for Earth-Moon system
+- **Stable CI**: Network tests excluded from CI pipeline; 59 unit tests pass / 0 fail
 
 ### **🎯 Validated Components**
 - **Impact Probability Calculator**: Comprehensive Earth and Moon assessment (`impact_probability.py`)
 - **Calibrated Assessment**: Bayesian inference methodology
-- **Enhanced Pipeline**: Integration of impact assessment (`impact_enhanced_pipeline.py`)
-- **Detection System**: Validated detector with sigma calculations
+- **Detection System**: Validated detector with sigma calculations; `GET /detect` REST endpoint wired
 - **CLI Integration**: User interface with Moon impact display
+- **Data Sources**: SBDB, MPC, NEODyS, Horizons — physical properties via `_physical` sub-dict; albedo preserved from all sources
+- **OpenAPI Spec**: `DetectionResponse` in `components/schemas`; generated via `make spec`
 
 ## The Search Continues with Planetary Defense
 

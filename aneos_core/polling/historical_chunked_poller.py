@@ -828,6 +828,25 @@ class HistoricalChunkedPoller:
         
         return result
     
+    def _merge_chunks(self, chunks: list) -> list:
+        """Merge objects from multiple chunks, deduplicating by designation.
+
+        When the same object appears in two chunks (e.g. at a boundary), the
+        entry with more non-None fields is retained.
+        """
+        seen: Dict[str, Dict] = {}
+        for chunk in chunks:
+            for obj in chunk:
+                desig = obj.get("designation", "")
+                if desig not in seen:
+                    seen[desig] = obj
+                else:
+                    existing = seen[desig]
+                    if (sum(v is not None for v in obj.values()) >
+                            sum(v is not None for v in existing.values())):
+                        seen[desig] = obj
+        return list(seen.values())
+
     def _save_historical_results(self, result: HistoricalPollingResult):
         """Save complete historical polling results."""
         try:
