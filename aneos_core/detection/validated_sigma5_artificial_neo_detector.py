@@ -1,20 +1,30 @@
 #!/usr/bin/env python3
 """
-Validated Sigma 5 Artificial NEO Detector - Scientifically Rigorous Implementation
+Validated Sigma 5 Artificial NEO Detector
 
-This detector implements proper statistical methodology for artificial object detection
-with validated sigma confidence levels. Addresses fundamental flaws in previous 
-implementations by using correct statistical principles and empirical validation.
+Computes orbital anomaly scores relative to the Granvik et al. 2018 debiased NEO
+population and applies Bayesian evidence fusion across available evidence types.
 
-Key Features:
-1. Proper sigma confidence calculation (not Z-score conflation)
-2. Empirically validated NEO population parameters from literature
-3. Bayesian evidence fusion with proper uncertainty propagation
-4. Ground truth validation against confirmed artificial objects
-5. False positive rate control through proper statistical testing
+VALIDATION STATUS (as of 2026-03-08):
+  Internal consistency check: N=4 objects (2 artificial, 2 natural), LOOCV.
+  The reported F1=1.000 reflects perfect separation on these 4 hardcoded objects;
+  it is NOT a generalisation estimate and has no external predictive validity.
+  A minimum of ~50 confirmed artificials and ~200 naturals in an independent
+  held-out dataset is required before publication-grade claims can be made.
 
-IMPORTANT: This implementation follows astronomical discovery standards and
-can withstand peer review scrutiny.
+SIGMA SEMANTICS:
+  σ_eff = sqrt(Z_a² + Z_e² + Z_i²) + hand-tuned low-inclination bonus.
+  Under the null (natural NEO), the base term follows χ²(3) distribution,
+  giving p = 1 − CDF_χ²(σ_eff², 3). Element correlations and non-Gaussianity
+  of real marginals are NOT modelled; p-values are optimistic.
+
+BAYESIAN POSTERIOR:
+  Prior P(artificial) = 0.001 (asserted, not data-derived).
+  Likelihood ratios (LR = 10 at σ>4) are hand-set constants.
+  Neither is calibrated against an independent corpus.
+  Posterior ceiling is ~3–5% from orbital+physical evidence alone.
+
+See docs/scientific/VALIDATION_INTEGRITY.md for the full audit.
 """
 
 import numpy as np
@@ -761,7 +771,12 @@ class ValidatedSigma5ArtificialNEODetector:
             f1_score=f1
         )
         
-        self.logger.info(f"Cross-validation complete: F1={f1:.3f}, Sensitivity={sensitivity:.3f}, Specificity={specificity:.3f}")
+        self.logger.info(
+            f"Internal consistency check (N={len(all_objects)}, LOOCV): "
+            f"F1={f1:.3f}, Sensitivity={sensitivity:.3f}, Specificity={specificity:.3f}. "
+            f"WARNING: N={len(all_objects)} is far below any valid statistical threshold "
+            f"(minimum ~50 per class). These metrics are NOT generalisation estimates."
+        )
     
     def analyze_neo_validated(self, orbital_elements: Dict[str, float], 
                             physical_data: Dict[str, Any] = None,
@@ -820,7 +835,10 @@ class ValidatedSigma5ArtificialNEODetector:
             'evidence_count': len(evidence_sources),
             'validation_available': self.validation_results is not None,
             'population_parameters_source': 'Granvik et al. 2018, WISE survey',
-            'statistical_method': 'Bayesian evidence fusion with cross-validation'
+            'statistical_method': (
+                'Bayesian evidence fusion; sigma=sqrt(Z_a^2+Z_e^2+Z_i^2)+bonus under chi2(3) null; '
+                'likelihood ratios are hardcoded constants (not calibrated)'
+            )
         }
         
         # TEMPORARILY DISABLED: Fix sigma calculation bug before re-enabling
@@ -847,39 +865,94 @@ class ValidatedSigma5ArtificialNEODetector:
             analysis_metadata=metadata
         )
     
+    @staticmethod
+    def _wilson_ci(k: int, n: int, z: float = 1.96) -> tuple:
+        """Wilson score 95% confidence interval for a proportion k/n."""
+        if n == 0:
+            return (0.0, 1.0)
+        p = k / n
+        denom = 1 + z * z / n
+        centre = (p + z * z / (2 * n)) / denom
+        half_width = (z * (p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / denom
+        return (max(0.0, centre - half_width), min(1.0, centre + half_width))
+
     def get_validation_report(self) -> Dict[str, Any]:
-        """Get comprehensive validation report."""
-        
+        """Get comprehensive validation report.
+
+        WARNING: The internal cross-validation corpus contains only N=4 objects
+        (2 artificial, 2 natural).  All reported metrics carry extreme uncertainty;
+        the 95% Wilson CIs span essentially the full [0, 1] range.  These numbers
+        are an internal consistency check, NOT a generalisation estimate.
+        See docs/scientific/VALIDATION_INTEGRITY.md for the full audit.
+        """
         if not self.validation_results:
             return {'status': 'no_validation_performed'}
-        
+
         val = self.validation_results
-        
+        n_art = len(self.artificial_objects_db)
+        n_nat = len(self.natural_objects_db)
+        n_total = n_art + n_nat
+
+        # Wilson 95% CIs (these will be wide given N=4)
+        tp, fp, tn, fn = val.true_positives, val.false_positives, val.true_negatives, val.false_negatives
+        sens_ci = self._wilson_ci(tp, tp + fn)
+        spec_ci = self._wilson_ci(tn, tn + fp)
+        f1_ci   = self._wilson_ci(int(round(val.f1_score * n_total)), n_total)
+
         return {
             'validation_performed': True,
+            'methodology_note': (
+                f"INTERNAL CONSISTENCY CHECK ONLY. N={n_total} total objects "
+                f"({n_art} artificial, {n_nat} natural). LOOCV on the same hardcoded "
+                f"objects used to tune detector thresholds. F1=1.000 reflects perfect "
+                f"separation on 4 objects; it is NOT a generalisation estimate. "
+                f"95% Wilson CIs span ~[0, 1]. An independent held-out corpus of "
+                f"≥50 artificials is required for valid performance claims."
+            ),
             'sample_sizes': {
-                'artificial_objects': len(self.artificial_objects_db),
-                'natural_objects': len(self.natural_objects_db),
-                'total_samples': len(self.artificial_objects_db) + len(self.natural_objects_db)
+                'artificial_objects': n_art,
+                'natural_objects': n_nat,
+                'total_samples': n_total,
+                'minimum_recommended_for_valid_estimate': 50
             },
             'performance_metrics': {
                 'sensitivity': val.sensitivity,
+                'sensitivity_95ci': list(sens_ci),
                 'specificity': val.specificity,
+                'specificity_95ci': list(spec_ci),
                 'positive_predictive_value': val.positive_predictive_value,
                 'negative_predictive_value': val.negative_predictive_value,
                 'f1_score': val.f1_score,
+                'f1_95ci': list(f1_ci),
                 'balanced_accuracy': (val.sensitivity + val.specificity) / 2
             },
             'confusion_matrix': {
-                'true_positives': val.true_positives,
-                'false_positives': val.false_positives,
-                'true_negatives': val.true_negatives,
-                'false_negatives': val.false_negatives
+                'true_positives': int(tp),
+                'false_positives': int(fp),
+                'true_negatives': int(tn),
+                'false_negatives': int(fn)
+            },
+            'sigma_semantics': {
+                'formula': 'sigma_eff = sqrt(Z_a^2 + Z_e^2 + Z_i^2) + low_inclination_bonus',
+                'null_distribution': 'chi2(3) approximation (assumes independent Gaussian marginals)',
+                'p_value_type': 'analytical from scipy.stats.chi2.cdf',
+                'multiple_testing_corrected': False,
+                'correlations_modelled': False,
+                'hand_tuned_bonus': True
+            },
+            'bayesian_calibration': {
+                'prior_p_artificial': 0.001,
+                'prior_source': 'asserted (not empirically derived)',
+                'likelihood_ratios': 'hardcoded constants (10/5/2 by sigma tier)',
+                'likelihood_source': 'not calibrated against holdout data',
+                'posterior_ceiling_orbital_physical': '~3–5%',
+                'calibration_diagram_available': False,
+                'brier_score': None
             },
             'statistical_significance': {
                 'sigma_5_threshold': self.SIGMA_5_CONFIDENCE,
                 'sigma_5_p_value': self.SIGMA_5_P_VALUE,
-                'validation_method': 'leave-one-out cross-validation'
+                'validation_method': 'leave-one-out cross-validation (N=4, internal only)'
             },
             'ground_truth_database': {
                 'artificial_objects': [obj['name'] for obj in self.artificial_objects_db],
