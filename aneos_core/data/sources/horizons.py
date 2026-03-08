@@ -254,6 +254,79 @@ class HorizonsSource(HTTPDataSource):
             self.logger.error(f"Horizons ephemeris error for {designation}: {e}")
             return None
 
+    def fetch_orbital_history(self, designation: str, years: int = 10) -> List[Dict[str, Any]]:
+        """
+        Fetch a time-series of osculating orbital elements from Horizons ELEMENTS ephemeris.
+        Returns one entry per year over `years` years centred on today.
+        """
+        today = datetime.utcnow()
+        start = (today - timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
+        stop = (today + timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
+        try:
+            resp = requests.get(
+                _HORIZONS_URL,
+                params={
+                    "format": "json",
+                    "COMMAND": self._horizons_command(designation),
+                    "OBJ_DATA": "NO",
+                    "MAKE_EPHEM": "YES",
+                    "EPHEM_TYPE": "ELEMENTS",
+                    "CENTER": "500@10",
+                    "START_TIME": start,
+                    "STOP_TIME": stop,
+                    "STEP_SIZE": "365d",
+                    "OUT_UNITS": "AU-D",
+                },
+                timeout=self.config.request_timeout,
+            )
+            resp.raise_for_status()
+            result_text = resp.json().get("result", "")
+            return self._parse_elements_table(result_text)
+        except Exception as e:
+            self.logger.error(f"Horizons orbital history failed for {designation}: {e}")
+            return []
+
+    def _parse_elements_table(self, text: str) -> List[Dict[str, Any]]:
+        """Parse the $$SOE ... $$EOE block from a Horizons ELEMENTS ephemeris."""
+        import re as _re
+        rows: List[Dict[str, Any]] = []
+        in_block = False
+        pending_epoch: Optional[str] = None
+        for line in text.splitlines():
+            if "$$SOE" in line:
+                in_block = True
+                continue
+            if "$$EOE" in line:
+                break
+            if not in_block or not line.strip():
+                continue
+            # Try to parse element values from the line
+            element_keys = [
+                ("a",    r"A=\s*([-\d.E+]+)"),
+                ("e",    r"EC=\s*([-\d.E+]+)"),
+                ("i",    r"IN=\s*([-\d.E+]+)"),
+                ("node", r"OM=\s*([-\d.E+]+)"),
+                ("peri", r"W=\s*([-\d.E+]+)"),
+                ("M",    r"MA=\s*([-\d.E+]+)"),
+            ]
+            parsed = {}
+            for key, pattern in element_keys:
+                m = _re.search(pattern, line)
+                if m:
+                    try:
+                        parsed[key] = float(m.group(1))
+                    except ValueError:
+                        pass
+            if parsed:
+                if pending_epoch:
+                    parsed["epoch"] = pending_epoch
+                    pending_epoch = None
+                rows.append(parsed)
+            elif not any(c in line for c in ["=", "!"]):
+                # Likely a date/epoch line
+                pending_epoch = line.strip()
+        return rows
+
     def _parse_ephemeris(self, text: str) -> List[Dict[str, Any]]:
         """Parse $$SOE…$$EOE ephemeris block."""
         ephemeris = []

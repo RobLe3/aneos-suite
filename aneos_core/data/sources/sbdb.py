@@ -32,6 +32,7 @@ class SBDBSource(HTTPDataSource):
             params = {
                 "sstr": designation,
                 "phys-par": "true",
+                "nongrav": "1",
             }
             
             response_data = await self._http_get("", params)
@@ -113,6 +114,26 @@ class SBDBSource(HTTPDataSource):
 
         # Store physical data separately for consumers that use NEOData.physical_properties
         orbital_data["_physical"] = physical_data
+
+        # Non-gravitational parameters (present for ~3% of NEOs)
+        ng_list = data.get("nongrav_params", [])
+        nongrav_data: Dict[str, Any] = {}
+        for item in ng_list:
+            name = item.get("name", "")
+            value = item.get("value")
+            if value is not None:
+                try:
+                    if name == "A1":
+                        nongrav_data["a1"] = float(value)
+                    elif name == "A2":
+                        nongrav_data["a2"] = float(value)
+                    elif name == "A3":
+                        nongrav_data["a3"] = float(value)
+                    elif name in ("model", "Model"):
+                        nongrav_data["model"] = str(value)
+                except (ValueError, TypeError):
+                    pass
+        orbital_data["_nongrav"] = nongrav_data if nongrav_data else None
 
         # Source metadata (filtered out before OrbitalElements construction)
         orbital_data["_source"] = self.name

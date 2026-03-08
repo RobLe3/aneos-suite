@@ -168,12 +168,13 @@ class ImpactProbabilityCalculator:
                 return d
         return getattr(orbital_elements, "diameter", None) or None
         
-    def calculate_comprehensive_impact_probability(self, 
+    def calculate_comprehensive_impact_probability(self,
                                                  orbital_elements: OrbitalElements,
                                                  close_approaches: List[CloseApproach] = None,
                                                  observation_arc_days: float = 30.0,
                                                  is_artificial: bool = False,
-                                                 artificial_probability: float = 0.0) -> ImpactProbability:
+                                                 artificial_probability: float = 0.0,
+                                                 physical_properties=None) -> ImpactProbability:
         """
         Calculate comprehensive impact probability for a NEO.
         
@@ -231,9 +232,9 @@ class ImpactProbabilityCalculator:
         )
         
         # Physical impact assessment
-        impact_energy = self._calculate_impact_energy(orbital_elements)
+        impact_energy = self._calculate_impact_energy(orbital_elements, physical_properties)
         impact_velocity = self._estimate_impact_velocity(orbital_elements)
-        crater_size = self._estimate_crater_diameter_proper(orbital_elements, impact_energy)
+        crater_size = self._estimate_crater_diameter_proper(orbital_elements, impact_energy, physical_properties)
         damage_radius = self._estimate_damage_radius(impact_energy)
         
         # Spatial distribution analysis
@@ -274,7 +275,8 @@ class ImpactProbabilityCalculator:
         
         # Calculate Moon impact probability assessment
         moon_results = self._calculate_moon_impact_probability(
-            orbital_elements, close_approaches, observation_arc_days, is_artificial, artificial_probability
+            orbital_elements, close_approaches, observation_arc_days, is_artificial, artificial_probability,
+            physical_properties=physical_properties,
         )
         
         # Update risk factors with Moon comparison (only if calculated)
@@ -1070,12 +1072,13 @@ class ImpactProbabilityCalculator:
         
         return None
 
-    def _calculate_moon_impact_probability(self, 
+    def _calculate_moon_impact_probability(self,
                                          orbital_elements: OrbitalElements,
                                          close_approaches: List[CloseApproach],
                                          observation_arc_days: float,
                                          is_artificial: bool,
-                                         artificial_probability: float = 0.0) -> Dict[str, Any]:
+                                         artificial_probability: float = 0.0,
+                                         physical_properties=None) -> Dict[str, Any]:
         """
         Calculate Moon impact probability and compare to Earth impact risk.
         
@@ -1167,7 +1170,7 @@ class ImpactProbabilityCalculator:
                     moon_collision_prob *= 2.0  # General artificial enhancement
             
             # Calculate Moon impact energy
-            moon_impact_energy = self._calculate_moon_impact_energy(orbital_elements)
+            moon_impact_energy = self._calculate_moon_impact_energy(orbital_elements, physical_properties)
             
             # Earth vs Moon impact ratio
             earth_vs_moon_ratio = 1.0

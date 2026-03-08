@@ -34,6 +34,7 @@ from ..auth import get_current_user
 from ..schemas.detection import DetectionResponse, EvidenceSummary, OrbitalInput
 from ..schemas.history import OrbitalHistoryResponse, OrbitalElementPoint
 from ..schemas.impact import ImpactResponse
+from ..schemas.network import NetworkRequest, NetworkStatusResponse
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,7 @@ else:
 _analysis_cache: Dict[str, AnalysisResponse] = {}
 _export_jobs: Dict[str, Dict[str, Any]] = {}
 _batch_store: Dict[str, Dict[str, Any]] = {}
+_network_store: Dict[str, Any] = {}
 
 # Known spacecraft catalog for API-level pre-check
 _KNOWN_SPACECRAFT = {
@@ -768,6 +770,82 @@ async def _run_batch_detection(batch_id: str, designations: List[str]):
     store['status'] = 'completed'
     store['finished_at'] = datetime.now().isoformat()
     logger.info(f"Batch detection {batch_id} completed")
+
+def _run_network_analysis(job_id: str, request: NetworkRequest) -> None:
+    """Background worker for population pattern analysis."""
+    try:
+        _network_store[job_id]["status"] = "processing"
+        from aneos_core.data.fetcher import DataFetcher
+        from aneos_core.pattern_analysis.session import (
+            NetworkAnalysisSession, PatternAnalysisConfig
+        )
+        fetcher = DataFetcher()
+        designations = request.designations
+        neo_objects = []
+        for des in designations:
+            try:
+                neo_objects.append(fetcher.fetch_neo_data(des))
+            except Exception as e:
+                logger.debug(f"Network analysis: could not fetch {des}: {e}")
+
+        cfg = PatternAnalysisConfig(
+            clustering=request.clustering,
+            harmonics=request.harmonics,
+            correlation=request.correlation,
+            rendezvous=False,   # deferred ADR-045
+            historical_years=request.historical_years,
+        )
+        session = NetworkAnalysisSession(config=cfg, fetcher=fetcher)
+        result = session.run(neo_objects)
+        _network_store[job_id].update(result)
+        _network_store[job_id]["status"] = "complete"
+    except Exception as exc:
+        logger.exception(f"Network analysis job {job_id} failed: {exc}")
+        _network_store[job_id]["status"] = "error"
+        _network_store[job_id]["error"] = str(exc)
+
+
+@router.post("/analyze/network", summary="Start population pattern analysis")
+async def start_network_analysis(request: NetworkRequest):
+    """Submit a batch for population-level pattern analysis. Returns a job_id immediately."""
+    import threading
+    import uuid
+    from datetime import datetime as _dt
+    job_id = f"net_{_dt.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    _network_store[job_id] = {
+        "status": "queued",
+        "designations_analyzed": 0,
+        "clusters": [],
+        "harmonic_signals": [],
+        "correlation_matrix": None,
+        "network_sigma": 0.0,
+        "network_tier": "NETWORK_ROUTINE",
+        "combined_p_value": 1.0,
+        "sub_module_p_values": {},
+        "analysis_metadata": {},
+        "error": None,
+    }
+    thread = threading.Thread(
+        target=_run_network_analysis, args=(job_id, request), daemon=True
+    )
+    thread.start()
+    return {
+        "job_id": job_id,
+        "status": "queued",
+        "status_url": f"/api/v1/analysis/network/{job_id}/status",
+    }
+
+
+@router.get("/analyze/network/{job_id}/status",
+            response_model=NetworkStatusResponse,
+            summary="Poll population pattern analysis status")
+async def get_network_status(job_id: str):
+    """Return current status / results for a network analysis job."""
+    store = _network_store.get(job_id)
+    if store is None:
+        raise HTTPException(status_code=404, detail=f"Job {job_id!r} not found")
+    return NetworkStatusResponse(job_id=job_id, **store)
+
 
 async def _process_export(export_id: str, request: ExportRequest):
     """Serialize _analysis_cache to JSON or CSV content."""

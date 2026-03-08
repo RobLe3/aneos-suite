@@ -76,6 +76,7 @@ except ImportError:
 
 from .models import APIResponse, ErrorResponse
 import aneos_api.schemas  # noqa: F401 — registers all schema types
+from .schemas.health import HealthResponse, CheckResult
 from .auth import AuthManager, get_current_user
 from .middleware import setup_middleware
 from .endpoints import analysis, prediction, monitoring, admin, streaming
@@ -231,7 +232,13 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
     # Create FastAPI app with lifespan
     app = FastAPI(
         title="aNEOS API",
-        description="Advanced Near Earth Object detection System - RESTful API",
+        description=(
+            "aNEOS REST API. "
+            "Read endpoints (GET /detect, GET /impact, GET /health) "
+            "are accessible without authentication in development mode. "
+            "Use 'Authorization: Bearer mock_admin_token' for write endpoints in dev, "
+            "or configure ANEOS_ADMIN_API_KEY for production."
+        ),
         version="2.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
@@ -258,39 +265,32 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
         app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
     
     # Health check endpoint
-    @app.get("/health", response_model=Dict[str, Any])
+    @app.get("/health", response_model=HealthResponse)
     async def health_check():
-        """Health check endpoint with emergency life support."""
+        """Health check endpoint."""
         try:
             aneos_app = get_aneos_app()
-            
-            # 🚨 EMERGENCY LIFE SUPPORT: Force initialization if needed
             if not aneos_app.services_initialized:
-                print("🚑 Emergency: Initializing services during request...")
                 await aneos_app.initialize_services()
-            
-            # 🩺 Get vital signs
-            health_status = aneos_app.get_health_status()
-            
-            # 💊 Add emergency response metadata
-            health_status['emergency_care'] = {
-                'services_auto_initialized': aneos_app.services_initialized,
-                'intensive_care_active': True,
-                'federation_romulan_cooperation': 'active'
+            raw = aneos_app.get_health_status()
+            services = raw.get('services', {})
+            checks = {
+                svc: CheckResult(
+                    status="ok" if ok else "degraded",
+                    detail="operational" if ok else "not initialized",
+                )
+                for svc, ok in services.items()
             }
-            
-            return health_status
-            
+            return HealthResponse(
+                status=raw.get('status', 'unknown'),
+                checks=checks,
+                version=raw.get('version', '0.7.0'),
+            )
         except Exception as e:
-            # 🚨 CRITICAL CARE: Don't let the patient die
-            print(f"🚨 Critical care intervention: {e}")
-            return {
-                'status': 'critical_care',
-                'error': str(e),
-                'emergency_protocols': 'active',
-                'federation_assistance': 'provided',
-                'romulan_integration': 'life_support_mode'
-            }
+            return HealthResponse(
+                status="error",
+                checks={"api": CheckResult(status="error", detail=str(e))},
+            )
     
     @app.get("/", response_model=Dict[str, Any])
     async def root():

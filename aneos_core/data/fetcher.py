@@ -176,8 +176,8 @@ class DataFetcher:
 
         return neo_data
 
-    def _fetch_close_approaches(self, designation: str) -> List:
-        """Fetch upcoming close approaches from SBDB CAD API for a single designation."""
+    def _fetch_close_approaches(self, designation: str, date_min: str = "now") -> List:
+        """Fetch close approaches from SBDB CAD API for a single designation."""
         import requests
         from datetime import datetime as _dt
         from .models import CloseApproach
@@ -186,7 +186,7 @@ class DataFetcher:
                 "https://ssd-api.jpl.nasa.gov/cad.api",
                 params={
                     "des": designation,
-                    "date-min": "now",
+                    "date-min": date_min,
                     "dist-max": "0.2",
                     "limit": "10",
                     "fullname": "true",
@@ -213,6 +213,40 @@ class DataFetcher:
         except Exception as e:
             self.logger.debug(f"CAD API fetch failed for {designation}: {e}")
             return []
+
+    def fetch_historical_approaches(
+        self, designation: str, years_back: int = 30
+    ) -> List:
+        """
+        Fetch historical close approaches for population pattern analysis.
+        NOT called in the standard detection path — used only by NetworkAnalysisSession.
+        Results are cached with a 7-day TTL.
+        """
+        from datetime import datetime as _dt, timedelta
+        from .models import CloseApproach
+        cache_key = f"neo_cad_hist:{designation}:{years_back}"
+        cached = self.cache_manager.get(cache_key)
+        if cached:
+            result = []
+            for item in cached:
+                try:
+                    result.append(CloseApproach.from_dict(item))
+                except Exception:
+                    pass
+            return result
+
+        date_min = (
+            _dt.utcnow() - timedelta(days=years_back * 365)
+        ).strftime("%Y-%m-%d")
+        approaches = self._fetch_close_approaches(designation, date_min=date_min)
+
+        # Cache with 7-day TTL (604800 seconds)
+        self.cache_manager.set(
+            cache_key,
+            [a.to_dict() for a in approaches],
+            ttl=604800,
+        )
+        return approaches
 
     def _fetch_from_source(self, source_name: str, source: DataSourceBase, designation: str) -> Optional[NEOData]:
         """Fetch data from a single source, handling both async and sync source implementations."""
@@ -270,11 +304,27 @@ class DataFetcher:
                     except Exception:
                         pass
 
+                # Build NonGravitationalParameters from _nongrav sub-dict if present
+                nongrav = None
+                ng_raw = orbital_elements_data.get("_nongrav") if orbital_elements_data else None
+                if ng_raw:
+                    from .models import NonGravitationalParameters
+                    try:
+                        nongrav = NonGravitationalParameters(
+                            a1=ng_raw.get("a1"),
+                            a2=ng_raw.get("a2"),
+                            a3=ng_raw.get("a3"),
+                            model=ng_raw.get("model"),
+                        )
+                    except Exception:
+                        pass
+
             if orbital_elements:
                 neo_data = NEOData(
                     designation=designation,
                     orbital_elements=orbital_elements,
                     physical_properties=physical_properties,
+                    nongrav=nongrav,
                     sources_used=[source_name],
                 )
                 neo_data.fetched_at = datetime.now(timezone.utc)

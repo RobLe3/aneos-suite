@@ -1,10 +1,11 @@
 # aNEOS — UELO Gap Analysis (Phase 8 Targets)
 
-**Version**: 1.0
+**Version**: 1.1
 **Date**: 2026-03-07
 **Supersedes**: UELO.md §5 (seed table)
 **Derived from**: Live code audit of 12 source files post-Phase 7
 **Test baseline**: 59 pass / 0 fail
+**Phase 8 status**: All 10 gaps (UE-001 – UE-010) CLOSED — see PHASE9_UELO_GAP_ANALYSIS.md for next targets
 
 ---
 
@@ -835,16 +836,16 @@ Add in-memory `_batch_store` for job state. Real results populated by background
 
 | ID | Gap | Priority | Status after Phase 8 |
 |----|-----|----------|----------------------|
-| UE-001 | Evidence sources not in API | P1 | CLOSED (8A) |
-| UE-002 | No impact REST endpoint | P1 | CLOSED (8B) |
-| UE-003 | Batch non-functional | P1 | CLOSED (8C) |
-| UE-004 | No sigma tier label | P2 | CLOSED (8A) |
-| UE-005 | Data source not surfaced | P2 | CLOSED (8D) |
-| UE-006 | /health schema not wired | P2 | CLOSED (8D) |
-| UE-007 | Generic interpretation | P2 | CLOSED (8A) |
-| UE-008 | Spacecraft veto not in API | P2 | CLOSED (8D) |
-| UE-009 | Export non-functional | P3 | CLOSED (8E) |
-| UE-010 | Auth blocks research use | P3 | CLOSED (8E) |
+| UE-001 | Evidence sources not in API | P1 | CLOSED Phase 8A |
+| UE-002 | No impact REST endpoint | P1 | CLOSED Phase 8B |
+| UE-003 | Batch non-functional | P1 | CLOSED Phase 8C |
+| UE-004 | No sigma tier label | P2 | CLOSED Phase 8A |
+| UE-005 | Data source not surfaced | P2 | CLOSED Phase 8D |
+| UE-006 | /health schema not wired | P2 | CLOSED Phase 8D |
+| UE-007 | Generic interpretation | P2 | CLOSED Phase 8A |
+| UE-008 | Spacecraft veto not in API | P2 | CLOSED Phase 8D |
+| UE-009 | Export non-functional | P3 | CLOSED Phase 8E |
+| UE-010 | Auth blocks research use | P3 | CLOSED Phase 8E |
 
 **Projected outcome after Phase 8**: All 4 user journeys (J1–J4) deliver their
 expected outcome through the REST API. P4 (casual explorer) can rely on the CLI menu
