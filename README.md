@@ -11,17 +11,69 @@ aNEOS is an open-source Python research platform with two independent missions:
 
 ---
 
+## In Plain English — What Does This Software Actually Do?
+
+Space agencies and astronomers track tens of thousands of **Near Earth Objects (NEOs)** —
+asteroids and comets whose orbits bring them close to Earth. Most are natural rocks following
+paths governed entirely by gravity. But a small number of confirmed objects are actually
+human-made spacecraft — such as the Tesla Roadster launched by SpaceX in 2018 or rocket
+upper stages left over from Apollo-era missions — that orbit the Sun just like asteroids do.
+
+aNEOS asks two questions about any object in those catalogues:
+
+**Question 1: Does this object behave like a natural rock?**
+
+The software downloads publicly available orbital data from NASA's JPL database, measures six
+different properties of the object's path around the Sun, and compares each against the
+known population of natural NEOs. If the object's orbit, size, brightness, or approach pattern
+is statistically unusual, it receives a higher "sigma score". The three confirmed artificial
+objects in our test set all score above sigma 5 — the same threshold astronomers use to claim
+a scientific discovery. All natural asteroids tested score below sigma 3.
+
+This does **not** mean aNEOS can detect alien spacecraft. It means it can flag objects whose
+behaviour is inconsistent with what we expect from rocks shaped only by gravity. Human-made
+spacecraft are the only known cause of such anomalies, and even then the software assigns
+only a ~3–4% probability of being artificial — the realistic ceiling given what orbital data
+alone can tell us. Confirming artificial origin requires telescope or radar follow-up.
+
+**Question 2: Could this object hit the Earth or Moon?**
+
+For any named object, aNEOS calculates the probability of a collision with Earth and with the
+Moon, estimates how much energy the impact would release (in megatons of TNT), how large a
+crater it would leave, and which decade carries the highest risk. It also identifies
+"gravitational keyholes" — narrow windows in space where a close approach could nudge an
+object onto a future impact trajectory.
+
+**How deep does it go?**
+
+- Data is fetched live from four NASA/ESA sources (JPL SBDB, JPL Horizons, NEODyS, MPC).
+- The detection framework has been validated against 3 confirmed artificial objects and 20+
+  natural NEOs from the JPL catalogue: it correctly identifies all of them.
+- A full REST API lets other software query aNEOS programmatically.
+- 59 automated tests verify the system works correctly end to end.
+
+**What it is not:**
+
+aNEOS is a research platform built by an independent developer. It is not affiliated with
+NASA, ESA, or any space agency. It does not have access to classified data, telescope feeds,
+or radar measurements. Its impact probability numbers are research-grade estimates — useful
+for screening and prioritisation, but not a replacement for the authoritative calculations
+produced by JPL Sentry or ESA NEOCC.
+
+---
+
 ## Table of Contents
 
-1. [Quick Start](#quick-start)
-2. [What aNEOS Does Right Now](#what-aneos-does-right-now)
-3. [Who Benefits — Profession-Specific Use Cases](#who-benefits--profession-specific-use-cases)
-4. [Detection Quality — Verified Claims](#detection-quality--verified-claims)
-5. [Capabilities and Limitations](#capabilities-and-limitations)
-6. [System Architecture](#system-architecture)
-7. [REST API Reference](#rest-api-reference)
-8. [Scientific Foundation](#scientific-foundation)
-9. [Contributing](#contributing)
+1. [In Plain English — What Does This Software Actually Do?](#in-plain-english--what-does-this-software-actually-do)
+2. [Quick Start](#quick-start)
+3. [What aNEOS Does Right Now](#what-aneos-does-right-now)
+4. [Who Benefits — Profession-Specific Use Cases](#who-benefits--profession-specific-use-cases)
+5. [Detection Quality — Verified Claims](#detection-quality--verified-claims)
+6. [Capabilities and Limitations](#capabilities-and-limitations)
+7. [System Architecture](#system-architecture)
+8. [REST API Reference](#rest-api-reference)
+9. [Scientific Foundation](#scientific-foundation)
+10. [Contributing](#contributing)
 
 ---
 
