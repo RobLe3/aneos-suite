@@ -1,6 +1,6 @@
 # Domain-Driven Design — aNEOS Suite
 
-_Derived: 2026-03-06 | Codebase Version: 0.7.0 (Stabilization Series)_
+_Derived: 2026-03-06 | Last updated: 2026-03-08 | Codebase Version: 1.0.0_
 _Concept documents: README.md, docs/scientific/scientific-documentation.md,
 docs/engineering/sigma5_success_criteria.md, Calibration Plan v1.2_
 
@@ -26,6 +26,15 @@ All developers, scientists, and stakeholders must use these terms consistently.
 | **Ground truth** | A verified dataset of objects with known true labels (artificial vs natural) |
 | **FPR** | False Positive Rate — probability of classifying a natural object as artificial |
 | **Keyhole** | A small region of orbital space whose traversal leads to a resonant Earth-collision return |
+| **Non-Gravitational Parameter** | A1/A2/A3 Marsden coefficients encoding accelerations beyond gravity (Yarkovsky thermal drift or active propulsion) |
+| **MOID** | Minimum Orbital Intersection Distance — the minimum possible distance between two orbits regardless of timing; used as a pre-filter before expensive trajectory propagation |
+| **NEO Population** | The complete set of NEO objects submitted to a single pattern analysis session |
+| **Orbital Family** | A cluster of NEOs occupying a statistically non-random volume of (a, e, i, ω, Ω) element space, potentially sharing a dynamical origin |
+| **Dynamical Pair** | Two NEOs exhibiting repeated mutual close approaches below the MOID threshold; potentially a temporary association or co-orbital object |
+| **Resonant Group** | A subset of NEOs sharing a common Earth-synodic period within measurement uncertainty, as detected by Lomb-Scargle periodogram |
+| **Debiased Model** | A statistical NEO population model corrected for discovery survey selection effects; the Granvik et al. 2018 model is the reference for anomaly benchmarking |
+| **Network Report** | Population-level analysis output from a single `NetworkAnalysisSession`, covering all enabled sub-modules (clustering, harmonics, rendezvous, correlation) |
+| **Network Sigma** | Fisher-combined significance level across all population-level evidence streams; threshold ≥ 3.0 for NETWORK_ANOMALY, ≥ 5.0 for NETWORK_EXCEPTIONAL |
 
 ---
 
@@ -37,6 +46,7 @@ All developers, scientists, and stakeholders must use these terms consistently.
   Gaia Catalog   ──ACL──▶  Multi-Modal Validation (MU SWARM)
   TLE Databases  ──ACL──▶  Multi-Modal Validation (THETA SWARM)
   Gaia TAP       ──ACL──▶  Multi-Modal Validation (MU SWARM)
+  REBOUND        ──ACL──▶  Population Pattern Analysis (PA-6, optional)
 
   Data Acquisition ──────▶ NEO Core Domain (Core)
                                    │
@@ -54,10 +64,22 @@ All developers, scientists, and stakeholders must use these terms consistently.
                     ▼                             ▼
              Reporting &                  API & External
              Visualization               Integration
-                                               │
-                                    Infrastructure &
-                                       Monitoring
+                    ▲                             ▲
+                    │      (concept — BC11)        │
+                    └─── Population Pattern ───────┘
+                             Analysis
+                    ▲              ▲
+                    │              │
+            Data Acquisition   Detection &
+            (NEOData batch)    Classification
+                               (filter: σ ≥ 1.0)
 ```
+
+**BC11 context rules (design-time, not yet implemented):**
+- BC11 READS `NEOData` from BC1 and `DetectionResult` from BC5
+- BC11 NEVER modifies individual `NEOData` records (read-only consumer)
+- BC11 WRITES `NetworkReport` consumed by BC7 (Reporting) and BC8 (API)
+- Each sub-module is independently enabled via `PatternAnalysisConfig`
 
 ACL = Anti-Corruption Layer (each SWARM translates external formats to domain types)
 
@@ -187,6 +209,24 @@ or permanent identifier). All analysis contexts receive a `NEOData` instance.
 `OrbitalElements` carries physical properties (diameter, albedo, rotation period,
 spectral type) that logically belong in `PhysicalProperties`. This violates
 single responsibility and makes it unclear which model to query for physical data.
+
+### Phase 10 Updates (2026-03-08)
+- `NEOData.to_dict()` and `from_dict()` now serialise `physical_properties`
+  (5 fields) and `fetched_at` — cache round-trips no longer silently drop
+  physical evidence.
+- `NEOData.close_approaches` is now populated from SBDB CAD API on every live
+  fetch (future approaches within 0.2 AU).
+
+### Planned Extension (ADR-040)
+`NonGravitationalParameters` value object to be added:
+| Field | Description |
+|---|---|
+| `a1` | Radial Marsden component (AU/day²) |
+| `a2` | Transverse component (Yarkovsky dominant) |
+| `a3` | Normal component |
+| `model` | Parameterization type |
+| `epoch` | Reference epoch for measurement |
+`NEOData.nongrav: Optional[NonGravitationalParameters]` (None for 97% of objects)
 
 ---
 
@@ -743,13 +783,14 @@ configuration. No service mesh or ingress controller configured.
 
 ---
 
-## Bounded Context 10: Ground Truth (Future — P0 Priority)
+## Bounded Context 10: Ground Truth (Operational — Phase 3/4 Complete)
 
 **Purpose**: Provide a verified, labelled dataset of confirmed artificial and
 natural objects to enable empirical accuracy, recall, and FPR measurement.
 
-**Status**: Stub implementation only (`datasets/ground_truth_dataset_preparation.py`).
-This context does not currently function.
+**Status**: Operational. `GroundTruthDatasetBuilder` and `GroundTruthValidator`
+are active. External validation has been performed on 3 confirmed artificials
+and 20+ natural NEOs. Blind-test set not yet built.
 
 **Code**: `aneos_core/datasets/`
 
@@ -759,16 +800,27 @@ This context does not currently function.
 A versioned, immutable collection of labelled objects split into training,
 validation, and blind-test sets.
 
-### Entities (Planned)
+### Entities
 
 | Entity | Status | Description |
 |--------|--------|-------------|
-| `GroundTruthDatasetBuilder` | Stub | Compiles verified artificial (spacecraft/rocket bodies) + natural objects |
-| `GroundTruthObject` | Defined | object_id, is_artificial, orbital_elements, source, verification_notes |
+| `GroundTruthDatasetBuilder` | Operational | Compiles 9 confirmed artificials (3 SBDB + 6 Horizons) + up to 250 natural NEOs from SBDB |
+| `GroundTruthObject` | Operational | object_id, is_artificial, orbital_elements, source, verification_notes |
+| `GroundTruthValidator` | Operational | Runs canonical detector on corpus; computes accuracy metrics |
 | `BlindTestSuite` | Not started | Randomized test set with withheld labels |
-| `AccuracyReport` | Not started | Precision, recall, FPR, FNR per detector |
+| `AccuracyReport` | Operational | precision, recall, F1, FPR, ROC-AUC at calibrated threshold |
 
-### Value Objects (Planned)
+### Validation Results (Phase 3 external run, 2026-03-07)
+
+| Metric | Value | Corpus |
+|---|---|---|
+| Sensitivity (recall) | 1.00 | 3 confirmed artificials |
+| Specificity | 1.00 | 20+ JPL natural NEOs |
+| F1 | 1.00 | Combined |
+| ROC-AUC | 1.00 | Full corpus |
+| Calibrated threshold | 0.037 | Bayesian posterior |
+
+### Value Objects
 
 | Value Object | Description |
 |-------------|-------------|
@@ -796,47 +848,141 @@ validation, and blind-test sets.
 
 ---
 
-## Future Domain Evolution (Roadmap-Derived)
+---
 
-### Phase 5 Additions
-- **Ground Truth Context** (activate the stub — P0)
-- **TLE Cross-Reference Integration** (extend THETA SWARM with live Space-Track feed)
-- **Physical Indicators** (implement `indicators/physical.py` — ADR-007 gap)
-- **CI/CD Pipeline Context** (quality gate on every commit)
-- **Pre-flight Health Check** (replace silent fallbacks with explicit failures)
+## Bounded Context 11: Population Pattern Analysis (Concept — Not Yet Implemented)
 
-### Phase 6 Additions
-- **ML Classification Context** (activate `aneos_core/ml/` with labelled data)
-  - Supervised: `RandomForestClassifier` for binary classification
-  - Unsupervised: `IsolationForest`, `OneClassSVM` for novelty detection
-  - Deep learning: PyTorch autoencoder for representation learning
-- **Real-Time Streaming Context** (activate `endpoints/streaming.py` with Redis pub/sub)
-- **TLE Registry Context** (dedicated aggregate for known human hardware)
+**Purpose**: Identify statistically anomalous structures in a collection of NEO
+objects by comparing their collective orbital, temporal, and dynamical properties
+against the natural NEO population model (Granvik et al. 2018 debiased reference).
 
-### Phase 7 Additions
-- **Publication Pipeline Context** — evidence package → peer-review document
-- **Collaboration Context** — multi-institution data sharing and result federation
+**Code (planned)**: `aneos_core/pattern_analysis/`
+
+**Status**: Design complete (ADR-042 through ADR-048). No code written. BC11 can
+be implemented modularly without touching any v1.0 component. PA-1 (clustering)
+has no external prerequisites and is ready to implement first.
 
 ---
 
-## Concept Document Alignment Matrix
+### Aggregate Root: `NetworkAnalysisSession`
+
+Owns the lifecycle of one population-level analysis run: from the input batch
+of designations through sub-module execution to `NetworkReport` production.
+
+| Field | Type | Description |
+|---|---|---|
+| `session_id` | str | Unique run identifier |
+| `designations` | List[str] | Objects in scope |
+| `config` | `PatternAnalysisConfig` | Which sub-modules are enabled |
+| `status` | str | pending / running / complete / failed |
+| `report` | Optional[NetworkReport] | Populated when complete |
+
+### Entities
+
+| Entity | Sub-module | Prerequisite | Status |
+|---|---|---|---|
+| `OrbitalElementClusterer` | `clustering.py` | None | Ready to implement (PA-1) |
+| `SynodicHarmonicAnalyzer` | `harmonics.py` | ADR-041 (historical CAD) | Blocked |
+| `NonGravCorrelator` | `correlation.py` | ADR-040 (non-grav params) | Blocked |
+| `RendezvousDetector` | `rendezvous.py` | `rebound` optional dep | Deferred (PA-6) |
+| `NetworkSigmaCombiner` | `network_sigma.py` | At least one sub-module | Ready to implement |
+
+### Value Objects
+
+| Value Object | Description |
+|---|---|
+| `OrbitalCluster` | members, centroid (a,e,i,ω,Ω), density_sigma, known_family, p_value |
+| `HarmonicSignal` | designation, dominant_period_days, power_excess_sigma, p_value |
+| `RendezvousPair` | designation_a, designation_b, n_encounters, min_distance_au, encounter_epochs, p_value |
+| `CorrelationMatrix` | cluster_id, designations, matrix, flagged_pairs, bonferroni_threshold |
+| `NetworkSigma` | combined_p_value, sigma, tier, sub_module_contributions |
+| `PatternAnalysisConfig` | clustering: bool, harmonics: bool, correlation: bool, rendezvous: bool, max_objects: int |
+
+### Domain Services
+
+| Service | Purpose |
+|---|---|
+| `NetworkAnalysisSession` | Orchestrates sub-module execution; respects `PatternAnalysisConfig` |
+| `GranvikReferenceModel` | Provides expected density/distribution from Granvik 2018 Table 1 constants |
+| `MoidPreFilter` | Computes MOID from orbital elements; eliminates non-candidate rendezvous pairs |
+
+### External Dependencies
+
+| Dependency | Guard | Purpose |
+|---|---|---|
+| `numpy`, `scipy` | None (already required) | Clustering, distance metrics, Lomb-Scargle |
+| `astropy.timeseries` | None (already required) | LombScargle periodogram |
+| `hdbscan` | `HAS_HDBSCAN` | Primary clustering; fallback: `sklearn.cluster.DBSCAN` |
+| `rebound` | `HAS_REBOUND` | Rendezvous propagation (PA-6 only) |
+
+### Domain Events
+
+| Event | Trigger |
+|---|---|
+| `OrbitalFamilyDetected(cluster_id, members, density_sigma)` | New cluster exceeds 3σ background density |
+| `ResonantGroupDetected(designation, period_days, power_sigma)` | Lomb-Scargle excess power > 3σ |
+| `DynamicalPairFound(designation_a, designation_b, n_encounters)` | Repeated mutual close approach |
+| `NonGravCorrelationFound(cluster_id, pair, r_value)` | Correlated A2 across cluster members |
+| `NetworkAnomalyFlagged(session_id, network_sigma, tier)` | Network sigma ≥ 3.0 |
+| `NetworkExceptionalFlagged(session_id, network_sigma)` | Network sigma ≥ 5.0 |
+
+### Context Boundary Rules
+
+1. BC11 reads `NEOData` from BC1 (Data Acquisition). It never modifies `NEOData` records.
+2. BC11 reads `DetectionResult` from BC5 as a pre-filter: only objects with σ ≥ 1.0
+   (NOTABLE or above) are included in the population analysis.
+3. Historical approach data is fetched by BC1's `DataFetcher.fetch_historical_approaches()`
+   on behalf of BC11 — BC11 does not call external APIs directly.
+4. `NetworkReport` (BC11 output) is consumed by BC7 (Reporting) and BC8 (API).
+5. BC11 never contributes to individual `DetectionResult` or `DetectionResponse` objects.
+   Network findings are reported separately.
+
+---
+
+## Future Domain Evolution (Roadmap-Derived, Updated 2026-03-08)
+
+### v1.1 Additions (BC11 Phase 1 — no prerequisites)
+- **PA-1**: `OrbitalElementClusterer` + `NetworkSigmaCombiner` — first working BC11 milestone
+- **Blind-test set** for BC10 — withheld-label validation of ground truth corpus
+- **ADR-040 implementation** — `NonGravitationalParameters` in `NEOData`; unlocks PA-5
+
+### v1.2 Additions (BC11 Phase 2 — after ADR-040/ADR-041)
+- **ADR-041 implementation** — `fetch_historical_approaches()` in `DataFetcher`
+- **PA-3**: `SynodicHarmonicAnalyzer` using Lomb-Scargle on historical approach epochs
+- **PA-5**: `NonGravCorrelator` using Pearson correlation of A2 across clusters
+- **`/analyze/network` API endpoint** (ADR-048) with `NetworkReport` Pydantic schema
+
+### v1.3 Additions (BC11 Phase 3 — deferred)
+- **PA-6**: `RendezvousDetector` with MOID pre-filter + optional REBOUND propagation
+- **ML Classification Context** (activate `aneos_core/ml/` with expanded ground truth)
+- **Real-Time Streaming Context** (activate `endpoints/streaming.py` with Redis pub/sub)
+
+### Long-Term
+- **Publication Pipeline Context** — evidence package → peer-review document generator
+- **Collaboration Context** — multi-institution data sharing and result federation
+- **TLE Registry Context** — live Space-Track feed for THETA SWARM enrichment
+
+---
+
+## Concept Document Alignment Matrix (v1.0.0)
 
 | Scientific Doc Requirement | Implementation | Status |
 |---------------------------|----------------|--------|
 | Primary mission: artificial detection | All detection modules | Implemented |
-| Secondary mission: planetary defense | `impact_probability.py` | Implemented |
-| Multi-modal Sigma-5 detection | All detectors | Implemented; not ground-truth validated |
-| 5 indicator categories | 4 categories implemented | **Gap: physical category missing** |
+| Secondary mission: planetary defense | `impact_probability.py`; 16-field API | Implemented |
+| Multi-modal Sigma-5 detection | `ValidatedSigma5ArtificialNEODetector` | Implemented + ground-truth validated (Phase 3) |
+| 5 indicator categories | 4 categories; physical indicators in `indicators/physical.py` | Physical category implemented but not yet wired to main pipeline |
 | Bayesian base rate correction | `validated_sigma5` detector | Implemented |
 | Multiple testing correction | `statistical_testing.py` | Implemented |
-| Uncertainty quantification | `uncertainty_analysis.py` | Implemented |
-| Reproducible methodology | Version-controlled code + config | Implemented |
+| Uncertainty quantification | `uncertainty_analysis.py`; `ImpactResponse.probability_uncertainty` | Implemented |
+| Reproducible methodology | Version-controlled code + config + OpenAPI spec | Implemented |
 | Peer-review ready output | Report generator | Implemented |
-| Ground truth validation | `ground_truth_dataset_preparation.py` | **Stub only** |
-| Real NASA/JPL data | `data/sources/` | Implemented; **silent fallback risk** |
-| Moon impact assessment | `impact_probability.py` | Implemented |
-| FPR < 5.7×10⁻⁷ | Monte Carlo validator | **Theoretically modeled, not empirically verified** |
-| Publication-standard sigma-5 | Detectors + `statistical_utils.py` | **Methodology correct; calibration unverified** |
+| Ground truth validation | `ground_truth_dataset_preparation.py` + `GroundTruthValidator` | Operational; sensitivity=1.00, specificity=1.00 (small corpus) |
+| Real NASA/JPL data | `data/sources/` (SBDB, Horizons, CAD, NEODyS, MPC) | Implemented; silent fallback risk remains (ADR-032) |
+| Moon impact assessment | `impact_probability.py`; `ImpactResponse.moon_*` fields | Implemented |
+| FPR < 5.7×10⁻⁷ | Monte Carlo validator | Theoretically modeled; not empirically verified at scale |
+| Publication-standard sigma-5 | Detectors + `statistical_utils.py` | Methodology correct; blind-test validation still needed |
+| Population-level pattern analysis | `aneos_core/pattern_analysis/` | **Designed (ADR-042 to ADR-048); not yet implemented** |
 
 ---
 
