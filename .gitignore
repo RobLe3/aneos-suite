@@ -105,6 +105,8 @@ test_*.py
 !tests/test_chunk_boundaries.py
 !tests/test_horizons_parser.py
 !tests/test_data_sources_network.py
+!tests/test_pattern_analysis.py
+!tests/test_pattern_api.py
 
 # Development directory - track structure, ignore contents
 development/**/*

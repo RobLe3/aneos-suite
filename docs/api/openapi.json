@@ -560,6 +560,46 @@ Some IP addresses of users launching heavy query showers have temporarily been d
         "title": "ConfigResponse",
         "type": "object"
       },
+      "CorrelationMatrixResult": {
+        "properties": {
+          "bonferroni_threshold": {
+            "title": "Bonferroni Threshold",
+            "type": "number"
+          },
+          "cluster_id": {
+            "title": "Cluster Id",
+            "type": "string"
+          },
+          "designations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Designations",
+            "type": "array"
+          },
+          "flagged_pairs": {
+            "items": {
+              "items": {},
+              "type": "array"
+            },
+            "title": "Flagged Pairs",
+            "type": "array"
+          },
+          "min_p_value": {
+            "title": "Min P Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "cluster_id",
+          "designations",
+          "flagged_pairs",
+          "bonferroni_threshold",
+          "min_p_value"
+        ],
+        "title": "CorrelationMatrixResult",
+        "type": "object"
+      },
       "CreateUserRequest": {
         "description": "Create user request model.",
         "properties": {
@@ -967,6 +1007,42 @@ Some IP addresses of users launching heavy query showers have temporarily been d
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HarmonicSignalResult": {
+        "properties": {
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "dominant_period_days": {
+            "title": "Dominant Period Days",
+            "type": "number"
+          },
+          "p_value": {
+            "title": "P Value",
+            "type": "number"
+          },
+          "power_excess_sigma": {
+            "title": "Power Excess Sigma",
+            "type": "number"
+          },
+          "target_periods_tested": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Target Periods Tested",
+            "type": "array"
+          }
+        },
+        "required": [
+          "designation",
+          "dominant_period_days",
+          "power_excess_sigma",
+          "target_periods_tested",
+          "p_value"
+        ],
+        "title": "HarmonicSignalResult",
+        "type": "object"
+      },
       "HealthResponse": {
         "properties": {
           "checks": {
@@ -1308,6 +1384,204 @@ Some IP addresses of users launching heavy query showers have temporarily been d
           }
         },
         "title": "MetricsResponse",
+        "type": "object"
+      },
+      "NetworkRequest": {
+        "properties": {
+          "clustering": {
+            "default": true,
+            "title": "Clustering",
+            "type": "boolean"
+          },
+          "correlation": {
+            "default": false,
+            "title": "Correlation",
+            "type": "boolean"
+          },
+          "designations": {
+            "description": "1\u2013500 NEO designations to analyse as a population",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Designations",
+            "type": "array"
+          },
+          "harmonics": {
+            "default": true,
+            "title": "Harmonics",
+            "type": "boolean"
+          },
+          "historical_years": {
+            "default": 30,
+            "description": "Years of historical close-approach data to fetch (1\u2013100)",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Historical Years",
+            "type": "integer"
+          },
+          "rendezvous": {
+            "default": false,
+            "title": "Rendezvous",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "designations"
+        ],
+        "title": "NetworkRequest",
+        "type": "object"
+      },
+      "NetworkStatusResponse": {
+        "properties": {
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Analysis Metadata",
+            "type": "object"
+          },
+          "clusters": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OrbitalClusterResult"
+            },
+            "title": "Clusters",
+            "type": "array"
+          },
+          "combined_p_value": {
+            "default": 1.0,
+            "title": "Combined P Value",
+            "type": "number"
+          },
+          "correlation_matrix": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CorrelationMatrixResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "designations_analyzed": {
+            "default": 0,
+            "title": "Designations Analyzed",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "harmonic_signals": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/HarmonicSignalResult"
+            },
+            "title": "Harmonic Signals",
+            "type": "array"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "network_sigma": {
+            "default": 0.0,
+            "title": "Network Sigma",
+            "type": "number"
+          },
+          "network_tier": {
+            "default": "NETWORK_ROUTINE",
+            "title": "Network Tier",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "sub_module_p_values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "default": {},
+            "title": "Sub Module P Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "title": "NetworkStatusResponse",
+        "type": "object"
+      },
+      "OrbitalClusterResult": {
+        "properties": {
+          "centroid": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Centroid",
+            "type": "object"
+          },
+          "cluster_id": {
+            "title": "Cluster Id",
+            "type": "string"
+          },
+          "density_sigma": {
+            "title": "Density Sigma",
+            "type": "number"
+          },
+          "known_family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Family"
+          },
+          "members": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "n_members": {
+            "title": "N Members",
+            "type": "integer"
+          },
+          "p_value": {
+            "title": "P Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "cluster_id",
+          "members",
+          "n_members",
+          "centroid",
+          "density_sigma",
+          "p_value"
+        ],
+        "title": "OrbitalClusterResult",
         "type": "object"
       },
       "OrbitalElementPoint": {
@@ -2860,6 +3134,89 @@ Some IP addresses of users launching heavy query showers have temporarily been d
           }
         ],
         "summary": "Analyze Batch",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/analyze/network": {
+      "post": {
+        "description": "Submit a batch for population-level pattern analysis. Returns a job_id immediately.",
+        "operationId": "start_network_analysis_api_v1_analysis_analyze_network_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start population pattern analysis",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/analyze/network/{job_id}/status": {
+      "get": {
+        "description": "Return current status / results for a network analysis job.",
+        "operationId": "get_network_status_api_v1_analysis_analyze_network__job_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Poll population pattern analysis status",
         "tags": [
           "Analysis"
         ]

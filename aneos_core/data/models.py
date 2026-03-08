@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Union, Tuple
 from datetime import UTC, datetime
 import json
+import logging
 from pathlib import Path
 
 
@@ -26,6 +27,34 @@ def _ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
     if dt.tzinfo is None:
         return dt.replace(tzinfo=UTC)
     return dt.astimezone(UTC)
+
+# Physical upper bound: |a_i| > 1e-9 AU/day² is anomalously large for any known NEO.
+# Typical Yarkovsky A2 range: 1e-15 to 1e-11 AU/day² (Farnocchia et al. 2013).
+_NONGRAV_BOUND = 1e-9  # AU/day²
+
+
+@dataclass
+class NonGravitationalParameters:
+    """Yarkovsky / Marsden non-gravitational acceleration parameters.
+
+    Units: a1, a2, a3 in AU/day². Typical Yarkovsky A2: 1e-15 to 1e-11 AU/day².
+    Reference: Farnocchia et al. 2013, Icarus 224, 1-13.
+    """
+    a1: Optional[float] = None   # Radial component (AU/day²)
+    a2: Optional[float] = None   # Transverse Yarkovsky (dominant)
+    a3: Optional[float] = None   # Normal component
+    model: Optional[str] = None  # "marsden", "chebyshev", etc.
+    epoch: Optional[datetime] = None
+
+    def __post_init__(self):
+        _log = logging.getLogger(__name__)
+        for _name, _val in [("a1", self.a1), ("a2", self.a2), ("a3", self.a3)]:
+            if _val is not None and abs(_val) > _NONGRAV_BOUND:
+                _log.warning(
+                    f"NonGravitationalParameters.{_name}={_val:.3e} AU/day² exceeds "
+                    f"physical bound ±{_NONGRAV_BOUND:.0e}; data quality suspect"
+                )
+
 
 @dataclass
 class OrbitalElements:
@@ -242,6 +271,7 @@ class NEOData:
     created_at: datetime = field(default_factory=_utcnow)
     updated_at: datetime = field(default_factory=_utcnow)
     fetched_at: Optional[datetime] = None  # Timestamp when data was fetched from source
+    nongrav: Optional["NonGravitationalParameters"] = None
     
     def __post_init__(self):
         """Post-initialization processing."""
@@ -324,6 +354,13 @@ class NEOData:
                 "absolute_magnitude_h":  self.physical_properties.absolute_magnitude_h,
             } if self.physical_properties else None,
             "fetched_at": self.fetched_at.isoformat() if self.fetched_at else None,
+            "nongrav": {
+                "a1": self.nongrav.a1,
+                "a2": self.nongrav.a2,
+                "a3": self.nongrav.a3,
+                "model": self.nongrav.model,
+                "epoch": self.nongrav.epoch.isoformat() if self.nongrav.epoch else None,
+            } if self.nongrav else None,
         }
     
     @classmethod
@@ -363,6 +400,17 @@ class NEOData:
                 absolute_magnitude_h=pp_data.get("absolute_magnitude_h"),
             )
 
+        ng_data = data.get("nongrav")
+        nongrav = None
+        if ng_data:
+            nongrav = NonGravitationalParameters(
+                a1=ng_data.get("a1"),
+                a2=ng_data.get("a2"),
+                a3=ng_data.get("a3"),
+                model=ng_data.get("model"),
+                epoch=_ensure_utc(parse_datetime(ng_data.get("epoch"))),
+            )
+
         return cls(
             designation=data.get("designation", ""),
             orbital_elements=orbital_elements,
@@ -380,8 +428,9 @@ class NEOData:
             created_at=_ensure_utc(parse_datetime(data.get("created_at")) or _utcnow()),
             updated_at=_ensure_utc(parse_datetime(data.get("updated_at")) or _utcnow()),
             fetched_at=_ensure_utc(parse_datetime(data.get("fetched_at"))),
+            nongrav=nongrav,
         )
-    
+
     def save_to_file(self, file_path: Union[str, Path]) -> None:
         """Save NEO data to JSON file."""
         file_path = Path(file_path)
