@@ -1,6 +1,6 @@
 # aNEOS — Advanced Near Earth Object Suite
 
-**v1.0.0 — Research Platform (Phase 18 + Kardashev ML complete, 2026-03-09)**
+**v1.1.0 — Research Platform (Phase 19: Progress bars, file browser, Kardashev ML, 2026-03-09)**
 
 aNEOS is an open-source Python research platform with two independent missions:
 

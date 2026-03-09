@@ -8,7 +8,7 @@ Extracted from aneos_menu.py (Phase 15E) as the first step of the God-Class
 refactor. Full domain split is deferred to Phase 16+.
 """
 
-from typing import List, Optional, Tuple
+from typing import Generator, List, Optional, Tuple
 
 try:
     from rich.console import Console
@@ -154,3 +154,105 @@ class ANEOSMenuBase:
         if score >= 0.2:
             return "blue"
         return "green"
+
+    # ------------------------------------------------------------------
+    # Progress tracking
+    # ------------------------------------------------------------------
+
+    def track_progress(
+        self, items: list, description: str = "Processing…"
+    ) -> Generator:
+        """Yield items from *items* with a Rich progress bar.
+
+        Falls back to plain numbered print lines when Rich is unavailable.
+        Usage::
+
+            for item in self.track_progress(my_list, "Analysing"):
+                process(item)
+        """
+        if self.console and HAS_RICH:
+            from rich.progress import (
+                BarColumn,
+                Progress,
+                SpinnerColumn,
+                TaskProgressColumn,
+                TextColumn,
+                TimeElapsedColumn,
+            )
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TaskProgressColumn(),
+                TimeElapsedColumn(),
+                console=self.console,
+                transient=False,
+            ) as prog:
+                task = prog.add_task(description, total=len(items))
+                for item in items:
+                    yield item
+                    prog.advance(task)
+        else:
+            total = len(items)
+            for i, item in enumerate(items, 1):
+                print(f"  [{i}/{total}] {description}")
+                yield item
+
+    # ------------------------------------------------------------------
+    # File browser
+    # ------------------------------------------------------------------
+
+    def browse_files(
+        self,
+        search_dirs: Optional[List[str]] = None,
+        extensions: Optional[List[str]] = None,
+        prompt: str = "Select file",
+    ) -> Optional[str]:
+        """Display a numbered list of matching files and return the chosen path.
+
+        Searches *search_dirs* (defaults to current directory) for files with any
+        of *extensions* (defaults to ``[".txt"]``).  The user may pick by number
+        or type a literal path.  Returns ``None`` if the user cancels.
+        """
+        from pathlib import Path as _Path
+
+        dirs = search_dirs or ["."]
+        exts = set(extensions or [".txt"])
+        found: List[_Path] = []
+        seen: set = set()
+        for d in dirs:
+            p = _Path(d)
+            if p.is_dir():
+                for f in sorted(p.iterdir()):
+                    if f.is_file() and f.suffix in exts and f not in seen:
+                        seen.add(f)
+                        found.append(f)
+
+        if found:
+            rows = [
+                [
+                    str(i + 1),
+                    f.name,
+                    str(f.parent) if str(f.parent) != "." else "(here)",
+                    f"{max(1, f.stat().st_size // 1024)} KB",
+                ]
+                for i, f in enumerate(found)
+            ]
+            self.display_table(
+                headers=["#", "File", "Directory", "Size"],
+                rows=rows,
+                title="Available files",
+            )
+        else:
+            self.show_info("No matching files found in common locations.")
+
+        raw = self._ask(f"{prompt} — enter number or full path (blank to cancel)").strip()
+        if not raw:
+            return None
+        try:
+            idx = int(raw) - 1
+            if found and 0 <= idx < len(found):
+                return str(found[idx])
+        except ValueError:
+            pass
+        return raw  # treat as a literal path

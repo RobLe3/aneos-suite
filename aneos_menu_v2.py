@@ -179,7 +179,11 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     def _detect_batch(self) -> None:
         """Option 3: Concurrent batch detection from a file of designations."""
-        path_str = self._ask("Path to file (one designation per line)").strip()
+        path_str = self.browse_files(
+            search_dirs=[".", "neo_data", "data", "tests"],
+            extensions=[".txt", ".csv"],
+            prompt="Designation file",
+        )
         if not path_str:
             self.show_error("No path provided.")
             return
@@ -205,21 +209,25 @@ class ANEOSMenuV2(ANEOSMenuBase):
             self.show_error(f"Failed to initialise detector: {exc}")
             return
 
-        # Concurrent fetch
+        # Concurrent fetch — show spinner (bulk operation, not per-item trackable)
         if self.console:
             with self.console.status(f"[green]Fetching {len(lines)} NEOs…", spinner="dots"):
                 neo_map = fetcher.fetch_multiple(lines)
         else:
             neo_map = fetcher.fetch_multiple(lines)
 
-        self.show_info(f"Fetched {sum(1 for v in neo_map.values() if v)} / {len(lines)}. Running detector…")
+        fetched = sum(1 for v in neo_map.values() if v)
+        self.show_info(f"Fetched {fetched}/{len(lines)} — running detector…")
 
+        # Detection loop with progress bar
         rows = []
-        for designation in lines:
-            neo_data = neo_map.get(designation)
-            if neo_data is None or neo_data.orbital_elements is None:
-                self.show_info(f"{designation}: no orbital data — skipped")
-                continue
+        valid = [d for d in lines if neo_map.get(d) and neo_map[d].orbital_elements]
+        skipped = [d for d in lines if not neo_map.get(d) or not neo_map[d].orbital_elements]
+        for s in skipped:
+            self.show_info(f"{s}: no orbital data — skipped")
+
+        for designation in self.track_progress(valid, f"Detecting {len(valid)} NEOs"):
+            neo_data = neo_map[designation]
             try:
                 result = self._run_detection(designation, neo_data, manager=manager)
                 if result is None:
@@ -474,9 +482,11 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     def _population_pattern_analysis(self) -> None:
         """Option 8: BC11 network-sigma clustering + harmonics analysis."""
-        path_str = self._ask(
-            "File of designations for population analysis (one per line)"
-        ).strip()
+        path_str = self.browse_files(
+            search_dirs=[".", "neo_data", "data", "tests"],
+            extensions=[".txt", ".csv"],
+            prompt="Designation file for population analysis",
+        )
         if not path_str:
             self.show_error("No path provided.")
             return
@@ -531,42 +541,63 @@ class ANEOSMenuV2(ANEOSMenuBase):
     # ==================================================================
 
     def _results_browser(self) -> None:
-        """Option 9: Browse in-session detection and impact results + DB fallback."""
+        """Option 9: Interactive browser for session detection/impact results + DB."""
         if not self._detection_results and not self._impact_results:
             self.show_info("No results in this session yet. Run options 1–5 first.")
             self._show_db_results()
             return
 
+        # --- Detection results ---
         if self._detection_results:
+            det_items = list(self._detection_results.items())
             rows = []
-            for desg, result in self._detection_results.items():
+            for i, (desg, result) in enumerate(det_items, 1):
                 sigma = getattr(result, "sigma_level", 0.0)
                 prob = getattr(result, "artificial_probability", 0.0)
                 cls = getattr(result, "classification", "—")
-                rows.append([desg, f"{sigma:.2f}", f"{prob:.4f}", cls])
+                rows.append([str(i), desg, f"{sigma:.2f}", f"{prob:.4f}", cls])
             self.display_table(
-                headers=["Designation", "σ", "P(artificial)", "Classification"],
+                headers=["#", "Designation", "σ", "P(artificial)", "Classification"],
                 rows=rows,
-                title=f"Detection Results ({len(rows)})",
+                title=f"Detection Results — {len(det_items)} objects",
             )
+            choice = self._ask("View full details for # (Enter to skip)").strip()
+            if choice:
+                try:
+                    idx = int(choice) - 1
+                    if 0 <= idx < len(det_items):
+                        desg, result = det_items[idx]
+                        self._display_detection_result(desg, result, verbose=True)
+                except ValueError:
+                    pass
 
+        # --- Impact results ---
         if self._impact_results:
+            imp_items = list(self._impact_results.items())
             rows = []
-            for desg, impact in self._impact_results.items():
+            for i, (desg, impact) in enumerate(imp_items, 1):
                 prob = getattr(impact, "collision_probability", 0.0)
                 energy = getattr(impact, "impact_energy_mt", None)
                 method = getattr(impact, "calculation_method", "—")
                 rows.append([
-                    desg,
-                    f"{prob:.2e}",
+                    str(i), desg, f"{prob:.2e}",
                     f"{energy:.1f} MT" if energy is not None else "N/A",
                     method,
                 ])
             self.display_table(
-                headers=["Designation", "P(impact)", "Energy", "Method"],
+                headers=["#", "Designation", "P(impact)", "Energy", "Method"],
                 rows=rows,
-                title=f"Impact Results ({len(rows)})",
+                title=f"Impact Results — {len(imp_items)} objects",
             )
+            choice = self._ask("View full impact details for # (Enter to skip)").strip()
+            if choice:
+                try:
+                    idx = int(choice) - 1
+                    if 0 <= idx < len(imp_items):
+                        desg, impact = imp_items[idx]
+                        self._display_impact_result(desg, impact)
+                except ValueError:
+                    pass
 
         self._show_db_results()
 
@@ -637,7 +668,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
             ("PipelineIntegration",      "aneos_core.integration.pipeline_integration",  "PipelineIntegration"),
             ("Exporter",                 "aneos_core.reporting.exporters",               "Exporter"),
         ]
-        for label, mod, cls_name in components:
+        for label, mod, cls_name in self.track_progress(components, "Checking components"):
             try:
                 m = __import__(mod, fromlist=[cls_name])
                 getattr(m, cls_name)

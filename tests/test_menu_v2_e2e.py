@@ -649,19 +649,22 @@ class TestOption9ResultsBrowser:
         menu._detection_results["99942"] = make_fake_detection_result(sigma=3.7)
 
         with patch.object(menu, "display_table") as mock_table, \
-             patch.object(menu, "_show_db_results"):
+             patch.object(menu, "_show_db_results"), \
+             patch.object(menu, "_ask", return_value=""):
             menu._results_browser()
 
         assert mock_table.called
         rows = mock_table.call_args[1].get("rows", [])
-        assert any("99942" in r[0] for r in rows)
+        # Rows now include a leading "#" column; search all cells for designation
+        assert any("99942" in cell for r in rows for cell in r)
 
     def test_shows_impact_results_table(self):
         menu = _make_menu()
         menu._impact_results["99942"] = make_fake_impact()
 
         with patch.object(menu, "display_table") as mock_table, \
-             patch.object(menu, "_show_db_results"):
+             patch.object(menu, "_show_db_results"), \
+             patch.object(menu, "_ask", return_value=""):
             menu._results_browser()
 
         assert mock_table.called
