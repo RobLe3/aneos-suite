@@ -116,11 +116,16 @@ class NetworkAnalysisSession:
             if matrix:
                 sub_module_p_values["correlation"] = matrix.min_p_value
 
-        # PA-6: RendezvousDetector (deferred — ADR-045; requires REBOUND, O(n²) computation)
+        # PA-6: RendezvousDetector — Stage 1 (MOID-based Drummond pre-filter) is implemented
+        # in aneos_core/pattern_analysis/rendezvous.py (PHAMoidScanner).
+        # Stage 2 (REBOUND orbit propagation) remains deferred per ADR-045.
+        # The session rendezvous flag still triggers a warning; use PHAMoidScanner directly
+        # (option 15 in the menu) for the Stage 1 scan.
         if self.config.rendezvous:
             logger.warning(
-                "rendezvous=True requested but PA-6 RendezvousDetector is deferred (ADR-045). "
-                "No rendezvous analysis will be performed."
+                "rendezvous=True requested in session config. PA-6 Stage 1 (MOID pre-filter) "
+                "is available via PHAMoidScanner. Stage 2 (REBOUND propagation) is deferred "
+                "(ADR-045). No in-session rendezvous analysis will be performed here."
             )
 
         # Combine

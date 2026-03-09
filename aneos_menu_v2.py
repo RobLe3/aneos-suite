@@ -2,7 +2,7 @@
 ANEOSMenuV2 — Redesigned interactive menu for the aNEOS platform.
 
 Covers the full feature set of the legacy 121-option menu, organized into
-12 real options across 4 groups. No theater: every option invokes real backend
+15 real options across 5 groups. No theater: every option invokes real backend
 code with honest result labelling.
 
 GROUP A — Detection & Classification
@@ -18,6 +18,7 @@ GROUP B — Impact Assessment
 GROUP C — Monitoring & Polling
   7  Live Pipeline Dashboard       — 200-year historical polling via pipeline
   8  Population Pattern Analysis   — BC11 network-sigma clustering / harmonics
+ 15  Rendezvous Scan               — PA-6 MOID-based pairwise scan of all PHAs
 
 GROUP D — Results & Reports
   9  Browse Results                — in-session + DB-persisted results
@@ -51,7 +52,7 @@ from aneos_menu_base import ANEOSMenuBase
 
 
 class ANEOSMenuV2(ANEOSMenuBase):
-    """Full-featured 14-option menu for the aNEOS research platform."""
+    """Full-featured 15-option menu for the aNEOS research platform."""
 
     # ------------------------------------------------------------------
     # Construction
@@ -89,6 +90,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 "12": self._start_api_server,
                 "13": self._detection_analytics,
                 "14": self._show_help,
+                "15": self._rendezvous_scan,
             }
             handler = handlers.get(choice)
             if handler:
@@ -116,7 +118,8 @@ class ANEOSMenuV2(ANEOSMenuBase):
             "  [cyan] 6[/cyan]  Close Approach History        [historical CAD data]\n\n"
             "  [bold cyan]── Monitoring & Polling ─────────────────────────[/bold cyan]\n"
             "  [cyan] 7[/cyan]  Live Pipeline Dashboard       [200-year historical poll]\n"
-            "  [cyan] 8[/cyan]  Population Pattern Analysis   [BC11 network sigma]\n\n"
+            "  [cyan] 8[/cyan]  Population Pattern Analysis   [BC11 network sigma]\n"
+            "  [cyan]15[/cyan]  Rendezvous Scan               [PA-6 MOID pairwise, all PHAs]\n\n"
             "  [bold cyan]── Results & Reports ───────────────────────────[/bold cyan]\n"
             "  [cyan] 9[/cyan]  Browse Results                [in-session + DB]\n"
             "  [cyan]10[/cyan]  Export Results                [JSON / CSV]\n\n"
@@ -150,12 +153,13 @@ class ANEOSMenuV2(ANEOSMenuBase):
         if neo_data is None:
             return
 
+        self._display_neo_data(designation, neo_data)
         result = self._run_detection(designation, neo_data)
         if result is None:
             return
 
         self._detection_results[designation.upper()] = result
-        self._display_detection_result(designation, result, verbose=False)
+        self._display_detection_result(designation, result, verbose=True)
         self._persist_detection_result_async(designation, result)
 
     def _detect_multi_evidence(self) -> None:
@@ -169,6 +173,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
         if neo_data is None:
             return
 
+        self._display_neo_data(designation, neo_data)
         result = self._run_detection(designation, neo_data)
         if result is None:
             return
@@ -483,25 +488,43 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     def _population_pattern_analysis(self) -> None:
         """Option 8: BC11 network-sigma clustering + harmonics analysis."""
-        path_str = self.browse_files(
-            search_dirs=[".", "neo_data", "data", "tests"],
-            extensions=[".txt", ".csv"],
-            prompt="Designation file for population analysis",
-        )
-        if not path_str:
-            self.show_error("No path provided.")
-            return
+        # Check if pipeline candidates are available as a shortcut input source
+        pipeline_desgs = [
+            d for d, r in self._detection_results.items()
+            if getattr(r, "classification", "").startswith("PIPELINE:")
+        ]
 
-        p = Path(path_str)
-        if not p.exists():
-            self.show_error(f"File not found: {p}")
-            return
+        lines: Optional[List[str]] = None
 
-        lines = [l.strip() for l in p.read_text().splitlines()
-                 if l.strip() and not l.startswith("#")]
-        if not lines:
-            self.show_error("File is empty.")
-            return
+        if pipeline_desgs:
+            choice = self._ask(
+                f"Input source [1=Load from file / 2=Use {len(pipeline_desgs)} pipeline candidates]"
+            ).strip()
+            if choice == "2":
+                lines = pipeline_desgs
+            # else: fall through to file browser
+
+        if lines is None:
+            # File browser path
+            path_str = self.browse_files(
+                search_dirs=[".", "neo_data", "data", "tests"],
+                extensions=[".txt", ".csv"],
+                prompt="Designation file for population analysis",
+            )
+            if not path_str:
+                self.show_error("No path provided.")
+                return
+
+            p = Path(path_str)
+            if not p.exists():
+                self.show_error(f"File not found: {p}")
+                return
+
+            lines = [l.strip() for l in p.read_text().splitlines()
+                     if l.strip() and not l.startswith("#")]
+            if not lines:
+                self.show_error("File is empty.")
+                return
 
         self.show_info(f"Fetching {len(lines)} NEOs for population analysis…")
         try:
@@ -860,6 +883,121 @@ class ANEOSMenuV2(ANEOSMenuBase):
     # Display helpers
     # ==================================================================
 
+    def _display_neo_data(self, designation: str, neo_data) -> None:
+        """Show a summary panel of fetched NEO data before running detection."""
+        lines = []
+
+        # Orbital elements
+        oe = getattr(neo_data, "orbital_elements", None)
+        if oe is not None:
+            a = getattr(oe, "semi_major_axis", None)
+            e = getattr(oe, "eccentricity", None)
+            i = getattr(oe, "inclination", None)
+            om = getattr(oe, "ra_of_ascending_node", None)
+            w = getattr(oe, "arg_of_periapsis", None)
+            m = getattr(oe, "mean_anomaly", None)
+            parts = []
+            if a is not None:
+                parts.append(f"a={a:.3f} AU")
+            if e is not None:
+                parts.append(f"e={e:.4f}")
+            if i is not None:
+                parts.append(f"i={i:.2f}°")
+            if om is not None:
+                parts.append(f"Ω={om:.1f}°")
+            if w is not None:
+                parts.append(f"ω={w:.1f}°")
+            if m is not None:
+                parts.append(f"M={m:.2f}°")
+            if parts:
+                lines.append(f"[bold]Orbital elements:[/bold]   {  '  '.join(parts)}")
+
+        # Physical properties
+        pp = getattr(neo_data, "physical_properties", None)
+        if pp is not None:
+            phys_parts = []
+            diam = getattr(pp, "diameter_km", None)
+            albedo = getattr(pp, "albedo", None)
+            stype = getattr(pp, "spectral_type", None)
+            rot = getattr(pp, "rotation_period_hours", None)
+            h = getattr(pp, "absolute_magnitude_h", None)
+            if diam is not None:
+                phys_parts.append(f"diameter={diam:.3f} km")
+            if albedo is not None:
+                phys_parts.append(f"albedo={albedo:.3f}")
+            if stype is not None:
+                phys_parts.append(f"type={stype}")
+            if rot is not None:
+                phys_parts.append(f"rot={rot:.2f} h")
+            if h is not None:
+                phys_parts.append(f"H={h:.1f}")
+            if phys_parts:
+                lines.append(f"[bold]Physical:[/bold]            {'  '.join(phys_parts)}")
+
+        # Observation arc
+        first_obs = getattr(neo_data, "first_observation", None)
+        last_obs = getattr(neo_data, "last_observation", None)
+        if first_obs is not None or last_obs is not None:
+            from datetime import datetime as _dt
+            f_str = str(first_obs)[:10] if first_obs else "?"
+            l_str = str(last_obs)[:10] if last_obs else "?"
+            arc_note = ""
+            if isinstance(first_obs, _dt) and isinstance(last_obs, _dt):
+                arc_yr = (last_obs - first_obs).days / 365.25
+                arc_note = f"  ({arc_yr:.1f} yr)"
+            lines.append(f"[bold]Observation arc:[/bold]     {f_str} → {l_str}{arc_note}")
+
+        # Data completeness
+        completeness = getattr(neo_data, "completeness", None)
+        if completeness is not None:
+            try:
+                pct = int(float(completeness) * 100) if float(completeness) <= 1.0 else int(float(completeness))
+                lines.append(f"[bold]Data completeness:[/bold]   {pct}%")
+            except (TypeError, ValueError):
+                pass
+
+        # Close approaches
+        close_approaches = getattr(neo_data, "close_approaches", None)
+        if close_approaches:
+            n_ca = len(close_approaches)
+            # Find nearest by distance_au
+            try:
+                nearest = min(
+                    close_approaches,
+                    key=lambda ca: getattr(ca, "distance_au", float("inf"))
+                    or float("inf"),
+                )
+                nd = getattr(nearest, "distance_au", None)
+                nd_date = getattr(nearest, "date", None)
+                nd_str = (
+                    f"  |  nearest: {nd:.4f} AU"
+                    + (f" ({str(nd_date)[:10]})" if nd_date else "")
+                    if nd is not None
+                    else ""
+                )
+            except Exception:
+                nd_str = ""
+            lines.append(f"[bold]Close approaches:[/bold]    {n_ca} recorded{nd_str}")
+
+        # Sources used
+        sources = getattr(neo_data, "sources_used", None)
+        if sources:
+            lines.append(f"[bold]Sources:[/bold]             {', '.join(sources)}")
+
+        # Non-gravitational parameters
+        nongrav = getattr(neo_data, "nongrav", None)
+        if nongrav is not None:
+            a2 = getattr(nongrav, "A2", None)
+            if a2 is not None:
+                lines.append(f"[bold]Non-grav A2:[/bold]         {a2:.3e} AU/day²")
+
+        if lines:
+            self.display_panel(
+                "\n".join(lines),
+                title=f"Object Data — {designation}",
+                style="blue",
+            )
+
     def _display_detection_result(self, designation: str, result, verbose: bool = False) -> None:
         cls = getattr(result, "classification", "UNKNOWN")
 
@@ -900,10 +1038,21 @@ class ANEOSMenuV2(ANEOSMenuBase):
                         f"  {str(etype):<30}  p={pval!s:<10}  effect={eff!s:<8}  quality={qi!s}"
                     )
 
-        lines.append(
-            "\n[dim]NOTE: σ < 2 = INCONCLUSIVE (not evidence of natural origin). "
-            "Bayesian posterior ≈ 3–5% max from orbital+physical data alone.[/dim]"
-        )
+        if sigma < 2.0:
+            lines.append(
+                "\n[dim]NOTE: σ < 2 = INCONCLUSIVE (not evidence of natural origin). "
+                "Bayesian posterior ≈ 3–5% max from orbital+physical data alone.[/dim]"
+            )
+        elif sigma < 5.0:
+            lines.append(
+                f"\n[dim]NOTE: σ={sigma:.2f} is statistically interesting but below the σ=5 threshold "
+                "for confirmed artificial classification. Independent verification required.[/dim]"
+            )
+        else:
+            lines.append(
+                f"\n[bold red]NOTE: σ={sigma:.2f} exceeds the σ=5 threshold. "
+                "This is a high-confidence artificial NEO candidate requiring expert review.[/bold red]"
+            )
         self.display_panel("\n".join(lines), title=f"Detection — {designation}", style="cyan")
 
     def _display_pipeline_candidate_detail(self, designation: str, result) -> None:
@@ -1204,6 +1353,32 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 title="Suspicious / Significant Objects (σ≥3)",
             )
 
+        # ATLAS score tiers for pipeline candidates
+        atlas_rows = []
+        for desg, result in self._detection_results.items():
+            cls = getattr(result, "classification", "") or ""
+            if cls.startswith("PIPELINE:"):
+                analysis = getattr(result, "analysis", {}) or {}
+                score = analysis.get("overall_score", 0.0) or 0.0
+                if score > 0.3:
+                    tier = (
+                        "exceptional" if score > 0.7
+                        else "significant" if score > 0.5
+                        else "notable"
+                    )
+                    atlas_rows.append([desg, f"{score:.4f}", tier])
+
+        if atlas_rows:
+            atlas_rows.sort(key=lambda r: float(r[1]), reverse=True)
+            self.display_table(
+                headers=["Designation", "ATLAS Score", "Tier"],
+                rows=atlas_rows,
+                title="ATLAS Score Tiers — Pipeline Candidates (score > 0.3)",
+            )
+            self.show_info(
+                "ATLAS Score Tiers: > 0.3 = notable | > 0.5 = significant | > 0.7 = exceptional"
+            )
+
         export_choice = self._ask("Export summary to JSON? [y/N]").strip().lower()
         if export_choice == "y":
             summary = {
@@ -1214,6 +1389,10 @@ class ANEOSMenuV2(ANEOSMenuBase):
                     {"designation": r[0], "sigma": float(r[1]), "classification": r[2]}
                     for r in suspicious_rows
                 ],
+                "atlas_notable": [
+                    {"designation": r[0], "score": float(r[1]), "tier": r[2]}
+                    for r in atlas_rows
+                ],
             }
             try:
                 from aneos_core.reporting.exporters import Exporter
@@ -1223,6 +1402,8 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 fallback = Path("aneos_session_analytics.json")
                 fallback.write_text(json.dumps(summary, indent=2, default=str))
                 self.show_success(f"Summary written to: {fallback}")
+        else:
+            self.show_info("Export skipped.")
 
     def _show_help(self) -> None:
         """Option 14: Display scientific methodology documentation."""
@@ -1247,6 +1428,48 @@ class ANEOSMenuV2(ANEOSMenuBase):
             self.display_panel(content, title="aNEOS Scientific Documentation", style="green")
         except Exception as exc:
             self.show_error(f"Failed to read documentation: {exc}")
+
+    def _rendezvous_scan(self) -> None:
+        """Option 15: PA-6 MOID-based pairwise rendezvous scan of all PHAs."""
+        import asyncio
+        self.show_info(
+            "Scanning all ~2,400 Potentially Hazardous Asteroids for anomalous\n"
+            "pairwise orbital proximity (no Earth close-approach required).\n"
+            "This checks: orbital similarity (Drummond D), period resonance, A2 correlation.\n"
+            "Expect 30–60 s for SBDB fetch + pairwise computation."
+        )
+        try:
+            from aneos_core.pattern_analysis.rendezvous import PHAMoidScanner
+            scanner = PHAMoidScanner()
+            pairs = asyncio.run(scanner.run(max_pairs=30))
+        except Exception as exc:
+            self.show_error(f"Rendezvous scan failed: {exc}")
+            return
+
+        if not pairs:
+            self.show_info("No anomalous pairs found above threshold.")
+            return
+
+        rows = []
+        for p in pairs:
+            flags = ", ".join(p.flags)
+            resonance = p.resonance or "—"
+            a2 = "yes" if p.a2_correlated else "—"
+            rows.append([
+                p.designation_a, p.designation_b,
+                f"{p.u_d:.4f}", resonance, a2,
+                f"{p.anomaly_score:.3f}", flags,
+            ])
+        self.display_table(
+            headers=["Object A", "Object B", "U_D", "Resonance", "A2 corr", "Score", "Flags"],
+            rows=rows,
+            title=f"Rendezvous Scan — Top {len(rows)} Anomalous Pairs",
+        )
+        self.show_info(
+            "U_D = Drummond orbital similarity (lower = more similar).\n"
+            "Resonance = period ratio near a simple fraction.\n"
+            "A2 corr = both objects have significant same-sign non-gravitational acceleration."
+        )
 
     @staticmethod
     def _rough_torino(prob: float, energy_mt: Optional[float]) -> str:

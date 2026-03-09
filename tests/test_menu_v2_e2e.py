@@ -118,11 +118,12 @@ class TestOption1DetectSingle:
         with patch.object(menu, "_ask", return_value="99942"), \
              patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
              patch.object(menu, "_run_detection", return_value=det_result), \
+             patch.object(menu, "_display_neo_data"), \
              patch.object(menu, "_display_detection_result") as mock_display, \
              patch.object(menu, "_persist_detection_result_async") as mock_persist:
             menu._detect_single()
 
-        mock_display.assert_called_once_with("99942", det_result, verbose=False)
+        mock_display.assert_called_once_with("99942", det_result, verbose=True)
         mock_persist.assert_called_once_with("99942", det_result)
         assert "99942" in menu._detection_results
 
@@ -148,6 +149,7 @@ class TestOption1DetectSingle:
 
         with patch.object(menu, "_ask", return_value="99942"), \
              patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
+             patch.object(menu, "_display_neo_data"), \
              patch.object(menu, "show_error") as mock_err:
             menu._detect_single()
         mock_err.assert_called_once()
@@ -160,6 +162,7 @@ class TestOption1DetectSingle:
         with patch.object(menu, "_ask", return_value="TESLA"), \
              patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
              patch.object(menu, "_run_detection", return_value=det_result), \
+             patch.object(menu, "_display_neo_data"), \
              patch.object(menu, "_display_detection_result"), \
              patch.object(menu, "_persist_detection_result_async"):
             menu._detect_single()
@@ -183,6 +186,7 @@ class TestOption2MultiEvidence:
         with patch.object(menu, "_ask", return_value="99942"), \
              patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
              patch.object(menu, "_run_detection", return_value=det_result), \
+             patch.object(menu, "_display_neo_data"), \
              patch.object(menu, "_display_detection_result") as mock_display, \
              patch.object(menu, "_persist_detection_result_async"):
             menu._detect_multi_evidence()
@@ -197,6 +201,7 @@ class TestOption2MultiEvidence:
         with patch.object(menu, "_ask", return_value="2020 SO"), \
              patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
              patch.object(menu, "_run_detection", return_value=det_result), \
+             patch.object(menu, "_display_neo_data"), \
              patch.object(menu, "_display_detection_result"), \
              patch.object(menu, "_persist_detection_result_async") as mock_persist:
             menu._detect_multi_evidence()
