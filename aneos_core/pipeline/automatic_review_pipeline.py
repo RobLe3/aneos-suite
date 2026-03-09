@@ -471,6 +471,7 @@ class AutomaticReviewPipeline:
                         score_result['sigma_5_detection'] = True
                         score_result['sigma_level'] = sigma_level
                         score_result['statistical_certainty'] = certainty
+                        boost_factor = 1.0  # full boost applied
                     else:
                         # Lower sigma levels get proportional boost
                         boost_factor = min(sigma_level / 5.0, 0.8)  # Scale to sigma 5
@@ -488,11 +489,11 @@ class AutomaticReviewPipeline:
                     score_result['artificial_analysis'] = artificial_analysis.analysis
                     score_result['boost_applied'] = boost_factor
                     score_result['original_score'] = base_score
-                    
+
                     # Get primary evidence from analysis
                     components = [k for k in artificial_analysis.analysis.keys() if k != 'overall']
                     primary_evidence = components[0] if components else 'orbital_analysis'
-                    
+
                     # VALIDATION TRACKING
                     score_result['detection_validation'] = {
                         'threshold_alignment': 'FIXED',
@@ -500,7 +501,7 @@ class AutomaticReviewPipeline:
                         'detection_sensitivity_tuned': True,
                         'validation_timestamp': datetime.now().isoformat()
                     }
-                    
+
                     self.logger.info(
                         f"🚀 ARTIFICIAL NEO DETECTED: {neo_obj.get('designation', 'Unknown')} "
                         f"- {primary_evidence} (confidence: {artificial_analysis.confidence:.3f}, "
@@ -637,29 +638,49 @@ class AutomaticReviewPipeline:
             return {'overall_score': 0.0, 'error': str(e), 'designation': neo_obj.get('designation', 'unknown')}
     
     def _simple_first_stage_scoring(self, neo_obj: Dict) -> Dict:
-        """Simple fallback scoring when XVIII SWARM is not available."""
+        """Simple fallback scoring when XVIII SWARM is not available.
+
+        For CAD-sourced objects (miss_distance_au present), uses encounter
+        geometry: exp(-dist/0.02) so objects < 0.05 AU score above the 0.08
+        first-stage threshold. Velocity anomaly adds a small bonus.
+        Falls back to orbital-element heuristics only when CAD fields absent.
+        """
         try:
+            import math
+            dist_au = neo_obj.get('miss_distance_au')
+            if dist_au is not None:
+                # Encounter-geometry score; scale 0.02 AU → threshold at ~0.05 AU
+                score = math.exp(-dist_au / 0.02)
+                # Bonus for anomalously slow velocity (< 5 km/s)
+                v_kms = neo_obj.get('relative_velocity_km_s', 15.0)
+                if v_kms < 5.0:
+                    score = min(score + 0.15, 1.0)
+                return {
+                    'overall_score': score,
+                    'flags': ['encounter_geometry'],
+                    'confidence': 0.7,
+                    'processing_stage': 'cad_encounter_geometry',
+                }
+
+            # Fallback: orbital elements
             orbital_elements = neo_obj.get('orbital_elements', {})
             eccentricity = orbital_elements.get('eccentricity', 0.0)
             inclination = orbital_elements.get('inclination', 0.0)
-            
             score = 0.0
-            
             if eccentricity > 0.9:
                 score += 0.5
             elif eccentricity > 0.7:
                 score += 0.3
-                
-            if inclination > 150 or inclination < 30:
+            if inclination > 150 or (inclination < 30 and inclination != 10.0):
+                # Skip the hardcoded i=10 placeholder to avoid false passes
                 score += 0.3
-                
             return {
                 'overall_score': score,
-                'flags': ['simple_heuristic'],
+                'flags': ['orbital_heuristic'],
                 'confidence': 0.4,
-                'processing_stage': 'simple_first_stage'
+                'processing_stage': 'simple_first_stage',
             }
-            
+
         except Exception:
             return {'overall_score': 0.0, 'error': 'scoring_failed'}
     
@@ -669,6 +690,16 @@ class AutomaticReviewPipeline:
             # Extract orbital elements
             orbital_elements = neo_obj.get('orbital_elements', {})
             if not orbital_elements:
+                return None
+
+            # Skip sigma-5 detection on CAD placeholder orbital elements.
+            # e=0.1, i=10.0, a=1.0 are the hardcoded defaults injected when only
+            # close-approach data is available; running the detector on them
+            # triggers log(0) instability and spurious sigma≥5 results.
+            e = orbital_elements.get('eccentricity')
+            i = orbital_elements.get('inclination')
+            a = orbital_elements.get('semi_major_axis')
+            if e == 0.1 and i == 10.0 and a == 1.0:
                 return None
             
             # Extract physical data if available
