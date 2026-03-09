@@ -501,10 +501,10 @@ class HumanHardwareAnalyzer:
             else:
                 labels.append('debris')
         
-        if self.object_classifier:
+        if self.object_classifier is not None:
             self.object_classifier.fit(features, labels)
-            
-        if self.constellation_classifier:
+
+        if self.constellation_classifier is not None:
             # Train constellation classifier with orbital clustering features
             constellation_features = features[:, [0, 1, 2, 3]]  # altitude, ecc, inc, period
             constellation_labels = ['starlink' if x < 0.3 else 'oneweb' if x < 0.7 else 'other' 
