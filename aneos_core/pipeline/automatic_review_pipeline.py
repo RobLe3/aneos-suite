@@ -721,38 +721,31 @@ class AutomaticReviewPipeline:
                     score += 0.06
                     flags.append('notable_velocity')
 
-            # --- Signal 3: Repeat-visit anomaly ---
+            # NOTE: Repeat-visit anomaly is intentionally excluded from the
+            # first-stage filter. Earth-crossing asteroids naturally appear
+            # dozens of times in a 200-year window (e.g. Apophis ~50×, Eros
+            # ~60×). Without real orbital periods to compare against, high
+            # visit counts are not anomalous — they are expected gravitational
+            # dynamics. Repeat-visit analysis runs at the population level in
+            # Option 8 (BC11 NetworkAnalysisSession) where it is combined
+            # with full orbital element data.
             designation = neo_obj.get('designation', '')
             n_visits = self._designation_frequencies.get(designation, 1)
-            if n_visits >= 20:
-                score += 0.40
-                flags.append(f'repeat_visits_{n_visits}')
-            elif n_visits >= 10:
-                score += 0.25
-                flags.append(f'repeat_visits_{n_visits}')
-            elif n_visits >= 5:
-                score += 0.12
-                flags.append(f'repeat_visits_{n_visits}')
-            elif n_visits >= 3:
-                score += 0.06
-                flags.append(f'repeat_visits_{n_visits}')
 
             if dist_au is not None or v_kms is not None:
+                dist_score = math.exp(-dist_au / 0.02) if dist_au is not None else 0.0
+                vel_bonus = (0.30 if v_kms and v_kms < 3 else (
+                             0.15 if v_kms and v_kms < 5 else (
+                             0.06 if v_kms and v_kms < 8 else 0.0)))
                 return {
                     'overall_score': min(score, 1.0),
                     'flags': flags if flags else ['cad_no_signal'],
                     'confidence': 0.7,
                     'processing_stage': 'cad_multi_signal',
                     'signal_breakdown': {
-                        'distance': math.exp(-dist_au / 0.02) if dist_au is not None else 0.0,
-                        'velocity_anomaly': 0.30 if v_kms and v_kms < 3 else (
-                                            0.15 if v_kms and v_kms < 5 else (
-                                            0.06 if v_kms and v_kms < 8 else 0.0)),
-                        'repeat_visits': score - (math.exp(-dist_au / 0.02) if dist_au is not None else 0.0)
-                                         - (0.30 if v_kms and v_kms < 3 else (
-                                            0.15 if v_kms and v_kms < 5 else (
-                                            0.06 if v_kms and v_kms < 8 else 0.0))),
-                        'n_visits': n_visits,
+                        'distance': dist_score,
+                        'velocity_anomaly': vel_bonus,
+                        'n_visits': n_visits,  # logged but not scored at this stage
                     },
                 }
 
@@ -1044,8 +1037,16 @@ class AutomaticReviewPipeline:
                 'candidate_count': len(result.validated_candidates) if result.validated_candidates else 0
             }
             
+            def _default(obj):
+                if hasattr(obj, 'isoformat'):
+                    return obj.isoformat()
+                try:
+                    return str(obj)
+                except Exception:
+                    return None
+
             with open(filepath, 'w') as f:
-                json.dump(data, f, indent=2)
+                json.dump(data, f, indent=2, default=_default)
                 
             self.logger.info(f"Pipeline results saved to: {filepath}")
             self.logger.info(f"Validated candidates included: {len(result.validated_candidates) if result.validated_candidates else 0}")
