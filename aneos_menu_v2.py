@@ -861,9 +861,15 @@ class ANEOSMenuV2(ANEOSMenuBase):
     # ==================================================================
 
     def _display_detection_result(self, designation: str, result, verbose: bool = False) -> None:
+        cls = getattr(result, "classification", "UNKNOWN")
+
+        # Pipeline candidates have rich ATLAS data — show it instead of the σ-5 panel
+        if cls.startswith("PIPELINE:"):
+            self._display_pipeline_candidate_detail(designation, result)
+            return
+
         sigma = getattr(result, "sigma_level", 0.0)
         prob = getattr(result, "artificial_probability", 0.0)
-        cls = getattr(result, "classification", "UNKNOWN")
         risk_factors = getattr(result, "risk_factors", [])
         meta = getattr(result, "metadata", {}) or {}
 
@@ -881,7 +887,6 @@ class ANEOSMenuV2(ANEOSMenuBase):
             lines.append(f"[bold]Evidence types:[/bold]      {', '.join(risk_factors)}")
 
         if verbose:
-            # Show individual evidence source objects if available from metadata
             analysis = getattr(result, "analysis", {}) or {}
             evidence_detail = analysis.get("evidence_breakdown") or analysis.get("evidence_sources")
             if evidence_detail:
@@ -900,6 +905,67 @@ class ANEOSMenuV2(ANEOSMenuBase):
             "Bayesian posterior ≈ 3–5% max from orbital+physical data alone.[/dim]"
         )
         self.display_panel("\n".join(lines), title=f"Detection — {designation}", style="cyan")
+
+    def _display_pipeline_candidate_detail(self, designation: str, result) -> None:
+        """Detailed ATLAS breakdown for a pipeline candidate (stored proxy object)."""
+        analysis = getattr(result, "analysis", {}) or {}
+        ms = getattr(result, "multi_stage_validation", {}) or {}
+        dist = getattr(result, "miss_distance_au", None)
+        vel = getattr(result, "relative_velocity_km_s", None)
+
+        overall = analysis.get("overall_score", 0.0)
+        flags = analysis.get("flag_string", "—")
+        stage = analysis.get("processing_stage", "—")
+        clues = analysis.get("clue_contributions", [])
+        cat_scores = analysis.get("category_scores", {})
+
+        lines = [
+            f"[bold]Designation:[/bold]      {self.format_designation(designation)}",
+            f"[bold]ATLAS score:[/bold]      {overall:.4f}  (flags: {flags})",
+            f"[bold]Scoring stage:[/bold]    {stage}",
+        ]
+        if dist is not None:
+            lines.append(f"[bold]Miss distance:[/bold]    {dist:.5f} AU  ({dist * 149_597_870.7:.0f} km)")
+        if vel is not None:
+            lines.append(f"[bold]Rel. velocity:[/bold]    {vel:.2f} km/s")
+
+        # Validation scores
+        v_score = ms.get("validation_score", 0.0)
+        v_method = ms.get("validation_method", "—")
+        lines.append(f"[bold]Validation score:[/bold] {v_score:.4f}  ({v_method})")
+
+        # Category breakdown
+        if cat_scores:
+            lines.append("\n[bold]Category scores:[/bold]")
+            for cat, score in cat_scores.items():
+                bar = "█" * int(score * 40)
+                lines.append(f"  {cat:<28} {score:.4f}  {bar}")
+
+        # Per-clue breakdown
+        if clues:
+            lines.append("\n[bold]ATLAS clue breakdown:[/bold]")
+            for clue in clues:
+                name = clue.get("name", "?")
+                contrib = clue.get("contribution", 0.0)
+                score = clue.get("score", 0.0)
+                conf = clue.get("confidence", 0.0)
+                flag = clue.get("flag", "")
+                explanation = clue.get("explanation", "")
+                flag_str = f" [{flag}]" if flag else ""
+                lines.append(
+                    f"  [bold]{name:<32}[/bold]{flag_str}"
+                )
+                lines.append(
+                    f"    score={score:.3f}  contribution={contrib:.4f}  confidence={conf:.2f}"
+                )
+                if explanation:
+                    lines.append(f"    → {explanation}")
+
+        lines.append(
+            "\n[dim]NOTE: ATLAS score reflects encounter geometry + orbital behaviour signals. "
+            "σ-5 detection requires full orbital elements via options 1–3.[/dim]"
+        )
+        self.display_panel("\n".join(lines), title=f"ATLAS Detail — {designation}", style="yellow")
 
     def _display_impact_result(self, designation: str, impact) -> None:
         prob = getattr(impact, "collision_probability", 0.0)
@@ -1002,6 +1068,10 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 confidence=ms.get("confidence", 0.0),
                 classification=f"PIPELINE:{ms.get('validation_method', '?')}",
                 analysis=c.get("first_stage_score", {}),
+                # Extra fields for rich detail view
+                miss_distance_au=c.get("miss_distance_au"),
+                relative_velocity_km_s=c.get("relative_velocity_km_s"),
+                multi_stage_validation=ms,
             )
             self._detection_results[desg.upper()] = proxy
         if candidates:
