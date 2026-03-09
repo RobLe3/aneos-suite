@@ -251,7 +251,7 @@ class AutomaticReviewPipeline:
                         
                         stage_results[ProcessingStage.RAW_OBJECTS] = StageResult(
                             stage=ProcessingStage.RAW_OBJECTS,
-                            input_count=0,
+                            input_count=len(raw_objects),
                             output_count=len(raw_objects),
                             processing_time_seconds=(datetime.now() - start_time).total_seconds(),
                             success=True,
@@ -300,7 +300,7 @@ class AutomaticReviewPipeline:
                 
                 stage_results[ProcessingStage.RAW_OBJECTS] = StageResult(
                     stage=ProcessingStage.RAW_OBJECTS,
-                    input_count=0,
+                    input_count=len(raw_objects),
                     output_count=len(raw_objects),
                     processing_time_seconds=(datetime.now() - start_time).total_seconds(),
                     success=True,

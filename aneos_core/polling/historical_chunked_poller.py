@@ -657,15 +657,19 @@ class HistoricalChunkedPoller:
         """
         try:
             orbital_elements = neo_obj.get('orbital_elements', {})
-            
-            # Check for unusual orbital characteristics
+
             eccentricity = orbital_elements.get('eccentricity', 0)
             inclination = orbital_elements.get('inclination', 0)
-            
+            semi_major_axis = orbital_elements.get('semi_major_axis', 0)
+
+            # Skip objects with placeholder orbital elements — no real signal
+            if eccentricity == 0.1 and inclination == 10.0 and semi_major_axis == 1.0:
+                return False
+
             # Flag objects with very high eccentricity or unusual inclination
             if eccentricity > 0.9 or inclination > 160 or inclination < 20:
                 return True
-                
+
             return False
             
         except Exception:
