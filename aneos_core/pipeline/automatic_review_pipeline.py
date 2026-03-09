@@ -534,15 +534,26 @@ class AutomaticReviewPipeline:
             
             if self.xviii_swarm_scorer:
                 # Use the actual XVIII SWARM advanced scoring system
-                # Create proper indicator results structure that XVIII SWARM expects
-                # Generate realistic baseline scores from orbital characteristics
+                # Prefer top-level CAD fields; fall back to orbital element proxies
                 orbital_elements = neo_obj.get('orbital_elements', {})
                 eccentricity = orbital_elements.get('eccentricity', 0.0)
                 inclination = orbital_elements.get('inclination', 0.0)
-                
-                # Create baseline scores based on orbital mechanics
-                approach_regularity_score = min(eccentricity * 0.1, 0.3)
-                delta_bic_score = min(abs(inclination - 90) / 180 * 0.2, 0.2)
+
+                # If CAD distance/velocity fields are present, use them for regularity proxy
+                dist_au = neo_obj.get('miss_distance_au')
+                v_kms = neo_obj.get('relative_velocity_km_s')
+                if dist_au is not None:
+                    import math
+                    approach_regularity_score = min(math.exp(-dist_au / 0.1), 0.9)
+                else:
+                    approach_regularity_score = min(eccentricity * 0.1, 0.3)
+
+                if v_kms is not None:
+                    # Low velocity (< 5 km/s) is anomalous; high (> 30 km/s) is notable
+                    delta_bic_score = min(max(0.0, (10.0 - v_kms) / 10.0), 0.5) if v_kms < 10 else min(v_kms / 100.0, 0.2)
+                else:
+                    delta_bic_score = min(abs(inclination - 90) / 180 * 0.2, 0.2)
+
                 radar_score = min(eccentricity * 0.15, 0.25)
                 thermal_score = min((eccentricity + inclination/180) * 0.1, 0.2)
                 spectral_score = min(eccentricity * 0.05, 0.15)

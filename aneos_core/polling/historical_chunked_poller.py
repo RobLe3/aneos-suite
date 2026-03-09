@@ -452,18 +452,24 @@ class HistoricalChunkedPoller:
             else:
                 ca_date = discovery_date
             
+            dist_au = float(row[4]) if len(row) > 4 and row[4] else 0.5
+            v_rel_kms = float(row[7]) if len(row) > 7 and row[7] else 10.0
+
             neo_obj = {
                 'designation': designation,
                 'discovery_date': discovery_date,
+                # Top-level fields consumed directly by XVIII SWARM encounter_geometry scorer
+                'miss_distance_au': dist_au,
+                'relative_velocity_km_s': v_rel_kms,
                 'orbital_elements': {
-                    'eccentricity': 0.1,  # Default values - will be enriched later
+                    'eccentricity': 0.1,  # Placeholder — no orbital elements in CAD data
                     'inclination': 10.0,
                     'semi_major_axis': 1.0
                 },
                 'close_approach': {
                     'date': ca_date.isoformat(),
-                    'distance': float(row[4]) if len(row) > 4 and row[4] else 1.0,
-                    'velocity': float(row[7]) if len(row) > 7 and row[7] else 10.0
+                    'distance': dist_au,
+                    'velocity': v_rel_kms,
                 },
                 'data_source': 'NASA_CAD',
                 'raw_cad_data': row,
