@@ -110,12 +110,40 @@ class DetectionManager:
                 # Normalize orbital elements
                 normalized_elements = self.preprocess_orbital_elements(orbital_elements)
                 
-                # Call validated detector
+                # Call validated detector — pass through optional rich data if supplied
+                extra = additional_data or {}
                 result = self.detector.analyze_neo_validated(
                     orbital_elements=normalized_elements,
-                    physical_data=physical_data or {}
+                    physical_data=physical_data or {},
+                    orbital_history=extra.get('orbital_history'),
+                    close_approach_history=extra.get('close_approach_history'),
+                    observation_data=extra.get('observation_data'),
                 )
                 
+                # Determine whether physical data has real (non-internal) keys
+                _phys = physical_data or {}
+                _real_physical_keys = {k for k in _phys if not k.startswith("_")}
+                _phys_available = bool(_real_physical_keys)
+
+                # Build risk_factors; exclude 'physical_properties' when no real
+                # physical data was supplied (avoids spurious risk attribution).
+                _risk_factors = [
+                    e.evidence_type.value for e in result.evidence_sources
+                    if e.evidence_type.value != "physical_properties" or _phys_available
+                ]
+
+                # Build per-source evidence breakdown for verbose display
+                _evidence_breakdown = [
+                    {
+                        "evidence_type": e.evidence_type.value,
+                        "p_value": e.p_value,
+                        "effect_size": e.effect_size,
+                        "quality_score": e.quality_score,
+                        "analyzed": e.analyzed,
+                    }
+                    for e in result.evidence_sources
+                ]
+
                 # Convert to unified format
                 return DetectionResult(
                     is_artificial=result.is_artificial,
@@ -123,14 +151,15 @@ class DetectionManager:
                     sigma_level=result.sigma_confidence,
                     artificial_probability=result.bayesian_probability,
                     classification=self._map_validated_classification(result),
-                    analysis=result.analysis_metadata,
-                    risk_factors=[e.evidence_type.value for e in result.evidence_sources],
+                    analysis={**result.analysis_metadata, "evidence_breakdown": _evidence_breakdown},
+                    risk_factors=_risk_factors,
                     metadata={
                         'detector_type': 'validated',
                         'evidence_count': len(result.evidence_sources),
                         'combined_p_value': result.combined_p_value,
                         'false_discovery_rate': result.false_discovery_rate,
-                        'validation_available': result.validation_metrics is not None
+                        'validation_available': result.validation_metrics is not None,
+                        'physical_data_available': _phys_available,
                     }
                 )
             
@@ -143,7 +172,7 @@ class DetectionManager:
                 elif result.sigma_confidence >= 2.0:
                     return "❓ EDGE CASE (σ≥2)"
                 else:
-                    return "🌍 NATURAL"
+                    return "❔ INCONCLUSIVE (σ<2)"
             
             def analyze_orbital_dynamics(self, orbital_elements: Dict[str, Any]) -> Dict[str, Any]:
                 normalized = self.preprocess_orbital_elements(orbital_elements)

@@ -8,7 +8,7 @@ for analysis results, user data, metrics, and system state.
 import os
 import logging
 from typing import List, Optional, Dict, Any, Union
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from pathlib import Path
 
 try:
@@ -61,7 +61,7 @@ if HAS_SQLALCHEMY:
         password_hash = Column(String(255))
         role = Column(String(20), default="viewer")
         api_keys = Column(JSON)  # Store API keys as JSON array
-        created_at = Column(DateTime, default=datetime.utcnow)
+        created_at = Column(DateTime, default=lambda: datetime.now(UTC))
         last_login = Column(DateTime)
         is_active = Column(Boolean, default=True)
     
@@ -71,7 +71,7 @@ if HAS_SQLALCHEMY:
         
         id = Column(Integer, primary_key=True, index=True)
         designation = Column(String(50), index=True)
-        analysis_date = Column(DateTime, default=datetime.utcnow, index=True)
+        analysis_date = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
         overall_score = Column(Float)
         classification = Column(String(20), index=True)
         confidence = Column(Float)
@@ -95,7 +95,7 @@ if HAS_SQLALCHEMY:
         
         id = Column(Integer, primary_key=True, index=True)
         designation = Column(String(50), index=True)
-        prediction_date = Column(DateTime, default=datetime.utcnow, index=True)
+        prediction_date = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
         model_id = Column(String(100))
         anomaly_score = Column(Float)
         anomaly_probability = Column(Float)
@@ -117,7 +117,7 @@ if HAS_SQLALCHEMY:
         __tablename__ = "system_metrics"
         
         id = Column(Integer, primary_key=True, index=True)
-        timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+        timestamp = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
         
         # System metrics
         cpu_percent = Column(Float)
@@ -144,7 +144,7 @@ if HAS_SQLALCHEMY:
         alert_level = Column(String(20), index=True)
         title = Column(String(255))
         message = Column(Text)
-        timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+        timestamp = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
         
         # Status
         acknowledged = Column(Boolean, default=False)
@@ -163,7 +163,7 @@ if HAS_SQLALCHEMY:
         
         id = Column(Integer, primary_key=True, index=True)
         session_id = Column(String(100), unique=True, index=True)
-        started_at = Column(DateTime, default=datetime.utcnow)
+        started_at = Column(DateTime, default=lambda: datetime.now(UTC))
         completed_at = Column(DateTime)
         status = Column(String(20), default="running")  # running, completed, failed, cancelled
         
@@ -187,7 +187,7 @@ if HAS_SQLALCHEMY:
         __tablename__ = "api_usage"
         
         id = Column(Integer, primary_key=True, index=True)
-        timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+        timestamp = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
         endpoint = Column(String(255), index=True)
         method = Column(String(10))
         status_code = Column(Integer, index=True)
@@ -212,7 +212,7 @@ if HAS_SQLALCHEMY:
         
         # Core metadata
         first_discovered = Column(DateTime, index=True)
-        last_updated = Column(DateTime, default=datetime.utcnow, index=True)
+        last_updated = Column(DateTime, default=lambda: datetime.now(UTC), index=True)
         data_sources = Column(JSON)  # List of all sources that provided data
         data_quality_score = Column(Float, default=0.0)
         
@@ -477,7 +477,7 @@ class MetricsService:
             return []
         
         try:
-            start_time = datetime.utcnow() - timedelta(hours=hours)
+            start_time = datetime.now(UTC) - timedelta(hours=hours)
             
             results = self.db.query(SystemMetrics).filter(
                 SystemMetrics.timestamp >= start_time
@@ -590,7 +590,7 @@ class EnrichedNEOService:
         }
         
         # Set data for the specific source
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         if data_source == 'NASA_CAD':
             source_data['nasa_cad_data'] = result
             source_updates['nasa_cad_last_update'] = now
@@ -638,7 +638,7 @@ class EnrichedNEOService:
     def _update_existing_neo(self, existing_neo: EnrichedNEO, result: Dict[str, Any], polling_session_id: str):
         """Update existing NEO with new data from polling."""
         data_source = result.get('data_source', 'Unknown')
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         # Update last updated timestamp
         existing_neo.last_updated = now
@@ -914,7 +914,7 @@ def cleanup_old_data(days: int = 30) -> Dict[str, int]:
     
     try:
         db = db_manager.get_db()
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days)
         
         # Clean up old metrics
         metrics_deleted = db.query(SystemMetrics).filter(

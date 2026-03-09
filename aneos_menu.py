@@ -83,6 +83,8 @@ try:
 except ImportError:
     HAS_RICH = False
 
+from aneos_menu_base import ANEOSMenuBase
+
 try:
     import uvicorn
     HAS_UVICORN = True
@@ -99,7 +101,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class ANEOSMenu:
+class ANEOSMenu(ANEOSMenuBase):
     """Mission-focused aNEOS menu system with intelligent automation."""
     
     def __init__(self):
@@ -969,9 +971,10 @@ class ANEOSMenu:
                                 )
                         else:
                             # Fetch real orbital elements from live data sources
-                            orbital_elements, physical_data = self._get_test_data(designation)
-                            if not orbital_elements:
-                                self.show_error(f"Could not fetch orbital data for {designation}")
+                            try:
+                                orbital_elements, physical_data = self._get_test_data(designation)
+                            except ValueError as exc:
+                                self.show_error(str(exc))
                                 return
                             result = manager.analyze_neo(
                                 orbital_elements=orbital_elements,
@@ -1564,27 +1567,6 @@ class ANEOSMenu:
         else:
             return input(prompt)
             
-    def show_error(self, message: str):
-        """Show error message."""
-        if self.console:
-            self.console.print(f"[bold red]❌ Error:[/bold red] {message}")
-        else:
-            print(f"❌ Error: {message}")
-            
-    def show_info(self, message: str):
-        """Show info message."""
-        if self.console:
-            self.console.print(f"[bold blue]ℹ️  Info:[/bold blue] {message}")
-        else:
-            print(f"ℹ️  Info: {message}")
-            
-    def wait_for_input(self):
-        """Wait for user input to continue."""
-        if self.console:
-            Prompt.ask("Press Enter to continue", default="")
-        else:
-            input("Press Enter to continue...")
-            
     def display_analysis_result(self, result):
         """Display analysis result in formatted way."""
         # Check if this is a validated detector result
@@ -1730,12 +1712,12 @@ class ANEOSMenu:
                 self.console.print("   • [red]Propulsion Signature Scanning[/red] (direct evidence)")
                 self.console.print("   • Bayesian Evidence Fusion (combined assessment)\n")
                 
-                # Fetch real orbital data; fall back to test values for known aliases
-                with self.console.status("[bold green]Fetching orbital data...", spinner="dots"):
-                    orbital_elements, physical_data = self._get_test_data(designation)
-
-                if not orbital_elements or not orbital_elements.get('a'):
-                    self.console.print("❌ Could not retrieve orbital data for this designation")
+                # Fetch real orbital data
+                try:
+                    with self.console.status("[bold green]Fetching orbital data...", spinner="dots"):
+                        orbital_elements, physical_data = self._get_test_data(designation)
+                except ValueError as exc:
+                    self.console.print(f"❌ {exc}")
                     return
 
                 sources = physical_data.get('_sources', ['local'])
@@ -1874,9 +1856,13 @@ class ANEOSMenu:
                 self.console.print("   • Propulsion Signature Analysis (non-gravitational forces)")
                 self.console.print("   • Orbital Evolution Timeline Assessment\n")
                 
-                # Get test data
-                orbital_elements, physical_data = self._get_test_data(designation)
-                
+                # Fetch orbital data
+                try:
+                    orbital_elements, physical_data = self._get_test_data(designation)
+                except ValueError as exc:
+                    self.console.print(f"❌ {exc}")
+                    return
+
                 # Analysis type selection
                 analysis_type = self.get_input("Analysis type [1=Course Corrections, 2=Trajectory Patterns, 3=Full Analysis] (3): ") or "3"
                 
@@ -2150,14 +2136,16 @@ class ANEOSMenu:
                 'M': oe.mean_anomaly,
             }
             physical = {}
-            if oe.diameter is not None:
-                physical['diameter'] = oe.diameter
-            if oe.albedo is not None:
-                physical['albedo'] = oe.albedo
-            if oe.spectral_type is not None:
-                physical['spectral_type'] = oe.spectral_type
-            if oe.rot_per is not None:
-                physical['rotation_period'] = oe.rot_per
+            pp = getattr(neo_data, 'physical_properties', None)
+            if pp is not None:
+                if getattr(pp, 'diameter_km', None) is not None:
+                    physical['diameter'] = pp.diameter_km
+                if getattr(pp, 'albedo', None) is not None:
+                    physical['albedo'] = pp.albedo
+                if getattr(pp, 'spectral_type', None) is not None:
+                    physical['spectral_type'] = pp.spectral_type
+                if getattr(pp, 'rotation_period_hours', None) is not None:
+                    physical['rotation_period'] = pp.rotation_period_hours
             sources = getattr(neo_data, 'sources_used', [])
             if sources:
                 physical['_sources'] = sources
@@ -2195,8 +2183,12 @@ class ANEOSMenu:
         if real:
             return real
 
-        # Last resort: generic NEO parameters (clearly labelled in calling code)
-        return known['test']['orbital'], known['test']['physical']
+        # No live data available and designation not in known aliases
+        raise ValueError(
+            f"Cannot resolve orbital data for '{designation}'. "
+            "Live data fetch failed and designation is not in the known alias table. "
+            "Provide a valid JPL designation (e.g. '99942', '2020 SO') or check network connectivity."
+        )
     
     def _calculate_validation_metrics(self, primary_result, detector_results):
         """Calculate comprehensive validation metrics across multiple detectors."""
@@ -3650,13 +3642,13 @@ class ANEOSMenu:
         """Check for outdated database entries that need re-polling."""
         try:
             from aneos_api.database import db_manager, EnrichedNEO
-            from datetime import datetime, timedelta
-            
+            from datetime import datetime, timedelta, UTC
+
             # Get database session
             db = db_manager.get_db()
-            
+
             # Define "outdated" as older than 30 days for most sources
-            cutoff_date = datetime.utcnow() - timedelta(days=30)
+            cutoff_date = datetime.now(UTC) - timedelta(days=30)
             
             # Find NEOs that haven't been updated recently from any of the polling sources
             outdated_objects = []
@@ -5728,31 +5720,31 @@ class ANEOSMenu:
         self.console.print("   • Processing efficiency: +180%")
         
     def ml_training(self):
-        self.show_info("ML model training - Coming soon!")
+        self.show_info("ML training backend is ready (TrainingPipeline in aneos_core/ml/training.py).\nNo trained model files found in .models/.\nTo train: POST /api/v1/admin/training/start with ≥50 designations.")
         self.wait_for_input()
         
     def ml_predictions(self):
-        self.show_info("ML predictions - Coming soon!")
+        self.show_info("ML prediction requires trained model files in .models/ — none found.\nFallback: statistical indicator scoring always available via GET /api/v1/analysis/detect.")
         self.wait_for_input()
         
     def model_management(self):
-        self.show_info("Model management - Coming soon!")
+        self.show_info("Model files (.joblib) are stored in .models/ — directory empty.\nOnce trained, use GET /api/v1/prediction/models to list and manage models.")
         self.wait_for_input()
         
     def feature_analysis(self):
-        self.show_info("Feature analysis - Coming soon!")
+        self.show_info("Feature engineering is active: 40+ orbital/physical features extracted per NEO.\nSee FeatureEngineer in aneos_core/ml/features.py.\nFeature vectors: GET /api/v1/prediction/features/{designation}.")
         self.wait_for_input()
         
     def model_performance(self):
-        self.show_info("Model performance - Coming soon!")
+        self.show_info("No trained models on disk — performance metrics unavailable.\nOnce trained, use GET /api/v1/prediction/performance for cross-validation metrics.")
         self.wait_for_input()
         
     def training_configuration(self):
-        self.show_info("Training configuration - Coming soon!")
+        self.show_info("Supported model types: isolation_forest, random_forest, one_class_svm.\nPOST /api/v1/admin/training/start accepts: model_types, use_ensemble, validation_split.\nDefault: isolation_forest with ensemble enabled.")
         self.wait_for_input()
         
     def model_export_import(self):
-        self.show_info("Model export/import - Coming soon!")
+        self.show_info("Models are .joblib files in .models/. Use GET /api/v1/prediction/models/{id}/info\nto inspect or re-activate a saved model.")
         self.wait_for_input()
         
     def start_web_dashboard(self):
@@ -5764,11 +5756,11 @@ class ANEOSMenu:
         self.wait_for_input()
         
     def api_performance_test(self):
-        self.show_info("API performance testing - Coming soon!")
+        self.show_info("API performance: run the full test suite with 'pytest tests/ -m not\\ network'.\nFor load testing, see docs/testing/ for locust configuration.")
         self.wait_for_input()
         
     def manage_api_keys(self):
-        self.show_info("API key management - Coming soon!")
+        self.show_info("API key management via admin endpoints (requires JWT auth):\n  GET  /api/v1/admin/users  — list users\n  POST /api/v1/admin/users  — create user\nSet JWT_SECRET_KEY env var to enable authentication.")
         self.wait_for_input()
         
     def view_api_docs(self):
@@ -6456,31 +6448,31 @@ class ANEOSMenu:
         self.development_mode()
         
     def build_docker_images(self):
-        self.show_info("Building Docker images - Coming soon!")
+        self.show_info("Docker build requires Docker Engine (not available in this environment).\nSee docs/deployment/ for Dockerfile and docker-compose.yml.")
         self.wait_for_input()
         
     def kubernetes_deploy(self):
-        self.show_info("Kubernetes deployment - Coming soon!")
+        self.show_info("Kubernetes deployment requires kubectl and a configured cluster.\nSee docs/deployment/kubernetes/ for manifests.")
         self.wait_for_input()
         
     def container_status(self):
-        self.show_info("Container status - Coming soon!")
+        self.show_info("Requires Docker Engine. Run: docker ps\nor: docker-compose ps (from project root)")
         self.wait_for_input()
         
     def view_logs(self):
-        self.show_info("Log viewer - Coming soon!")
+        self.show_info("Requires Docker Engine. Run: docker-compose logs -f aneos-api")
         self.wait_for_input()
         
     def scale_services(self):
-        self.show_info("Service scaling - Coming soon!")
+        self.show_info("Service scaling requires Docker Swarm or Kubernetes.\nSee docs/deployment/ for horizontal scaling instructions.")
         self.wait_for_input()
         
     def stop_services(self):
-        self.show_info("Stop services - Coming soon!")
+        self.show_info("Run from project root: docker-compose down")
         self.wait_for_input()
         
     def cleanup_containers(self):
-        self.show_info("Container cleanup - Coming soon!")
+        self.show_info("Run: docker system prune   (removes stopped containers and unused images)")
         self.wait_for_input()
         
     def show_user_guide(self):
@@ -7584,9 +7576,13 @@ class ANEOSMenu:
                 # Initialize validated detector
                 manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
                 
-                # Get test data
-                orbital_elements, physical_data = self._get_test_data(designation)
-                
+                # Fetch orbital data
+                try:
+                    orbital_elements, physical_data = self._get_test_data(designation)
+                except ValueError as exc:
+                    self.console.print(f"❌ {exc}")
+                    return
+
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
@@ -7594,7 +7590,7 @@ class ANEOSMenu:
                     TimeElapsedColumn(),
                     console=self.console
                 ) as progress:
-                    
+
                     # Stage 1: Basic Detection Analysis
                     task1 = progress.add_task("Stage 1: Basic Detection Analysis", total=100)
                     time.sleep(1)
@@ -7678,16 +7674,20 @@ class ANEOSMenu:
                 # Initialize validated detector for integration
                 manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
                 
-                # Get test data
-                orbital_elements, physical_data = self._get_test_data(designation)
-                
+                # Fetch orbital data
+                try:
+                    orbital_elements, physical_data = self._get_test_data(designation)
+                except ValueError as exc:
+                    self.console.print(f"❌ {exc}")
+                    return
+
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
                     BarColumn(),
                     console=self.console
                 ) as progress:
-                    
+
                     # Stage 1: Visible Spectrum Analysis
                     task1 = progress.add_task("Analyzing visible spectrum (400-700nm)", total=100)
                     time.sleep(1.5)
@@ -7768,16 +7768,20 @@ class ANEOSMenu:
                 # Initialize validated detector for integration
                 manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
                 
-                # Get test data
-                orbital_elements, physical_data = self._get_test_data(designation)
-                
+                # Fetch orbital data
+                try:
+                    orbital_elements, physical_data = self._get_test_data(designation)
+                except ValueError as exc:
+                    self.console.print(f"❌ {exc}")
+                    return
+
                 with Progress(
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
                     BarColumn(),
                     console=self.console
                 ) as progress:
-                    
+
                     # Stage 1: Orbital Element Analysis
                     task1 = progress.add_task("Analyzing orbital elements and stability", total=100)
                     time.sleep(1)
@@ -8477,8 +8481,11 @@ class ANEOSMenu:
             'sample_size': 0,
         }
 
-        # Fetch real orbital/physical data
-        orbital_elements, physical_data = self._get_test_data(designation)
+        # Fetch real orbital/physical data — raises ValueError if unavailable
+        try:
+            orbital_elements, physical_data = self._get_test_data(designation)
+        except ValueError:
+            orbital_elements, physical_data = {}, {}
         sources = physical_data.get('_sources', []) if physical_data else []
         source_count = len(sources)
 

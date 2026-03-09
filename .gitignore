@@ -107,6 +107,15 @@ test_*.py
 !tests/test_data_sources_network.py
 !tests/test_pattern_analysis.py
 !tests/test_pattern_api.py
+!tests/test_detection_integrity.py
+!tests/test_ml_infrastructure.py
+!tests/test_phase15.py
+!tests/test_menu_v2.py
+!tests/test_menu_v2_e2e.py
+!tests/test_phase17.py
+!tests/test_phase18.py
+!tests/test_kardashev_generator.py
+!tests/test_kardashev_training.py
 
 # Development directory - track structure, ignore contents
 development/**/*

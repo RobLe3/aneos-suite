@@ -9,7 +9,7 @@ and ephemeris data for Near-Earth Objects.
 import re
 import logging
 from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 import requests
 
@@ -107,7 +107,7 @@ class HorizonsSource(HTTPDataSource):
             # Metadata
             elements["_source"] = self.name
             elements["_designation"] = designation
-            elements["_fetched_at"] = datetime.utcnow().isoformat()
+            elements["_fetched_at"] = datetime.now(UTC).isoformat()
             return elements
 
         except requests.HTTPError as e:
@@ -259,7 +259,7 @@ class HorizonsSource(HTTPDataSource):
         Fetch a time-series of osculating orbital elements from Horizons ELEMENTS ephemeris.
         Returns one entry per year over `years` years centred on today.
         """
-        today = datetime.utcnow()
+        today = datetime.now(UTC)
         start = (today - timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
         stop = (today + timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
         try:
@@ -287,28 +287,37 @@ class HorizonsSource(HTTPDataSource):
             return []
 
     def _parse_elements_table(self, text: str) -> List[Dict[str, Any]]:
-        """Parse the $$SOE ... $$EOE block from a Horizons ELEMENTS ephemeris."""
+        """Parse the $$SOE ... $$EOE block from a Horizons ELEMENTS ephemeris.
+
+        Horizons ELEMENTS output emits multiple lines per epoch (one element per
+        line).  This version accumulates all element keys into a single record and
+        flushes only when the next epoch header (a non-element, non-comment line)
+        is encountered, preventing duplicate/partial rows.
+        """
         import re as _re
         rows: List[Dict[str, Any]] = []
         in_block = False
         pending_epoch: Optional[str] = None
+        pending_record: Dict[str, Any] = {}
+
+        element_keys = [
+            ("a",    r"A=\s*([-\d.E+]+)"),
+            ("e",    r"EC=\s*([-\d.E+]+)"),
+            ("i",    r"IN=\s*([-\d.E+]+)"),
+            ("node", r"OM=\s*([-\d.E+]+)"),
+            ("peri", r"W=\s*([-\d.E+]+)"),
+            ("M",    r"MA=\s*([-\d.E+]+)"),
+        ]
+
         for line in text.splitlines():
             if "$$SOE" in line:
                 in_block = True
                 continue
             if "$$EOE" in line:
                 break
-            if not in_block or not line.strip():
+            if not in_block or not line.strip() or "!" in line:
                 continue
-            # Try to parse element values from the line
-            element_keys = [
-                ("a",    r"A=\s*([-\d.E+]+)"),
-                ("e",    r"EC=\s*([-\d.E+]+)"),
-                ("i",    r"IN=\s*([-\d.E+]+)"),
-                ("node", r"OM=\s*([-\d.E+]+)"),
-                ("peri", r"W=\s*([-\d.E+]+)"),
-                ("M",    r"MA=\s*([-\d.E+]+)"),
-            ]
+
             parsed = {}
             for key, pattern in element_keys:
                 m = _re.search(pattern, line)
@@ -317,14 +326,22 @@ class HorizonsSource(HTTPDataSource):
                         parsed[key] = float(m.group(1))
                     except ValueError:
                         pass
+
             if parsed:
-                if pending_epoch:
-                    parsed["epoch"] = pending_epoch
-                    pending_epoch = None
-                rows.append(parsed)
-            elif not any(c in line for c in ["=", "!"]):
-                # Likely a date/epoch line
+                # Accumulate element fields into the current record
+                pending_record.update(parsed)
+            elif "=" not in line:
+                # Non-element line with no "=" → epoch header for next record.
+                # Flush the previous record first.
+                if pending_epoch and pending_record:
+                    rows.append({"epoch": pending_epoch, **pending_record})
                 pending_epoch = line.strip()
+                pending_record = {}
+
+        # Flush final record
+        if pending_epoch and pending_record:
+            rows.append({"epoch": pending_epoch, **pending_record})
+
         return rows
 
     def _parse_ephemeris(self, text: str) -> List[Dict[str, Any]]:

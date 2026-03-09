@@ -7,7 +7,7 @@ for fetching Near Earth Object orbital elements and physical parameters.
 
 from typing import Dict, Any, Optional
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 
 from .base import HTTPDataSource, FetchResult, DataSourceException
 from ...config.settings import APIConfig
@@ -32,10 +32,19 @@ class SBDBSource(HTTPDataSource):
             params = {
                 "sstr": designation,
                 "phys-par": "true",
-                "nongrav": "1",
             }
-            
+
             response_data = await self._http_get("", params)
+
+            # Optionally enrich with non-gravitational parameters (only ~3% of NEOs
+            # have these; requesting nongrav=1 for the rest returns HTTP 400).
+            try:
+                ng_params = {"sstr": designation, "phys-par": "false", "nongrav": "1"}
+                ng_response = await self._http_get("", ng_params)
+                if "nongrav_params" in ng_response:
+                    response_data["nongrav_params"] = ng_response["nongrav_params"]
+            except Exception as _ng_exc:
+                logger.debug("Non-gravitational fetch skipped for %s: %s", designation, _ng_exc)
             
             if "orbit" not in response_data:
                 return FetchResult(
@@ -135,10 +144,18 @@ class SBDBSource(HTTPDataSource):
                     pass
         orbital_data["_nongrav"] = nongrav_data if nongrav_data else None
 
+        # Observation window (first_obs / last_obs from orbit section)
+        orbit_section = data.get("orbit", {})
+        for sbdb_key, out_key in (("first_obs", "first_observation_date"),
+                                   ("last_obs",  "last_observation_date")):
+            raw_date = orbit_section.get(sbdb_key)
+            if raw_date:
+                orbital_data[out_key] = str(raw_date)
+
         # Source metadata (filtered out before OrbitalElements construction)
         orbital_data["_source"] = self.name
         orbital_data["_designation"] = designation
-        orbital_data["_fetched_at"] = datetime.utcnow().isoformat()
+        orbital_data["_fetched_at"] = datetime.now(UTC).isoformat()
 
         return orbital_data
     
@@ -158,12 +175,11 @@ class SBDBSource(HTTPDataSource):
                 return None
     
     async def health_check(self) -> bool:
-        """Perform health check by testing a known object."""
+        """Perform health check by testing a known object (Apophis / 99942)."""
         try:
-            # Test with a well-known asteroid (Ceres)
-            result = await self.fetch_orbital_elements("1 Ceres")
+            result = await self.fetch_orbital_elements("99942")
             return result.success
-            
+
         except Exception as e:
             logger.error(f"SBDB health check failed: {e}")
             return False

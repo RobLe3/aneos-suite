@@ -12,7 +12,7 @@ data sources, and validation methods to provide the highest quality analysis.
 import logging
 import time
 from typing import Dict, Any, Optional, List, Union
-from datetime import datetime
+from datetime import datetime, UTC
 
 from ..interfaces.unified_analysis import (
     aNEOSAnalysisInterface, aNEOSAnalysisResult, AdvancedaNEOSCapabilities,
@@ -129,7 +129,7 @@ class AdvancedaNEOSAnalyzer(aNEOSAnalysisInterface):
             # Step 5: Create comprehensive result
             analysis_result = aNEOSAnalysisResult(
                 designation=designation,
-                analysis_timestamp=datetime.utcnow(),
+                analysis_timestamp=datetime.now(UTC),
                 is_artificial=detection_result.is_artificial,
                 artificial_probability=detection_result.artificial_probability,
                 confidence_level=detection_result.confidence,
@@ -173,7 +173,7 @@ class AdvancedaNEOSAnalyzer(aNEOSAnalysisInterface):
             # Return basic result with error information
             return aNEOSAnalysisResult(
                 designation=designation,
-                analysis_timestamp=datetime.utcnow(),
+                analysis_timestamp=datetime.now(UTC),
                 is_artificial=False,
                 artificial_probability=0.0,
                 confidence_level=0.0,

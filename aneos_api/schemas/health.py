@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict
 
 try:
@@ -22,4 +22,4 @@ class HealthResponse(BaseModel):
     status: str
     checks: Dict[str, CheckResult] = Field(default_factory=dict)
     version: str = "0.7.0"
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

@@ -1616,4 +1616,95 @@ NetworkReport:
 
 ---
 
+### ADR-049: Menu Scope — Six Real Workflows Replace 121-Option God Class
+
+**Status**: Accepted — Phase 16
+
+**Context**
+`aneos_menu.py` grew to 10,800+ lines / 266 methods in a single `ANEOSMenu` class over
+14 development phases. The menu presented 121 options across 8+ nesting levels for a system
+with exactly two real use-cases: (1) classify an object as artificial or natural, and
+(2) assess its impact probability. Over-delivery created maintainability and honesty risks:
+- 4 separate paths to the same `ValidatedSigma5ArtificialNEODetector`
+- Theater (fake progress bars, military framing, animated spinners with hardcoded results)
+- "Coming soon!" stubs presented alongside implemented features
+- No Impact Assessment option despite `ImpactProbabilityCalculator` existing and being wired to the API
+
+**Decision**
+Introduce `ANEOSMenuV2` (`aneos_menu_v2.py`) with exactly 6 options:
+
+| Option | Label | Backend |
+|--------|-------|---------|
+| 1 | Detect NEO | `DetectionManager(VALIDATED)` + `DataFetcher` |
+| 2 | Batch Detection | `DataFetcher.fetch_multiple()` + `DetectionManager` |
+| 3 | Impact Assessment | `ImpactProbabilityCalculator.calculate_comprehensive_impact_probability()` |
+| 4 | Live Polling | `PipelineIntegration` (existing pipeline) |
+| 5 | Results & Reports | in-session cache + `AnalysisService` DB fallback |
+| 6 | System | component import checks + `http://localhost:8000/health` |
+
+`aneos_menu.py` (legacy) is preserved and accessible via `python aneos.py --legacy-menu`.
+`ANEOSMenuV2` inherits from `ANEOSMenuBase` (ADR-049 companion, implemented Phase 15E).
+`aneos.py` default launch switches from legacy menu to v2 menu.
+
+**Out-of-scope (removed without replacement)**
+- Docker/K8s management options (just printed CLI instructions)
+- "User Management" stub (single-user tool)
+- ML training menu (no trained models exist)
+- Streaming/web dashboard option (feature not built)
+- `generate_statistical_reports()` fake animated progress stub
+
+**Consequences**
+- (+) Every menu option invokes real, tested backend code
+- (+) `ANEOSMenuV2` is independently testable (8 unit tests in `tests/test_menu_v2.py`)
+- (+) Legacy 121-option menu remains accessible; no functionality deleted
+- (-) Users familiar with legacy menu must use `--legacy-menu` flag
+- (-) Phase 16E (theater removal from legacy menu) still needed for production readiness
+
+**Files**: `aneos_menu_v2.py` (created), `aneos.py` (default changed), `aneos_menu_base.py` (inherited)
+
+---
+
+### ADR-050: No Silent Fallback for Unresolvable Orbital Data
+
+**Status**: Accepted — Phase 16
+
+**Context**
+`ANEOSMenu._get_test_data()` had a "last resort" path that silently returned generic
+orbital elements (`a=1.5, e=0.3, i=5.0`) when live data fetch failed and the designation
+was not in the known alias table. Detection results produced from generic parameters are
+meaningless but were presented to users without warning. This violated the honesty principle
+established in the scientific integrity audit (2026-03-08).
+
+Similarly, `_fetch_real_orbital_data()` was reading `oe.diameter`, `oe.albedo`,
+`oe.spectral_type`, `oe.rot_per` — fields removed from `OrbitalElements` in Phase 6 (ADR
+G-011). Physical data was silently lost, reducing detection evidence.
+
+**Decision**
+1. `_get_test_data()` raises `ValueError` with a descriptive message when the designation
+   cannot be resolved. All call sites wrap in `try/except ValueError` and display the error
+   to the user before returning — no analysis runs on fabricated data.
+
+2. `_fetch_real_orbital_data()` reads physical data from `neo_data.physical_properties`
+   (`PhysicalProperties.diameter_km`, `.albedo`, `.spectral_type`, `.rotation_period_hours`)
+   consistent with the canonical data model established in Phase 6.
+
+3. `ValidatedWrapper.analyze_neo()` in `DetectionManager` forwards `orbital_history`,
+   `close_approach_history`, and `observation_data` from `additional_data` to
+   `analyze_neo_validated()` — they were previously silently dropped.
+
+4. `_map_validated_classification()` returns `"❔ INCONCLUSIVE (σ<2)"` for sigma below 2.0,
+   replacing the scientifically incorrect `"🌍 NATURAL"` label. An INCONCLUSIVE result is
+   not evidence of natural origin.
+
+**Consequences**
+- (+) Detection runs only on data that was actually fetched
+- (+) σ < 2 is no longer labelled as definitively natural
+- (+) Orbital history evidence reaches the detector when fetched
+- (-) Some menu workflows now show an error where they previously silently continued;
+  this is the correct behaviour — user must investigate the missing data
+
+**Files**: `aneos_core/detection/detection_manager.py`, `aneos_menu.py`
+
+---
+
 _End of Architecture Decision Records_

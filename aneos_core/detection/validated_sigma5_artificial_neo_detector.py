@@ -38,13 +38,22 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
+# Bus-DeMeo taxonomy: common natural NEO spectral types (~99% of known NEOs)
+# Source: DeMeo et al. 2009; Binzel et al. 2019
+_NATURAL_SPECTRAL_TYPES = frozenset({
+    "S", "Sq", "Sr", "Sv", "Sa", "Q", "Qw",   # S-complex
+    "C", "Cb", "Cg", "Cgh", "Ch",              # C-complex
+    "X", "Xc", "Xe", "Xk",                     # X-complex
+    "D", "T", "K", "L", "V", "B", "O", "R",    # Other natural
+})
+
 class EvidenceType(Enum):
     """Types of evidence for artificial object detection."""
     ORBITAL_DYNAMICS = "orbital_dynamics"
-    PHYSICAL_PROPERTIES = "physical_properties" 
-    TEMPORAL_SIGNATURES = "temporal_signatures"
+    PHYSICAL_PROPERTIES = "physical_properties"
+    TEMPORAL_SIGNATURES = "temporal_signatures"       # RESERVED — requires multi-epoch observation data
     SPECTRAL_ANALYSIS = "spectral_analysis"
-    RADAR_CHARACTERISTICS = "radar_characteristics"
+    RADAR_CHARACTERISTICS = "radar_characteristics"  # RESERVED — requires Goldstone/Arecibo integration
     COURSE_CORRECTIONS = "course_corrections"  # Implausible orbital changes
     TRAJECTORY_PATTERNS = "trajectory_patterns"  # Repeated exact passages
     PROPULSION_SIGNATURES = "propulsion_signatures"  # Evidence of thrust
@@ -59,7 +68,9 @@ class EvidenceSource:
     p_value: float  # Statistical significance
     effect_size: float  # Magnitude of anomaly (Cohen's d)
     quality_score: float  # Data quality assessment (0-1)
-    
+    analyzed: bool = True        # False when skipped due to missing input data
+    data_available: bool = True  # False when no data was present for this type
+
 @dataclass 
 class ValidationResult:
     """Result from validation against ground truth dataset."""
@@ -322,9 +333,10 @@ class ValidatedSigma5ArtificialNEODetector:
         
         if not physical_data:
             return EvidenceSource(
-                EvidenceType.PHYSICAL_PROPERTIES, 0.0, (0.0, 0.0), 0, 1.0, 0.0, 0.0
+                EvidenceType.PHYSICAL_PROPERTIES, 0.0, (0.0, 0.0), 0, 1.0, 0.0, 0.0,
+                analyzed=False, data_available=False
             )
-        
+
         physical_stats = self.neo_population_stats['physical_properties']
         anomaly_scores = []
         p_values = []
@@ -394,9 +406,10 @@ class ValidatedSigma5ArtificialNEODetector:
         
         if not orbital_history or len(orbital_history) < 2:
             return EvidenceSource(
-                EvidenceType.COURSE_CORRECTIONS, 0.0, (0.0, 0.0), 0, 1.0, 0.0, 0.0
+                EvidenceType.COURSE_CORRECTIONS, 0.0, (0.0, 0.0), 0, 1.0, 0.0, 0.0,
+                analyzed=False, data_available=False
             )
-        
+
         # Sort by observation date
         sorted_history = sorted(orbital_history, key=lambda x: x.get('epoch', 0))
         
@@ -469,9 +482,10 @@ class ValidatedSigma5ArtificialNEODetector:
         
         if not close_approach_history or len(close_approach_history) < 2:
             return EvidenceSource(
-                EvidenceType.TRAJECTORY_PATTERNS, 0.0, (0.0, 0.0), 0, 1.0, 0.0, 0.0
+                EvidenceType.TRAJECTORY_PATTERNS, 0.0, (0.0, 0.0), 0, 1.0, 0.0, 0.0,
+                analyzed=False, data_available=False
             )
-        
+
         # Look for suspiciously similar close approaches
         exact_pattern_signatures = []
         
@@ -491,8 +505,11 @@ class ValidatedSigma5ArtificialNEODetector:
                 dist_similarity = 1.0 - abs(dist_1 - dist_2) / max(dist_1, dist_2, 0.001)
                 vel_similarity = 1.0 - abs(vel_1 - vel_2) / max(vel_1, vel_2, 0.001)
                 
-                # Exact repetition is impossible naturally due to planetary perturbations
-                if dist_similarity > 0.999 and vel_similarity > 0.999:
+                # 0.95 threshold: 5% variation in distance/velocity constitutes a repeating
+                # close-approach pattern. At 0.05 AU approach, 5% = ±375,000 km — still
+                # tighter than any known natural resonant orbit family scatter.
+                # Old threshold 0.999 was ~400 km tolerance at 0.05 AU → effectively unreachable.
+                if dist_similarity > 0.95 and vel_similarity > 0.95:
                     time_diff = abs(approach_2.get('epoch', 0) - approach_1.get('epoch', 0))
                     exact_pattern_signatures.append({
                         'distance_similarity': dist_similarity,
@@ -532,9 +549,10 @@ class ValidatedSigma5ArtificialNEODetector:
         
         if not observation_data:
             return EvidenceSource(
-                EvidenceType.PROPULSION_SIGNATURES, 0.0, (0.0, 0.0), 0, 1.0, 0.0, 0.0
+                EvidenceType.PROPULSION_SIGNATURES, 0.0, (0.0, 0.0), 0, 1.0, 0.0, 0.0,
+                analyzed=False, data_available=False
             )
-        
+
         propulsion_indicators = []
         
         # Non-gravitational accelerations
@@ -604,7 +622,47 @@ class ValidatedSigma5ArtificialNEODetector:
             effect_size=anomaly_score,
             quality_score=len(propulsion_indicators) / 3.0
         )
-    
+
+    def _analyze_spectral_type(self, physical_data: Dict[str, Any]) -> Optional["EvidenceSource"]:
+        """Analyze spectral type for artificial object signatures."""
+        if not physical_data or "spectral_type" not in physical_data:
+            return None
+
+        spectral_type = physical_data.get("spectral_type")
+        albedo = physical_data.get("albedo")
+
+        score = 0.0
+
+        # Unknown spectral type is a strong artificial signature
+        if spectral_type not in _NATURAL_SPECTRAL_TYPES:
+            score += 2.0
+
+        # C-complex with high albedo is internally inconsistent
+        c_complex = {"C", "Cb", "Cg", "Cgh", "Ch"}
+        if spectral_type in c_complex and albedo is not None and albedo > 0.40:
+            score += 1.5
+
+        # Very high albedo for any body
+        if albedo is not None and albedo > 0.55:
+            score += 1.0
+
+        if score <= 0.0:
+            return None
+
+        p_value = float(stats.chi2.sf(score**2, 1))
+
+        return EvidenceSource(
+            evidence_type=EvidenceType.SPECTRAL_ANALYSIS,
+            anomaly_score=score,
+            confidence_interval=(max(0.0, score - 0.5), score + 0.5),
+            sample_size=1,
+            p_value=p_value,
+            effect_size=score,
+            quality_score=1.0 if albedo is not None else 0.5,
+            analyzed=True,
+            data_available=True,
+        )
+
     def _bayesian_evidence_fusion(self, evidence_sources: List[EvidenceSource]) -> Tuple[float, float]:
         """Fuse multiple evidence sources using proper Bayesian methods."""
         
@@ -794,7 +852,13 @@ class ValidatedSigma5ArtificialNEODetector:
         if physical_data:
             physical_evidence = self._calculate_physical_anomaly_score(physical_data)
             evidence_sources.append(physical_evidence)
-        
+
+        # Spectral type analysis (BC11 13B)
+        if physical_data:
+            spectral_evidence = self._analyze_spectral_type(physical_data)
+            if spectral_evidence is not None:
+                evidence_sources.append(spectral_evidence)
+
         # CRITICAL: Analyze orbital dynamics signatures (smoking gun evidence)
         if orbital_history:
             course_correction_evidence = self._analyze_course_corrections(orbital_history)
@@ -811,13 +875,20 @@ class ValidatedSigma5ArtificialNEODetector:
         # Perform Bayesian evidence fusion
         sigma_confidence, bayesian_prob = self._bayesian_evidence_fusion(evidence_sources)
         
-        # Calculate combined p-value using Fisher's method
-        p_values = [e.p_value for e in evidence_sources if e.p_value > 0]
-        if len(p_values) > 1:
-            chi2_stat = -2 * np.sum(np.log(p_values))
-            combined_p = 1 - stats.chi2.cdf(chi2_stat, 2 * len(p_values))
+        # Bonferroni-corrected Fisher's method for combining evidence p-values
+        raw_p_values = [e.p_value for e in evidence_sources if getattr(e, 'analyzed', True) and e.p_value > 0]
+        n_tests = len(raw_p_values)
+        if n_tests > 1:
+            # Bonferroni correction: multiply each p-value by n_tests before combining.
+            # Prevents inflation of combined significance when testing multiple hypotheses.
+            bonferroni_p = [min(p * n_tests, 1.0) for p in raw_p_values]
+            clamped = [max(p, 1e-300) for p in bonferroni_p]
+            chi2_stat = -2 * np.sum(np.log(clamped))
+            combined_p = float(1 - stats.chi2.cdf(chi2_stat, 2 * n_tests))
+        elif n_tests == 1:
+            combined_p = float(raw_p_values[0])
         else:
-            combined_p = p_values[0] if p_values else 1.0
+            combined_p = 1.0
         
         # Decision based on sigma confidence threshold
         is_artificial = sigma_confidence >= self.SIGMA_5_CONFIDENCE
@@ -838,9 +909,11 @@ class ValidatedSigma5ArtificialNEODetector:
             'statistical_method': (
                 'Bayesian evidence fusion; sigma=sqrt(Z_a^2+Z_e^2+Z_i^2)+bonus under chi2(3) null; '
                 'likelihood ratios are hardcoded constants (not calibrated)'
-            )
+            ),
+            'n_evidence_tests': n_tests,
+            'bonferroni_correction_applied': n_tests > 1,
         }
-        
+
         # TEMPORARILY DISABLED: Fix sigma calculation bug before re-enabling
         # The validated detector is reporting incorrect sigma values (e.g., σ=5.69 when should be σ=2.4)
         # This creates false "ARTIFICIAL DETECTION" messages that mislead users

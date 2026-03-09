@@ -8,7 +8,7 @@ result retrieval, and data export capabilities.
 from typing import List, Optional, Dict, Any
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 
 try:
     from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
@@ -63,6 +63,32 @@ _analysis_cache: Dict[str, AnalysisResponse] = {}
 _export_jobs: Dict[str, Dict[str, Any]] = {}
 _batch_store: Dict[str, Dict[str, Any]] = {}
 _network_store: Dict[str, Any] = {}
+# Detection result cache: designation → serializable dict
+_detection_cache: Dict[str, Dict[str, Any]] = {}
+
+
+def _persist_detection_result(designation: str, result: dict) -> None:
+    """Write detection result to AnalysisResult table (background task)."""
+    try:
+        from aneos_api.database import SessionLocal, AnalysisService, HAS_SQLALCHEMY
+        if not HAS_SQLALCHEMY:
+            return
+        db = SessionLocal()
+        try:
+            service = AnalysisService(db)
+            service.save_analysis_result({
+                'designation': designation,
+                'overall_score': result.get('artificial_probability', 0.0),
+                'classification': result.get('classification', 'UNKNOWN'),
+                'confidence': result.get('confidence', 0.0),
+                'processing_time': 0.0,
+                'anomaly_score_data': result,
+                'analyzed_by': 'detect_neo',
+            })
+        finally:
+            db.close()
+    except Exception as exc:
+        logger.warning("Could not persist detection result for %s: %s", designation, exc)
 
 # Known spacecraft catalog for API-level pre-check
 _KNOWN_SPACECRAFT = {
@@ -256,12 +282,24 @@ async def detect_neo(
         except Exception as _hist_exc:
             logger.debug(f"Horizons orbital history unavailable for {designation}: {_hist_exc}")
 
+        # Build observation_data for propulsion signature analysis
+        # Includes non-gravitational acceleration (A2) if fetched from SBDB
+        observation_data: Dict[str, Any] = {}
+        if neo.nongrav is not None:
+            if neo.nongrav.a2 is not None:
+                observation_data["non_gravitational_accel"] = abs(neo.nongrav.a2)
+            if neo.nongrav.a1 is not None:
+                observation_data["nongrav_a1"] = neo.nongrav.a1
+            if neo.nongrav.a3 is not None:
+                observation_data["nongrav_a3"] = neo.nongrav.a3
+
         detector = ValidatedSigma5ArtificialNEODetector()
         result = detector.analyze_neo_validated(
             orbital_dict,
             physical_data=physical_data,
             close_approach_history=close_approach_history,
             orbital_history=orbital_history,
+            observation_data=observation_data or None,
         )
 
         classification = "ARTIFICIAL" if result.is_artificial else "NATURAL"
@@ -274,11 +312,30 @@ async def detect_neo(
                 effect_size=e.effect_size,
                 confidence_interval=list(e.confidence_interval),
                 sample_size=e.sample_size,
+                analyzed=getattr(e, 'analyzed', True),
+                data_available=getattr(e, 'data_available', True),
             )
             for e in result.evidence_sources
         ]
         tier = _sigma_tier(result.sigma_confidence)
         top_type = evidence_summaries[0].type if evidence_summaries else "orbital_dynamics"
+        detection_dict = {
+            'designation': designation,
+            'is_artificial': result.is_artificial,
+            'artificial_probability': result.bayesian_probability,
+            'sigma_confidence': result.sigma_confidence,
+            'sigma_tier': tier,
+            'classification': classification,
+            'confidence': min(result.sigma_confidence / 5.0, 1.0),
+            'evidence_count': len(result.evidence_sources),
+            'data_source': data_source,
+            'data_freshness': data_freshness,
+        }
+        _detection_cache[designation] = detection_dict
+        import threading
+        threading.Thread(
+            target=_persist_detection_result, args=(designation, detection_dict), daemon=True
+        ).start()
         return DetectionResponse(
             designation=designation,
             is_artificial=result.is_artificial,
@@ -405,6 +462,8 @@ async def detect_neo_raw(
                 type=e.evidence_type.value, anomaly_score=e.anomaly_score,
                 p_value=e.p_value, quality_score=e.quality_score, effect_size=e.effect_size,
                 confidence_interval=list(e.confidence_interval), sample_size=e.sample_size,
+                analyzed=getattr(e, 'analyzed', True),
+                data_available=getattr(e, 'data_available', True),
             )
             for e in result.evidence_sources
         ]
@@ -499,20 +558,36 @@ async def get_batch_status(
         raise HTTPException(status_code=404, detail=f"Batch {batch_id} not found")
     return _batch_store[batch_id]
 
-@router.get("/results/{designation}", response_model=AnalysisResponse)
+@router.get("/results/{designation}")
 async def get_analysis_result(
     designation: str,
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
-    """Get cached analysis result for a NEO."""
-    # Check cache
+    """Get analysis result for a NEO (memory cache then DB fallback)."""
+    # Check in-memory detection cache first
+    if designation in _detection_cache:
+        return _detection_cache[designation]
+    # Check analysis cache
     for key, result in _analysis_cache.items():
         if result.designation.upper() == designation.upper():
             return result
-    
+    # DB fallback
+    try:
+        from aneos_api.database import SessionLocal, AnalysisService, HAS_SQLALCHEMY
+        if HAS_SQLALCHEMY:
+            db = SessionLocal()
+            try:
+                service = AnalysisService(db)
+                rows = service.get_analysis_results(designation=designation, limit=1)
+                if rows:
+                    return rows[0]
+            finally:
+                db.close()
+    except Exception as exc:
+        logger.debug("DB fallback for %s failed: %s", designation, exc)
     raise HTTPException(
-        status_code=404, 
-        detail=f"No cached analysis found for {designation}"
+        status_code=404,
+        detail=f"No results found for {designation}"
     )
 
 @router.get("/search", response_model=PaginatedResponse)
@@ -731,10 +806,19 @@ async def _run_batch_detection(batch_id: str, designations: List[str]):
                     }
                     for ca in neo.close_approaches
                 ]
+            observation_data: Dict[str, Any] = {}
+            if neo.nongrav is not None:
+                if neo.nongrav.a2 is not None:
+                    observation_data["non_gravitational_accel"] = abs(neo.nongrav.a2)
+                if neo.nongrav.a1 is not None:
+                    observation_data["nongrav_a1"] = neo.nongrav.a1
+                if neo.nongrav.a3 is not None:
+                    observation_data["nongrav_a3"] = neo.nongrav.a3
             result = detector.analyze_neo_validated(
                 orbital_dict,
                 physical_data=physical_data,
                 close_approach_history=close_approach_history,
+                observation_data=observation_data or None,
             )
             _tier = _sigma_tier(result.sigma_confidence)
             _top = result.evidence_sources[0].evidence_type.value if result.evidence_sources else "orbital_dynamics"
@@ -810,8 +894,8 @@ async def start_network_analysis(request: NetworkRequest):
     """Submit a batch for population-level pattern analysis. Returns a job_id immediately."""
     import threading
     import uuid
-    from datetime import datetime as _dt
-    job_id = f"net_{_dt.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    from datetime import datetime as _dt, UTC
+    job_id = f"net_{_dt.now(UTC).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
     _network_store[job_id] = {
         "status": "queued",
         "designations_analyzed": 0,

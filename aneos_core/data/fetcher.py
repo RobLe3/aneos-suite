@@ -236,7 +236,7 @@ class DataFetcher:
             return result
 
         date_min = (
-            _dt.utcnow() - timedelta(days=years_back * 365)
+            _dt.now(timezone.utc) - timedelta(days=years_back * 365)
         ).strftime("%Y-%m-%d")
         approaches = self._fetch_close_approaches(designation, date_min=date_min)
 
@@ -328,6 +328,23 @@ class DataFetcher:
                     sources_used=[source_name],
                 )
                 neo_data.fetched_at = datetime.now(timezone.utc)
+
+                # Wire observation window from SBDB first_obs / last_obs fields
+                for date_key, attr in (
+                    ("first_observation_date", "first_observation"),
+                    ("last_observation_date",  "last_observation"),
+                ):
+                    raw = orbital_elements_data.get(date_key)
+                    if raw:
+                        from datetime import timezone as _tz
+                        for fmt in ("%Y-%b-%d", "%Y-%m-%d"):
+                            try:
+                                parsed = datetime.strptime(raw, fmt).replace(tzinfo=_tz.utc)
+                                setattr(neo_data, attr, parsed)
+                                break
+                            except ValueError:
+                                pass
+
                 return neo_data
 
         except Exception as e:

@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional, List, Set
 import asyncio
 import aiohttp
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import logging
 from dataclasses import dataclass, field
 
@@ -83,7 +83,7 @@ class DataSourceBase(ABC):
         self._status = DataSourceStatus(
             name=name,
             available=True,
-            last_check=datetime.utcnow()
+            last_check=datetime.now(UTC)
         )
         
         # Session for HTTP requests
@@ -186,7 +186,7 @@ class DataSourceBase(ABC):
             )
         
         # Fetch from source
-        start_time = datetime.utcnow()
+        start_time = datetime.now(UTC)
         
         try:
             result = await self.fetch_orbital_elements(designation)
@@ -200,7 +200,7 @@ class DataSourceBase(ABC):
                 await self._store_in_cache(designation, result.data)
             
             # Update response time
-            response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
             result.response_time_ms = response_time
             self._status.response_time_ms = response_time
             
@@ -275,13 +275,13 @@ class HTTPDataSource(DataSourceBase):
                     is_healthy = response.status in [200, 400]  # 400 expected for some APIs
 
                     self._status.available = is_healthy
-                    self._status.last_check = datetime.utcnow()
+                    self._status.last_check = datetime.now(UTC)
                     self._status.error_message = None if is_healthy else f"HTTP {response.status}"
                     return is_healthy
 
         except Exception as e:
             self._status.available = False
-            self._status.last_check = datetime.utcnow()
+            self._status.last_check = datetime.now(UTC)
             self._status.error_message = str(e)
             logger.error(f"Health check failed for {self.name}: {e}")
             return False

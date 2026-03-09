@@ -8,7 +8,7 @@ model training, and system maintenance operations.
 from typing import List, Optional, Dict, Any
 import logging
 import asyncio
-from datetime import datetime
+from datetime import datetime, UTC
 
 try:
     from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
@@ -24,6 +24,8 @@ except ImportError:
     TrainingPipeline = None
     TrainingConfig = None
     get_config = lambda: {'api': {}, 'analysis': {}, 'ml': {}, 'monitoring': {}}
+import json
+from pathlib import Path
 from ..models import (
     TrainingRequest, TrainingResponse, CreateUserRequest, UserResponse,
     ConfigResponse, SystemStatusResponse
@@ -31,6 +33,10 @@ from ..models import (
 # Import moved to avoid circular imports
 # from ..app import get_aneos_app
 from ..auth import get_current_user, require_admin
+from ..database import User as DBUser, get_database, HAS_SQLALCHEMY
+
+CONFIG_FILE = Path("aneos_config_override.json")
+LOG_PATH = Path("logs/aneos.log")
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +82,7 @@ async def get_system_status(
         # Calculate uptime
         uptime_seconds = 0
         if aneos_app.startup_time:
-            uptime_seconds = (datetime.now() - aneos_app.startup_time).total_seconds()
+            uptime_seconds = (datetime.now(UTC) - aneos_app.startup_time).total_seconds()
         
         return SystemStatusResponse(
             status=health_status['status'],
@@ -95,41 +101,21 @@ async def get_system_status(
         logger.error(f"Failed to get system status: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get system status: {str(e)}")
 
-@router.get("/config", response_model=ConfigResponse)
+@router.get("/config")
 async def get_system_config(
     current_user: Dict = Depends(require_admin)
 ):
-    """Get current system configuration."""
+    """Get current system configuration (includes persisted overrides)."""
     try:
+        if CONFIG_FILE.exists():
+            return json.loads(CONFIG_FILE.read_text())
         config = get_config()
-        
-        return ConfigResponse(
-            api_config={
-                'max_concurrent_requests': config.get('api', {}).get('max_concurrent_requests', 100),
-                'request_timeout': config.get('api', {}).get('request_timeout', 300),
-                'rate_limit': config.get('api', {}).get('rate_limit', 1000),
-                'cors_origins': config.get('api', {}).get('cors_origins', ['*'])
-            },
-            analysis_config={
-                'max_batch_size': config.get('analysis', {}).get('max_batch_size', 100),
-                'cache_ttl': config.get('analysis', {}).get('cache_ttl', 3600),
-                'timeout': config.get('analysis', {}).get('timeout', 60),
-                'retry_attempts': config.get('analysis', {}).get('retry_attempts', 3)
-            },
-            ml_config={
-                'model_cache_size': config.get('ml', {}).get('model_cache_size', 10),
-                'feature_cache_ttl': config.get('ml', {}).get('feature_cache_ttl', 1800),
-                'ensemble_threshold': config.get('ml', {}).get('ensemble_threshold', 0.7),
-                'training_data_size': config.get('ml', {}).get('training_data_size', 1000)
-            },
-            monitoring_config={
-                'metrics_interval': config.get('monitoring', {}).get('metrics_interval', 60),
-                'alert_cooldown': config.get('monitoring', {}).get('alert_cooldown', 300),
-                'log_level': config.get('monitoring', {}).get('log_level', 'INFO'),
-                'retention_days': config.get('monitoring', {}).get('retention_days', 30)
-            }
-        )
-        
+        return {
+            'api': config.get('api', {}),
+            'analysis': config.get('analysis', {}),
+            'ml': config.get('ml', {}),
+            'monitoring': config.get('monitoring', {}),
+        }
     except Exception as e:
         logger.error(f"Failed to get system config: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get system config: {str(e)}")
@@ -139,27 +125,16 @@ async def update_system_config(
     config_updates: Dict[str, Any],
     current_user: Dict = Depends(require_admin)
 ):
-    """Update system configuration (requires restart for some changes)."""
+    """Update and persist system configuration."""
     try:
-        # Validate configuration updates
-        valid_sections = ['api', 'analysis', 'ml', 'monitoring']
-        
-        for section in config_updates:
-            if section not in valid_sections:
-                raise HTTPException(status_code=400, detail=f"Invalid config section: {section}")
-        
-        # Apply configuration updates (mock implementation)
-        # In production, this would update the actual configuration
-        logger.info(f"Configuration updated by {current_user['username']}: {config_updates}")
-        
+        CONFIG_FILE.write_text(json.dumps(config_updates, indent=2))
+        logger.info(f"Configuration persisted by {current_user['username']}: {list(config_updates.keys())}")
         return {
-            'status': 'success',
+            'status': 'saved',
             'updated_sections': list(config_updates.keys()),
             'updated_by': current_user['username'],
-            'updated_at': datetime.now().isoformat(),
-            'restart_required': True  # Some config changes require restart
+            'updated_at': datetime.now(UTC).isoformat(),
         }
-        
     except Exception as e:
         logger.error(f"Failed to update config: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to update config: {str(e)}")
@@ -288,23 +263,37 @@ async def create_user(
 ):
     """Create a new user account."""
     try:
-        # Mock user creation (would integrate with actual auth system)
-        user_id = f"user_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        
-        new_user = UserResponse(
+        user_id = f"user_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
+        if HAS_SQLALCHEMY:
+            from ..database import SessionLocal
+            db = SessionLocal()
+            try:
+                db_user = DBUser(
+                    user_id=user_id,
+                    username=request.username,
+                    email=request.email,
+                    role=request.role,
+                )
+                db.add(db_user)
+                db.commit()
+                db.refresh(db_user)
+                user_id = db_user.user_id or user_id
+                created_at = db_user.created_at or datetime.now(UTC)
+            finally:
+                db.close()
+        else:
+            created_at = datetime.now(UTC)
+
+        logger.info(f"User {request.username} created by {current_user['username']}")
+        return UserResponse(
             user_id=user_id,
             username=request.username,
             email=request.email,
             role=request.role,
-            created_at=datetime.now(),
+            created_at=created_at,
             last_login=None,
-            is_active=True
+            is_active=True,
         )
-        
-        logger.info(f"User {request.username} created by {current_user['username']}")
-        
-        return new_user
-        
     except Exception as e:
         logger.error(f"Failed to create user: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
@@ -314,27 +303,26 @@ async def list_users(
     current_user: Dict = Depends(require_admin)
 ):
     """List all user accounts."""
-    # Mock user list (would query actual user database)
-    return [
-        UserResponse(
-            user_id="admin_001",
-            username="admin",
-            email="admin@aneos.local",
-            role="admin",
-            created_at=datetime.now(),
-            last_login=datetime.now(),
-            is_active=True
-        ),
-        UserResponse(
-            user_id="analyst_001",
-            username="analyst",
-            email="analyst@aneos.local",
-            role="analyst",
-            created_at=datetime.now(),
-            last_login=datetime.now(),
-            is_active=True
-        )
-    ]
+    if HAS_SQLALCHEMY:
+        from ..database import SessionLocal
+        db = SessionLocal()
+        try:
+            users = db.query(DBUser).all()
+            return [
+                UserResponse(
+                    user_id=u.user_id or str(u.id),
+                    username=u.username,
+                    email=u.email or "",
+                    role=u.role or "viewer",
+                    created_at=u.created_at or datetime.now(UTC),
+                    last_login=u.last_login,
+                    is_active=u.is_active if u.is_active is not None else True,
+                )
+                for u in users
+            ]
+        finally:
+            db.close()
+    return []
 
 @router.put("/users/{user_id}", response_model=UserResponse)
 async def update_user(
@@ -393,11 +381,13 @@ async def clear_system_cache(
         
         # Clear analysis cache
         if aneos_app.analysis_pipeline:
-            await aneos_app.analysis_pipeline.clear_cache()
-        
+            if hasattr(aneos_app.analysis_pipeline, 'cache_manager'):
+                aneos_app.analysis_pipeline.cache_manager.clear()
+
         # Clear ML prediction cache
-        if aneos_app.ml_predictor:
-            await aneos_app.ml_predictor.clear_cache()
+        if hasattr(aneos_app, 'ml_predictor') and aneos_app.ml_predictor:
+            if hasattr(aneos_app.ml_predictor, 'clear_cache'):
+                aneos_app.ml_predictor.clear_cache()
         
         logger.info(f"System cache cleared by {current_user['username']}")
         
@@ -444,23 +434,21 @@ async def get_system_logs(
 ):
     """Get recent system logs."""
     try:
-        # Mock log retrieval (would read from actual log files)
-        logs = [
-            f"2025-08-04 10:00:00 INFO: System started successfully",
-            f"2025-08-04 10:01:00 INFO: Analysis pipeline initialized",
-            f"2025-08-04 10:02:00 INFO: ML predictor ready",
-            f"2025-08-04 10:03:00 INFO: API server listening on port 8000",
-            f"2025-08-04 10:04:00 DEBUG: Cache hit rate: 85%"
-        ]
-        
+        if LOG_PATH.exists():
+            content = LOG_PATH.read_text(errors='replace').splitlines()
+            log_lines = content[-lines:]
+            total = len(content)
+        else:
+            log_lines = []
+            total = 0
         return {
-            'logs': logs[-lines:],
-            'total_lines': len(logs),
+            'lines': log_lines,
+            'total_lines': total,
             'level_filter': level,
             'retrieved_by': current_user['username'],
-            'retrieved_at': datetime.now().isoformat()
+            'retrieved_at': datetime.now(UTC).isoformat(),
+            'note': None if LOG_PATH.exists() else f"No log file at {LOG_PATH}",
         }
-        
     except Exception as e:
         logger.error(f"Failed to get system logs: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get system logs: {str(e)}")

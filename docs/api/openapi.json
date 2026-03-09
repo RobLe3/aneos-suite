@@ -797,6 +797,11 @@ Some IP addresses of users launching heavy query showers have temporarily been d
       },
       "EvidenceSummary": {
         "properties": {
+          "analyzed": {
+            "default": true,
+            "title": "Analyzed",
+            "type": "boolean"
+          },
           "anomaly_score": {
             "title": "Anomaly Score",
             "type": "number"
@@ -808,6 +813,11 @@ Some IP addresses of users launching heavy query showers have temporarily been d
             },
             "title": "Confidence Interval",
             "type": "array"
+          },
+          "data_available": {
+            "default": true,
+            "title": "Data Available",
+            "type": "boolean"
           },
           "effect_size": {
             "title": "Effect Size",
@@ -1888,14 +1898,14 @@ Some IP addresses of users launching heavy query showers have temporarily been d
             "type": "integer"
           },
           "total_pages": {
+            "default": 0,
             "title": "Total Pages",
             "type": "integer"
           }
         },
         "required": [
           "items",
-          "total",
-          "total_pages"
+          "total"
         ],
         "title": "PaginatedResponse",
         "type": "object"

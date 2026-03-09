@@ -7,7 +7,7 @@ and performance tracking capabilities.
 
 from typing import List, Optional, Dict, Any
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 try:
     from fastapi import APIRouter, HTTPException, Depends, Query
@@ -349,6 +349,8 @@ async def get_dashboard_data(
 ):
     """Get comprehensive dashboard data for monitoring interface."""
     try:
+        from ..app import get_aneos_app
+        aneos_app = get_aneos_app()
         if not metrics_collector:
             raise HTTPException(status_code=503, detail="Metrics collector not available")
         # Get current metrics
@@ -364,9 +366,9 @@ async def get_dashboard_data(
         return {
             'status_overview': {
                 'overall_health': 'healthy' if len(active_alerts) == 0 else 'warning' if len(active_alerts) < 3 else 'critical',
-                'services_online': 6,  # Mock - would be dynamic
+                'services_online': sum(1 for v in aneos_app.get_health_status()['services'].values() if v),
                 'active_alerts': len(active_alerts),
-                'uptime_hours': 24.5  # Mock - would be calculated
+                'uptime_hours': round((datetime.now(UTC) - aneos_app.startup_time).total_seconds() / 3600, 1) if aneos_app.startup_time else 0.0
             },
             'key_metrics': {
                 'cpu_usage': system_metrics.cpu_percent if system_metrics else 0,

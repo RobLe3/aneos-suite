@@ -21,7 +21,7 @@ All developers, scientists, and stakeholders must use these terms consistently.
 | **SWARM** | A named, specialized analytical agent responsible for one physical domain of evidence |
 | **ATLAS** | Advanced automated first-stage screening system (used in `advanced_scoring.py`) |
 | **Candidate** | An NEO that has passed at least one stage of filtering and is under active investigation |
-| **Classification** | One of: `natural | suspicious | highly_suspicious | artificial` |
+| **Classification** | One of: `INCONCLUSIVE (σ<2) | EDGE CASE (σ≥2) | SUSPICIOUS (σ≥3) | ARTIFICIAL VALIDATED (σ≥5)` — INCONCLUSIVE replaces "NATURAL"; σ<2 is not evidence of natural origin |
 | **Calibrated probability** | Bayesian posterior P(artificial | evidence) using realistic 0.1% prior |
 | **Ground truth** | A verified dataset of objects with known true labels (artificial vs natural) |
 | **FPR** | False Positive Rate — probability of classifying a natural object as artificial |
@@ -613,9 +613,10 @@ scenarios.
 ## Bounded Context 7: Reporting & Visualization
 
 **Purpose**: Transform detection and validation results into publication-ready
-reports, dashboards, and exportable data packages.
+reports, dashboards, and exportable data packages. Includes the interactive
+terminal menu as the primary presentation layer for human users.
 
-**Code**: `aneos_core/reporting/`
+**Code**: `aneos_core/reporting/`, `aneos_menu_v2.py` (primary UI), `aneos_menu.py` (legacy UI)
 
 ---
 
@@ -627,6 +628,8 @@ scores, methodology references, and uncertainty bounds.
 
 | Entity | Code | Output Formats |
 |--------|------|---------------|
+| `ANEOSMenuV2` | `aneos_menu_v2.py` | Rich terminal, 6-option lean menu (primary) |
+| `ANEOSMenu` | `aneos_menu.py` | Rich terminal, 121-option full menu (legacy) |
 | `ReportGenerator` | `reporting/generators.py` | Rich terminal, structured JSON |
 | `Exporter` | `reporting/exporters.py` | CSV, JSON, FITS |
 | `Visualizer` | `reporting/visualizers.py` | matplotlib, plotly charts |

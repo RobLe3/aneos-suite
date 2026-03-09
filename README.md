@@ -1,6 +1,6 @@
 # aNEOS — Advanced Near Earth Object Suite
 
-**v1.0.0 — Research Platform (Phase 10 complete, 2026-03-08)**
+**v1.0.0 — Research Platform (Phase 18 + Kardashev ML complete, 2026-03-09)**
 
 aNEOS is an open-source Python research platform with two independent missions:
 
@@ -47,10 +47,16 @@ object onto a future impact trajectory.
 **How deep does it go?**
 
 - Data is fetched live from four NASA/ESA sources (JPL SBDB, JPL Horizons, NEODyS, MPC).
-- The detection framework has been validated against 3 confirmed artificial objects and 20+
-  natural NEOs from the JPL catalogue: it correctly identifies all of them.
+- The detection framework has been validated against 4 confirmed artificial objects (2020 SO,
+  J002E3, WT1190F, Tesla Roadster-type) and 6+ natural NEOs: the ML layer scores all
+  confirmed artificials > 0.94 P(artificial) and all confirmed naturals < 0.46.
+- A **Kardashev synthetic training corpus** generates 2 100+ labelled artificial signatures
+  across 14 scenarios from K0.5 (rocket stages, ion probes) to K2.0 (megastructure fragments),
+  training a RandomForest classifier that achieves AUC=1.000 on the ground-truth test set.
+- The primary discriminating feature is **density** (hollow vs rocky), followed by albedo
+  and non-gravitational acceleration magnitude.
 - A full REST API lets other software query aNEOS programmatically.
-- 59 automated tests verify the system works correctly end to end.
+- 235 automated tests verify the system works correctly end to end.
 
 **What it is not:**
 

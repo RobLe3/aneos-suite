@@ -415,7 +415,7 @@ async def initialize_pipeline_integration() -> bool:
 
 async def run_200_year_poll() -> Dict[str, Any]:
     """Run 200-year historical poll - main function for menu."""
-    return await pipeline_integration.run_historical_polling_workflow(200)
+    return await pipeline_integration.run_historical_polling_workflow(200, interactive=False)
 
 async def get_pipeline_status() -> Dict[str, Any]:
     """Get pipeline status - utility function for menu."""

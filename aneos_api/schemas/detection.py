@@ -27,6 +27,8 @@ class EvidenceSummary(BaseModel):
     effect_size: float
     confidence_interval: List[float] = []   # [lower_95, upper_95]
     sample_size: int = 0
+    analyzed: bool = True
+    data_available: bool = True
 
 
 class DetectionResponse(BaseModel):

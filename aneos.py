@@ -19,18 +19,25 @@ def main():
         print("Current directory should contain 'aneos_core' folder")
         sys.exit(1)
     
-    # If no arguments, start interactive menu
-    if len(sys.argv) == 1:
-        print("🚀 Starting aNEOS Interactive Menu...")
+    # --legacy-menu flag anywhere → use the original 121-option menu
+    if "--legacy-menu" in sys.argv:
+        sys.argv.remove("--legacy-menu")
+        print("🚀 Starting aNEOS Legacy Menu (full 121-option interface)…")
         subprocess.run([sys.executable, "aneos_menu.py"])
         return
-    
+
+    # If no arguments, start the new v2 menu
+    if len(sys.argv) == 1:
+        print("🚀 Starting aNEOS Menu…")
+        subprocess.run([sys.executable, "aneos_menu_v2.py"])
+        return
+
     # Parse command-line arguments for direct execution
     command = sys.argv[1].lower()
-    
+
     if command in ['menu', 'interactive', 'm']:
-        print("🚀 Starting aNEOS Interactive Menu...")
-        subprocess.run([sys.executable, "aneos_menu.py"])
+        print("🚀 Starting aNEOS Menu…")
+        subprocess.run([sys.executable, "aneos_menu_v2.py"])
         
     elif command in ['api', 'server', 'start']:
         print("🚀 Starting aNEOS API Server...")
@@ -469,8 +476,9 @@ def print_help():
 Usage: python aneos.py [command] [options]
 
 Commands:
-  (no command)    Start interactive menu system
-  menu, m         Start interactive menu system
+  (no command)    Start aNEOS menu (v2 — 6-option lean interface)
+  menu, m         Start aNEOS menu (v2)
+  --legacy-menu   Start original 121-option menu (append to any command)
   
   install, setup  Install/setup aNEOS system
     --full        Full installation with all components

@@ -10,7 +10,7 @@ from datetime import datetime
 from enum import Enum
 
 try:
-    from pydantic import BaseModel, Field, validator
+    from pydantic import BaseModel, Field, field_validator, model_validator
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
@@ -39,13 +39,12 @@ class PaginatedResponse(BaseModel):
     total: int
     page: int = 1
     page_size: int = 50
-    total_pages: int
-    
-    @validator('total_pages', always=True)
-    def calculate_total_pages(cls, v, values):
-        total = values.get('total', 0)
-        page_size = values.get('page_size', 50)
-        return max(1, (total + page_size - 1) // page_size)
+    total_pages: int = 0
+
+    @model_validator(mode='after')
+    def calculate_total_pages(self) -> 'PaginatedResponse':
+        self.total_pages = max(1, (self.total + self.page_size - 1) // self.page_size)
+        return self
 
 # Analysis Models
 class AnalysisRequest(BaseModel):
@@ -57,7 +56,7 @@ class AnalysisRequest(BaseModel):
 
 class BatchAnalysisRequest(BaseModel):
     """Request model for batch NEO analysis."""
-    designations: List[str] = Field(..., min_items=1, max_items=100, description="List of NEO designations")
+    designations: List[str] = Field(..., min_length=1, max_length=100, description="List of NEO designations")
     force_refresh: bool = Field(False, description="Force refresh of cached data")
     include_raw_data: bool = Field(False, description="Include raw NEO data in responses")
     progress_webhook: Optional[str] = Field(None, description="Webhook URL for progress updates")
@@ -119,7 +118,7 @@ class PredictionRequest(BaseModel):
 
 class BatchPredictionRequest(BaseModel):
     """Request model for batch ML prediction."""
-    designations: List[str] = Field(..., min_items=1, max_items=50)
+    designations: List[str] = Field(..., min_length=1, max_length=50)
     use_cache: bool = Field(True, description="Use cached predictions if available")
     model_id: Optional[str] = Field(None, description="Specific model ID to use")
 
@@ -143,7 +142,7 @@ class PredictionResponse(APIResponse):
 # Training Models
 class TrainingRequest(BaseModel):
     """Request model for model training."""
-    designations: List[str] = Field(..., min_items=50, description="NEO designations for training")
+    designations: List[str] = Field(..., min_length=50, description="NEO designations for training")
     model_types: List[str] = Field(["isolation_forest"], description="Model types to train")
     use_ensemble: bool = Field(True, description="Create ensemble model")
     hyperparameter_optimization: bool = Field(True, description="Optimize hyperparameters")
@@ -312,22 +311,6 @@ class ExportResponse(APIResponse):
     download_url: Optional[str] = None
     file_size_bytes: Optional[int] = None
     expires_at: Optional[datetime] = None
-
-# Validation helpers
-if HAS_PYDANTIC:
-    # Add custom validators
-    
-    @validator('designation', pre=True)
-    def validate_designation(cls, v):
-        """Validate NEO designation format."""
-        if not isinstance(v, str):
-            raise ValueError('Designation must be a string')
-        
-        # Basic validation - could be enhanced with regex
-        if len(v.strip()) < 3:
-            raise ValueError('Designation too short')
-        
-        return v.strip().upper()
 
 # Response model registry for OpenAPI documentation
 RESPONSE_MODELS = {

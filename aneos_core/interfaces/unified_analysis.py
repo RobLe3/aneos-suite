@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, UTC
 
 from .detection import DetectionResult, ArtificialNEODetector
 
@@ -91,7 +91,7 @@ class aNEOSAnalysisResult:
         if self.metadata is None:
             self.metadata = {}
         if self.analysis_timestamp is None:
-            self.analysis_timestamp = datetime.utcnow()
+            self.analysis_timestamp = datetime.now(UTC)
 
 
 class aNEOSAnalysisInterface(ABC):
