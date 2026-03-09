@@ -168,6 +168,8 @@ class AutomaticReviewPipeline:
         self.xviii_swarm_scorer = None
         self.multi_stage_validator = None
         self.enhanced_pipeline = None
+        # Populated by _stage_first_review pre-pass
+        self._designation_frequencies: Dict[str, int] = {}
 
         # Initialize detection manager (auto-selects best available detector)
         self.artificial_neo_detector = DetectionManager(preferred_detector=DetectorType.AUTO)
@@ -383,21 +385,46 @@ class AutomaticReviewPipeline:
         self.logger.info(f"Extracted {len(raw_objects)} raw objects from historical polling")
         return raw_objects
     
+    def _compute_designation_frequencies(self, raw_objects: List[Dict]) -> Dict[str, int]:
+        """Count how many times each designation appears across all chunks.
+
+        A natural NEO in a 200-year window might appear 5-10 times (once per
+        orbital period).  An object appearing dozens of times, or with very
+        short return intervals, deviates from expected gravitational dynamics
+        and is worth escalating regardless of close-approach distance.
+        """
+        from collections import Counter
+        freq: Counter = Counter()
+        for obj in raw_objects:
+            des = obj.get('designation', '')
+            if des:
+                freq[des] += 1
+        self.logger.info(
+            f"Designation frequency pre-pass: {len(freq)} unique objects, "
+            f"max visits={max(freq.values()) if freq else 0}"
+        )
+        return dict(freq)
+
     async def _stage_first_review(self, raw_objects: List[Dict]) -> StageResult:
         """Execute XVIII SWARM first-stage review."""
         start_time = time.time()
         config = self.config.first_stage
-        
+
         try:
             self.logger.info(f"Starting first-stage review of {len(raw_objects)} objects")
-            
+
+            # Pre-pass: count designation frequencies across the full 200-year window.
+            # Objects appearing multiple times get a repeat-visit bonus in scoring,
+            # allowing patterned distant objects to surface even if never close enough
+            # to trigger the distance threshold alone.
+            self._designation_frequencies = self._compute_designation_frequencies(raw_objects)
+
             candidates = []
             processed_count = 0
-            
+
             # Process in batches for efficiency
             batch_size = 100
-            total_batches = (len(raw_objects) + batch_size - 1) // batch_size
-            
+
             # Process in batches (progress handled by parent if enabled)
             for i in range(0, len(raw_objects), batch_size):
                 batch = raw_objects[i:i + batch_size]
@@ -638,47 +665,113 @@ class AutomaticReviewPipeline:
             return {'overall_score': 0.0, 'error': str(e), 'designation': neo_obj.get('designation', 'unknown')}
     
     def _simple_first_stage_scoring(self, neo_obj: Dict) -> Dict:
-        """Simple fallback scoring when XVIII SWARM is not available.
+        """Multi-signal first-stage scorer for CAD and orbital-element data.
 
-        For CAD-sourced objects (miss_distance_au present), uses encounter
-        geometry: exp(-dist/0.02) so objects < 0.05 AU score above the 0.08
-        first-stage threshold. Velocity anomaly adds a small bonus.
-        Falls back to orbital-element heuristics only when CAD fields absent.
+        Three independent anomaly signals are combined additively so that
+        objects at any distance can surface if they show enough anomalous
+        behaviour:
+
+        1. ENCOUNTER GEOMETRY (distance-based)
+           score = exp(-dist / 0.02 AU)
+           Threshold ~0.05 AU → objects < 0.05 AU pass on distance alone.
+
+        2. VELOCITY ANOMALY (distance-independent)
+           Natural NEOs approach at 10–25 km/s; objects significantly below
+           that are anomalous regardless of distance.
+           v < 3 km/s → +0.30   (extreme — co-orbital or station-keeping)
+           v < 5 km/s → +0.15   (very slow — requires explanation)
+           v < 8 km/s → +0.06   (notable)
+
+        3. REPEAT-VISIT ANOMALY (distance-independent)
+           Uses pre-computed _designation_frequencies over the full 200-year
+           window.  An object revisiting far more often than its orbital period
+           predicts, or appearing with very short intervals, deviates from
+           purely gravitational dynamics.
+           N ≥ 20 visits → +0.40
+           N ≥ 10 visits → +0.25
+           N ≥  5 visits → +0.12
+           N ≥  3 visits → +0.06
+
+        Any combination summing ≥ 0.08 passes the first-stage gate.
+        Example: 0.1 AU object, v=4 km/s, 3 visits → 0.007 + 0.15 + 0.06 = 0.217 ✓
         """
         try:
             import math
+            flags = []
+            score = 0.0
+
+            # --- Signal 1: Encounter geometry ---
             dist_au = neo_obj.get('miss_distance_au')
             if dist_au is not None:
-                # Encounter-geometry score; scale 0.02 AU → threshold at ~0.05 AU
-                score = math.exp(-dist_au / 0.02)
-                # Bonus for anomalously slow velocity (< 5 km/s)
-                v_kms = neo_obj.get('relative_velocity_km_s', 15.0)
-                if v_kms < 5.0:
-                    score = min(score + 0.15, 1.0)
+                geo_score = math.exp(-dist_au / 0.02)
+                score += geo_score
+                if geo_score > 0.08:
+                    flags.append('close_approach')
+
+            # --- Signal 2: Velocity anomaly ---
+            v_kms = neo_obj.get('relative_velocity_km_s')
+            if v_kms is not None:
+                if v_kms < 3.0:
+                    score += 0.30
+                    flags.append('extreme_low_velocity')
+                elif v_kms < 5.0:
+                    score += 0.15
+                    flags.append('anomalous_velocity')
+                elif v_kms < 8.0:
+                    score += 0.06
+                    flags.append('notable_velocity')
+
+            # --- Signal 3: Repeat-visit anomaly ---
+            designation = neo_obj.get('designation', '')
+            n_visits = self._designation_frequencies.get(designation, 1)
+            if n_visits >= 20:
+                score += 0.40
+                flags.append(f'repeat_visits_{n_visits}')
+            elif n_visits >= 10:
+                score += 0.25
+                flags.append(f'repeat_visits_{n_visits}')
+            elif n_visits >= 5:
+                score += 0.12
+                flags.append(f'repeat_visits_{n_visits}')
+            elif n_visits >= 3:
+                score += 0.06
+                flags.append(f'repeat_visits_{n_visits}')
+
+            if dist_au is not None or v_kms is not None:
                 return {
-                    'overall_score': score,
-                    'flags': ['encounter_geometry'],
+                    'overall_score': min(score, 1.0),
+                    'flags': flags if flags else ['cad_no_signal'],
                     'confidence': 0.7,
-                    'processing_stage': 'cad_encounter_geometry',
+                    'processing_stage': 'cad_multi_signal',
+                    'signal_breakdown': {
+                        'distance': math.exp(-dist_au / 0.02) if dist_au is not None else 0.0,
+                        'velocity_anomaly': 0.30 if v_kms and v_kms < 3 else (
+                                            0.15 if v_kms and v_kms < 5 else (
+                                            0.06 if v_kms and v_kms < 8 else 0.0)),
+                        'repeat_visits': score - (math.exp(-dist_au / 0.02) if dist_au is not None else 0.0)
+                                         - (0.30 if v_kms and v_kms < 3 else (
+                                            0.15 if v_kms and v_kms < 5 else (
+                                            0.06 if v_kms and v_kms < 8 else 0.0))),
+                        'n_visits': n_visits,
+                    },
                 }
 
-            # Fallback: orbital elements
+            # Fallback: orbital elements only (no CAD data)
             orbital_elements = neo_obj.get('orbital_elements', {})
             eccentricity = orbital_elements.get('eccentricity', 0.0)
             inclination = orbital_elements.get('inclination', 0.0)
-            score = 0.0
+            orb_score = 0.0
             if eccentricity > 0.9:
-                score += 0.5
+                orb_score += 0.5
             elif eccentricity > 0.7:
-                score += 0.3
+                orb_score += 0.3
             if inclination > 150 or (inclination < 30 and inclination != 10.0):
-                # Skip the hardcoded i=10 placeholder to avoid false passes
-                score += 0.3
+                orb_score += 0.3
             return {
-                'overall_score': score,
+                'overall_score': orb_score,
                 'flags': ['orbital_heuristic'],
                 'confidence': 0.4,
-                'processing_stage': 'simple_first_stage',
+                'processing_stage': 'orbital_heuristic',
             }
 
         except Exception:
