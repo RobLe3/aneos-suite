@@ -467,6 +467,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
             if result:
                 self._display_pipeline_result(result)
+                self._store_pipeline_candidates(result)
             else:
                 self.show_info("Pipeline completed but returned no results.")
 
@@ -965,6 +966,47 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
         self.display_table(headers=["Metric", "Value"], rows=rows, title="Pipeline Run Summary")
 
+        # Show the actual candidate designations and their anomaly flags
+        candidates = getattr(pipeline_result, "validated_candidates", None) if pipeline_result else None
+        if candidates:
+            cand_rows = []
+            for c in candidates:
+                desg = c.get("designation", "?")
+                ms = c.get("multi_stage_validation", {})
+                fs = c.get("first_stage_score", {})
+                score = f"{ms.get('validation_score', 0.0):.3f}"
+                method = ms.get("validation_method", "—")
+                flags = fs.get("flag_string", "—")
+                dist = c.get("miss_distance_au")
+                dist_str = f"{dist:.4f} AU" if dist is not None else "—"
+                cand_rows.append([desg, score, flags, dist_str, method])
+            self.display_table(
+                headers=["Designation", "Score", "Flags", "Miss dist", "Method"],
+                rows=cand_rows,
+                title=f"Final Candidates ({len(cand_rows)})",
+            )
+
+    def _store_pipeline_candidates(self, result: dict) -> None:
+        """Store pipeline validated candidates in _detection_results for option 9/13."""
+        import types
+        pipeline_result = result.get("pipeline_result")
+        if pipeline_result is None:
+            return
+        candidates = getattr(pipeline_result, "validated_candidates", None) or []
+        for c in candidates:
+            desg = c.get("designation", "UNKNOWN")
+            ms = c.get("multi_stage_validation", {})
+            proxy = types.SimpleNamespace(
+                sigma_level=ms.get("sigma_level", 0.0),
+                artificial_probability=ms.get("statistical_certainty", 0.0),
+                confidence=ms.get("confidence", 0.0),
+                classification=f"PIPELINE:{ms.get('validation_method', '?')}",
+                analysis=c.get("first_stage_score", {}),
+            )
+            self._detection_results[desg.upper()] = proxy
+        if candidates:
+            self.show_info(f"Stored {len(candidates)} pipeline candidates — available in options 9 and 13.")
+
     def _display_pattern_result(self, result: dict) -> None:
         n = result.get("designations_analyzed", 0)
         clusters = result.get("clusters", [])
@@ -1121,21 +1163,17 @@ class ANEOSMenuV2(ANEOSMenuBase):
         try:
             text = doc_path.read_text(encoding="utf-8")
             lines = text.splitlines()
-            # Extract key sections: Methodology, Sigma, Classification, Detection
+            # Extract all key sections: Methodology, Sigma, Classification, Detection
+            KEYWORDS = {"Methodology", "Sigma", "Classification", "Detection", "Threshold"}
             sections: List[str] = []
             capture = False
             for line in lines:
-                heading = line.startswith("## ") or line.startswith("# ")
-                if heading and any(
-                    kw in line for kw in
-                    ["Methodology", "Sigma", "Classification", "Detection", "Threshold"]
-                ):
-                    capture = True
-                elif heading and capture:
-                    break
+                is_heading = line.startswith("## ") or line.startswith("# ")
+                if is_heading:
+                    capture = any(kw in line for kw in KEYWORDS)
                 if capture:
                     sections.append(line)
-            content = "\n".join(sections[:100]) if sections else "\n".join(lines[:100])
+            content = "\n".join(sections[:120]) if sections else "\n".join(lines[:100])
             self.display_panel(content, title="aNEOS Scientific Documentation", style="green")
         except Exception as exc:
             self.show_error(f"Failed to read documentation: {exc}")

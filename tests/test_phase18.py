@@ -200,3 +200,66 @@ class TestMissingFeatures:
     def test_show_help_method_exists(self):
         from aneos_menu_v2 import ANEOSMenuV2
         assert callable(getattr(ANEOSMenuV2, "_show_help", None))
+
+    def test_store_pipeline_candidates_method_exists(self):
+        from aneos_menu_v2 import ANEOSMenuV2
+        assert callable(getattr(ANEOSMenuV2, "_store_pipeline_candidates", None))
+
+
+# ===========================================================================
+# 8. Pipeline candidates stored and browsable (option 7 → 9 integration)
+# ===========================================================================
+
+class TestPipelineCandidateStorage:
+
+    def _fake_pipeline_result(self):
+        """Simulate the dict returned by run_200_year_poll()."""
+        import types
+        cand = {
+            "designation": "1998 KY26",
+            "multi_stage_validation": {
+                "validation_score": 0.25,
+                "sigma_level": 0.0,
+                "statistical_certainty": 0.036,
+                "confidence": 0.25,
+                "validation_method": "natural_object_standard",
+            },
+            "first_stage_score": {
+                "overall_score": 0.25,
+                "flag_string": "d,r",
+            },
+            "miss_distance_au": 0.0086,
+        }
+        pr = types.SimpleNamespace(
+            validated_candidates=[cand],
+            pipeline_metrics={"raw_objects_input": 100},
+        )
+        return {
+            "status": "success",
+            "pipeline_result": pr,
+            "total_objects": 100,
+            "final_candidates": 1,
+            "processing_time_seconds": 10.0,
+            "compression_ratio": 100.0,
+        }
+
+    def test_candidates_stored_in_detection_results(self):
+        """After _store_pipeline_candidates, designation appears in _detection_results."""
+        menu = _make_menu()
+        menu._store_pipeline_candidates(self._fake_pipeline_result())
+        assert "1998 KY26" in menu._detection_results
+
+    def test_candidate_proxy_has_sigma(self):
+        """Stored proxy must have sigma_level attribute."""
+        menu = _make_menu()
+        menu._store_pipeline_candidates(self._fake_pipeline_result())
+        proxy = menu._detection_results.get("1998 KY26")
+        assert hasattr(proxy, "sigma_level")
+
+    def test_empty_candidates_does_not_crash(self):
+        """Zero candidates in result — no exception, _detection_results unchanged."""
+        import types
+        menu = _make_menu()
+        pr = types.SimpleNamespace(validated_candidates=[], pipeline_metrics={})
+        menu._store_pipeline_candidates({"status": "success", "pipeline_result": pr})
+        assert len(menu._detection_results) == 0
