@@ -350,16 +350,21 @@ class HistoricalChunkedPoller:
             
             # Use direct CAD data fetching with explicit date ranges
             # This ensures we get the exact historical time periods we want
-            if hasattr(self.base_poller, 'fetch_cad_data'):
+            # Accept either method name — EnhancedNEOPoller exposes fetch_cad_data_with_cache
+            _cad_method = (
+                getattr(self.base_poller, 'fetch_cad_data', None)
+                or getattr(self.base_poller, 'fetch_cad_data_with_cache', None)
+            )
+            if _cad_method:
                 # Calculate and display the actual time span for this chunk
                 years_span = (end_date - start_date).days / 365.25
-                
+
                 if years_span >= 1:
                     period_display = f"{years_span:.1f} Years" if years_span != int(years_span) else f"{int(years_span)} Years"
                 else:
                     days_span = (end_date - start_date).days
                     period_display = f"{days_span} Days"
-                
+
                 # Display polling information in the same format as the regular poller
                 if self.console:
                     self.console.print(f"\n🔍 Polling NASA Close Approach Data")
@@ -369,12 +374,12 @@ class HistoricalChunkedPoller:
                     print(f"\n🔍 Polling NASA Close Approach Data")
                     print(f"📅 Period: {start_date_str} to {end_date_str} ({period_display})")
                     print(f"🎯 Max results: 5000")
-                
+
                 # Also log for debugging
                 self.logger.info(f"Polling CAD data: {start_date_str} to {end_date_str} ({period_display})")
-                
+
                 cad_data = await asyncio.to_thread(
-                    self.base_poller.fetch_cad_data,
+                    _cad_method,
                     start_date_str,
                     end_date_str,
                     5000  # Limit per chunk
