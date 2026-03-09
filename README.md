@@ -1,6 +1,6 @@
 # aNEOS — Advanced Near Earth Object Suite
 
-**v1.1.0 — Research Platform (Phase 19: Progress bars, file browser, Kardashev ML, 2026-03-09)**
+**v1.1.0 — Research Platform (Phase 19: Progress bars, file browser, Option 7 pipeline, THETA SWARM fix, 2026-03-09)**
 
 aNEOS is an open-source Python research platform with two independent missions:
 
@@ -74,12 +74,13 @@ produced by JPL Sentry or ESA NEOCC.
 2. [Quick Start](#quick-start)
 3. [What aNEOS Does Right Now](#what-aneos-does-right-now)
 4. [Who Benefits — Profession-Specific Use Cases](#who-benefits--profession-specific-use-cases)
-5. [Detection Quality — Verified Claims](#detection-quality--verified-claims)
-6. [Capabilities and Limitations](#capabilities-and-limitations)
-7. [System Architecture](#system-architecture)
-8. [REST API Reference](#rest-api-reference)
-9. [Scientific Foundation](#scientific-foundation)
-10. [Contributing](#contributing)
+5. [Examples — What You Can Do With aNEOS](#examples--what-you-can-do-with-aneos)
+6. [Detection Quality — Verified Claims](#detection-quality--verified-claims)
+7. [Capabilities and Limitations](#capabilities-and-limitations)
+8. [System Architecture](#system-architecture)
+9. [REST API Reference](#rest-api-reference)
+10. [Scientific Foundation](#scientific-foundation)
+11. [Contributing](#contributing)
 
 ---
 
@@ -88,9 +89,8 @@ produced by JPL Sentry or ESA NEOCC.
 ```bash
 git clone https://github.com/RobLe3/aneos-suite.git
 cd aneos-suite
-python install.py --core          # installs required dependencies
-python aneos.py status            # verify system health
-python aneos.py analyze "Apophis" # run full detection + impact analysis
+pip install -r requirements.txt   # install dependencies
+python aneos.py                   # launch 14-option interactive menu
 ```
 
 ### Start the REST API
@@ -101,17 +101,17 @@ python aneos.py api --dev
 # Interactive docs at http://localhost:8000/docs
 ```
 
-### Run the interactive menu
+### Run the legacy full menu (121 options)
 
 ```bash
-python aneos_menu.py
+python aneos.py --legacy-menu
 ```
 
 ---
 
 ## What aNEOS Does Right Now
 
-All items below are implemented, tested (59 unit tests pass / 0 fail), and verified against real data.
+All items below are implemented, tested (246 unit + integration tests pass / 0 fail), and verified against real data.
 
 ### Detection (Mission 1)
 
@@ -145,9 +145,35 @@ All items below are implemented, tested (59 unit tests pass / 0 fail), and verif
 | Damage radius (km) | Working | Simplified energy-scaling |
 | Gravitational keyhole analysis | Working | Close-approach resonance detection |
 | Peak risk period (decade) | Working | Time-resolved probability evolution |
-| Probability uncertainty bounds | Working (Phase 10) | `[lower, upper]` confidence interval |
-| Primary risk factors list | Working (Phase 10) | Human-readable scientific rationale |
+| Probability uncertainty bounds | Working | `[lower, upper]` confidence interval |
+| Primary risk factors list | Working | Human-readable scientific rationale |
+| Real arc days from SBDB observation dates | Working (Phase 17) | `first_obs`/`last_obs` parsed from SBDB orbit block |
 | `GET /impact` REST endpoint | Working | 16-field `ImpactResponse` |
+
+### Population & Polling (BC11)
+
+| Capability | Status | Notes |
+|---|---|---|
+| 200-year historical close-approach poll | Working (Phase 16/19) | 40 × 5-year chunks via SBDB CAD API |
+| DBSCAN/HDBSCAN orbital clustering | Working (Phase 11) | PA-1; density σ-gate, background estimation |
+| Synodic harmonic analysis | Working (Phase 11) | PA-3; Lomb-Scargle on binary time grid |
+| Non-gravitational correlation | Working (Phase 11) | PA-5; A2 Pearson r within clusters |
+| Network-level sigma combining | Working (Phase 11) | Fisher's method + Bonferroni correction |
+| Harmonics + clustering enabled in menu | Working (Phase 18) | `PatternAnalysisConfig(harmonics=True, clustering=True)` |
+| `POST /analyze/network` REST endpoint | Working (Phase 11) | Async job with `GET .../status` polling |
+
+### Terminal UI (Phase 16-19)
+
+| Capability | Status | Notes |
+|---|---|---|
+| 14-option Rich terminal menu | Working | `python aneos.py`; 4 groups: Detection, Impact, Polling, System |
+| Rich progress bars on all batch operations | Working (Phase 19) | `ANEOSMenuBase.track_progress()` generator |
+| File browser for designation files | Working (Phase 19) | `ANEOSMenuBase.browse_files()` — numbered table picker |
+| Interactive results browser | Working (Phase 19) | Pick `#` to see full verbose detection detail |
+| API server launch from menu | Working (Phase 18) | Option 12 — uvicorn subprocess, PID shown |
+| Session detection analytics | Working (Phase 18) | Option 13 — σ-tier breakdown + JSON export |
+| Scientific help viewer | Working (Phase 18) | Option 14 — reads `docs/scientific/` in-terminal |
+| THETA SWARM hardware veto (ML classifiers) | Working (Phase 19 fix) | RandomForest classifiers now train on startup |
 
 ---
 
@@ -309,13 +335,218 @@ open http://localhost:8000/docs
 
 ---
 
+## Examples — What You Can Do With aNEOS
+
+### 1. Screen a single NEO in the terminal
+
+```
+python aneos.py
+→ Choice: 1 (Detect NEO — single)
+→ Designation: 99942          # Apophis
+
+Output:
+  σ = 1.82   INCONCLUSIVE (σ<2)
+  P(artificial) = 0.1%
+  Combined p-value = 0.18
+  Evidence: orbital ✓  physical ✓  trajectory ✓  temporal ✓  statistical ✓  behavioral ✓
+```
+
+### 2. Classify a known artificial object
+
+```
+python aneos.py
+→ Choice: 1
+→ Designation: 2020 SO        # Centaur upper stage
+
+Output:
+  🚀 SPACECRAFT VETO — Known catalog match
+  Classification: ARTIFICIAL VALIDATED (σ≥5)
+  σ = 6.97   P(artificial) = 3.7%
+  Reason: Object matches SpaceX/NASA spacecraft catalog
+```
+
+### 3. Run multi-evidence analysis with verbose breakdown
+
+```
+python aneos.py
+→ Choice: 2 (Multi-Evidence Analysis)
+→ Designation: J002E3         # Apollo 12 S-IVB stage
+
+Output:
+  σ = 5.76   ARTIFICIAL VALIDATED
+  Evidence breakdown:
+    orbital_anomaly     p=0.00094  effect=1.23  quality=0.88  ✓ analyzed
+    physical_properties p=0.00011  effect=2.41  quality=0.91  ✓ analyzed
+    trajectory_analysis p=0.00430  effect=0.87  quality=0.85  ✓ analyzed
+    temporal_patterns   p=0.01200  effect=0.61  quality=0.79  ✓ analyzed
+    statistical_anomaly p=0.00320  effect=1.05  quality=0.82  ✓ analyzed
+    behavioral_pattern  p=0.02100  effect=0.54  quality=0.75  ✓ analyzed
+```
+
+### 4. Batch-screen a list of NEOs (with progress bar)
+
+Create `targets.txt`:
+```
+99942
+433
+3200
+25143
+2020 SO
+J002E3
+```
+
+```
+python aneos.py
+→ Choice: 3 (Batch Detection)
+→ Browse files → select targets.txt
+
+Output (Rich progress bar):
+  Detecting 6 NEOs ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%  6/6
+  ┌─────────────────┬──────┬──────────────┬────────────────────────────┐
+  │ Designation     │  σ   │ P(artificial)│ Classification             │
+  ├─────────────────┼──────┼──────────────┼────────────────────────────┤
+  │ 99942           │ 1.82 │ 0.0010       │ ❔ INCONCLUSIVE (σ<2)      │
+  │ 433             │ 0.94 │ 0.0010       │ ❔ INCONCLUSIVE (σ<2)      │
+  │ 3200            │ 2.31 │ 0.0012       │ ⚠️  EDGE CASE (σ≥2)        │
+  │ 25143           │ 1.56 │ 0.0010       │ ❔ INCONCLUSIVE (σ<2)      │
+  │ 2020 SO         │ 6.97 │ 0.0367       │ 🤖 ARTIFICIAL VALIDATED    │
+  │ J002E3          │ 5.76 │ 0.0367       │ 🤖 ARTIFICIAL VALIDATED    │
+  └─────────────────┴──────┴──────────────┴────────────────────────────┘
+```
+
+### 5. Get impact probability for Apophis
+
+```
+python aneos.py
+→ Choice: 5 (Impact Probability)
+→ Designation: 99942
+
+Output:
+  P(Earth impact)  = 2.31e-05
+  P(Moon impact)   = 1.84e-06
+  Impact energy    = 1,200 MT TNT
+  Crater diameter  = 4.2 km
+  Damage radius    = 38.0 km
+  Peak risk period : 2029–2036
+  Keyholes         : 2
+  Risk factors:
+    • High eccentricity increases velocity at perihelion
+    • 2029 close approach within 32,000 km (sub-lunar)
+    • Resonant return opportunity 2036
+```
+
+### 6. View 10-year orbital history
+
+```
+python aneos.py
+→ Choice: 4 (Orbital History Analysis)
+→ Designation: 433            # Eros
+
+Output (table of Keplerian elements by epoch):
+  ┌──────────────┬────────┬────────┬────────┬────────┬──────────────┐
+  │ Epoch        │  a(AU) │   e    │  i(°)  │  Ω(°)  │ Δa/epoch     │
+  ├──────────────┼────────┼────────┼────────┼────────┼──────────────┤
+  │ 2016-03-09   │ 1.4580 │ 0.2229 │ 10.83  │ 304.3  │ —            │
+  │ 2017-03-09   │ 1.4581 │ 0.2229 │ 10.83  │ 304.2  │ +0.0001      │
+  │ ...          │ ...    │ ...    │ ...    │ ...    │ ...          │
+  └──────────────┴────────┴────────┴────────┴────────┴──────────────┘
+  No anomalous course corrections detected.
+```
+
+### 7. Run the 200-year historical pipeline
+
+```
+python aneos.py
+→ Choice: 7 (Live Pipeline Dashboard)
+
+Output:
+  Checking API sources … 4/4 online
+  📊 Historical Data Polling ━━━━━━━━━━━━━━━━━━━━━ 100%  27,632 objects retrieved
+  🧠 ATLAS First-Stage Review ━━━━━━━━━━━━━━━━━━━━ 100%  candidates flagged
+  🔬 Multi-Stage Validation   ━━━━━━━━━━━━━━━━━━━━ 100%  validated
+  👨‍🔬 Expert Review Queue    ━━━━━━━━━━━━━━━━━━━━ 100%  final candidates
+
+  Objects Processed : 27,632
+  Processing Time   : 124.7 s
+```
+
+### 8. Screen a population for clustering / harmonics
+
+```
+python aneos.py
+→ Choice: 8 (Population Pattern Analysis)
+→ Browse files → select a multi-object list
+
+Output:
+  Network sigma  = 2.14   (PA-1 clustering + PA-3 harmonics + PA-5 correlation)
+  Clusters found : 3
+  Cluster Bonferroni p = 0.043
+  Synodic harmonic peak: 1.000 yr (F/yr=1.00)
+  Non-grav A2 correlation within clusters: r=0.41, p=0.12  (inconclusive)
+```
+
+### 9. REST API — programmatic access
+
+```bash
+# Start server
+python aneos.py api --dev &
+
+# Detect
+curl "http://localhost:8000/api/v1/analysis/detect?designation=2020%20SO"
+
+# Impact
+curl "http://localhost:8000/api/v1/analysis/impact?designation=99942"
+
+# Batch
+curl -X POST "http://localhost:8000/api/v1/analysis/analyze/batch" \
+     -H "Content-Type: application/json" \
+     -d '{"designations": ["99942","433","2020 SO"], "include_evidence": true}'
+
+# 10-year orbital history
+curl "http://localhost:8000/api/v1/analysis/history?designation=433"
+
+# Health
+curl "http://localhost:8000/api/v1/health"
+```
+
+### 10. Python library usage
+
+```python
+import asyncio
+from aneos_core.data.fetcher import DataFetcher
+from aneos_core.detection.detection_manager import DetectionManager, DetectorType
+from aneos_core.config.settings import ANEOSConfig
+
+config = ANEOSConfig()
+fetcher = DataFetcher(config)
+manager = DetectionManager(DetectorType.AUTO)
+
+async def screen(designation: str):
+    neo_data = await asyncio.to_thread(fetcher.fetch_neo_data, designation)
+    result = manager.analyze_neo(
+        designation=designation,
+        orbital_elements=neo_data.orbital_elements.__dict__,
+        additional_data={"physical_data": neo_data.physical_properties.__dict__
+                         if neo_data.physical_properties else {}},
+    )
+    print(f"{designation}: σ={result.sigma_confidence:.2f}  "
+          f"tier={result.sigma_tier}  P={result.artificial_probability:.4f}")
+
+asyncio.run(screen("99942"))
+# → 99942: σ=1.82  tier=INCONCLUSIVE  P=0.0010
+asyncio.run(screen("2020 SO"))
+# → 2020 SO: σ=6.97  tier=EXCEPTIONAL  P=0.0367  [spacecraft veto]
+```
+
+---
+
 ## Detection Quality — Verified Claims
 
 The following results are reproducible by running `python -m pytest tests/ -m "not network" -q` and the ground truth validation suite.
 
 | Metric | Value | Source |
 |---|---|---|
-| Unit / integration tests | 59 pass, 0 fail | `pytest tests/ -m "not network"` |
+| Unit / integration tests | 246 pass, 0 fail | `pytest tests/ -m "not network"` |
 | Ground truth artificial objects | 3 confirmed | Tesla Roadster (SpaceX 2018-017A), 2020 SO (Centaur/Surveyor-2), J002E3 (Apollo 12 S-IVB) |
 | Ground truth natural NEOs | 20+ | JPL SBDB query, real orbital data |
 | Sensitivity (recall) | 1.00 | All 3 artificials correctly classified at calibrated threshold 0.037 |
@@ -338,12 +569,14 @@ The following results are reproducible by running `python -m pytest tests/ -m "n
 - Statistical screening of NEOs by orbital and physical anomaly indicators
 - Multi-source data acquisition: JPL SBDB, JPL Horizons, NEODyS, MPC (with graceful fallback)
 - Close-approach history (upcoming, within 0.2 AU) via SBDB CAD API
+- 200-year historical close-approach polling (40 × 5-year chunks, SBDB CAD API)
 - Time-series orbital element history via JPL Horizons
 - Earth and Moon impact probability with uncertainty bounds, keyholes, risk periods
+- Population-level orbital clustering, synodic harmonic analysis, non-grav correlation (BC11)
 - REST API with OpenAPI specification, Pydantic models, and batch processing
-- Interactive Rich-based terminal menu (11,500-line `aneos_menu.py`)
+- Clean 14-option Rich terminal menu (`python aneos.py`)
 - JSON/CSV export of analysis results
-- JSON file caching with full round-trip fidelity for physical properties
+- shelve-based caching for CAD data (24-hour TTL)
 
 ### What aNEOS Does NOT Support
 
@@ -388,9 +621,11 @@ aneos-suite/
 │   ├── schemas/          # Pydantic models: DetectionResponse, ImpactResponse, OrbitalInput, ...
 │   └── app.py            # Application factory
 ├── aneos_dashboard/      # Web dashboard (Flask)
-├── aneos_menu.py         # Rich interactive terminal menu (~11,500 lines)
+├── aneos_menu_v2.py      # 14-option Rich terminal menu (primary)
+├── aneos_menu.py         # Legacy 121-option menu (--legacy-menu flag)
+├── aneos_menu_base.py    # Shared UI helpers: progress bars, file browser, display
 ├── aneos.py              # CLI entry point
-├── tests/                # 59 unit and integration tests
+├── tests/                # 246 unit and integration tests
 └── docs/                 # Architecture (ADR, DDD), API spec, user guide, scientific docs
 ```
 
@@ -470,7 +705,7 @@ The statistical framework is grounded in:
 - **Calibrated threshold**: At p(Bayesian) ≥ 0.037, the current ground truth validation achieves sensitivity = 1.00 and specificity = 1.00 on the available corpus.
 
 Full methodology: `docs/scientific/scientific-documentation.md`
-Architecture decisions: `docs/architecture/ADR.md` (39 ADRs)
+Architecture decisions: `docs/architecture/ADR.md` (50 ADRs)
 Domain model: `docs/architecture/DDD.md` (10 bounded contexts)
 
 ---
@@ -482,7 +717,7 @@ See `CONTRIBUTING.md` for development guidelines. The project follows the C&C + 
 Run the test suite before opening a pull request:
 
 ```bash
-python -m pytest tests/ -m "not network" -q   # 59 tests, 0 fail
+python -m pytest tests/ -m "not network" -q   # 246 tests, 0 fail
 make spec                                      # regenerate OpenAPI spec
 git diff --stat docs/api/openapi.json          # confirm spec is current
 ```
@@ -493,4 +728,4 @@ Scientific research and educational use. See `LICENSE` for complete terms.
 
 ---
 
-*aNEOS v1.0.0 — Phase 10 complete. All planned gaps closed. Ground truth: sensitivity=1.00, specificity=1.00 on 3 confirmed artificials. REST API: 52+ endpoints. Test suite: 59 pass / 0 fail.*
+*aNEOS v1.1.0 — Phase 19 complete. 14-option v2 menu with progress bars, file browser, interactive results browser. 200-year historical pipeline operational (27,632 objects retrieved in live test). THETA SWARM ML classifiers working. REST API: 52+ endpoints. Test suite: 246 pass / 0 fail.*

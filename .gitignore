@@ -162,6 +162,9 @@ DIPLOMATIC_TRANSMISSION.md
 HUMANITARIAN_MISSION_PROTOCOL.md
 STARFLEET_TRANSMISSION.md
 
+# Reports directory (generated artefacts)
+reports/
+
 # Development reports and analysis files
 *_report_*.md
 *_analysis_*.md
