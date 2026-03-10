@@ -282,6 +282,10 @@ where close-approach geometry and physical traits are available; Standard
 from `advanced_scoring.py`; configuration now logs at DEBUG level.
 **Empirical basis**: Ground truth validation (Phase 3) confirms ValidatedSigma5 achieves
 sensitivity=1.00, specificity=1.00 on 3 artificials + 20 natural JPL NEOs.
+**⚠ Caveat (VALIDATION_INTEGRITY audit, 2026-03-08)**: Corpus is small (N=3 artificials,
+N≈20 naturals); thresholds hand-tuned to the same objects; F1=1.000 is spurious on this
+dataset. Blind-test set not yet built. Performance on unseen objects unverified. See
+`docs/scientific/VALIDATION_INTEGRITY.md` for full remediation roadmap.
 
 ---
 
@@ -384,6 +388,7 @@ correctly routing through the priority-0 VALIDATED detector.
 **Consequences**
 - (+) `DetectionManager` provides a clean abstraction for all callers
 - (+) Pipeline now honours `DetectorType.AUTO` priority order (VALIDATED → MULTIMODAL → …)
+- (+) **Phase 19 fix**: `automatic_review_pipeline.py` line 175 uses `DetectionManager(AUTO)`
 - (-) Manual wrappers per detector type create maintenance burden
 
 **Files**: `aneos_core/detection/detection_manager.py`,
@@ -603,7 +608,7 @@ Two components implement the CLAUDETTE SWARM:
 - `StatisticalTesting` (`statistical_testing.py`, ~484 lines) — formal
   hypothesis testing per indicator: H₀ = natural, H₁ = artificial; Bonferroni
   and Benjamini-Hochberg multiple testing corrections; p-value calculation
-- `FalsePositivePrevention` (`false_positive_prevention.py`, ~769 lines) —
+- `FalsePositivePrevention` (`false_positive_prevention.py`) —
   space debris cross-matching (`SpaceDebrisMatch`), known artificial object
   exclusion, confusion matrix tracking
 
@@ -793,7 +798,7 @@ objects to ~50 expert-review candidates.
 | Stage | Max Objects | Threshold | Component |
 |-------|-------------|-----------|-----------|
 | RAW_OBJECTS | unlimited | — | HistoricalChunkedPoller |
-| FIRST_STAGE_REVIEW | 50,000 | configurable | MultiModalSigma5Detector (hardcoded) |
+| FIRST_STAGE_REVIEW | 50,000 | configurable | `DetectionManager(DetectorType.AUTO)` |
 | MULTI_STAGE_VALIDATION | 500 | 0.60 | MultiStageValidator |
 | EXPERT_REVIEW_QUEUE | 50 | 0.80 | Expert Queue |
 
@@ -803,7 +808,7 @@ objects to ~50 expert-review candidates.
 
 **Previously critical issue (RESOLVED — Phase 19)**: Pipeline hardcoded
 `MultiModalSigma5ArtificialNEODetector` instead of routing through `DetectionManager`.
-Fixed: pipeline now uses `DetectionManager(AUTO)` (see ADR-011).
+Fixed: pipeline now uses `DetectionManager(AUTO)` (see ADR-011 for registry design).
 
 **Concept alignment**: Full in structure and implementation.
 
@@ -933,6 +938,10 @@ comprehensive explanations." Silent simulation directly contradicts this.
 **Recommendation**: Replace silent fallbacks with explicit
 `IntegrationError` exceptions and a pre-flight health check that validates
 required dependencies before any analysis run starts.
+
+**Partial remediation (Phase 16 — ADR-050)**: Silent fallback eliminated in the menu
+orbital data path (`_get_test_data()` now raises `ValueError` for unknown designations).
+Silent simulation risk remains in `PipelineIntegration` and API `HAS_*` guard paths.
 
 **Files**: `aneos_core/integration/pipeline_integration.py`,
 `aneos_api/app.py`, `aneos_menu.py`
@@ -1498,9 +1507,9 @@ Flag pairs with |r| > 0.7 and p < 0.01 (Bonferroni-corrected for number of pairs
 **Consequences**
 - (+) Scientifically motivated; shared Yarkovsky signatures can confirm common
   composition or parent body
-- (-) Blocked until ADR-040 (non-grav parameter parsing) is implemented
+- (-) ADR-040 now implemented (Phase 11); A2 prerequisite resolved
 - (-) A2 data available for ≈ 3% of NEOs; most clusters will have zero objects
-  with A2 — module will silently produce no output for 97%+ of clusters
+  with A2 — module is implemented but rarely exercises (silent no-output for ~97% of clusters)
 - (-) A2 values have large individual uncertainties; correlation p-values may
   be unreliable without full covariance matrix treatment
 
@@ -1763,6 +1772,163 @@ Stage 2 (REBOUND N-body propagation) is deferred until the dependency is adopted
 - (-) Stage 2 (actual encounter epochs) requires REBOUND and is deferred
 
 **Files**: `aneos_core/pattern_analysis/rendezvous.py`, `aneos_menu_v2.py`
+
+---
+
+### ADR-053: Physical Indicators Architecture (BC3 Gap)
+
+**Status**: Gap Identified — No Implementation Yet
+
+**Context**
+`scoring.py` maps a `physical` category with weight 0.20 but `aneos_core/indicators/physical.py`
+does not exist. Three intended indicators (`DiameterAnomalyIndicator`, `AlbedoAnomalyIndicator`,
+`SpectralAnomalyIndicator`) are planned in DDD BC3 but never implemented. The physical category
+always contributes 0 to every composite score.
+
+**Decision**
+Defer implementation until `PhysicalProperties` data (diameter, albedo, spectral_type) is
+reliably populated from SBDB for a sufficient fraction of NEOs. Current coverage: diameter
+available for ~30% of NEOs; albedo ~25%; spectral type ~15%.
+
+**Consequences**
+- (-) Physical category silently contributes 0 to all scores; ATLAS weight of 0.20 is wasted
+- (-) Sigma-5 detections are based on 4 of 5 indicator categories
+- (+) No false positives introduced by missing data fallback
+- (+) BC3 architecture is complete except for this module; adding it later requires only one file
+
+**Files (when implemented)**: `aneos_core/indicators/physical.py`
+
+---
+
+### ADR-054: Analysis Result Persistence & Retrieval
+
+**Status**: Implemented (Phase 15) — Documented retroactively
+
+**Context**
+Detection results need to persist across menu sessions so that Option 9 (Results Browser)
+can show historical analyses, and the REST API can serve prior results without re-running
+the detector. SQLAlchemy is already used by the API layer.
+
+**Decision**
+`aneos_api/endpoints/analysis.py` fires `_persist_detection_result()` in a background
+thread after each detection run. Results are stored in `DetectionResult` SQLAlchemy table
+via `AnalysisService`. `GET /results/{designation}` queries `AnalysisService.get_analysis_results()`
+with a `limit=20` ceiling. The menu `_show_db_result_for(designation)` filters client-side
+by designation match.
+
+**Consequences**
+- (+) Results survive menu restarts; historical comparison possible
+- (+) REST API can replay results without re-analysis
+- (-) `limit=20` ceiling means older results may not surface
+- (-) Background thread persistence has no failure notification
+
+**Files**: `aneos_api/endpoints/analysis.py`, `aneos_api/database.py`, `aneos_menu_v2.py`
+
+---
+
+### ADR-055: Menu Base Class — Separation of Concerns
+
+**Status**: Implemented (Phase 15E) — Documented retroactively
+
+**Context**
+`ANEOSMenu` (`aneos_menu.py`, 10,800+ lines) mixed business logic with presentation.
+`ANEOSMenuV2` was designed to inherit a thin UI helper layer rather than re-implementing
+terminal I/O primitives.
+
+**Decision**
+`aneos_menu_base.py` (`ANEOSMenuBase`) provides 12 UI helpers:
+`show_error`, `show_info`, `show_success`, `wait_for_input`, `display_table`, `display_panel`,
+`format_probability`, `format_sigma`, `format_designation`, `_get_terminal_width`, `_truncate`,
+`_color_for_score`. All Rich calls are guarded by `HAS_RICH`; plain-text fallbacks ensure
+usability in minimal environments. `ANEOSMenuV2` and `ANEOSMenu` both inherit `ANEOSMenuBase`.
+
+**Consequences**
+- (+) UI primitives testable independently of menu logic
+- (+) Rich unavailability degrades gracefully to plain text
+- (-) `display_panel(expand=False)` required to prevent wide-terminal truncation (Phase 20 fix)
+
+**Files**: `aneos_menu_base.py`, `aneos_menu_v2.py`, `aneos_menu.py`
+
+---
+
+### ADR-056: ML-Monitoring Integration Pattern
+
+**Status**: Partially Active — Core Dependency Wired (Phase 14+)
+
+**Context**
+`monitoring/alerts.py` imports `Alert` from `ml.prediction` unconditionally. This creates
+a hard dependency: if `aneos_core/ml/` is unavailable or broken, the monitoring alert
+system fails at import. ML training is explicitly deferred (CLAUDE.md), but the monitoring
+bridge is live.
+
+**Decision**
+Accept the hard dependency for now. `ml/prediction.py` defines `Alert`, `AlertManager`,
+and `RealTimePredictor`. `monitoring/alerts.py` uses `Alert` as a carrier class only —
+no model inference occurs at alert time. The `HAS_SKLEARN`/`HAS_TORCH` guards in `ml/models.py`
+prevent model loading failures from propagating to alert dispatch.
+
+**Consequences**
+- (+) Alert infrastructure works without trained models
+- (-) `from aneos_core.ml.prediction import Alert` will fail if `ml/` is removed or renamed
+- (-) Circular concern: monitoring depends on ML, but ML should be independent of monitoring
+- (-) No ADR previously captured this design decision
+
+**Files**: `aneos_core/ml/prediction.py`, `aneos_core/monitoring/alerts.py`
+
+---
+
+### ADR-057: Progressive UI Enhancement — Progress Bars & File Browser
+
+**Status**: Implemented (Phase 19)
+
+**Context**
+Long-running operations (batch detection, health check, population analysis) give no
+progress feedback. File path entry for batch inputs requires users to type absolute paths,
+which is error-prone.
+
+**Decision**
+`ANEOSMenuBase.track_progress(items, description)` wraps any iterable in a Rich
+`Progress` context manager, yielding items with a live bar. Fallback: numbered print
+statements when Rich unavailable. `ANEOSMenuBase.browse_files(search_dirs, extensions, prompt)`
+scans common directories, shows a numbered table, and accepts either a `#` selection
+or a literal path. Options 3 (batch), 8 (population analysis), and 11 (health check)
+use these helpers.
+
+**Consequences**
+- (+) Users can see progress on operations taking > 2 seconds
+- (+) File selection reduces invalid-path errors
+- (-) Rich is a soft dependency; progress bars silently absent if not installed
+
+**Files**: `aneos_menu_base.py`, `aneos_menu_v2.py`
+
+---
+
+### ADR-058: ATLAS Clue-Based Scoring & Runtime Weight Configuration
+
+**Status**: Implemented (Phase 1+) — Documented retroactively
+
+**Context**
+The original `scoring.py` used hard-coded integer weights in category maps.
+`advanced_scoring.py` (ATLAS) introduced continuous [0,1] clue scoring with weights
+loadable from `advanced_scoring_weights.json` at runtime, enabling tuning without
+code changes.
+
+**Decision**
+`AdvancedScoreCalculator` reads `advanced_scoring_weights.json` at construction time.
+If the file is missing, default weights are used silently. Six clue categories
+(Encounter Geometry 0.15, Orbit Behavior 0.25, Physical Traits 0.20, Spectral Identity 0.20,
+Dynamical Sanity 0.15, Human Origin 0.05) are evaluated per object. Per-clue contribution,
+score, confidence, and explanation are stored in `ClueContribution` for full traceability.
+`AdvancedScoreCalculator` is designated canonical for full-data pipeline scenarios (ADR-008 Update).
+
+**Consequences**
+- (+) Weights tunable without code changes
+- (+) Full per-clue audit trail in `ClueContribution`
+- (-) Physical Traits and Spectral Identity clues contribute 0 when physical data absent
+  (ADR-053 gap)
+- (-) No validation of `advanced_scoring_weights.json` schema on load
+
+**Files**: `aneos_core/analysis/advanced_scoring.py`, `advanced_scoring_weights.json`
 
 ---
 

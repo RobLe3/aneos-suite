@@ -75,7 +75,7 @@ All developers, scientists, and stakeholders must use these terms consistently.
                                (filter: σ ≥ 1.0)
 ```
 
-**BC11 context rules (design-time, not yet implemented):**
+**BC11 context rules (live as of Phase 11; Stage 1 fully implemented):**
 - BC11 READS `NEOData` from BC1 and `DetectionResult` from BC5
 - BC11 NEVER modifies individual `NEOData` records (read-only consumer)
 - BC11 WRITES `NetworkReport` consumed by BC7 (Reporting) and BC8 (API)
@@ -137,7 +137,8 @@ parameters through cache write to domain model delivery.
 | `DataFetched(source, object_count, timestamp)` | Successful API response |
 | `ChunkCached(chunk_id, time_range, object_count)` | Chunk written to disk cache |
 | `APIHealthChanged(source_name, is_healthy, timestamp)` | Circuit breaker state change |
-| `FallbackToSimulation(reason)` | **Currently silent** — should be an explicit observable event |
+| `FallbackToSimulation(reason)` | **Currently silent** — should be an explicit observable event (ADR-032 risk; ADR-050 partial remediation in menu path) |
+| `CloseApproachDataFetched(designation, n_approaches, source)` | CAD API fetch complete — unconditional after primary orbital fetch (ADR-001 Update) |
 
 ### Anti-Corruption Layer
 Each `DataSourceBase` subclass translates the source-specific JSON format into
@@ -217,8 +218,8 @@ single responsibility and makes it unclear which model to query for physical dat
 - `NEOData.close_approaches` is now populated from SBDB CAD API on every live
   fetch (future approaches within 0.2 AU).
 
-### Planned Extension (ADR-040)
-`NonGravitationalParameters` value object to be added:
+### Implemented Extension (ADR-040, Phase 11)
+`NonGravitationalParameters` value object added to `aneos_core/data/models.py`:
 | Field | Description |
 |---|---|
 | `a1` | Radial Marsden component (AU/day²) |
@@ -226,7 +227,8 @@ single responsibility and makes it unclear which model to query for physical dat
 | `a3` | Normal component |
 | `model` | Parameterization type |
 | `epoch` | Reference epoch for measurement |
-`NEOData.nongrav: Optional[NonGravitationalParameters]` (None for 97% of objects)
+`NEOData.nongrav: Optional[NonGravitationalParameters]` — populated from SBDB `nongrav=1`
+optional fetch; None for ~97% of objects. A2 bounds validated in `__post_init__` (±1e-9 AU/day²).
 
 ---
 
@@ -291,12 +293,14 @@ scorable unit for pipeline routing.
 **Missing Physical Indicators** (`indicators/physical.py` — DOES NOT EXIST):
 | Intended Indicator | Status | Impact |
 |--------------------|--------|--------|
-| `DiameterAnomalyIndicator` | Missing | Physical category never scored |
-| `AlbedoAnomalyIndicator` | Missing | Physical category never scored |
-| `SpectralAnomalyIndicator` | Missing | Physical category never scored |
+| `DiameterAnomalyIndicator` | Missing | Physical category contributes 0 to composite score |
+| `AlbedoAnomalyIndicator` | Missing | Physical category contributes 0 to composite score |
+| `SpectralAnomalyIndicator` | Missing | Physical category contributes 0 to composite score |
 
-This is a **concept-to-code misalignment**: `scoring.py` maps the `physical`
-category but no file implements its indicators.
+This is a **concept-to-code misalignment** (ADR-053): `scoring.py` maps the `physical`
+category but no file implements its indicators. Implementation deferred until SBDB physical
+data coverage is sufficient (~30% diameter, ~25% albedo, ~15% spectral type). ATLAS weight
+of 0.20 for Physical Traits is effectively wasted at present.
 
 ### Value Objects
 
@@ -452,16 +456,28 @@ Combines NEO identity + multi-modal evidence package + composite sigma score
 
 ### Entities
 
+**Canonical (production path):**
+
 | Entity | Code | Description |
 |--------|------|-------------|
-| `DetectionManager` | `detection/detection_manager.py` | Priority-based detector registry; unified entry point |
-| `ValidatedSigma5ArtificialNEODetector` | `detection/validated_sigma5_artificial_neo_detector.py` | **Canonical** (priority 0); Bayesian corrected; scientifically validated |
-| `MultiModalSigma5ArtificialNEODetector` | `detection/multimodal_sigma5_artificial_neo_detector.py` | Multi-modal evidence fusion; used directly by pipeline (priority 1) |
-| `ProductionArtificialNEODetector` | `detection/production_artificial_neo_detector.py` | Hard-coded production thresholds; a=1.5 AU, e=0.6, i=50°–80° |
-| `CorrectedSigma5ArtificialNEODetector` | `detection/corrected_sigma5_artificial_neo_detector.py` | First calibration correction pass |
-| `Sigma5ArtificialNEODetector` | `detection/sigma5_artificial_neo_detector.py` | Original basic implementation |
-| `Sigma5CorrectedStatisticalFramework` | `detection/sigma5_corrected_statistical_framework.py` | Statistical framework refactor (shared by detectors) |
-| `GroundTruthDatasetBuilder` | `datasets/ground_truth_dataset_preparation.py` | Stub — not yet operational |
+| `DetectionManager` | `detection/detection_manager.py` | Priority-based detector registry; unified entry point (ADR-011) |
+| `ValidatedSigma5ArtificialNEODetector` | `detection/validated_sigma5_artificial_neo_detector.py` | **Canonical — priority 0**; Bayesian corrected; scientifically validated (ADR-008 Update) |
+| `MultiModalSigma5ArtificialNEODetector` | `detection/multimodal_sigma5_artificial_neo_detector.py` | Multi-modal evidence fusion; priority 1 fallback (ADR-013) |
+
+**Archived variants (fallback only; ADR-013):**
+
+| Entity | Code | Description |
+|--------|------|-------------|
+| `ProductionArtificialNEODetector` | `detection/production_artificial_neo_detector.py` | Hard-coded thresholds; priority 2 |
+| `CorrectedSigma5ArtificialNEODetector` | `detection/corrected_sigma5_artificial_neo_detector.py` | First calibration pass; priority 3 |
+| `Sigma5ArtificialNEODetector` | `detection/sigma5_artificial_neo_detector.py` | Original basic; priority 4 |
+| `Sigma5CorrectedStatisticalFramework` | `detection/sigma5_corrected_statistical_framework.py` | Statistical framework shared by archived variants |
+
+**Supporting:**
+
+| Entity | Code | Description |
+|--------|------|-------------|
+| `GroundTruthDatasetBuilder` | `datasets/ground_truth_dataset_preparation.py` | Operational (Phase 3/4); sensitivity=1.00, specificity=1.00 on small corpus (ADR-038) |
 | `ArtificialNEOTestSuite` | `detection/artificial_neo_test_suite.py` | Unit test harness; should reside in `tests/` |
 
 ### `ProductionArtificialNEODetector` Hard-Coded Parameters
@@ -605,6 +621,8 @@ scenarios.
 | `ImpactRiskAssessed(designation, earth_prob, moon_prob, energy_mt)` | Assessment complete |
 | `HighRiskFlagged(designation, collision_probability, timeline)` | P_impact > threshold |
 | `KeyholeIdentified(designation, keyhole_date, orbital_region)` | Resonant return path found |
+| `CraterSizeEstimated(designation, crater_diameter_km, uncertainty_pct)` | Crater calculation complete |
+| `EarthLunarRatioCalculated(designation, earth_prob, moon_prob, ratio)` | Comparative impact output produced |
 
 ---
 
@@ -766,7 +784,8 @@ No Slack, PagerDuty, or webhook integration exists yet.
 from ..ml.prediction import Alert as MLAlert, PredictionResult
 ```
 This creates a hard dependency on the ML module from the monitoring layer.
-If ML is unavailable, alerting breaks (see ADR-033).
+If ML is unavailable, alerting breaks. See ADR-033 and ADR-056 for design rationale
+and accepted risk. `Alert` is used as a carrier class only — no model inference at alert time.
 
 ### Infrastructure Components
 
@@ -840,13 +859,13 @@ validation, and blind-test sets.
 | MPC unusual objects | Oumuamua-class interlopers (natural anomalies) |
 | JPL SBDB | Natural NEO population sample |
 
-### Domain Events (Planned)
+### Domain Events
 
-| Event | Trigger |
-|-------|---------|
-| `DatasetVersionReleased(version, n_artificial, n_natural)` | New ground truth published |
-| `BlindTestCompleted(detector_type, precision, recall, fpr)` | Accuracy measurement done |
-| `GroundTruthValidated(designation, true_label, predicted_label)` | Single object labelled |
+| Event | Trigger | Status |
+|-------|---------|--------|
+| `GroundTruthValidated(designation, true_label, predicted_label)` | Single object labelled against corpus | Active (Phase 3) |
+| `DatasetVersionReleased(version, n_artificial, n_natural)` | New ground truth corpus published | Planned — next corpus expansion |
+| `BlindTestCompleted(detector_type, precision, recall, fpr)` | Held-out blind-test run completes | Planned — requires ≥50 confirmed artificials |
 
 ---
 
@@ -869,6 +888,9 @@ Stage 2 (PA-6 REBOUND propagation) deferred pending dependency adoption.
 
 ### Aggregate Root: `NetworkAnalysisSession`
 
+**Design ADRs**: ADR-042 (BC architecture), ADR-043 (clustering PA-1), ADR-044 (harmonics PA-3),
+ADR-045 (rendezvous PA-6), ADR-046 (correlation PA-5), ADR-047 (network sigma), ADR-048 (API endpoint)
+
 Owns the lifecycle of one population-level analysis run: from the input batch
 of designations through sub-module execution to `NetworkReport` production.
 
@@ -884,11 +906,12 @@ of designations through sub-module execution to `NetworkReport` production.
 
 | Entity | Sub-module | Prerequisite | Status |
 |---|---|---|---|
-| `OrbitalElementClusterer` | `clustering.py` | None | Ready to implement (PA-1) |
-| `SynodicHarmonicAnalyzer` | `harmonics.py` | ADR-041 (historical CAD) | Blocked |
-| `NonGravCorrelator` | `correlation.py` | ADR-040 (non-grav params) | Blocked |
-| `RendezvousDetector` | `rendezvous.py` | aiohttp (Stage 1); rebound (Stage 2, deferred) | Stage 1 Live — Option 15 |
-| `NetworkSigmaCombiner` | `network_sigma.py` | At least one sub-module | Ready to implement |
+| `OrbitalElementClusterer` | `clustering.py` | None | Implemented (Phase 11, PA-1) |
+| `SynodicHarmonicAnalyzer` | `harmonics.py` | ADR-041 ✅ done | Implemented (Phase 11, PA-3) — Note: ~60% of objects skipped (insufficient historical epochs) |
+| `NonGravCorrelator` | `correlation.py` | ADR-040 ✅ done | Implemented (Phase 11, PA-5) — Note: ~97% of clusters produce no output (A2 data available for ≈3% of NEOs) |
+| `RendezvousDetector Stage 1` | `rendezvous.py` | aiohttp | Implemented (Phase 19, PA-6 Stage 1) — Option 15 |
+| `RendezvousDetector Stage 2` | `rendezvous.py` | `rebound` compiled dep | Deferred — REBOUND N-body propagation pending dependency adoption |
+| `NetworkSigmaCombiner` | `network_sigma.py` | At least one sub-module | Implemented (Phase 11) |
 
 ### Value Objects
 
@@ -928,6 +951,8 @@ of designations through sub-module execution to `NetworkReport` production.
 | `NonGravCorrelationFound(cluster_id, pair, r_value)` | Correlated A2 across cluster members |
 | `NetworkAnomalyFlagged(session_id, network_sigma, tier)` | Network sigma ≥ 3.0 |
 | `NetworkExceptionalFlagged(session_id, network_sigma)` | Network sigma ≥ 5.0 |
+| `HarmonicAnalysisSkipped(designation, reason, epoch_count)` | Object has < 5 historical close-approach epochs — PA-3 cannot run |
+| `CorrelationAnalysisSkipped(cluster_id, reason)` | Cluster has zero members with A2 data — PA-5 produces no output |
 
 ### Context Boundary Rules
 
@@ -942,23 +967,23 @@ of designations through sub-module execution to `NetworkReport` production.
 
 ---
 
-## Future Domain Evolution (Roadmap-Derived, Updated 2026-03-08)
+## Domain Evolution History & Roadmap (Updated 2026-03-10)
 
-### v1.1 Additions (BC11 Phase 1 — no prerequisites)
-- **PA-1**: `OrbitalElementClusterer` + `NetworkSigmaCombiner` — first working BC11 milestone
-- **Blind-test set** for BC10 — withheld-label validation of ground truth corpus
-- **ADR-040 implementation** — `NonGravitationalParameters` in `NEOData`; unlocks PA-5
+### v1.0 → v1.1 Completed (Phases 11–19)
+- **PA-1** ✅: `OrbitalElementClusterer` + `NetworkSigmaCombiner` — BC11 Stage 1 milestone
+- **ADR-040** ✅: `NonGravitationalParameters` added to `NEOData` (Phase 11)
+- **ADR-041** ✅: `fetch_historical_approaches()` in `DataFetcher` (Phase 17)
+- **PA-3** ✅: `SynodicHarmonicAnalyzer` using Lomb-Scargle on historical approach epochs
+- **PA-5** ✅: `NonGravCorrelator` Pearson A2 correlation within clusters
+- **ADR-048** ✅: `POST /analyze/network` + `GET /analyze/network/{job_id}/status` (Phase 11)
+- **PA-6 Stage 1** ✅: `RendezvousDetector` MOID pre-filter; Option 15 (Phase 19)
 
-### v1.2 Additions (BC11 Phase 2 — after ADR-040/ADR-041)
-- **ADR-041 implementation** — `fetch_historical_approaches()` in `DataFetcher`
-- **PA-3**: `SynodicHarmonicAnalyzer` using Lomb-Scargle on historical approach epochs
-- **PA-5**: `NonGravCorrelator` using Pearson correlation of A2 across clusters
-- **`/analyze/network` API endpoint** (ADR-048) with `NetworkReport` Pydantic schema
-
-### v1.3 Additions (BC11 Phase 3 — deferred)
-- **PA-6**: `RendezvousDetector` with MOID pre-filter + optional REBOUND propagation
-- **ML Classification Context** (activate `aneos_core/ml/` with expanded ground truth)
-- **Real-Time Streaming Context** (activate `endpoints/streaming.py` with Redis pub/sub)
+### v1.2 Deferred Roadmap
+- **Blind-test set** for BC10 — withheld-label validation; requires ≥50 confirmed artificials
+- **PA-6 Stage 2**: REBOUND N-body propagation for rendezvous encounter epoch confirmation
+- **ML Classification Context**: activate `aneos_core/ml/` training with expanded ground truth
+- **Physical Indicators** (ADR-053): `indicators/physical.py` when SBDB data coverage sufficient
+- **Real-Time Streaming Context**: activate `endpoints/streaming.py` with Redis pub/sub
 
 ### Long-Term
 - **Publication Pipeline Context** — evidence package → peer-review document generator
@@ -967,7 +992,7 @@ of designations through sub-module execution to `NetworkReport` production.
 
 ---
 
-## Concept Document Alignment Matrix (v1.0.0)
+## Concept Document Alignment Matrix (v1.1.0)
 
 | Scientific Doc Requirement | Implementation | Status |
 |---------------------------|----------------|--------|
@@ -985,7 +1010,7 @@ of designations through sub-module execution to `NetworkReport` production.
 | Moon impact assessment | `impact_probability.py`; `ImpactResponse.moon_*` fields | Implemented |
 | FPR < 5.7×10⁻⁷ | Monte Carlo validator | Theoretically modeled; not empirically verified at scale |
 | Publication-standard sigma-5 | Detectors + `statistical_utils.py` | Methodology correct; blind-test validation still needed |
-| Population-level pattern analysis | `aneos_core/pattern_analysis/` | **Designed (ADR-042 to ADR-048); not yet implemented** |
+| Population-level pattern analysis | `aneos_core/pattern_analysis/` | Stage 1 Implemented (PA-1, PA-3, PA-5, PA-6 MOID — Phases 11–19); Stage 2 (PA-6 REBOUND) Deferred |
 
 ---
 
