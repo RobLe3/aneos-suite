@@ -327,3 +327,64 @@ class TestHarmonicsSkipTracking:
         )) for i in range(3)]
         result = NetworkAnalysisSession(config=cfg, fetcher=None).run(neos)
         assert result["analysis_metadata"]["objects_skipped_insufficient_harmonics"] == 3
+
+
+# ---------------------------------------------------------------------------
+# Phase 21B — Stouffer's method (SCI-003)
+# ---------------------------------------------------------------------------
+
+class TestStouffersMethod:
+    def _combiner(self):
+        from aneos_core.pattern_analysis.network_sigma import NetworkSigmaCombiner
+        return NetworkSigmaCombiner()
+
+    def test_stouffer_no_valid_p_returns_routine(self):
+        """No valid p-values → network_sigma 0.0, tier NETWORK_ROUTINE."""
+        result = self._combiner().combine(
+            {'pa1': None, 'pa3': None}, method='stouffer'
+        )
+        assert result['network_sigma'] == 0.0
+        assert result['network_tier'] == 'NETWORK_ROUTINE'
+        assert result['method'] == 'stouffer'
+        assert 'z_combined' in result
+
+    def test_stouffer_strong_signal_exceeds_sigma_2(self):
+        """Strong p-values should yield network_sigma >= 2.0 via Stouffer."""
+        result = self._combiner().combine(
+            {'pa1': 1e-5, 'pa3': 0.01}, method='stouffer'
+        )
+        assert result['network_sigma'] >= 2.0, (
+            f"Expected sigma >= 2.0, got {result['network_sigma']}"
+        )
+        assert result['method'] == 'stouffer'
+
+    def test_stouffer_with_weights_shifts_result(self):
+        """Weights should influence the z_combined value."""
+        combiner = self._combiner()
+        p_vals = {'pa1': 1e-4, 'pa3': 0.05}
+        r_equal = combiner.combine(p_vals, method='stouffer', weights={'pa1': 1.0, 'pa3': 1.0})
+        r_biased = combiner.combine(p_vals, method='stouffer', weights={'pa1': 10.0, 'pa3': 0.1})
+        # Biased toward the strong signal should give higher or equal z
+        assert r_biased['z_combined'] >= r_equal['z_combined'] * 0.8, (
+            "Weighting the strong signal should not drastically reduce z_combined"
+        )
+
+    def test_fisher_result_has_method_key(self):
+        """Fisher path (default) must include 'method': 'fisher' in result dict."""
+        result = self._combiner().combine({'pa1': 0.01}, method='fisher')
+        assert result.get('method') == 'fisher'
+        assert 'chi2_stat' in result
+        assert 'degrees_of_freedom' in result
+
+    def test_unknown_method_raises(self):
+        """Passing an unknown method name must raise ValueError."""
+        with pytest.raises(ValueError, match='stouffer'):
+            self._combiner().combine({'pa1': 0.01}, method='unknown_method')
+
+    def test_session_combination_method_field(self):
+        """PatternAnalysisConfig must expose combination_method field defaulting to 'fisher'."""
+        from aneos_core.pattern_analysis.session import PatternAnalysisConfig
+        cfg = PatternAnalysisConfig()
+        assert cfg.combination_method == 'fisher'
+        cfg2 = PatternAnalysisConfig(combination_method='stouffer')
+        assert cfg2.combination_method == 'stouffer'

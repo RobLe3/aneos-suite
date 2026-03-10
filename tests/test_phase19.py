@@ -236,3 +236,16 @@ class TestOption15Exists:
         assert '"15"' in src or "'15'" in src, (
             "Option '15' not found in handlers dict in ANEOSMenuV2.run()"
         )
+
+
+# ===========================================================================
+# Phase 21E — HAS_AIOHTTP raises ImportError (ADR-032)
+# ===========================================================================
+
+def test_fetch_phas_raises_importerror_when_no_aiohttp(monkeypatch):
+    """PHAMoidScanner.fetch_phas() must raise ImportError with install hint when aiohttp absent."""
+    import asyncio
+    import aneos_core.pattern_analysis.rendezvous as rv
+    monkeypatch.setattr(rv, '_HAS_AIOHTTP', False)
+    with pytest.raises(ImportError, match='aiohttp'):
+        asyncio.run(rv.PHAMoidScanner().fetch_phas())

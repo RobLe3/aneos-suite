@@ -11,11 +11,11 @@ Key Components:
 - reporting: Report generation and visualization
 - utils: Common utilities and helper functions
 
-Version: 1.1.0 (Phase 19 — Progress bars, file browser, Kardashev ML)
+Version: 1.2.0 (Phase 21 — Physical indicators, Stouffer, JWT, hypothesis tests)
 Original: neos_o3high_v6.19.1.py
 """
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __author__ = "aNEOS Development Team"
 
 from .config.settings import ANEOSConfig, ConfigManager

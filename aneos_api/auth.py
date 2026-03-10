@@ -12,6 +12,18 @@ import secrets
 from datetime import datetime, timedelta
 
 try:
+    from jose import jwt as _jose_jwt, JWTError as _JWTError
+    _HAS_JOSE = True
+except ImportError:
+    _HAS_JOSE = False
+
+try:
+    from datetime import UTC as _UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    _UTC = _tz.utc
+
+try:
     from fastapi import HTTPException, Depends, Security
     from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
     from fastapi.security.api_key import APIKeyHeader
@@ -76,6 +88,45 @@ for user_data in MOCK_USERS.values():
         API_KEY_MAP[api_key] = user_data
 
 
+_JWT_SECRET = os.getenv('ANEOS_SECRET_KEY', '')
+_JWT_ALGORITHM = 'HS256'
+
+
+def create_access_token(
+    user_id: str,
+    role: str,
+    expires_delta: Optional[timedelta] = None,
+) -> str:
+    """Create a signed JWT access token.
+
+    Raises RuntimeError if python-jose is not installed or ANEOS_SECRET_KEY is unset.
+    """
+    if not _HAS_JOSE:
+        raise RuntimeError("python-jose is not installed; run: pip install 'python-jose[cryptography]'")
+    if not _JWT_SECRET:
+        raise RuntimeError(
+            "Set ANEOS_SECRET_KEY env var before calling create_access_token.\n"
+            "Generate a key with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+    payload = {
+        'sub': user_id,
+        'role': role,
+        'exp': datetime.now(_UTC) + (expires_delta or timedelta(hours=24)),
+        'iat': datetime.now(_UTC),
+    }
+    return _jose_jwt.encode(payload, _JWT_SECRET, algorithm=_JWT_ALGORITHM)
+
+
+def _decode_bearer_token(token: str) -> Optional[Dict]:
+    """Decode and validate a JWT bearer token. Returns payload dict or None."""
+    if not _HAS_JOSE or not _JWT_SECRET:
+        return None
+    try:
+        return _jose_jwt.decode(token, _JWT_SECRET, algorithms=[_JWT_ALGORITHM])
+    except _JWTError:
+        return None
+
+
 def _assert_auth_configured() -> None:
     """Raise if placeholder API keys are still in use outside development."""
     if os.getenv('ANEOS_ENV', 'development') == 'development':
@@ -126,15 +177,28 @@ class AuthManager:
         return None
     
     def authenticate_bearer_token(self, token: str) -> Optional[Dict[str, Any]]:
-        """Authenticate user by bearer token."""
-        # Mock token authentication (would validate JWT in production)
-        if token == "mock_admin_token":
-            return MOCK_USERS['admin']
-        elif token == "mock_analyst_token":
-            return MOCK_USERS['analyst']
-        elif token == "mock_viewer_token":
-            return MOCK_USERS['viewer']
-        
+        """Authenticate user by bearer token.
+
+        Dev-mode mock tokens are only active when ANEOS_ENV=development and
+        ANEOS_SECRET_KEY is not set.  In all other cases real JWT validation is used.
+        """
+        # Dev-mode mocks: only when ANEOS_ENV=development AND no SECRET_KEY configured
+        if os.getenv('ANEOS_ENV', 'development') == 'development' and not _JWT_SECRET:
+            if token == "mock_admin_token":
+                return MOCK_USERS['admin']
+            elif token == "mock_analyst_token":
+                return MOCK_USERS['analyst']
+            elif token == "mock_viewer_token":
+                return MOCK_USERS['viewer']
+
+        # Real JWT path
+        payload = _decode_bearer_token(token)
+        if payload:
+            user_id = payload.get('sub')
+            for user_data in MOCK_USERS.values():
+                if user_data.get('user_id') == user_id and user_data.get('is_active'):
+                    return user_data
+
         return None
     
     def create_api_key(self, user_id: str) -> str:

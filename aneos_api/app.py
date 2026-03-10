@@ -79,7 +79,7 @@ import aneos_api.schemas  # noqa: F401 — registers all schema types
 from .schemas.health import HealthResponse, CheckResult
 from .auth import AuthManager, get_current_user
 from .middleware import setup_middleware
-from .endpoints import analysis, prediction, monitoring, admin, streaming
+from .endpoints import analysis, prediction, monitoring, admin, streaming, auth_endpoints
 from . import dashboard
 
 logger = logging.getLogger(__name__)
@@ -263,7 +263,9 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
         app.include_router(streaming.router, prefix="/api/v1/stream", tags=["Streaming"])
     if isinstance(dashboard.router, APIRouter):
         app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
-    
+    if isinstance(auth_endpoints.router, APIRouter):
+        app.include_router(auth_endpoints.router, prefix="/api/v1", tags=["auth"])
+
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse)
     async def health_check():

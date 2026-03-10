@@ -110,11 +110,45 @@ class DetectionManager:
                 # Normalize orbital elements
                 normalized_elements = self.preprocess_orbital_elements(orbital_elements)
                 
+                # Compute physical indicators when real SBDB data is present
+                extra = dict(additional_data or {})
+                _phys = physical_data or {}
+                if _phys and any(_phys.get(k) for k in ('diameter_km', 'albedo')):
+                    try:
+                        from aneos_core.analysis.indicators.physical import (
+                            DiameterAnomalyIndicator, AlbedoAnomalyIndicator,
+                        )
+                        from aneos_core.analysis.indicators.base import IndicatorConfig
+                        from aneos_core.data.models import NEOData as _NEOData, PhysicalProperties
+                        _cfg = IndicatorConfig(weight=1.0, enabled=True)
+                        _pp_kwargs = {
+                            k: _phys[k] for k in ('diameter_km', 'albedo', 'spectral_type')
+                            if k in _phys and _phys[k] is not None
+                        }
+                        _pp = PhysicalProperties(**_pp_kwargs)
+                        _nd_tmp = _NEOData(
+                            designation=orbital_elements.get('designation', 'UNKNOWN'),
+                            orbital_elements=normalized_elements,
+                            physical_properties=_pp,
+                        )
+                        for ind_cls, key in [
+                            (DiameterAnomalyIndicator, 'diameter_anomaly'),
+                            (AlbedoAnomalyIndicator, 'albedo_anomaly'),
+                        ]:
+                            res = ind_cls(_cfg).safe_evaluate(_nd_tmp)
+                            if res.weighted_score > 0:
+                                extra[key] = {
+                                    'weighted_score': res.weighted_score,
+                                    'raw_score': res.raw_score,
+                                    'confidence': res.confidence,
+                                }
+                    except Exception:
+                        pass  # Never block detection on indicator failure
+
                 # Call validated detector — pass through optional rich data if supplied
-                extra = additional_data or {}
                 result = self.detector.analyze_neo_validated(
                     orbital_elements=normalized_elements,
-                    physical_data=physical_data or {},
+                    physical_data=_phys,
                     orbital_history=extra.get('orbital_history'),
                     close_approach_history=extra.get('close_approach_history'),
                     observation_data=extra.get('observation_data'),

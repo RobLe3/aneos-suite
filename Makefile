@@ -26,10 +26,11 @@ test:
 spec:
 	@mkdir -p docs/api
 	python -c "\
-import sys, json; sys.path.insert(0, '.'); \
+import sys, json, io; sys.path.insert(0, '.'); \
+_out = sys.stdout; sys.stdout = io.StringIO(); \
 from aneos_api.app import create_app; \
-app = create_app(); \
-print(json.dumps(app.openapi(), indent=2, sort_keys=True))" \
+app = create_app(); spec = app.openapi(); sys.stdout = _out; \
+print(json.dumps(spec, indent=2, sort_keys=True))" \
 	> docs/api/openapi.json
 	@echo "OpenAPI spec written to docs/api/openapi.json"
 

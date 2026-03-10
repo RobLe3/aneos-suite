@@ -915,7 +915,7 @@ named commands to menu functions.
 
 ### ADR-032: Silent Simulation Fallback on Integration Failure
 
-**Status**: Risk — Needs Reversal
+**Status**: Partially Mitigated (Phase 21) — `PHAMoidScanner.fetch_phas()` now raises `ImportError` with install instructions instead of silently returning `[]` when aiohttp is absent. Other HAS_* guards remain silent.
 
 **Context**
 Optional pipeline components and external API dependencies cause initialization
@@ -1556,8 +1556,11 @@ correction is applied per sub-module across N to control the family-wise error r
 - (-) Bonferroni correction for large N batches (> 100 objects) will suppress
   all but the most extreme signals; users must be informed
 
+**Phase 21 extension**: Stouffer's weighted z-score method added as an alternative to Fisher's. `NetworkSigmaCombiner.combine()` now accepts `method='stouffer'` and per-key `weights`. `PatternAnalysisConfig` exposes a `combination_method` field (default `'fisher'`) that is threaded through `NetworkAnalysisSession.run()`. This partially addresses the independence assumption noted above — Stouffer's method handles heterogeneous evidence confidence better, though correlation between sub-modules still applies.
+
 **Files** (Phase 11): `aneos_core/pattern_analysis/network_sigma.py`,
 `aneos_core/utils/statistical_utils.py` (reused)
+**Files** (Phase 21): `aneos_core/pattern_analysis/network_sigma.py`, `aneos_core/pattern_analysis/session.py`
 
 ---
 
@@ -1777,7 +1780,7 @@ Stage 2 (REBOUND N-body propagation) is deferred until the dependency is adopted
 
 ### ADR-053: Physical Indicators Architecture (BC3 Gap)
 
-**Status**: Gap Identified — No Implementation Yet
+**Status**: Implemented (Phase 21) — `DiameterAnomalyIndicator` and `AlbedoAnomalyIndicator` wired into single-object detection path; pipeline stays 0.0 per ADR-059.
 
 **Context**
 `scoring.py` maps a `physical` category with weight 0.20 but `aneos_core/indicators/physical.py`
@@ -1785,18 +1788,29 @@ does not exist. Three intended indicators (`DiameterAnomalyIndicator`, `AlbedoAn
 `SpectralAnomalyIndicator`) are planned in DDD BC3 but never implemented. The physical category
 always contributes 0 to every composite score.
 
-**Decision**
+**Decision (original)**
 Defer implementation until `PhysicalProperties` data (diameter, albedo, spectral_type) is
 reliably populated from SBDB for a sufficient fraction of NEOs. Current coverage: diameter
 available for ~30% of NEOs; albedo ~25%; spectral type ~15%.
 
-**Consequences**
-- (-) Physical category silently contributes 0 to all scores; ATLAS weight of 0.20 is wasted
-- (-) Sigma-5 detections are based on 4 of 5 indicator categories
-- (+) No false positives introduced by missing data fallback
-- (+) BC3 architecture is complete except for this module; adding it later requires only one file
+**Phase 21 Implementation**
+`DiameterAnomalyIndicator` and `AlbedoAnomalyIndicator` are now computed in
+`detection_manager.py` `ValidatedWrapper.analyze_neo()` when `physical_data` contains
+real `diameter_km` or `albedo` values from SBDB. Results are forwarded as
+`diameter_anomaly` / `albedo_anomaly` keys and consumed by ATLAS
+`_process_physical_traits()` to produce `ClueContribution` entries with the `μ` and `α`
+flags respectively. CAD-API pipeline continues to score 0.0 for these categories (ADR-059) —
+the pipeline has no per-object SBDB physical data.
 
-**Files (when implemented)**: `aneos_core/indicators/physical.py`
+**Consequences**
+- (+) Physical indicators now active for single-object detection (Options 1–3) when SBDB provides diameter/albedo
+- (+) μ (diameter) and α (albedo) flags appear in ATLAS output for anomalous objects
+- (-) Coverage remains sparse: ~30% diameter, ~25% albedo from SBDB — most objects still score 0
+- (-) Pipeline (Option 8) unchanged: physical physical categories score 0 per ADR-059
+- (+) No false positives introduced: sub-weights 0.25 each; guard `weighted_score > 0` prevents activation when data is absent
+
+**Files**: `aneos_core/analysis/indicators/physical.py` (pre-existing),
+`aneos_core/analysis/advanced_scoring.py`, `aneos_core/detection/detection_manager.py`
 
 ---
 
@@ -1979,6 +1993,36 @@ objects, creating false-positive pipeline candidates.
 
 **Files**: `aneos_core/pipeline/automatic_review_pipeline.py`,
 `aneos_core/analysis/advanced_scoring.py`, `aneos_menu_v2.py`
+
+---
+
+### ADR-060: Property-Based Testing with Hypothesis
+
+**Status**: Implemented (Phase 21) — `tests/test_property_based.py`; `hypothesis>=6.92.0` in `requirements-core.txt`
+
+**Context**
+`hypothesis` was added to `requirements-core.txt` in Phase 20C but zero `@given` tests existed.
+Coverage at 33% provides weak assurance for pure mathematical functions (orbital element
+invariants, sigma/p-value round-trips, ATLAS score bounds) that are straightforward to
+property-test.
+
+**Decision**
+Add a dedicated `tests/test_property_based.py` with `@given` tests covering:
+1. `OrbitalElements` invariants: eccentricity ≥ 0, inclination ∈ [0, 180]
+2. `ClueContribution` math: `contribution == normalized_score × weight`
+3. `statistical_utils` round-trip: `p_value_to_sigma(sigma_to_p_value(σ)) ≈ σ` and inverse
+4. ATLAS score bounds: `calculate_score(...).overall_score ∈ [0, 1]` for any valid orbital input
+5. Targeted unit tests: Bonferroni correction, Fisher method key, boundary p-values
+
+No production code changes are required.
+
+**Consequences**
+- (+) Invariants are verified over thousands of generated inputs on every CI run
+- (+) Covers pure-math code paths that example-based tests miss
+- (+) Realistic coverage push from ~33% toward ~40%
+- (-) `max_examples=50` applied to ATLAS test to limit wall-time on CI
+
+**Files**: `tests/test_property_based.py` (new)
 
 ---
 

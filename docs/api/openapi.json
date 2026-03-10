@@ -1,4 +1,3 @@
-Some IP addresses of users launching heavy query showers have temporarily been disabled. Please contact the Gaia helpdesk (https://www.cosmos.esa.int/web/gaia/gaia-helpdesk) for advice. Workaround solutions for the Gaia Archive issues following the infrastructure upgrade: https://www.cosmos.esa.int/web/gaia/news#WorkaroundArchive
 {
   "components": {
     "schemas": {
@@ -525,39 +524,6 @@ Some IP addresses of users launching heavy query showers have temporarily been d
           }
         },
         "title": "CloseApproachResponse",
-        "type": "object"
-      },
-      "ConfigResponse": {
-        "description": "Configuration response model.",
-        "properties": {
-          "analysis_config": {
-            "additionalProperties": true,
-            "title": "Analysis Config",
-            "type": "object"
-          },
-          "api_config": {
-            "additionalProperties": true,
-            "title": "Api Config",
-            "type": "object"
-          },
-          "ml_config": {
-            "additionalProperties": true,
-            "title": "Ml Config",
-            "type": "object"
-          },
-          "monitoring_config": {
-            "additionalProperties": true,
-            "title": "Monitoring Config",
-            "type": "object"
-          }
-        },
-        "required": [
-          "api_config",
-          "analysis_config",
-          "ml_config",
-          "monitoring_config"
-        ],
-        "title": "ConfigResponse",
         "type": "object"
       },
       "CorrelationMatrixResult": {
@@ -2145,6 +2111,29 @@ Some IP addresses of users launching heavy query showers have temporarily been d
         "title": "SystemStatusResponse",
         "type": "object"
       },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in_hours": {
+            "default": 24,
+            "title": "Expires In Hours",
+            "type": "integer"
+          },
+          "token_type": {
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token"
+        ],
+        "title": "TokenResponse",
+        "type": "object"
+      },
       "TrainingRequest": {
         "description": "Request model for model training.",
         "properties": {
@@ -2425,15 +2414,13 @@ Some IP addresses of users launching heavy query showers have temporarily been d
     },
     "/api/v1/admin/config": {
       "get": {
-        "description": "Get current system configuration.",
+        "description": "Get current system configuration (includes persisted overrides).",
         "operationId": "get_system_config_api_v1_admin_config_get",
         "responses": {
           "200": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConfigResponse"
-                }
+                "schema": {}
               }
             },
             "description": "Successful Response"
@@ -2453,7 +2440,7 @@ Some IP addresses of users launching heavy query showers have temporarily been d
         ]
       },
       "post": {
-        "description": "Update system configuration (requires restart for some changes).",
+        "description": "Update and persist system configuration.",
         "operationId": "update_system_config_api_v1_admin_config_post",
         "requestBody": {
           "content": {
@@ -3710,7 +3697,7 @@ Some IP addresses of users launching heavy query showers have temporarily been d
     },
     "/api/v1/analysis/results/{designation}": {
       "get": {
-        "description": "Get cached analysis result for a NEO.",
+        "description": "Get analysis result for a NEO (memory cache then DB fallback).",
         "operationId": "get_analysis_result_api_v1_analysis_results__designation__get",
         "parameters": [
           {
@@ -3727,9 +3714,7 @@ Some IP addresses of users launching heavy query showers have temporarily been d
           "200": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AnalysisResponse"
-                }
+                "schema": {}
               }
             },
             "description": "Successful Response"
@@ -3905,6 +3890,34 @@ Some IP addresses of users launching heavy query showers have temporarily been d
         "summary": "Get Analysis Stats",
         "tags": [
           "Analysis"
+        ]
+      }
+    },
+    "/api/v1/auth/token": {
+      "post": {
+        "description": "Exchange a valid X-API-Key for a signed JWT bearer token.\n\nSet ANEOS_SECRET_KEY in your environment before using this endpoint.\nGenerate a key with::\n\n    python -c \"import secrets; print(secrets.token_hex(32))\"",
+        "operationId": "get_token_api_v1_auth_token_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "summary": "Exchange API key for JWT bearer token",
+        "tags": [
+          "auth",
+          "auth"
         ]
       }
     },

@@ -1,6 +1,6 @@
 # aNEOS Installation Guide
 
-Complete installation and setup guide for aNEOS v1.1.0.
+Complete installation and setup guide for aNEOS v1.2.0.
 
 ---
 

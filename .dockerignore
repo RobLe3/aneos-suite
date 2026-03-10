@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+
+# Testing & coverage
+.coverage
+.coverage.*
+coverage.json
+htmlcov/
+.pytest_cache/
+tests/
+
+# Development
+.git/
+.gitignore
+*.md
+docs/
+*.env
+*.env.*
+!.env.example
+
+# Cache & runtime data
+neo_data/cache/
+aneos.db
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp

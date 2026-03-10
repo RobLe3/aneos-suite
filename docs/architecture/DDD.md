@@ -290,17 +290,18 @@ scorable unit for pipeline routing.
 | `SubpointClusteringIndicator` | Ground track clustering over specific regions |
 | `GeographicBiasIndicator` | Non-uniform subpoint distribution |
 
-**Missing Physical Indicators** (`indicators/physical.py` — DOES NOT EXIST):
-| Intended Indicator | Status | Impact |
-|--------------------|--------|--------|
-| `DiameterAnomalyIndicator` | Missing | Physical category contributes 0 to composite score |
-| `AlbedoAnomalyIndicator` | Missing | Physical category contributes 0 to composite score |
-| `SpectralAnomalyIndicator` | Missing | Physical category contributes 0 to composite score |
+**Physical Indicators** (Phase 21A — ADR-053 closed):
+| Indicator | Status | Notes |
+|-----------|--------|-------|
+| `DiameterAnomalyIndicator` | **Implemented (Phase 21A)** | Wired in `detection_manager.py` `ValidatedWrapper.analyze_neo()` when SBDB supplies `diameter_km`; μ flag in ATLAS output |
+| `AlbedoAnomalyIndicator` | **Implemented (Phase 21A)** | Same path; α flag in ATLAS output |
+| `SpectralAnomalyIndicator` | Deferred | Spectral type coverage ~15% — insufficient for reliable scoring |
 
-This is a **concept-to-code misalignment** (ADR-053): `scoring.py` maps the `physical`
-category but no file implements its indicators. Implementation deferred until SBDB physical
-data coverage is sufficient (~30% diameter, ~25% albedo, ~15% spectral type). ATLAS weight
-of 0.20 for Physical Traits is effectively wasted at present.
+ADR-053 is now closed for the single-object detection path. Physical Traits ATLAS weight
+(0.20) is partially active when SBDB supplies diameter or albedo data (~30% and ~25%
+coverage respectively). The **CAD-API pipeline** (Option 8 / `automatic_review_pipeline.py`)
+remains 0.0 for all physical scores (ADR-059): batch objects lack individual physical
+observations.
 
 **Phase 20 Pipeline Proxy Fix (ADR-059)**: The CAD-API pipeline previously synthesised
 `radar_score`, `thermal_score`, and `spectral_score` from orbital elements (eccentricity,
@@ -929,14 +930,15 @@ of designations through sub-module execution to `NetworkReport` production.
 | `HarmonicSignal` | designation, dominant_period_days, power_excess_sigma, p_value |
 | `RendezvousPair` | designation_a, designation_b, n_encounters, min_distance_au, encounter_epochs, p_value |
 | `CorrelationMatrix` | cluster_id, designations, matrix, flagged_pairs, bonferroni_threshold |
-| `NetworkSigma` | combined_p_value, sigma, tier, sub_module_contributions |
-| `PatternAnalysisConfig` | clustering: bool, harmonics: bool, correlation: bool, rendezvous: bool, max_objects: int |
+| `NetworkSigma` | combined_p_value, sigma, tier, sub_module_contributions, method |
+| `PatternAnalysisConfig` | clustering: bool, harmonics: bool, correlation: bool, rendezvous: bool, max_objects: int, combination_method: str (default 'fisher') |
 
 ### Domain Services
 
 | Service | Purpose |
 |---|---|
 | `NetworkAnalysisSession` | Orchestrates sub-module execution; respects `PatternAnalysisConfig` |
+| `NetworkSigmaCombiner` | Combines sub-module p-values; supports `method='fisher'` (default) and `method='stouffer'` with per-key weights (Phase 21B — SCI-003 mitigated) |
 | `GranvikReferenceModel` | Provides expected density/distribution from Granvik 2018 Table 1 constants |
 | `MoidPreFilter` | Computes MOID from orbital elements; eliminates non-candidate rendezvous pairs |
 
@@ -1007,7 +1009,7 @@ of designations through sub-module execution to `NetworkReport` production.
 | Primary mission: artificial detection | All detection modules | Implemented |
 | Secondary mission: planetary defense | `impact_probability.py`; 16-field API | Implemented |
 | Multi-modal Sigma-5 detection | `ValidatedSigma5ArtificialNEODetector` | Implemented + ground-truth validated (Phase 3) |
-| 5 indicator categories | 4 categories; physical indicators in `indicators/physical.py` | Physical category implemented but not yet wired to main pipeline |
+| 5 indicator categories | 4 full categories + physical (partial); `DiameterAnomalyIndicator`/`AlbedoAnomalyIndicator` in `detection_manager.py` | Physical category active for single-object path when SBDB data available (Phase 21A) |
 | Bayesian base rate correction | `validated_sigma5` detector | Implemented |
 | Multiple testing correction | `statistical_testing.py` | Implemented |
 | Uncertainty quantification | `uncertainty_analysis.py`; `ImpactResponse.probability_uncertainty` | Implemented |

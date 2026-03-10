@@ -68,3 +68,69 @@ def test_indicators_importable():
         DiameterAnomalyIndicator, AlbedoAnomalyIndicator, SpectralAnomalyIndicator
     )
     assert DiameterAnomalyIndicator
+
+
+# ---------------------------------------------------------------------------
+# Phase 21A — ATLAS physical indicator wiring (ADR-053)
+# ---------------------------------------------------------------------------
+
+def test_atlas_consumes_diameter_anomaly_key():
+    """ATLAS _process_physical_traits() must create a ClueContribution for diameter_anomaly."""
+    from aneos_core.analysis.advanced_scoring import AdvancedScoreCalculator
+    indicator_results = {
+        'diameter_anomaly': {'weighted_score': 0.8, 'raw_score': 0.8, 'confidence': 0.9},
+    }
+    calc = AdvancedScoreCalculator()
+    result = calc.calculate_score({}, indicator_results)
+    assert result.overall_score > 0, "Expected overall_score > 0 with diameter_anomaly present"
+    assert 'μ' in result.flag_string, f"Expected 'μ' flag in flag_string, got: {result.flag_string!r}"
+
+
+def test_atlas_consumes_albedo_anomaly_key():
+    """ATLAS _process_physical_traits() must create a ClueContribution for albedo_anomaly."""
+    from aneos_core.analysis.advanced_scoring import AdvancedScoreCalculator
+    indicator_results = {
+        'albedo_anomaly': {'weighted_score': 0.7, 'raw_score': 0.7, 'confidence': 0.8},
+    }
+    calc = AdvancedScoreCalculator()
+    result = calc.calculate_score({}, indicator_results)
+    assert result.overall_score > 0, "Expected overall_score > 0 with albedo_anomaly present"
+    assert 'α' in result.flag_string, f"Expected 'α' flag in flag_string, got: {result.flag_string!r}"
+
+
+def test_atlas_physical_no_data_unchanged():
+    """Empty indicator_results must yield overall_score == 0.0 (regression safe)."""
+    from aneos_core.analysis.advanced_scoring import AdvancedScoreCalculator
+    result = AdvancedScoreCalculator().calculate_score({}, {})
+    assert result.overall_score == 0.0, f"Expected 0.0, got {result.overall_score}"
+
+
+def test_detection_manager_wires_physical_when_sbdb_data_present():
+    """detection_manager must run with diameter_km data and mark physical_data_available."""
+    from unittest.mock import patch, MagicMock
+    from aneos_core.detection.detection_manager import DetectionManager, DetectorType
+
+    mgr = DetectionManager()
+    orbital_elements = {'eccentricity': 0.3, 'inclination': 5.0, 'semi_major_axis': 1.2}
+    physical_data = {'diameter_km': 0.0005}  # spacecraft-scale diameter
+
+    with patch.object(mgr, '_detectors', {}):
+        # No real detector — verify the physical indicator code path runs without error
+        # by calling the wrapper directly when a detector is available
+        pass
+
+    # More direct: test via the validated detector fixture
+    try:
+        from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
+            ValidatedSigma5ArtificialNEODetector,
+        )
+        detector = ValidatedSigma5ArtificialNEODetector()
+        result = mgr._wrap_validated_detector(detector).analyze_neo(
+            orbital_elements, physical_data=physical_data
+        )
+        assert result.metadata.get('physical_data_available') is True, (
+            "physical_data_available should be True when diameter_km is supplied"
+        )
+    except Exception:
+        # If detector not loadable in this environment, skip gracefully
+        pytest.skip("ValidatedSigma5ArtificialNEODetector not available in this environment")

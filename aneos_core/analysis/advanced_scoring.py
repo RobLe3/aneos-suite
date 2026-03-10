@@ -397,7 +397,7 @@ class AdvancedScoreCalculator:
         thermal_result = indicator_results.get('thermal_ir_analysis', {})
         if thermal_result.get('weighted_score', 0) > 0:
             thermal_score = thermal_result['weighted_score']
-            
+
             clues.append(ClueContribution(
                 name='thermal_signature',
                 category='physical_traits',
@@ -409,7 +409,39 @@ class AdvancedScoreCalculator:
                 flag='t' if thermal_score > 0.5 else '',
                 explanation="Thermal signature suggests artificial materials"
             ))
-        
+
+        # Diameter anomaly (DiameterAnomalyIndicator — single-object path only, SBDB data)
+        diameter_result = indicator_results.get('diameter_anomaly', {})
+        if diameter_result.get('weighted_score', 0) > 0:
+            d_score = diameter_result['weighted_score']
+            clues.append(ClueContribution(
+                name='diameter_anomaly',
+                category='physical_traits',
+                raw_value=diameter_result.get('raw_score', 0),
+                normalized_score=d_score,
+                weight=self.config.physical_traits_weight * 0.25,
+                contribution=d_score * self.config.physical_traits_weight * 0.25,
+                confidence=diameter_result.get('confidence', 0.8),
+                flag='μ' if d_score > 0.5 else '',
+                explanation="Diameter anomaly — object in spacecraft-scale size range"
+            ))
+
+        # Albedo anomaly (AlbedoAnomalyIndicator — single-object path only, SBDB data)
+        albedo_result = indicator_results.get('albedo_anomaly', {})
+        if albedo_result.get('weighted_score', 0) > 0:
+            a_score = albedo_result['weighted_score']
+            clues.append(ClueContribution(
+                name='albedo_anomaly',
+                category='physical_traits',
+                raw_value=albedo_result.get('raw_score', 0),
+                normalized_score=a_score,
+                weight=self.config.physical_traits_weight * 0.25,
+                contribution=a_score * self.config.physical_traits_weight * 0.25,
+                confidence=albedo_result.get('confidence', 0.8),
+                flag='α' if a_score > 0.5 else '',
+                explanation="Albedo anomaly — reflectivity inconsistent with natural surface"
+            ))
+
         return clues
     
     def _process_spectral_identity(self, neo_data: Dict[str, Any], 

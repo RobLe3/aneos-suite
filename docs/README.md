@@ -17,7 +17,7 @@ Welcome to the comprehensive documentation for the aNEOS (Advanced Near Earth Ob
 - **[Validation Integrity Audit](scientific/VALIDATION_INTEGRITY.md)** — Honest uncertainty assessment: what the F1=1.00 on N=4 actually means
 
 ### Architecture
-- **[Architecture Decision Records](architecture/ADR.md)** — 59 ADRs documenting every significant design choice
+- **[Architecture Decision Records](architecture/ADR.md)** — 60 ADRs documenting every significant design choice
 - **[Domain-Driven Design](architecture/DDD.md)** — 11 Bounded Contexts: entities, value objects, domain events, context boundaries
 
 ### API Reference
@@ -85,7 +85,7 @@ The documentation is version-controlled with the code. When contributing:
 
 ---
 
-**Project Version**: 1.1.0 (Phase 20)
+**Project Version**: 1.2.0 (Phase 21)
 **Documentation Last Updated**: 2026-03-10
 **Maintainer**: aNEOS Development Team
 **Community**: https://community.openastronomy.org/t/open-source-python-tool-for-checking-neo-anomalies-aneos/1374

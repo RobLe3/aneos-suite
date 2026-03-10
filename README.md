@@ -1,6 +1,6 @@
 # aNEOS — Advanced Near Earth Object Suite
 
-**v1.1.0 — Research Platform (Phase 20: pipeline proxy discipline, dark comet context, ADR/DDD harmonisation, 2026-03-10)**
+**v1.2.0 — Research Platform (Phase 21: physical indicators, Stouffer, JWT, hypothesis tests, 2026-03-10)**
 
 aNEOS is an open-source Python research platform with two independent missions:
 
@@ -56,7 +56,7 @@ object onto a future impact trajectory.
 - The primary discriminating feature is **density** (hollow vs rocky), followed by albedo
   and non-gravitational acceleration magnitude.
 - A full REST API lets other software query aNEOS programmatically.
-- 235 automated tests verify the system works correctly end to end.
+- 336 automated tests verify the system works correctly end to end.
 
 **What it is not:**
 
@@ -718,7 +718,7 @@ See `CONTRIBUTING.md` for development guidelines. The project follows the C&C + 
 Run the test suite before opening a pull request:
 
 ```bash
-python -m pytest tests/ aneos_core/tests/ -m "not network" -q   # 308 tests, 0 fail
+python -m pytest tests/ aneos_core/tests/ -m "not network" -q   # 336 tests, 0 fail
 make spec                                      # regenerate OpenAPI spec
 git diff --stat docs/api/openapi.json          # confirm spec is current
 ```
@@ -729,4 +729,4 @@ Scientific research and educational use. See `LICENSE` for complete terms.
 
 ---
 
-*aNEOS v1.1.0 — Phase 20 complete. 15-option v2 menu with progress bars, file browser, interactive results browser. 200-year historical pipeline operational (27,632 objects retrieved in live test). THETA SWARM ML classifiers working. REST API: 52+ endpoints. Test suite: 308 pass / 0 fail. Pipeline proxy score discipline enforced (ADR-059): physical/spectral/radar/thermal scores zero unless dedicated observations supplied.*
+*aNEOS v1.2.0 — Phase 21 complete. Physical indicators (diameter, albedo) wired into single-object detection path. Stouffer's weighted z-score method added to population analysis. JWT bearer token endpoint live (/api/v1/auth/token). Property-based hypothesis tests added. REST API: 52+ endpoints. Test suite: 336 pass / 0 fail.*

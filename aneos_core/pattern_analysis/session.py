@@ -25,6 +25,7 @@ class PatternAnalysisConfig:
     historical_years: int = 30
     max_objects: int = 500
     min_sigma_filter: float = 1.0   # only objects with sigma >= this enter analysis
+    combination_method: str = 'fisher'  # 'fisher' or 'stouffer' (ADR-047)
 
 
 class NetworkAnalysisSession:
@@ -135,7 +136,10 @@ class NetworkAnalysisSession:
 
         # Combine
         from .network_sigma import NetworkSigmaCombiner
-        combined = NetworkSigmaCombiner().combine(sub_module_p_values, n_objects=n)
+        combined = NetworkSigmaCombiner().combine(
+            sub_module_p_values, n_objects=n,
+            method=self.config.combination_method,
+        )
         result.update(combined)
         return result
 

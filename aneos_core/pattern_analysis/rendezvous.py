@@ -81,8 +81,11 @@ class PHAMoidScanner:
     async def fetch_phas(self) -> List[PHAObject]:
         """Query SBDB for all PHAs with orbital elements and A2."""
         if not _HAS_AIOHTTP:
-            self.logger.error("aiohttp is not installed; cannot fetch PHAs from SBDB")
-            return []
+            raise ImportError(
+                "aiohttp is required for the rendezvous scanner (Option 15) but is not installed.\n"
+                "Install with: pip install aiohttp>=3.8.0\n"
+                "Or: pip install -r requirements.txt"
+            )
 
         params = {
             "sb-cdata": '{"AND":["Moid|LT|0.05","H|LT|22"]}',
