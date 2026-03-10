@@ -592,6 +592,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
                     if 0 <= idx < len(det_items):
                         desg, result = det_items[idx]
                         self._display_detection_result(desg, result, verbose=True)
+                        self._show_db_result_for(desg)
                 except ValueError:
                     pass
 
@@ -620,10 +621,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
                     if 0 <= idx < len(imp_items):
                         desg, impact = imp_items[idx]
                         self._display_impact_result(desg, impact)
+                        self._show_db_result_for(desg)
                 except ValueError:
                     pass
-
-        self._show_db_results()
 
     def _export_results(self) -> None:
         """Option 10: Export in-session results to JSON or CSV."""
@@ -1086,9 +1086,11 @@ class ANEOSMenuV2(ANEOSMenuBase):
         # Category breakdown
         if cat_scores:
             lines.append("\n[bold]Category scores:[/bold]")
+            max_cat = max(cat_scores.values()) if cat_scores else 1.0
             for cat, score in cat_scores.items():
-                bar = "█" * int(score * 40)
-                lines.append(f"  {cat:<28} {score:.4f}  {bar}")
+                bar = "█" * int((score / max_cat) * 25) if max_cat > 0 else ""
+                pct = f"{score*100:.1f}%"
+                lines.append(f"  {cat:<28} {pct:>6}  {bar}")
 
         # Per-clue breakdown
         if clues:
@@ -1256,6 +1258,40 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 title=f"Clusters (top {len(rows)} of {len(clusters)})",
             )
         self.display_panel("\n".join(lines), title="Population Pattern Analysis", style="cyan")
+
+    def _show_db_result_for(self, designation: str) -> None:
+        """Show persisted DB results filtered to a specific designation."""
+        try:
+            from aneos_api.database import SessionLocal, HAS_SQLALCHEMY
+            if not HAS_SQLALCHEMY:
+                return
+            from aneos_api.database import AnalysisService
+            db = SessionLocal()
+            try:
+                service = AnalysisService(db)
+                results = service.get_analysis_results(limit=20)
+                matches = [
+                    r for r in results
+                    if r.get("designation", "").lower() == designation.lower()
+                ]
+                if matches:
+                    rows = [
+                        [
+                            r.get("designation", "?"),
+                            r.get("classification", "—"),
+                            str(r.get("analysis_date", ""))[:19],
+                        ]
+                        for r in matches
+                    ]
+                    self.display_table(
+                        headers=["Designation", "Classification", "Analysis date"],
+                        rows=rows,
+                        title=f"Persisted results for {designation}",
+                    )
+            finally:
+                db.close()
+        except Exception:
+            pass
 
     def _show_db_results(self) -> None:
         try:

@@ -85,7 +85,11 @@ class ANEOSMenuBase:
     def display_panel(self, content: str, title: str = "", style: str = "blue") -> None:
         """Render a Rich panel or fall back to plain text."""
         if self.console and HAS_RICH:
-            self.console.print(Panel(content, title=title, style=style))
+            self.console.print(Panel(
+                content, title=title, style=style,
+                padding=(0, 1),
+                expand=False,
+            ))
         else:
             if title:
                 print(f"\n{'='*40} {title} {'='*40}")

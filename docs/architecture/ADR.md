@@ -1,6 +1,6 @@
 # Architecture Decision Records — aNEOS Suite
 
-_Derived: 2026-03-06 | Last updated: 2026-03-08 | Codebase Version: 1.0.0_
+_Derived: 2026-03-06 | Last updated: 2026-03-10 | Codebase Version: 1.1.0_
 _Concept document: README.md + docs/scientific/scientific-documentation.md_
 
 ADRs capture every significant architectural decision found in the aNEOS codebase,
@@ -1188,7 +1188,7 @@ Research outputs must be suitable for academic publication and data sharing.
 | Real NASA/JPL data integration | Implemented (SBDB, Horizons, CAD API, NEODyS, MPC); silent fallback risk remains | Silent fallback (ADR-032) |
 | 99.99994% confidence / FPR 5.7×10⁻⁷ | Theoretically modeled; Monte Carlo FPR validator exists | Empirically unverified at scale |
 | OpenAPI spec | Auto-generated via `make spec`; committed at every change | None |
-| Population-level pattern analysis | Not started | New bounded context required (ADR-040 through ADR-048) |
+| Population-level pattern analysis | Stage 1 implemented (Phase 11–19): PA-1 clustering, PA-3 harmonics, PA-5 correlation, PA-6 Stage 1 rendezvous (Option 15) | BC11; PA-6 Stage 2 (REBOUND) deferred |
 
 ---
 
@@ -1203,7 +1203,7 @@ All must be reviewed against existing data structures before implementation begi
 
 ### ADR-040: Non-Gravitational Parameter Prerequisite
 
-**Status**: Open — Prerequisite for ADR-046
+**Status**: Implemented (Phase 11) — `NonGravitationalParameters` VO in `aneos_core/models.py`; SBDB `nongrav=1` optional fetch; A2 bounds validation in `__post_init__`
 
 **Context**
 The Cross-Object Residual Correlation analysis (PA-5 in the implementation plan)
@@ -1240,7 +1240,7 @@ Extend `NEOData.to_dict()`/`from_dict()` to preserve the field across cache.
 
 ### ADR-041: Historical Close-Approach Fetch Strategy
 
-**Status**: Open — Prerequisite for ADR-044
+**Status**: Implemented (Phase 17) — `DataFetcher.fetch_historical_approaches()` using CAD API; 7-day TTL cache; `first_observation_date`/`last_observation_date` wired into `NEOData`
 
 **Context**
 `DataFetcher._fetch_close_approaches()` (Phase 10) uses `date-min=now`, returning
@@ -1385,7 +1385,7 @@ from anomaly scoring.
 
 ### ADR-044: Synodic Period Harmonic Analysis (PA-3)
 
-**Status**: Concept / Blocked on ADR-041
+**Status**: Implemented (Phase 11) — `SynodicHarmonicAnalyzer` in `aneos_core/pattern_analysis/harmonics.py`; Lomb-Scargle on dense binary time grid; skipped-object count tracked in `analysis_metadata`
 
 **Context**
 Objects with repeated Earth close approaches at predictable intervals may be in
@@ -1429,7 +1429,7 @@ Objects with fewer are silently skipped and logged at DEBUG level.
 
 ### ADR-045: Pairwise Rendezvous Detection (PA-6)
 
-**Status**: Concept / Deferred — Implement After PA-1 through PA-5
+**Status**: Stage 1 Implemented (Phase 19) — Stage 2 (REBOUND) deferred
 
 **Context**
 Temporary gravitational capture or repeated co-orbital encounters between two
@@ -1460,19 +1460,20 @@ making O(n²) tractable: 2,400² / 2 ≈ 2.9 million pairs pre-MOID-filter.
 
 **Consequences**
 - (+) MOID pre-filter eliminates > 99% of pairs before expensive propagation
+- (+) PHAMoidScanner deployed in `aneos_core/pattern_analysis/rendezvous.py`; exposed as Option 15 in `aneos_menu_v2.py`
 - (-) REBOUND is a compiled C dependency; `HAS_REBOUND` guard required;
   graceful no-op if absent
 - (-) Even with PHA restriction, 2.9M MOID evaluations + propagation for
   surviving pairs is a multi-hour computation on a single machine
-- (-) Deferred: implement only after PA-1 through PA-5 are operational
+- (-) Stage 2 (REBOUND propagation) deferred until dependency adopted
 
-**Files (when implemented)**: `aneos_core/pattern_analysis/rendezvous.py`
+**Files**: `aneos_core/pattern_analysis/rendezvous.py`
 
 ---
 
 ### ADR-046: Cross-Object Non-Gravitational Correlation (PA-5)
 
-**Status**: Concept / Blocked on ADR-040
+**Status**: Implemented (Phase 11) — `NonGravCorrelator` in `aneos_core/pattern_analysis/correlation.py`; A2 Pearson correlation within clusters; single-epoch NaN logged; Bonferroni-corrected p-values
 
 **Context**
 Synchronized non-gravitational accelerations across multiple spatially proximate
@@ -1556,7 +1557,7 @@ correction is applied per sub-module across N to control the family-wise error r
 
 ### ADR-048: `/analyze/network` API Endpoint
 
-**Status**: Concept / Blocked on ADR-042 through ADR-044
+**Status**: Implemented (Phase 11) — `POST /analyze/network` + `GET /analyze/network/{job_id}/status`; `NetworkAnalysisSession` aggregate root; `aneos_api/schemas/network.py`
 
 **Context**
 Population pattern analysis results must be accessible via the REST API
@@ -1704,6 +1705,57 @@ G-011). Physical data was silently lost, reducing detection evidence.
   this is the correct behaviour — user must investigate the missing data
 
 **Files**: `aneos_core/detection/detection_manager.py`, `aneos_menu.py`
+
+---
+
+### ADR-051: Full Object Data Panel (Options 1 & 2)
+
+**Status**: Implemented — Phase 19
+
+**Context**
+Before a detection result is shown, users benefit from seeing the raw object
+data that was fetched, so they can assess data quality and completeness before
+interpreting the sigma score.
+
+**Decision**
+`_display_neo_data()` panel (style=blue) is shown before the detection result
+in `_detect_single` and `_detect_multi_evidence`. Option 1 defaults `verbose=True`.
+The panel shows: orbital elements, physical properties, observation arc,
+completeness score, closest approach summary, sources used, and non-grav A2
+if present.
+
+**Consequences**
+- (+) Users see data quality context alongside the detection verdict
+- (+) Missing data is visible before the result, not hidden in metadata
+- (-) Slightly longer output for single-object queries
+
+**Files**: `aneos_menu_v2.py`
+
+---
+
+### ADR-052: Standalone Rendezvous Scan as Option 15 (PA-6 Stage 1)
+
+**Status**: Implemented — Phase 19
+
+**Context**
+Option 7 pipeline is Earth-centric (CAD API). Objects on rendezvous paths to
+other NEOs never appear in Earth close-approach data and therefore bypass the
+main polling pipeline entirely.
+
+**Decision**
+Deploy PA-6 Stage 1 (Drummond D + period resonance + A2 correlation) as Option 15
+without REBOUND. SBDB bulk query provides ~2,400 PHAs with orbital elements and
+A2 parameters. Drummond D metric pairs objects by orbital similarity; period
+resonance (P_a/P_b ratio) and A2 sign correlation provide supporting signals.
+Stage 2 (REBOUND N-body propagation) is deferred until the dependency is adopted.
+
+**Consequences**
+- (+) Earth-independent rendezvous signal available without compiled dependencies
+- (+) ~2,400 PHAs covered using SBDB bulk query
+- (-) No temporal confirmation — Stage 1 flags geometric proximity only
+- (-) Stage 2 (actual encounter epochs) requires REBOUND and is deferred
+
+**Files**: `aneos_core/pattern_analysis/rendezvous.py`, `aneos_menu_v2.py`
 
 ---
 

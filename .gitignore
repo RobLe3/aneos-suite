@@ -182,3 +182,7 @@ status_*.md
 neo_poll_*.json
 enhanced_neo_poll_*.json
 *_analysis_*.json
+
+# Archive directory - track all content (must be last to override name-based patterns above)
+!docs/archive/
+!docs/archive/**

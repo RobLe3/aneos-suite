@@ -492,6 +492,7 @@ Combines NEO identity + multi-modal evidence package + composite sigma score
 |---------|---------|
 | `DetectionManager` | Registry + AUTO selection + per-detector output adapters |
 | `OrbitalElementsNormalizer` | Translates dual-naming (a/semi_major_axis, e/eccentricity) |
+| `_display_neo_data()` | Presents orbital elements, physical properties, observation arc, completeness, and nearest approach before the detection result in Options 1 and 2 (ADR-051) |
 
 ### Interfaces (ABCs)
 
@@ -628,7 +629,8 @@ scores, methodology references, and uncertainty bounds.
 
 | Entity | Code | Output Formats |
 |--------|------|---------------|
-| `ANEOSMenuV2` | `aneos_menu_v2.py` | Rich terminal, 6-option lean menu (primary) |
+| `ANEOSMenuV2` | `aneos_menu_v2.py` | Rich terminal, 15-option menu (primary) |
+| `DetectionAnalytics` (Option 13) | `aneos_menu_v2.py` | σ-tier + ATLAS-tier session statistics, JSON export via Exporter |
 | `ANEOSMenu` | `aneos_menu.py` | Rich terminal, 121-option full menu (legacy) |
 | `ReportGenerator` | `reporting/generators.py` | Rich terminal, structured JSON |
 | `Exporter` | `reporting/exporters.py` | CSV, JSON, FITS |
@@ -853,7 +855,7 @@ validation, and blind-test sets.
 
 ---
 
-## Bounded Context 11: Population Pattern Analysis (Concept — Not Yet Implemented)
+## Bounded Context 11: Population Pattern Analysis (Stage 1 Implemented — Phase 19, Stage 2 Deferred)
 
 **Purpose**: Identify statistically anomalous structures in a collection of NEO
 objects by comparing their collective orbital, temporal, and dynamical properties
@@ -887,7 +889,7 @@ of designations through sub-module execution to `NetworkReport` production.
 | `OrbitalElementClusterer` | `clustering.py` | None | Ready to implement (PA-1) |
 | `SynodicHarmonicAnalyzer` | `harmonics.py` | ADR-041 (historical CAD) | Blocked |
 | `NonGravCorrelator` | `correlation.py` | ADR-040 (non-grav params) | Blocked |
-| `RendezvousDetector` | `rendezvous.py` | `rebound` optional dep | Deferred (PA-6) |
+| `RendezvousDetector` | `rendezvous.py` | aiohttp (Stage 1); rebound (Stage 2, deferred) | Stage 1 Live — Option 15 |
 | `NetworkSigmaCombiner` | `network_sigma.py` | At least one sub-module | Ready to implement |
 
 ### Value Objects
