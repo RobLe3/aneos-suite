@@ -1674,4 +1674,37 @@ def establish_data_sharing_protocols():
 
 ---
 
+## Dark Comets and Non-Gravitational Acceleration
+
+### Definition
+
+**Dark comets** are a class of NEOs that exhibit measurable non-gravitational acceleration — consistent with cometary outgassing — but lack a visible coma or tail. Unlike classical comets, they appear point-like in optical observations; unlike inert asteroids, their trajectories deviate systematically from purely gravitational orbits.
+
+The term emerged from the discovery of objects whose astrometric residuals required non-gravitational parameters (A1, A2, A3) to fit, despite no photometric or spectroscopic evidence of cometary activity. Candidates include: 1998 KY26 (JAXA Hayabusa2 target; dark comet candidacy proposed ≥ 2023), 2000 PH5/YORP, and a growing population of carbonaceous bodies.
+
+### Relevance to aNEOS
+
+aNEOS uses the A2 parameter (transverse non-gravitational acceleration, AU/day²) as one input to the orbit-behaviour scoring category. A non-zero A2 raises the ATLAS Δ flag. However, A2 is only available for a small fraction of NEOs (~2–5% in SBDB as of 2026) and its physical origin is ambiguous:
+
+| A2 origin | Interpretation |
+|-----------|----------------|
+| Sublimation outgassing | Natural (comet or dark comet) |
+| Solar radiation pressure | Natural (low-mass, high area-to-mass) |
+| Active propulsion | Artificial (strong prior needed) |
+| Orbit fit artefact | Noise (short arc, sparse observations) |
+
+### Scoring Principle
+
+A Δ flag on a pipeline candidate does **not** classify the object as artificial. It triggers additional context in the ATLAS detail panel and indicates that dedicated follow-up (spectroscopy, thermal IR, long-arc astrometry) is scientifically warranted.
+
+Objects with A2 > 10⁻¹³ AU/day² and no observable coma should be reviewed for dark comet candidacy before an artificial origin is inferred. The aNEOS scoring system assigns A2-based Δ flags only when A2 is sourced directly from SBDB (confidence ≥ 0.6). Velocity-proxy estimates from the CAD pipeline use confidence = 0.35 and do not trigger the Δ flag (threshold raised to score > 0.65 per ADR-058).
+
+### References
+
+- Farnocchia, D. et al. (2023). *Non-gravitational acceleration in the trajectory of 1998 KY26.* JPL Technical Memorandum.
+- Seligman, D. Z. et al. (2023). *Dark comets: An emerging population of NEOs with non-gravitational forces.* ApJL.
+- SBDB non-gravitational parameters: https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html
+
+---
+
 This completes the comprehensive Scientific Documentation for aNEOS. The framework provides rigorous, academically sound methodology for detecting artificial Near Earth Objects while maintaining full transparency and reproducibility required for scientific validation.

@@ -1928,7 +1928,57 @@ score, confidence, and explanation are stored in `ClueContribution` for full tra
   (ADR-053 gap)
 - (-) No validation of `advanced_scoring_weights.json` schema on load
 
-**Files**: `aneos_core/analysis/advanced_scoring.py`, `advanced_scoring_weights.json`
+**Pipeline proxy fix (Phase 20)**: CAD-API pipeline previously computed synthetic
+radar/thermal/spectral scores from eccentricity. These are zeroed in
+`automatic_review_pipeline.py`; real values require dedicated observations (ADR-053).
+Δ flag threshold raised from `> 0.4` to `> 0.65` so velocity-proxy scores (capped at 0.5)
+cannot trigger it. Approach and ΔBIC proxy confidence lowered to 0.35; explanations are
+now confidence-conditional (proxy path shows "proximity signal / velocity anomaly signal"
+rather than "Suspiciously regular" / "Non-gravitational acceleration detected").
+
+**Files**: `aneos_core/analysis/advanced_scoring.py`, `advanced_scoring_weights.json`,
+`aneos_core/pipeline/automatic_review_pipeline.py`
+
+---
+
+### ADR-059: Pipeline Proxy Score Discipline (Phase 20)
+
+**Status**: Accepted — Phase 20
+
+**Context**
+`automatic_review_pipeline.py` computed synthetic scores for `radar_score`,
+`thermal_score`, and `spectral_score` from orbital elements (eccentricity, inclination).
+These fed ATLAS which displayed misleading explanations ("Radar polarization indicates
+artificial surface properties", "Thermal emission consistent with engineered material")
+when no actual observational data existed. The ΔBIC score was computed from approach
+velocity and could trigger the Δ flag (threshold 0.4) even for natural slow-approaching
+objects, creating false-positive pipeline candidates.
+
+**Decision**
+1. Zero out `radar_score`, `thermal_score`, `spectral_score` in the pipeline — set to
+   `neo_obj.get('X_score', 0.0)` so they remain non-zero only if a caller explicitly
+   provides a measured value.
+2. Lower `approach_confidence` to 0.35 and `delta_bic_confidence` to 0.35 for
+   CAD-sourced pipeline candidates (signalling proxy nature).
+3. Raise ATLAS Δ flag threshold in `advanced_scoring.py` from `> 0.4` to `> 0.65`.
+   Pipeline delta_bic_score is capped at 0.5, so no proxy score can trigger the flag.
+4. Make ATLAS explanation text confidence-conditional:
+   - confidence < 0.6 + `repeat_approaches` → "Close-approach proximity signal (proxy)"
+   - confidence < 0.6 + `non_gravitational_acceleration` → "Velocity anomaly signal (proxy)"
+5. Add data-source disclaimer and dark-comet context to `_display_pipeline_candidate_detail`
+   in `aneos_menu_v2.py`.
+
+**Consequences**
+- (+) Pipeline candidates no longer display fabricated physical/spectral evidence
+- (+) Δ flag reserved for objects with genuine A2 measurements or high-confidence signals
+- (+) Dark comet candidacy context surfaced to analyst when Δ flag present
+- (-) Physical/spectral/radar/thermal ATLAS categories will score 0 for all pipeline
+  candidates until ADR-053 observational data gap is closed
+- (-) Orbit-behaviour category scores are lower (proxy confidence 0.35 vs 0.5/0.7),
+  reducing overall ATLAS scores and potentially pushing borderline objects below threshold
+
+**Files**: `aneos_core/pipeline/automatic_review_pipeline.py`,
+`aneos_core/analysis/advanced_scoring.py`, `aneos_menu_v2.py`
 
 ---
 

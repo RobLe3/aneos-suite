@@ -577,50 +577,60 @@ class AutomaticReviewPipeline:
                     approach_regularity_score = min(eccentricity * 0.1, 0.3)
 
                 if v_kms is not None:
-                    # Low velocity (< 5 km/s) is anomalous; high (> 30 km/s) is notable
+                    # Low velocity proxy: orbital geometry only, NOT actual ΔBIC fit.
+                    # Cap at 0.5 so score never exceeds the Δ flag threshold (0.65).
+                    # Confidence kept low (0.35) to signal this is a proxy, not a measurement.
                     delta_bic_score = min(max(0.0, (10.0 - v_kms) / 10.0), 0.5) if v_kms < 10 else min(v_kms / 100.0, 0.2)
+                    delta_bic_confidence = neo_obj.get('delta_bic_confidence', 0.35)
                 else:
                     delta_bic_score = min(abs(inclination - 90) / 180 * 0.2, 0.2)
+                    delta_bic_confidence = 0.25
 
-                radar_score = min(eccentricity * 0.15, 0.25)
-                thermal_score = min((eccentricity + inclination/180) * 0.1, 0.2)
-                spectral_score = min(eccentricity * 0.05, 0.15)
+                # Radar, thermal, and spectral data are NOT available from the CAD API.
+                # Setting these to 0.0 prevents fabricated "physical evidence" explanations.
+                # Real values require dedicated observational campaigns (ADR-053).
+                radar_score = neo_obj.get('radar_score', 0.0)
+                thermal_score = neo_obj.get('thermal_score', 0.0)
+                spectral_score = neo_obj.get('spectral_score', 0.0)
                 hardware_score = 0.0  # Conservative for natural objects
-                
+
                 indicator_results = {
                     # Orbital behavior indicators
+                    # Confidence 0.35 signals this is a single close-approach proximity
+                    # proxy, not a multi-epoch regularity measurement.
                     'approach_regularity': {
                         'raw_score': neo_obj.get('approach_regularity', approach_regularity_score),
-                        'confidence': neo_obj.get('approach_confidence', 0.5)
+                        'confidence': neo_obj.get('approach_confidence', 0.35)
                     },
-                    
-                    # ΔBIC analysis results
+
+                    # Velocity-proxy ΔBIC: low confidence, score capped at 0.5
+                    # (below Δ flag threshold of 0.65). Real ΔBIC requires trajectory fit.
                     'delta_bic_analysis': {
                         'weighted_score': neo_obj.get('delta_bic_score', delta_bic_score),
                         'raw_score': neo_obj.get('delta_bic_raw', delta_bic_score),
-                        'confidence': neo_obj.get('delta_bic_confidence', 0.7)
+                        'confidence': delta_bic_confidence
                     },
-                    
-                    # Physical trait indicators
+
+                    # Physical trait indicators: 0.0 unless object carries measured values
                     'radar_polarization': {
-                        'weighted_score': neo_obj.get('radar_score', radar_score),
+                        'weighted_score': radar_score,
                         'raw_score': neo_obj.get('radar_raw', radar_score),
                         'confidence': neo_obj.get('radar_confidence', 0.7)
                     },
-                    
+
                     'thermal_ir_analysis': {
-                        'weighted_score': neo_obj.get('thermal_score', thermal_score),
+                        'weighted_score': thermal_score,
                         'raw_score': neo_obj.get('thermal_raw', thermal_score),
                         'confidence': neo_obj.get('thermal_confidence', 0.6)
                     },
-                    
-                    # Spectral analysis
+
+                    # Spectral analysis: 0.0 unless object carries measured values
                     'spectral_outlier': {
-                        'weighted_score': neo_obj.get('spectral_score', spectral_score),
+                        'weighted_score': spectral_score,
                         'raw_score': neo_obj.get('spectral_raw', spectral_score),
                         'confidence': neo_obj.get('spectral_confidence', 0.7)
                     },
-                    
+
                     # Human origin analysis
                     'human_hardware': {
                         'weighted_score': neo_obj.get('hardware_score', hardware_score),

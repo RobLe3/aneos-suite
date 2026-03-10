@@ -302,6 +302,14 @@ category but no file implements its indicators. Implementation deferred until SB
 data coverage is sufficient (~30% diameter, ~25% albedo, ~15% spectral type). ATLAS weight
 of 0.20 for Physical Traits is effectively wasted at present.
 
+**Phase 20 Pipeline Proxy Fix (ADR-059)**: The CAD-API pipeline previously synthesised
+`radar_score`, `thermal_score`, and `spectral_score` from orbital elements (eccentricity,
+inclination). These fabricated values fed ATLAS and produced misleading explanations ("Radar
+polarization indicates artificial surface properties"). From Phase 20 these are zeroed out
+in `automatic_review_pipeline.py`; real values only appear if a caller provides measured
+data. Similarly, ΔBIC confidence is lowered to 0.35 (proxy) and the ATLAS Δ flag threshold
+raised from 0.4 → 0.65 so no proxy score can trigger it.
+
 ### Value Objects
 
 | Value Object | Description |

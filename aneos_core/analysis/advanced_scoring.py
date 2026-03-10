@@ -304,6 +304,11 @@ class AdvancedScoreCalculator:
         if approach_regularity.get('raw_score', 0) > 0:
             regularity_score = approach_regularity['raw_score']
             
+            regularity_confidence = approach_regularity.get('confidence', 0.5)
+            if regularity_confidence < 0.6:
+                regularity_explanation = "Close-approach proximity signal (proxy — no multi-epoch regularity data)"
+            else:
+                regularity_explanation = "Suspiciously regular close approaches detected"
             clues.append(ClueContribution(
                 name='repeat_approaches',
                 category='orbit_behavior',
@@ -311,9 +316,9 @@ class AdvancedScoreCalculator:
                 normalized_score=regularity_score,
                 weight=self.config.orbit_behavior_weight * 0.4,
                 contribution=regularity_score * self.config.orbit_behavior_weight * 0.4,
-                confidence=approach_regularity.get('confidence', 0.5),
+                confidence=regularity_confidence,
                 flag='r' if regularity_score > 0.5 else '',
-                explanation="Suspiciously regular close approaches detected"
+                explanation=regularity_explanation
             ))
         
         # Non-gravitational acceleration (from ΔBIC analysis)
@@ -321,6 +326,13 @@ class AdvancedScoreCalculator:
         if delta_bic_result.get('weighted_score', 0) > 0:
             acceleration_score = delta_bic_result['weighted_score']
             
+            delta_confidence = delta_bic_result.get('confidence', 0.7)
+            if delta_confidence < 0.6:
+                delta_explanation = "Velocity anomaly signal (proxy — no dedicated A2 measurement)"
+            elif acceleration_score > 0.65:
+                delta_explanation = "Non-gravitational acceleration detected via ΔBIC analysis"
+            else:
+                delta_explanation = "Marginal non-gravitational acceleration signal (low confidence)"
             clues.append(ClueContribution(
                 name='non_gravitational_acceleration',
                 category='orbit_behavior',
@@ -328,9 +340,9 @@ class AdvancedScoreCalculator:
                 normalized_score=acceleration_score,
                 weight=self.config.orbit_behavior_weight * 0.6,
                 contribution=acceleration_score * self.config.orbit_behavior_weight * 0.6,
-                confidence=delta_bic_result.get('confidence', 0.7),
-                flag='Δ' if acceleration_score > 0.4 else '',
-                explanation="Non-gravitational acceleration detected via ΔBIC analysis"
+                confidence=delta_confidence,
+                flag='Δ' if acceleration_score > 0.65 else '',
+                explanation=delta_explanation
             ))
         
         return clues

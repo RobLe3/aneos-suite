@@ -1113,8 +1113,22 @@ class ANEOSMenuV2(ANEOSMenuBase):
                     lines.append(f"    → {explanation}")
 
         lines.append(
-            "\n[dim]NOTE: ATLAS score reflects encounter geometry + orbital behaviour signals. "
-            "σ-5 detection requires full orbital elements via options 1–3.[/dim]"
+            "\n[dim]DATA-SOURCE NOTE: CAD API provides orbital geometry only. "
+            "Physical, spectral, radar, and thermal clue scores are zero unless "
+            "dedicated observational data is available (ADR-053). "
+            "Orbit-behaviour scores (approach proximity, velocity anomaly) are proxies "
+            "computed from orbital elements — not direct measurements.[/dim]"
+        )
+        if "Δ" in flags:
+            lines.append(
+                "\n[dim]Δ FLAG (non-gravitational acceleration): This object shows a velocity "
+                "anomaly signal. Dark comets are a known class of NEOs with non-gravitational "
+                "acceleration from sublimation without a visible coma or tail. 1998 KY26 is a "
+                "candidate dark comet. A Δ flag alone is insufficient to classify an object as "
+                "artificial; dedicated A2 measurement is required.[/dim]"
+            )
+        lines.append(
+            "\n[dim]σ-5 detection requires full orbital elements — use options 1–3.[/dim]"
         )
         self.display_panel("\n".join(lines), title=f"ATLAS Detail — {designation}", style="yellow")
 
