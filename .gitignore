@@ -117,6 +117,7 @@ test_*.py
 !tests/test_phase17.py
 !tests/test_phase18.py
 !tests/test_phase19.py
+!tests/test_phase23.py
 !tests/test_pipeline_scoring.py
 !tests/test_kardashev_generator.py
 !tests/test_kardashev_training.py

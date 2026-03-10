@@ -158,9 +158,11 @@ class ANEOSApp:
                 logger.warning("⚠️  Alert manager not available - core modules missing")
             
             # Initialize authentication (basic version always available)
-            from .auth import AuthManager as APIAuthManager
+            from .auth import AuthManager as APIAuthManager, _load_users_from_db
             self.auth_manager = APIAuthManager(self.config)
             logger.info("✓ Authentication manager initialized")
+            _load_users_from_db()
+            logger.info("✓ DB users loaded into API_KEY_MAP")
             
             self.services_initialized = True
             self.startup_time = datetime.now()

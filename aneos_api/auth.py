@@ -88,6 +88,35 @@ for user_data in MOCK_USERS.values():
         API_KEY_MAP[api_key] = user_data
 
 
+def _load_users_from_db() -> None:
+    """Load API keys from the User DB table into API_KEY_MAP (idempotent)."""
+    try:
+        from .database import SessionLocal, User as DBUser, HAS_SQLALCHEMY
+    except ImportError:
+        return
+    if not HAS_SQLALCHEMY:
+        return
+    try:
+        db = SessionLocal()
+        users = db.query(DBUser).filter(DBUser.is_active == True).all()
+        for u in users:
+            for key in (u.api_keys or []):
+                if key and key not in API_KEY_MAP:
+                    API_KEY_MAP[key] = {
+                        'user_id': u.user_id,
+                        'username': u.username,
+                        'email': u.email or '',
+                        'role': u.role or 'viewer',
+                        'api_keys': u.api_keys or [],
+                        'is_active': bool(u.is_active),
+                        'created_at': u.created_at,
+                        'last_login': u.last_login,
+                    }
+        db.close()
+    except Exception as exc:
+        logger.warning("Could not load DB users into API_KEY_MAP: %s", exc)
+
+
 _JWT_SECRET = os.getenv('ANEOS_SECRET_KEY', '')
 _JWT_ALGORITHM = 'HS256'
 
@@ -198,6 +227,23 @@ class AuthManager:
             for user_data in MOCK_USERS.values():
                 if user_data.get('user_id') == user_id and user_data.get('is_active'):
                     return user_data
+            # DB fallback: JWT sub not found in MOCK_USERS
+            try:
+                from .database import SessionLocal, User as DBUser, HAS_SQLALCHEMY
+                if HAS_SQLALCHEMY:
+                    db = SessionLocal()
+                    u = db.query(DBUser).filter(
+                        DBUser.user_id == user_id, DBUser.is_active == True
+                    ).first()
+                    db.close()
+                    if u:
+                        return {
+                            'user_id': u.user_id, 'username': u.username,
+                            'email': u.email or '', 'role': u.role or 'viewer',
+                            'api_keys': u.api_keys or [], 'is_active': True,
+                        }
+            except Exception:
+                pass
 
         return None
     

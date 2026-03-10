@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TestNEO:
     """Test NEO object for validation."""
+    __test__ = False   # prevent pytest collection warning (has __init__ from @dataclass)
     designation: str
     orbital_elements: Dict[str, float]
     observation_date: datetime

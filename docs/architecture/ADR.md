@@ -233,7 +233,7 @@ exists**. Physical anomaly detection is absent from the indicator pipeline.
 
 ### ADR-008: Dual Scoring Systems — Standard vs Advanced (ATLAS)
 
-**Status**: Risk / Needs Consolidation
+**Status**: Accepted — Keep Both (Phase 23): scoring.py = σ gate; advanced_scoring.py = explanation layer. Call-site contract documented.
 
 **Context**
 Two independent scoring systems exist in `aneos_core/analysis/`:
@@ -915,7 +915,7 @@ named commands to menu functions.
 
 ### ADR-032: Silent Simulation Fallback on Integration Failure
 
-**Status**: Partially Mitigated (Phase 21) — `PHAMoidScanner.fetch_phas()` now raises `ImportError` with install instructions instead of silently returning `[]` when aiohttp is absent. Other HAS_* guards remain silent.
+**Status**: Mitigated (Phase 23) — All invocation-time failures now either raise `ImportError` with install instructions (PHAMoidScanner — Phase 21E) or log clearly and return safely (WebhookNotificationChannel, AlertManager — Phase 23C).
 
 **Context**
 Optional pipeline components and external API dependencies cause initialization

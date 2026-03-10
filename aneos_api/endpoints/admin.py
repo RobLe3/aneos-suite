@@ -270,20 +270,32 @@ async def create_user(
     try:
         user_id = f"user_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
         if HAS_SQLALCHEMY:
+            import secrets as _secrets
             from ..database import SessionLocal
+            from ..auth import API_KEY_MAP
             db = SessionLocal()
             try:
+                api_key = f"aneos_{_secrets.token_urlsafe(32)}"
                 db_user = DBUser(
                     user_id=user_id,
                     username=request.username,
                     email=request.email,
                     role=request.role,
+                    api_keys=[api_key],
                 )
                 db.add(db_user)
                 db.commit()
                 db.refresh(db_user)
                 user_id = db_user.user_id or user_id
                 created_at = db_user.created_at or datetime.now(UTC)
+                API_KEY_MAP[api_key] = {
+                    'user_id': db_user.user_id,
+                    'username': db_user.username,
+                    'email': db_user.email or '',
+                    'role': db_user.role or 'viewer',
+                    'api_keys': [api_key],
+                    'is_active': True,
+                }
             finally:
                 db.close()
         else:

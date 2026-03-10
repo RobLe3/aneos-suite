@@ -216,22 +216,29 @@ class WebhookNotificationChannel(NotificationChannel):
         """Send webhook notification."""
         if not self.enabled:
             return False
-        
+
         try:
-            import aiohttp
-            
+            import aiohttp as _aiohttp
+        except ImportError:
+            logger.warning(
+                "WebhookNotificationChannel requires aiohttp; "
+                "install with: pip install 'aiohttp>=3.8.0'"
+            )
+            return False
+
+        try:
             payload = {
                 'alert': alert.to_dict(),
                 'system': 'aNEOS',
                 'timestamp': datetime.now().isoformat()
             }
-            
-            async with aiohttp.ClientSession() as session:
+
+            async with _aiohttp.ClientSession() as session:
                 async with session.post(
                     self.webhook_url,
                     json=payload,
                     headers=self.headers,
-                    timeout=aiohttp.ClientTimeout(total=10)
+                    timeout=_aiohttp.ClientTimeout(total=10)
                 ) as response:
                     if response.status == 200:
                         logger.info(f"Webhook alert sent for {alert.alert_id}")
@@ -239,7 +246,7 @@ class WebhookNotificationChannel(NotificationChannel):
                     else:
                         logger.error(f"Webhook failed with status {response.status}")
                         return False
-                        
+
         except Exception as e:
             logger.error(f"Failed to send webhook alert {alert.alert_id}: {e}")
             return False
@@ -291,6 +298,10 @@ class AlertManager:
     def check_anomaly_alert(self, prediction_result: Any, anomaly_score: AnomalyScore) -> None:
         """Check if NEO analysis results warrant an alert."""
         if not _HAS_ML_ALERTS:
+            logger.debug(
+                "ML alert subsystem unavailable (ml.prediction not importable); "
+                "skipping anomaly alert check"
+            )
             return
         data = {
             'designation': prediction_result.designation,
