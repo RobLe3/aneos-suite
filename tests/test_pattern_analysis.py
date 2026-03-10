@@ -1,6 +1,11 @@
 """Tests for Population Pattern Analysis (BC11)."""
 import pytest
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 
 
 # --- Fixtures ----

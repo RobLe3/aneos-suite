@@ -7,7 +7,12 @@ and performance tracking capabilities.
 
 from typing import List, Optional, Dict, Any
 import logging
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 
 try:
     from fastapi import APIRouter, HTTPException, Depends, Query

@@ -11,7 +11,12 @@ import json
 import os
 import sys
 import tempfile
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

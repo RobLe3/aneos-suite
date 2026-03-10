@@ -13,7 +13,12 @@ Network calls are mocked. All tests run offline.
 import json
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, UTC
+from datetime import datetime
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, patch, call

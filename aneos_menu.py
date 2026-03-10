@@ -3642,7 +3642,8 @@ class ANEOSMenu(ANEOSMenuBase):
         """Check for outdated database entries that need re-polling."""
         try:
             from aneos_api.database import db_manager, EnrichedNEO
-            from datetime import datetime, timedelta, UTC
+            from datetime import datetime, timedelta, timezone as _tz
+            UTC = _tz.utc
 
             # Get database session
             db = db_manager.get_db()

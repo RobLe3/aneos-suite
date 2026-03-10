@@ -19,7 +19,12 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass
 from enum import Enum
-from datetime import datetime, UTC
+from datetime import datetime
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 
 from .detection import DetectionResult, ArtificialNEODetector
 

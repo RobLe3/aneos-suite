@@ -22,7 +22,12 @@ import os
 import tempfile
 import threading
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 from pathlib import Path
 from typing import Any, Dict, Iterator, MutableMapping, Optional
 

@@ -10,7 +10,12 @@ from typing import Dict, Any, Optional, List, Set
 import asyncio
 import aiohttp
 import requests
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 import logging
 from dataclasses import dataclass, field
 

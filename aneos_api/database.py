@@ -8,7 +8,12 @@ for analysis results, user data, metrics, and system state.
 import os
 import logging
 from typing import List, Optional, Dict, Any, Union
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 from pathlib import Path
 
 try:

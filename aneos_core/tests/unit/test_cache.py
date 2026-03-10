@@ -35,7 +35,11 @@ class TestCacheEntry:
     
     def test_is_expired(self):
         """Test expiration check."""
-        from datetime import UTC
+        try:
+            from datetime import UTC
+        except ImportError:
+            from datetime import timezone as _tz
+            UTC = _tz.utc
         now = datetime.now(UTC)
         
         # Not expired

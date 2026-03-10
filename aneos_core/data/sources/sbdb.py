@@ -7,7 +7,12 @@ for fetching Near Earth Object orbital elements and physical parameters.
 
 from typing import Dict, Any, Optional
 import logging
-from datetime import datetime, UTC
+from datetime import datetime
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 
 from .base import HTTPDataSource, FetchResult, DataSourceException
 from ...config.settings import APIConfig

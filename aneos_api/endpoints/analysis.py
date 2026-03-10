@@ -8,7 +8,12 @@ result retrieval, and data export capabilities.
 from typing import List, Optional, Dict, Any
 import asyncio
 import logging
-from datetime import datetime, UTC
+from datetime import datetime
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 
 try:
     from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
@@ -894,8 +899,8 @@ async def start_network_analysis(request: NetworkRequest):
     """Submit a batch for population-level pattern analysis. Returns a job_id immediately."""
     import threading
     import uuid
-    from datetime import datetime as _dt, UTC
-    job_id = f"net_{_dt.now(UTC).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    from datetime import datetime as _dt, timezone as _tz
+    job_id = f"net_{_dt.now(_tz.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
     _network_store[job_id] = {
         "status": "queued",
         "designations_analyzed": 0,

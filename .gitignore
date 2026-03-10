@@ -79,6 +79,8 @@ neo_data/polling-results/
 neo_data/polling-archive/
 neo_data/results/
 # Note: aneos_core/data/ contains source code and should be included
+!aneos_core/data/
+!aneos_core/data/**
 
 # Large cache directories  
 *_cache/

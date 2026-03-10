@@ -8,7 +8,12 @@ model training, and system maintenance operations.
 from typing import List, Optional, Dict, Any
 import logging
 import asyncio
-from datetime import datetime, UTC
+from datetime import datetime
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 
 try:
     from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks

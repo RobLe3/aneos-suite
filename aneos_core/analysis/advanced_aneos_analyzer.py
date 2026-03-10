@@ -12,7 +12,12 @@ data sources, and validation methods to provide the highest quality analysis.
 import logging
 import time
 from typing import Dict, Any, Optional, List, Union
-from datetime import datetime, UTC
+from datetime import datetime
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 
 from ..interfaces.unified_analysis import (
     aNEOSAnalysisInterface, aNEOSAnalysisResult, AdvancedaNEOSCapabilities,

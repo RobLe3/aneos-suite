@@ -7,7 +7,12 @@ approach in the original monolithic script.
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Union, Tuple
-from datetime import UTC, datetime
+from datetime import datetime
+try:
+    from datetime import UTC  # Python 3.11+
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 import json
 import logging
 from pathlib import Path
