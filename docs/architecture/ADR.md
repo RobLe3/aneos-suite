@@ -353,7 +353,7 @@ structure (e.g., Earth: 8.52×10⁻¹⁵, Moon: 6.65×10⁻⁹ for 2024 YR4).
 
 ### ADR-011: DetectionManager — Priority-Based Detector Registry
 
-**Status**: Accepted / Partially Bypassed
+**Status**: Accepted — Pipeline bypass fixed (Phase 19)
 
 **Context**
 Multiple detector versions exist (see ADR-018). Something must choose which
@@ -375,22 +375,19 @@ enum and loads detectors in priority order:
 successfully. Each detector is wrapped through a type-specific adapter method
 to normalize output to `DetectionResult`.
 
-**Critical misalignment found**
-`automatic_review_pipeline.py` (line 52) hardcodes:
-```python
-from ..detection.multimodal_sigma5_artificial_neo_detector import MultiModalSigma5ArtificialNEODetector
-```
-This bypasses `DetectionManager` entirely. The pipeline always runs MULTIMODAL
-regardless of manager priority settings.
+**Previously: Critical misalignment (RESOLVED — Phase 19)**
+`automatic_review_pipeline.py` previously hardcoded `MultiModalSigma5ArtificialNEODetector`
+at line 52, bypassing `DetectionManager` entirely. Fixed in Phase 19: the pipeline
+now uses `DetectionManager(preferred_detector=DetectorType.AUTO)` at line 175,
+correctly routing through the priority-0 VALIDATED detector.
 
 **Consequences**
-- (+) `DetectionManager` provides a clean abstraction for all other callers
-- (-) The main production pipeline ignores the manager — `DetectorType.AUTO`
-  has no effect on the most-used code path
+- (+) `DetectionManager` provides a clean abstraction for all callers
+- (+) Pipeline now honours `DetectorType.AUTO` priority order (VALIDATED → MULTIMODAL → …)
 - (-) Manual wrappers per detector type create maintenance burden
 
 **Files**: `aneos_core/detection/detection_manager.py`,
-`aneos_core/pipeline/automatic_review_pipeline.py:52`
+`aneos_core/pipeline/automatic_review_pipeline.py`
 
 ---
 
@@ -804,11 +801,11 @@ objects to ~50 expert-review candidates.
 `max_candidates`, `score_threshold`, `processing_timeout_seconds`,
 `retry_attempts`, `parallel_workers`.
 
-**Critical issue**: Pipeline hardcodes `MultiModalSigma5ArtificialNEODetector`
-instead of routing through `DetectionManager` (see ADR-011).
+**Previously critical issue (RESOLVED — Phase 19)**: Pipeline hardcoded
+`MultiModalSigma5ArtificialNEODetector` instead of routing through `DetectionManager`.
+Fixed: pipeline now uses `DetectionManager(AUTO)` (see ADR-011).
 
-**Concept alignment**: Full in structure; partial in implementation (hardcoded
-detector bypass).
+**Concept alignment**: Full in structure and implementation.
 
 **Files**: `aneos_core/pipeline/automatic_review_pipeline.py`
 
@@ -946,7 +943,7 @@ required dependencies before any analysis run starts.
 
 ### ADR-033: Machine Learning Module — Scaffolded, Partially Integrated
 
-**Status**: Deferred / Partially Active
+**Status**: Partially Active (core dependency for monitoring) — Training deferred (no ground truth dataset)
 
 **Context**
 The concept document mentions ML as a future methodology component. A full ML
@@ -1233,7 +1230,7 @@ Extend `NEOData.to_dict()`/`from_dict()` to preserve the field across cache.
 - (-) SBDB `nongrav_params` is present for only ~3% of NEOs (those with measured Yarkovsky)
 - (-) Adds a field that will be `None` for 97% of objects; consumers must handle absence
 
-**Files (when implemented)**: `aneos_core/data/models.py`,
+**Files** (Phase 11): `aneos_core/data/models.py` (`NonGravitationalParameters` VO),
 `aneos_core/data/sources/sbdb.py`
 
 ---
@@ -1267,7 +1264,7 @@ called explicitly by the population pattern analysis module to avoid adding a
 - (-) Adds a second SBDB API call pattern that must be documented separately
 - (-) Objects with fewer than 5 historical approaches are skipped for harmonic analysis
 
-**Files (when implemented)**: `aneos_core/data/fetcher.py`
+**Files** (Phase 17): `aneos_core/data/fetcher.py`
 
 ---
 
@@ -1337,7 +1334,7 @@ NetworkAnalysisSession
 - (-) `NetworkAnalysisSession` holding a batch of `NEOData` objects is memory-intensive;
   needs a configurable object cap (`max_objects: int = 500`)
 
-**Files (when implemented)**: `aneos_core/pattern_analysis/`
+**Files** (Phase 11): `aneos_core/pattern_analysis/`
 
 ---
 
@@ -1379,7 +1376,7 @@ from anomaly scoring.
   it does not account for discovery survey biases in the aNEOS working set
 - (-) ω and Ω are periodic (0°–360°); wraparound distance metric needed
 
-**Files (when implemented)**: `aneos_core/pattern_analysis/clustering.py`
+**Files** (Phase 11): `aneos_core/pattern_analysis/clustering.py`
 
 ---
 
@@ -1423,7 +1420,7 @@ Objects with fewer are silently skipped and logged at DEBUG level.
 - (-) Most NEOs have fewer than 5 recorded Earth approaches in any 30-year window;
   the majority of objects will be silently skipped
 
-**Files (when implemented)**: `aneos_core/pattern_analysis/harmonics.py`
+**Files** (Phase 11): `aneos_core/pattern_analysis/harmonics.py`
 
 ---
 
@@ -1507,13 +1504,13 @@ Flag pairs with |r| > 0.7 and p < 0.01 (Bonferroni-corrected for number of pairs
 - (-) A2 values have large individual uncertainties; correlation p-values may
   be unreliable without full covariance matrix treatment
 
-**Files (when implemented)**: `aneos_core/pattern_analysis/correlation.py`
+**Files** (Phase 11): `aneos_core/pattern_analysis/correlation.py`
 
 ---
 
 ### ADR-047: Network Sigma Combination (Fisher's Method)
 
-**Status**: Concept / Design Agreed
+**Status**: Implemented (Phase 11) — `NetworkSigmaCombiner` live in `aneos_core/pattern_analysis/network_sigma.py`
 
 **Context**
 Individual pattern analysis sub-modules each produce a p-value for their
@@ -1550,8 +1547,8 @@ correction is applied per sub-module across N to control the family-wise error r
 - (-) Bonferroni correction for large N batches (> 100 objects) will suppress
   all but the most extreme signals; users must be informed
 
-**Files (when implemented)**: `aneos_core/pattern_analysis/network_sigma.py`,
-`aneos_core/utils/statistical_utils.py` (reused, not modified)
+**Files** (Phase 11): `aneos_core/pattern_analysis/network_sigma.py`,
+`aneos_core/utils/statistical_utils.py` (reused)
 
 ---
 
@@ -1612,8 +1609,8 @@ NetworkReport:
 - (-) `NetworkReport` schema must be designed carefully: cluster members reference
   designations, not embedded NEOData — keep response size manageable
 
-**Files (when implemented)**: `aneos_api/endpoints/analysis.py` (new route),
-`aneos_api/schemas/network.py` (new file)
+**Files** (Phase 11): `aneos_api/endpoints/analysis.py` (route added),
+`aneos_api/schemas/network.py` (schema defined)
 
 ---
 
@@ -1632,16 +1629,26 @@ with exactly two real use-cases: (1) classify an object as artificial or natural
 - No Impact Assessment option despite `ImpactProbabilityCalculator` existing and being wired to the API
 
 **Decision**
-Introduce `ANEOSMenuV2` (`aneos_menu_v2.py`) with exactly 6 options:
+Introduce `ANEOSMenuV2` (`aneos_menu_v2.py`) starting with 6 core options (Phase 16),
+expanded to 15 options by Phase 19:
 
 | Option | Label | Backend |
 |--------|-------|---------|
-| 1 | Detect NEO | `DetectionManager(VALIDATED)` + `DataFetcher` |
-| 2 | Batch Detection | `DataFetcher.fetch_multiple()` + `DetectionManager` |
-| 3 | Impact Assessment | `ImpactProbabilityCalculator.calculate_comprehensive_impact_probability()` |
-| 4 | Live Polling | `PipelineIntegration` (existing pipeline) |
-| 5 | Results & Reports | in-session cache + `AnalysisService` DB fallback |
-| 6 | System | component import checks + `http://localhost:8000/health` |
+| 1 | Detect NEO (single, σ-5) | `DetectionManager(AUTO)` + `DataFetcher` |
+| 2 | Multi-Evidence Analysis | `DetectionManager(AUTO)` + physical/temporal data |
+| 3 | Batch Detection | `DataFetcher.fetch_multiple()` + `DetectionManager` |
+| 4 | Orbital History Analysis | `HorizonsSource.fetch_orbital_history()` |
+| 5 | Impact Probability | `ImpactProbabilityCalculator.calculate_comprehensive_impact_probability()` |
+| 6 | Close Approach History | CAD API via `DataFetcher` |
+| 7 | Live Pipeline Dashboard | `PipelineIntegration` (200-year CAD polling) |
+| 8 | Population Pattern Analysis | `NetworkAnalysisSession` (BC11) |
+| 9 | Browse Results | in-session cache + `AnalysisService` DB fallback |
+| 10 | Export Results | `Exporter` (JSON/CSV) |
+| 11 | System Health | 8-component import + API probe |
+| 12 | Start API Server | `uvicorn aneos_api.app:app` |
+| 13 | Detection Analytics | σ-tier + ATLAS-tier session statistics |
+| 14 | Scientific Help | concept docs + sigma table |
+| 15 | Rendezvous Scan | `PHAMoidScanner` (PA-6 Stage 1, ADR-052) |
 
 `aneos_menu.py` (legacy) is preserved and accessible via `python aneos.py --legacy-menu`.
 `ANEOSMenuV2` inherits from `ANEOSMenuBase` (ADR-049 companion, implemented Phase 15E).
@@ -1735,7 +1742,7 @@ if present.
 
 ### ADR-052: Standalone Rendezvous Scan as Option 15 (PA-6 Stage 1)
 
-**Status**: Implemented — Phase 19
+**Status**: Stage 1 Implemented (Phase 19) — Stage 2 (REBOUND) deferred
 
 **Context**
 Option 7 pipeline is Earth-centric (CAD API). Objects on rendezvous paths to

@@ -1,6 +1,6 @@
 # Domain-Driven Design — aNEOS Suite
 
-_Derived: 2026-03-06 | Last updated: 2026-03-08 | Codebase Version: 1.0.0_
+_Derived: 2026-03-06 | Last updated: 2026-03-10 | Codebase Version: 1.1.0_
 _Concept documents: README.md, docs/scientific/scientific-documentation.md,
 docs/engineering/sigma5_success_criteria.md, Calibration Plan v1.2_
 
@@ -534,15 +534,12 @@ REAL_TIME_MONITORING, HISTORICAL_ANALYSIS
 | `ExpertReviewQueued(designation, priority, sigma)` | Passes all stages; score >= 0.80 |
 | `GroundTruthValidated(designation, true_label, detector_label)` | **Future** — when dataset exists |
 
-### Critical Pipeline Inconsistency
+### Pipeline Inconsistency (RESOLVED — Phase 19)
 
-`automatic_review_pipeline.py` hardcodes:
-```python
-from ..detection.multimodal_sigma5_artificial_neo_detector import \
-    MultiModalSigma5ArtificialNEODetector
-```
-This bypasses `DetectionManager` and the `VALIDATED` detector (priority 0).
-The pipeline always uses MULTIMODAL regardless of `DetectorType.AUTO` setting.
+`automatic_review_pipeline.py` previously hardcoded `MultiModalSigma5ArtificialNEODetector`,
+bypassing `DetectionManager` and the `VALIDATED` detector (priority 0).
+**Fixed**: pipeline now uses `DetectionManager(preferred_detector=DetectorType.AUTO)` at
+line 175, correctly honouring the priority-0 VALIDATED detector.
 
 ---
 
@@ -861,11 +858,12 @@ validation, and blind-test sets.
 objects by comparing their collective orbital, temporal, and dynamical properties
 against the natural NEO population model (Granvik et al. 2018 debiased reference).
 
-**Code (planned)**: `aneos_core/pattern_analysis/`
+**Code**: `aneos_core/pattern_analysis/`
 
-**Status**: Design complete (ADR-042 through ADR-048). No code written. BC11 can
-be implemented modularly without touching any v1.0 component. PA-1 (clustering)
-has no external prerequisites and is ready to implement first.
+**Status**: Stage 1 implemented (Phase 11–19). PA-1 (clustering), PA-3 (harmonics),
+PA-5 (correlation), network sigma combiner, and PA-6 Stage 1 rendezvous scanner are
+all live. BC11 integrates modularly without touching any v1.0 component.
+Stage 2 (PA-6 REBOUND propagation) deferred pending dependency adoption.
 
 ---
 
