@@ -526,6 +526,22 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 self.show_error("File is empty.")
                 return
 
+        # Pre-flight: warn about designations that don't look like known formats
+        import re as _re
+        _DESG_PAT = _re.compile(
+            r'^(\d+[\s\w]*|'             # numbered: "433", "99942", "99942 Apophis"
+            r'[12]\d{3}\s+[A-Z][\w]*|'  # provisional: "1998 KY26" / "2004 MN4"
+            r'[A-Z][a-z]{2,})$'          # name only: "Apophis", "Ryugu"
+        )
+        _skipped = [l for l in lines if not _DESG_PAT.match(l.strip())]
+        if _skipped:
+            self.show_info(
+                f"Warning: {len(_skipped)} line(s) don't look like NEO designations "
+                f"and may fail: {_skipped[:3]}"
+            )
+            _filtered = [l for l in lines if _DESG_PAT.match(l.strip())]
+            lines = _filtered or lines  # keep all if none pass
+
         self.show_info(f"Fetching {len(lines)} NEOs for population analysis…")
         try:
             from aneos_core.data.fetcher import DataFetcher

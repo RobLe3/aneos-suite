@@ -89,19 +89,26 @@ class NEODySSource(DataSourceBase):
         Convert a designation string to an asteroid number.
 
         Handles:
-        - Plain integers:  '99942'
-        - Number + name:   '99942 Apophis'
-        - Name only:       'Apophis'  (queries MPC)
-        - Provisional:     '2004 MN4' (queries MPC)
+        - Plain integers:   '99942'
+        - Number + name:    '99942 Apophis'
+        - Name only:        'Apophis'  (queries MPC)
+        - Provisional:      '2004 MN4', '1998 KY26' (queries MPC — NOT treated as numbers)
         """
         stripped = designation.strip()
 
-        # Try leading integer
-        m = re.match(r'^(\d+)', stripped)
-        if m:
-            return int(m.group(1))
+        # Provisional designations look like "YYYY X..." where YYYY is 1800–2200.
+        # Do NOT extract the year as a catalogue number.
+        _PROVISIONAL = re.compile(r'^(1[89]\d\d|2[012]\d\d)\s+[A-Z]')
+        if _PROVISIONAL.match(stripped):
+            # Fall through to MPC lookup below
+            pass
+        else:
+            # Try leading integer (numbered asteroid or "99942 Apophis" style)
+            m = re.match(r'^(\d+)', stripped)
+            if m:
+                return int(m.group(1))
 
-        # Fall back to MPC name lookup
+        # MPC name / provisional lookup
         try:
             from astroquery.mpc import MPC as _MPC
             results = _MPC.query_object("asteroid", name=stripped)
@@ -109,8 +116,8 @@ class NEODySSource(DataSourceBase):
                 num = results[0].get("number")
                 if num is not None:
                     return int(num)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("MPC lookup failed for %r: %s", stripped, exc)
 
         return None
 

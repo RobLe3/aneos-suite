@@ -260,49 +260,78 @@ if HAS_ENHANCED_ANALYSIS and HAS_FASTAPI:
     @enhanced_router.get("/enhanced/summary", response_model=ValidationSummaryResponse)
     async def get_validation_summary(
         days: int = Query(default=7, ge=1, le=365, description="Number of days to include in summary"),
-        pipeline: EnhancedAnalysisPipeline = Depends(get_enhanced_analysis_pipeline),
         current_user: Optional[Dict] = Depends(get_current_user)
     ):
         """
         Get validation summary statistics over specified time period.
-        
-        Provides aggregate statistics on validation results, false positive rates,
-        and system performance for monitoring and calibration purposes.
+
+        Provides aggregate statistics from the AnalysisResult table for
+        monitoring and calibration purposes.
         """
         try:
-            validation_status = pipeline.get_validation_status()
-            
-            # In production, this would query stored results from database
-            summary = ValidationSummaryResponse(
-                total_analyses=0,  # Would be queried from database
+            from ..database import SessionLocal, AnalysisResult, HAS_SQLALCHEMY
+            from datetime import timedelta
+            try:
+                from datetime import UTC
+            except ImportError:
+                from datetime import timezone as _tz
+                UTC = _tz.utc
+
+            if not HAS_SQLALCHEMY:
+                raise HTTPException(status_code=503, detail="Database unavailable")
+
+            db = SessionLocal()
+            try:
+                cutoff = datetime.now(UTC) - timedelta(days=days)
+                rows = db.query(AnalysisResult).filter(
+                    AnalysisResult.analysis_date >= cutoff
+                ).all()
+            finally:
+                db.close()
+
+            scores = [r.overall_score for r in rows if r.overall_score is not None]
+            total = len(rows)
+            mean_score = sum(scores) / total if total else 0.0
+            sorted_scores = sorted(scores)
+            median_score = sorted_scores[total // 2] if scores else 0.0
+
+            # Count by classification
+            rec_counts: Dict[str, int] = {"accept": 0, "expert_review": 0, "reject": 0, "unknown": 0}
+            for r in rows:
+                c = (r.classification or "").lower()
+                if "artificial" in c or "suspicious" in c:
+                    rec_counts["expert_review"] += 1
+                elif "natural" in c or "inconclusive" in c:
+                    rec_counts["accept"] += 1
+                else:
+                    rec_counts["unknown"] += 1
+
+            return ValidationSummaryResponse(
+                total_analyses=total,
                 false_positive_statistics={
-                    "mean_probability": 0.0,
-                    "median_probability": 0.0,
-                    "high_fp_risk_count": 0,
-                    "low_fp_risk_count": 0
+                    "mean_probability": mean_score,
+                    "median_probability": median_score,
+                    "high_fp_risk_count": sum(1 for s in scores if s >= 0.8),
+                    "low_fp_risk_count": sum(1 for s in scores if s < 0.3),
                 },
-                recommendations={
-                    "accept": 0,
-                    "reject": 0,
-                    "expert_review": 0,
-                    "unknown": 0
-                },
+                recommendations=rec_counts,
                 overall_score_statistics={
-                    "mean": 0.0,
-                    "min": 0.0,
-                    "max": 0.0
+                    "mean": mean_score,
+                    "min": min(scores) if scores else 0.0,
+                    "max": max(scores) if scores else 0.0,
                 },
-                validation_system_status=validation_status
+                validation_system_status={
+                    "validation_enabled": True,
+                    "validation_available": HAS_SQLALCHEMY,
+                    "period_days": days,
+                },
             )
-            
-            return summary
-            
-        except Exception as e:
-            logger.error(f"Validation summary failed: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Validation summary failed: {str(e)}"
-            )
+
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.error("get_validation_summary failed: %s", exc)
+            raise HTTPException(status_code=500, detail=str(exc))
 
 # Background task functions
 async def _log_enhanced_analysis_result(

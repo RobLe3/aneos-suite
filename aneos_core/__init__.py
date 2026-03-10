@@ -11,11 +11,11 @@ Key Components:
 - reporting: Report generation and visualization
 - utils: Common utilities and helper functions
 
-Version: 1.2.1 (Phase 23 — SA 2.0 fix, auth DB wiring, ADR-032 closure, warning cleanup)
+Version: 1.2.2 (Phase 24 — Bug fixes, input validation, endpoint wiring)
 Original: neos_o3high_v6.19.1.py
 """
 
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 __author__ = "aNEOS Development Team"
 
 from .config.settings import ANEOSConfig, ConfigManager

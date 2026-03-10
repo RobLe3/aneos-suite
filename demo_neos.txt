@@ -1,3 +1,7 @@
-test
-demo
-example
+# aNEOS demo designation list — real NEOs for testing
+# Format: MPC number, provisional designation, or name
+99942 Apophis
+101955 Bennu
+162173 Ryugu
+65803 Didymos
+2004 MN4

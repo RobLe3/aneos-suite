@@ -426,43 +426,50 @@ async def _handle_websocket_message(websocket: WebSocket, session_id: str, messa
         }))
 
 async def _get_next_sse_event(subscribed_events: set) -> Optional[StreamingEvent]:
-    """Get the next SSE event (mock implementation)."""
-    # Mock event generation for demonstration
-    import random
-    
-    if random.random() < 0.1:  # 10% chance of event
-        event_types = list(subscribed_events)
-        if event_types:
-            event_type = random.choice(event_types)
-            
-            # Generate mock event data based on type
-            if event_type == StreamingEventType.SYSTEM_STATUS:
-                data = {
-                    'status': 'healthy',
-                    'uptime': 3600,
-                    'services_online': 6
-                }
-            elif event_type == StreamingEventType.METRICS_UPDATE:
-                data = {
-                    'cpu_percent': random.uniform(10, 80),
-                    'memory_percent': random.uniform(20, 70),
-                    'analyses_count': random.randint(0, 5)
-                }
-            elif event_type == StreamingEventType.ALERT_GENERATED:
-                data = {
-                    'alert_level': random.choice(['low', 'medium', 'high']),
-                    'title': 'System Alert',
-                    'message': 'Mock alert for demonstration'
-                }
-            else:
-                data = {'mock': True, 'event_type': event_type}
-            
+    """Return the next SSE event from real services, or None if nothing to emit."""
+    try:
+        # Lazy import to avoid circular imports
+        from ..app import get_aneos_app
+        aneos_app = get_aneos_app()
+    except Exception:
+        aneos_app = None
+
+    # 1. Check for new alerts
+    if aneos_app and hasattr(aneos_app, 'alert_manager') and aneos_app.alert_manager:
+        try:
+            recent = aneos_app.alert_manager.get_recent_alerts(hours=0.01)  # last ~36s
+            if recent and StreamingEventType.ALERT_GENERATED in subscribed_events:
+                alert = recent[0]
+                return StreamingEvent(
+                    event_type=StreamingEventType.ALERT_GENERATED,
+                    data={
+                        'event_type': 'ALERT_GENERATED',
+                        'alert_id': str(getattr(alert, 'alert_id', '')),
+                        'level': getattr(alert.alert_level, 'value', str(getattr(alert, 'alert_level', ''))),
+                        'title': getattr(alert, 'title', ''),
+                        'timestamp': getattr(alert, 'timestamp', datetime.now()).isoformat(),
+                    }
+                )
+        except Exception as exc:
+            logger.debug("Alert check failed: %s", exc)
+
+    # 2. Emit system status (always available)
+    if StreamingEventType.SYSTEM_STATUS in subscribed_events and aneos_app:
+        try:
+            health = aneos_app.get_health_status()
+            services = health.get('services', {})
             return StreamingEvent(
-                event_type=event_type,
-                data=data
+                event_type=StreamingEventType.SYSTEM_STATUS,
+                data={
+                    'status': health.get('status', 'unknown'),
+                    'services_online': sum(1 for v in services.values() if v),
+                    'timestamp': datetime.now().isoformat(),
+                }
             )
-    
-    return None
+        except Exception as exc:
+            logger.debug("Health status check failed: %s", exc)
+
+    return None  # No event; caller will sleep and retry
 
 # Utility function to trigger events (for testing)
 async def trigger_test_event(event_type: str, data: Dict[str, Any]):

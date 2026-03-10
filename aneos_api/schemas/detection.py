@@ -2,20 +2,24 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 try:
-    from pydantic import BaseModel
+    from pydantic import BaseModel, Field
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
     BaseModel = object
+    Field = lambda *a, **kw: None  # type: ignore
 
 
 class OrbitalInput(BaseModel):
-    a: float                          # semi-major axis (AU)
-    e: float                          # eccentricity
-    i: float                          # inclination (degrees)
-    designation: Optional[str] = None
-    diameter_km: Optional[float] = None
-    albedo: Optional[float] = None
+    a: float = Field(..., ge=0.1, le=1000.0,
+                     description="Semi-major axis (AU)")
+    e: float = Field(..., ge=0.0, le=2.0,
+                     description="Eccentricity (0–1 bound, up to 2 for hyperbolic)")
+    i: float = Field(..., ge=0.0, le=180.0,
+                     description="Inclination (degrees)")
+    designation: Optional[str] = Field(None, min_length=1, max_length=50)
+    diameter_km: Optional[float] = Field(None, gt=0.0, le=10000.0)
+    albedo: Optional[float] = Field(None, ge=0.0, le=1.0)
     orbital_history: Optional[List[Dict[str, Any]]] = None  # time-series from GET /history
 
 

@@ -36,19 +36,25 @@ try:
     from astropy.coordinates import SkyCoord, ICRS, FK5, get_body_barycentric
     from astropy.time import Time
     from astropy.table import Table
-    from astroquery.gaia import Gaia
+    import contextlib as _contextlib
+    import io as _io
+    _gaia_buf = _io.StringIO()
+    with _contextlib.redirect_stdout(_gaia_buf):
+        from astroquery.gaia import Gaia
+    _gaia_msg = _gaia_buf.getvalue().strip()
+    if _gaia_msg:
+        logging.getLogger(__name__).debug("Gaia TAP server: %s", _gaia_msg)
     from astroquery.simbad import Simbad
     from astroquery.exceptions import RemoteServiceError
     import astropy.constants as const
+    from scipy import stats
+    from scipy.spatial.distance import cdist
+    from sklearn.cluster import DBSCAN
+    from sklearn.preprocessing import StandardScaler
     ASTROPY_AVAILABLE = True
 except ImportError as e:
     warnings.warn(f"Astropy/astroquery not available: {e}")
     ASTROPY_AVAILABLE = False
-
-from scipy import stats
-from scipy.spatial.distance import cdist
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 

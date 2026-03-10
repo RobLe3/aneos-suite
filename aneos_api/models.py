@@ -49,7 +49,8 @@ class PaginatedResponse(BaseModel):
 # Analysis Models
 class AnalysisRequest(BaseModel):
     """Request model for NEO analysis."""
-    designation: str = Field(..., description="NEO designation (e.g., '2024 AB123')")
+    designation: str = Field(..., min_length=1, max_length=50,
+                              description="NEO designation, e.g. '99942 Apophis'")
     force_refresh: bool = Field(False, description="Force refresh of cached data")
     include_raw_data: bool = Field(False, description="Include raw NEO data in response")
     include_indicators: bool = Field(True, description="Include individual indicator results")
@@ -57,6 +58,14 @@ class AnalysisRequest(BaseModel):
 class BatchAnalysisRequest(BaseModel):
     """Request model for batch NEO analysis."""
     designations: List[str] = Field(..., min_length=1, max_length=100, description="List of NEO designations")
+
+    @field_validator('designations')
+    @classmethod
+    def validate_each_designation(cls, v: list) -> list:
+        for d in v:
+            if not (1 <= len(d.strip()) <= 50):
+                raise ValueError(f"Designation must be 1–50 chars: {d!r}")
+        return [d.strip() for d in v]
     force_refresh: bool = Field(False, description="Force refresh of cached data")
     include_raw_data: bool = Field(False, description="Include raw NEO data in responses")
     progress_webhook: Optional[str] = Field(None, description="Webhook URL for progress updates")
