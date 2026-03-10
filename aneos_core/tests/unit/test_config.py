@@ -76,7 +76,7 @@ class TestAPIConfig:
         """Test default API configuration values."""
         config = APIConfig()
         
-        assert config.neodys_url == "https://newton.spacedys.com/neodys/api/"
+        assert config.neodys_url == "https://newton.spacedys.com/~neodys2/epoch/"
         assert config.mpc_url == "https://www.minorplanetcenter.net/"
         assert config.horizons_url == "https://ssd.jpl.nasa.gov/api/horizons.api"
         assert config.sbdb_url == "https://ssd-api.jpl.nasa.gov/sbdb.api"

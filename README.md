@@ -1,6 +1,6 @@
 # aNEOS — Advanced Near Earth Object Suite
 
-**v1.1.0 — Research Platform (Phase 19: Progress bars, file browser, Option 7 pipeline, THETA SWARM fix, 2026-03-09)**
+**v1.1.0 — Research Platform (Phase 20: pipeline proxy discipline, dark comet context, ADR/DDD harmonisation, 2026-03-10)**
 
 aNEOS is an open-source Python research platform with two independent missions:
 
@@ -90,7 +90,7 @@ produced by JPL Sentry or ESA NEOCC.
 git clone https://github.com/RobLe3/aneos-suite.git
 cd aneos-suite
 pip install -r requirements.txt   # install dependencies
-python aneos.py                   # launch 14-option interactive menu
+python aneos.py                   # launch 15-option interactive menu
 ```
 
 ### Start the REST API
@@ -111,7 +111,7 @@ python aneos.py --legacy-menu
 
 ## What aNEOS Does Right Now
 
-All items below are implemented, tested (246 unit + integration tests pass / 0 fail), and verified against real data.
+All items below are implemented, tested (308 unit + integration tests pass / 0 fail), and verified against real data.
 
 ### Detection (Mission 1)
 
@@ -166,7 +166,7 @@ All items below are implemented, tested (246 unit + integration tests pass / 0 f
 
 | Capability | Status | Notes |
 |---|---|---|
-| 14-option Rich terminal menu | Working | `python aneos.py`; 4 groups: Detection, Impact, Polling, System |
+| 15-option Rich terminal menu | Working | `python aneos.py`; 4 groups: Detection, Impact, Polling, System |
 | Rich progress bars on all batch operations | Working (Phase 19) | `ANEOSMenuBase.track_progress()` generator |
 | File browser for designation files | Working (Phase 19) | `ANEOSMenuBase.browse_files()` — numbered table picker |
 | Interactive results browser | Working (Phase 19) | Pick `#` to see full verbose detection detail |
@@ -546,7 +546,7 @@ The following results are reproducible by running `python -m pytest tests/ -m "n
 
 | Metric | Value | Source |
 |---|---|---|
-| Unit / integration tests | 246 pass, 0 fail | `pytest tests/ -m "not network"` |
+| Unit / integration tests | 308 pass, 0 fail | `pytest tests/ aneos_core/tests/ -m "not network"` |
 | Ground truth artificial objects | 3 confirmed | Tesla Roadster (SpaceX 2018-017A), 2020 SO (Centaur/Surveyor-2), J002E3 (Apollo 12 S-IVB) |
 | Ground truth natural NEOs | 20+ | JPL SBDB query, real orbital data |
 | Sensitivity (recall) | 1.00 | All 3 artificials correctly classified at calibrated threshold 0.037 |
@@ -574,7 +574,7 @@ The following results are reproducible by running `python -m pytest tests/ -m "n
 - Earth and Moon impact probability with uncertainty bounds, keyholes, risk periods
 - Population-level orbital clustering, synodic harmonic analysis, non-grav correlation (BC11)
 - REST API with OpenAPI specification, Pydantic models, and batch processing
-- Clean 14-option Rich terminal menu (`python aneos.py`)
+- Clean 15-option Rich terminal menu (`python aneos.py`)
 - JSON/CSV export of analysis results
 - shelve-based caching for CAD data (24-hour TTL)
 
@@ -621,7 +621,7 @@ aneos-suite/
 │   ├── schemas/          # Pydantic models: DetectionResponse, ImpactResponse, OrbitalInput, ...
 │   └── app.py            # Application factory
 ├── aneos_dashboard/      # Web dashboard (Flask)
-├── aneos_menu_v2.py      # 14-option Rich terminal menu (primary)
+├── aneos_menu_v2.py      # 15-option Rich terminal menu (primary)
 ├── aneos_menu.py         # Legacy 121-option menu (--legacy-menu flag)
 ├── aneos_menu_base.py    # Shared UI helpers: progress bars, file browser, display
 ├── aneos.py              # CLI entry point
@@ -705,8 +705,9 @@ The statistical framework is grounded in:
 - **Calibrated threshold**: At p(Bayesian) ≥ 0.037, the current ground truth validation achieves sensitivity = 1.00 and specificity = 1.00 on the available corpus.
 
 Full methodology: `docs/scientific/scientific-documentation.md`
-Architecture decisions: `docs/architecture/ADR.md` (50 ADRs)
-Domain model: `docs/architecture/DDD.md` (10 bounded contexts)
+Theory: `docs/scientific/theory.md`
+Architecture decisions: `docs/architecture/ADR.md` (59 ADRs)
+Domain model: `docs/architecture/DDD.md` (11 bounded contexts)
 
 ---
 
@@ -717,7 +718,7 @@ See `CONTRIBUTING.md` for development guidelines. The project follows the C&C + 
 Run the test suite before opening a pull request:
 
 ```bash
-python -m pytest tests/ -m "not network" -q   # 246 tests, 0 fail
+python -m pytest tests/ aneos_core/tests/ -m "not network" -q   # 308 tests, 0 fail
 make spec                                      # regenerate OpenAPI spec
 git diff --stat docs/api/openapi.json          # confirm spec is current
 ```
@@ -728,4 +729,4 @@ Scientific research and educational use. See `LICENSE` for complete terms.
 
 ---
 
-*aNEOS v1.1.0 — Phase 19 complete. 14-option v2 menu with progress bars, file browser, interactive results browser. 200-year historical pipeline operational (27,632 objects retrieved in live test). THETA SWARM ML classifiers working. REST API: 52+ endpoints. Test suite: 246 pass / 0 fail.*
+*aNEOS v1.1.0 — Phase 20 complete. 15-option v2 menu with progress bars, file browser, interactive results browser. 200-year historical pipeline operational (27,632 objects retrieved in live test). THETA SWARM ML classifiers working. REST API: 52+ endpoints. Test suite: 308 pass / 0 fail. Pipeline proxy score discipline enforced (ADR-059): physical/spectral/radar/thermal scores zero unless dedicated observations supplied.*

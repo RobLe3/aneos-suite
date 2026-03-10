@@ -2,78 +2,69 @@
 
 Welcome to the comprehensive documentation for the aNEOS (Advanced Near Earth Object detection System) platform.
 
-## 📚 Documentation Structure
+## Documentation Structure
 
-### 🚀 Getting Started
-- **[Installation Guide](user-guide/installation.md)** - Complete installation and setup
-- **[Quick Start Guide](user-guide/quick-start.md)** - Get up and running quickly
-- **[Menu System Guide](user-guide/menu-system.md)** - Interactive menu system usage
+### Getting Started
+- **[Installation Guide](user-guide/installation.md)** — Complete installation and setup
+- **[Quick Start Guide](user-guide/quick-start.md)** — Get up and running quickly
+- **[Menu System Guide](user-guide/menu-system.md)** — 15-option interactive menu usage
+- **[User Guide](user-guide/user-guide.md)** — Full feature reference
+- **[Profession Guide](user-guide/profession-guide.md)** — Use-case guides by role
 
-### 👥 User Guides
-- **[Scientific Analysis](user-guide/scientific-analysis.md)** - NEO analysis methodology and usage
-- **[Machine Learning](user-guide/machine-learning.md)** - ML model training and predictions
-- **[Web Dashboard](user-guide/web-dashboard.md)** - Web interface usage
-- **[Command Line Interface](user-guide/cli.md)** - Command line tools and scripts
+### Scientific Foundation
+- **[Scientific Documentation](scientific/scientific-documentation.md)** — Full methodology: Bayesian framework, Fisher's method, sigma-5 threshold, indicator categories
+- **[Artificial NEOs Theory](scientific/theory.md)** — The core hypothesis: statistical signatures of artificial vs natural heliocentric objects
+- **[Validation Integrity Audit](scientific/VALIDATION_INTEGRITY.md)** — Honest uncertainty assessment: what the F1=1.00 on N=4 actually means
 
-### 🔧 API Documentation
-- **[REST API Reference](api/rest-api.md)** - Complete API endpoint documentation
-- **[Authentication](api/authentication.md)** - API authentication and authorization
-- **[WebSocket/Streaming](api/streaming.md)** - Real-time data streaming
-- **[API Examples](api/examples.md)** - Code examples and use cases
+### Architecture
+- **[Architecture Decision Records](architecture/ADR.md)** — 59 ADRs documenting every significant design choice
+- **[Domain-Driven Design](architecture/DDD.md)** — 11 Bounded Contexts: entities, value objects, domain events, context boundaries
 
-### 🚀 Deployment
-- **[Docker Deployment](deployment/docker.md)** - Docker and Docker Compose setup
-- **[Kubernetes Deployment](deployment/kubernetes.md)** - Kubernetes deployment guide
-- **[Production Setup](deployment/production.md)** - Production environment configuration
-- **[Monitoring Setup](deployment/monitoring.md)** - Prometheus and Grafana setup
+### API Reference
+- **[REST API Reference](api/rest-api.md)** — Key endpoint documentation
+- **[OpenAPI Specification](api/openapi.json)** — Machine-readable, auto-generated (regenerate: `make spec`)
 
-### 🛠️ Development
-- **[Development Setup](development/setup.md)** - Development environment setup
-- **[Architecture Overview](development/architecture.md)** - System architecture and design
-- **[Contributing Guide](development/contributing.md)** - How to contribute to the project
-- **[Testing Guide](development/testing.md)** - Testing frameworks and procedures
-- **[Phase Completion Reports](development/)** - Development phase documentation
-- **[Maturity Assessment](engineering/maturity_assessment.md)** - Current stabilization
-  findings and outstanding risks
+### Engineering
+- **[Maturity Assessment](engineering/maturity_assessment.md)** — Stabilization findings and outstanding risks
+- **[Sigma-5 Success Criteria](engineering/sigma5_success_criteria.md)** — Acceptance criteria for detection quality
 
-### 🔧 Troubleshooting
-- **[Common Issues](troubleshooting/common-issues.md)** - Frequently encountered problems
-- **[Installation Issues](troubleshooting/installation.md)** - Installation-specific troubleshooting
-- **[Performance Issues](troubleshooting/performance.md)** - Performance optimization
-- **[FAQ](troubleshooting/faq.md)** - Frequently asked questions
+### Deployment
+- **[Deployment Guide](deployment/deployment-guide.md)** — Docker and production setup
 
-### 📦 Release Notes
-- **[v0.7.0 Release Notes](releases/v0.7.0.md)** - Summary of the 0.7 stabilization update and legacy branch information
+### Troubleshooting
+- **[Installation Issues](troubleshooting/installation.md)** — Installation-specific troubleshooting
+- **[Troubleshooting Guide](troubleshooting/troubleshooting-guide.md)** — Common issues and fixes
 
-## 🎯 Quick Navigation
+### Release Notes
+- **[v0.7.0 Release Notes](releases/v0.7.0.md)** — Legacy branch information
+
+### Archive
+- **[docs/archive/](archive/)** — Superseded phase plans and gap analyses (kept for historical reference)
+
+## Quick Navigation
 
 ### For Scientists and Researchers
-- Start with: [Scientific Analysis Guide](user-guide/scientific-analysis.md)
-- Menu system: [Menu System Guide](user-guide/menu-system.md)
-- NEO analysis methodology in the scientific analysis guide
+- Start with: [Artificial NEOs Theory](scientific/theory.md)
+- Methodology: [Scientific Documentation](scientific/scientific-documentation.md)
+- Honest caveats: [Validation Integrity Audit](scientific/VALIDATION_INTEGRITY.md)
+- Menu guide: [Menu System Guide](user-guide/menu-system.md)
 
-### For Developers
-- Start with: [Development Setup](development/setup.md)
-- Architecture: [Architecture Overview](development/architecture.md)
+### For Developers / Contributors
+- Start with: [CONTRIBUTING.md](../CONTRIBUTING.md) in the project root
+- Architecture: [ADR.md](architecture/ADR.md) + [DDD.md](architecture/DDD.md)
 - API: [REST API Reference](api/rest-api.md)
 
-### For System Administrators
-- Start with: [Installation Guide](user-guide/installation.md)
-- Deployment: [Docker Deployment](deployment/docker.md) or [Kubernetes Deployment](deployment/kubernetes.md)
-- Monitoring: [Monitoring Setup](deployment/monitoring.md)
+### For New Users
+- [Quick Start Guide](user-guide/quick-start.md)
+- [Installation Guide](user-guide/installation.md)
+- [Troubleshooting Guide](troubleshooting/troubleshooting-guide.md)
 
-### For DevOps Engineers
-- Production: [Production Setup](deployment/production.md)
-- Monitoring: [Monitoring Setup](deployment/monitoring.md)
-- Troubleshooting: [Performance Issues](troubleshooting/performance.md)
+## Getting Help
 
-## 🆘 Getting Help
-
-1. **Check the documentation** - Most questions are answered here
-2. **Run system diagnostics** - `python aneos.py status`
-3. **Check installation** - `python install.py --check`
-4. **Review logs** - Check `logs/` directory for error messages
-5. **Use the menu system** - `python aneos.py` for interactive help
+1. **Run the menu** — `python aneos.py` then choose Option 14 (Scientific Help) or Option 11 (System Health)
+2. **Check the documentation** — most questions are answered in [Scientific Documentation](scientific/scientific-documentation.md)
+3. **Community forum** — https://community.openastronomy.org/t/open-source-python-tool-for-checking-neo-anomalies-aneos/1374
+4. **GitHub issues** — https://github.com/RobLe3/aneos-suite/issues
 
 ## 📖 Documentation Conventions
 
@@ -94,6 +85,7 @@ The documentation is version-controlled with the code. When contributing:
 
 ---
 
-**Project Version**: 2.0.0  
-**Documentation Last Updated**: 2025-08-04  
+**Project Version**: 1.1.0 (Phase 20)
+**Documentation Last Updated**: 2026-03-10
 **Maintainer**: aNEOS Development Team
+**Community**: https://community.openastronomy.org/t/open-source-python-tool-for-checking-neo-anomalies-aneos/1374

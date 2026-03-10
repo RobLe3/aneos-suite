@@ -476,7 +476,7 @@ def print_help():
 Usage: python aneos.py [command] [options]
 
 Commands:
-  (no command)    Start aNEOS menu (v2 — 6-option lean interface)
+  (no command)    Start aNEOS menu (v2 — 15-option interactive interface)
   menu, m         Start aNEOS menu (v2)
   --legacy-menu   Start original 121-option menu (append to any command)
   

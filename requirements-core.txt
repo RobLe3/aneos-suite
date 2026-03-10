@@ -29,3 +29,9 @@ skyfield>=1.46  # For astronomical calculations
 # Additional utilities that enhance but don't break core functionality
 matplotlib>=3.6.0  # For plotting (optional)
 pandas>=1.5.0  # For data analysis (optional)
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+hypothesis>=6.92.0
