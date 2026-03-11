@@ -26,7 +26,7 @@ class DetectionResult:
         self.is_artificial = is_artificial
         self.confidence = confidence
         self.sigma_level = sigma_level
-        self.artificial_probability = artificial_probability or (confidence if is_artificial else 1 - confidence)
+        self.artificial_probability = artificial_probability if artificial_probability is not None else (confidence if is_artificial else 1 - confidence)
         self.classification = classification or self._determine_classification()
         self.analysis = analysis or {}
         self.risk_factors = risk_factors or []

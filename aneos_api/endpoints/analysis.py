@@ -364,6 +364,9 @@ async def detect_neo(
         raise
     except Exception as e:
         logger.error(f"Detection failed for {designation}: {e}")
+        from aneos_core.utils.errors import DataSourceUnavailableError
+        if isinstance(e, DataSourceUnavailableError):
+            raise HTTPException(status_code=404, detail=f"NEO not found: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Detection failed: {str(e)}")
 
 
@@ -775,6 +778,7 @@ async def _log_analysis_completion(
 
 async def _run_batch_detection(batch_id: str, designations: List[str]):
     """Run ValidatedSigma5 detection concurrently; populate _batch_store."""
+    import asyncio
     from aneos_core.data.fetcher import DataFetcher
     from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
         ValidatedSigma5ArtificialNEODetector,
@@ -783,8 +787,10 @@ async def _run_batch_detection(batch_id: str, designations: List[str]):
     fetcher = DataFetcher()
     detector = ValidatedSigma5ArtificialNEODetector()
 
-    # Fetch all designations concurrently via existing ThreadPoolExecutor
-    neo_map = fetcher.fetch_multiple(designations)   # Dict[str, Optional[NEOData]]
+    # fetch_multiple is synchronous blocking I/O — run in a thread to avoid blocking
+    # the asyncio event loop (BackgroundTasks run in the same loop as request handlers)
+    loop = asyncio.get_event_loop()
+    neo_map = await loop.run_in_executor(None, fetcher.fetch_multiple, designations)
 
     for designation in designations:
         neo = neo_map.get(designation)

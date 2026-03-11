@@ -1,6 +1,6 @@
 # aNEOS — Advanced Near Earth Object Suite
 
-**v1.2.0 — Research Platform (Phase 21: physical indicators, Stouffer, JWT, hypothesis tests, 2026-03-10)**
+**v1.2.2 — Research Platform (Phase 24: bug fixes, input validation, endpoint wiring, 2026-03-11)**
 
 aNEOS is an open-source Python research platform with two independent missions:
 
@@ -56,7 +56,7 @@ object onto a future impact trajectory.
 - The primary discriminating feature is **density** (hollow vs rocky), followed by albedo
   and non-gravitational acceleration magnitude.
 - A full REST API lets other software query aNEOS programmatically.
-- 336 automated tests verify the system works correctly end to end.
+- 360 automated tests verify the system works correctly end to end.
 
 **What it is not:**
 
@@ -111,7 +111,7 @@ python aneos.py --legacy-menu
 
 ## What aNEOS Does Right Now
 
-All items below are implemented, tested (308 unit + integration tests pass / 0 fail), and verified against real data.
+All items below are implemented, tested (360 unit + integration tests pass / 0 fail), and verified against real data.
 
 ### Detection (Mission 1)
 
@@ -158,7 +158,7 @@ All items below are implemented, tested (308 unit + integration tests pass / 0 f
 | DBSCAN/HDBSCAN orbital clustering | Working (Phase 11) | PA-1; density σ-gate, background estimation |
 | Synodic harmonic analysis | Working (Phase 11) | PA-3; Lomb-Scargle on binary time grid |
 | Non-gravitational correlation | Working (Phase 11) | PA-5; A2 Pearson r within clusters |
-| Network-level sigma combining | Working (Phase 11) | Fisher's method + Bonferroni correction |
+| Network-level sigma combining | Working (Phase 11) | Fisher's method + Bonferroni correction; Stouffer weighted z-score optional (Phase 21) |
 | Harmonics + clustering enabled in menu | Working (Phase 18) | `PatternAnalysisConfig(harmonics=True, clustering=True)` |
 | `POST /analyze/network` REST endpoint | Working (Phase 11) | Async job with `GET .../status` polling |
 
@@ -174,6 +174,11 @@ All items below are implemented, tested (308 unit + integration tests pass / 0 f
 | Session detection analytics | Working (Phase 18) | Option 13 — σ-tier breakdown + JSON export |
 | Scientific help viewer | Working (Phase 18) | Option 14 — reads `docs/scientific/` in-terminal |
 | THETA SWARM hardware veto (ML classifiers) | Working (Phase 19 fix) | RandomForest classifiers now train on startup |
+| Physical indicators: diameter + albedo anomaly | Working (Phase 21) | `DiameterAnomalyIndicator` + `AlbedoAnomalyIndicator` active in detection path |
+| JWT bearer token endpoint | Working (Phase 21) | `POST /api/v1/auth/token` exchanges API key for signed JWT |
+| OrbitalInput Pydantic bounds | Working (Phase 24) | `a` 0.1–1000 AU; `e` 0–2; `i` 0–180° — invalid inputs rejected with 422 |
+| NEODyS provisional designation fix | Working (Phase 24) | `"1998 KY26"` and `"2004 MN4"` no longer misparsed as year integers |
+| Gaia stdout suppression | Working (Phase 24) | Gaia import warnings redirected to debug log instead of polluting terminal |
 
 ---
 
@@ -546,7 +551,7 @@ The following results are reproducible by running `python -m pytest tests/ -m "n
 
 | Metric | Value | Source |
 |---|---|---|
-| Unit / integration tests | 308 pass, 0 fail | `pytest tests/ aneos_core/tests/ -m "not network"` |
+| Unit / integration tests | 360 pass, 0 fail | `pytest tests/ aneos_core/tests/ -m "not network"` |
 | Ground truth artificial objects | 3 confirmed | Tesla Roadster (SpaceX 2018-017A), 2020 SO (Centaur/Surveyor-2), J002E3 (Apollo 12 S-IVB) |
 | Ground truth natural NEOs | 20+ | JPL SBDB query, real orbital data |
 | Sensitivity (recall) | 1.00 | All 3 artificials correctly classified at calibrated threshold 0.037 |
@@ -625,7 +630,7 @@ aneos-suite/
 ├── aneos_menu.py         # Legacy 121-option menu (--legacy-menu flag)
 ├── aneos_menu_base.py    # Shared UI helpers: progress bars, file browser, display
 ├── aneos.py              # CLI entry point
-├── tests/                # 246 unit and integration tests
+├── tests/                # 360 unit and integration tests
 └── docs/                 # Architecture (ADR, DDD), API spec, user guide, scientific docs
 ```
 
@@ -706,7 +711,7 @@ The statistical framework is grounded in:
 
 Full methodology: `docs/scientific/scientific-documentation.md`
 Theory: `docs/scientific/theory.md`
-Architecture decisions: `docs/architecture/ADR.md` (59 ADRs)
+Architecture decisions: `docs/architecture/ADR.md` (60 ADRs)
 Domain model: `docs/architecture/DDD.md` (11 bounded contexts)
 
 ---
@@ -718,7 +723,7 @@ See `CONTRIBUTING.md` for development guidelines. The project follows the C&C + 
 Run the test suite before opening a pull request:
 
 ```bash
-python -m pytest tests/ aneos_core/tests/ -m "not network" -q   # 336 tests, 0 fail
+python -m pytest tests/ aneos_core/tests/ -m "not network" -q   # 360 tests, 0 fail
 make spec                                      # regenerate OpenAPI spec
 git diff --stat docs/api/openapi.json          # confirm spec is current
 ```
@@ -729,4 +734,4 @@ Scientific research and educational use. See `LICENSE` for complete terms.
 
 ---
 
-*aNEOS v1.2.0 — Phase 21 complete. Physical indicators (diameter, albedo) wired into single-object detection path. Stouffer's weighted z-score method added to population analysis. JWT bearer token endpoint live (/api/v1/auth/token). Property-based hypothesis tests added. REST API: 52+ endpoints. Test suite: 336 pass / 0 fail.*
+*aNEOS v1.2.2 — Phase 24 complete. Bug fixes: NEODyS provisional designation misparse, Gaia stdout suppression, `DetectionResult` falsy-zero guard, monitoring alert kwarg. Input validation: Pydantic bounds on `OrbitalInput` (a/e/i), designation length on `AnalysisRequest`. Endpoint wiring: `get_validation_summary` uses real DB, SSE streaming uses real `alert_manager`. Demo NEO list updated with real designations. REST API: 52+ endpoints. Test suite: 360 pass / 0 fail.*

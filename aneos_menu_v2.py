@@ -143,7 +143,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
     # ==================================================================
 
     def _detect_single(self) -> None:
-        """Option 1: Run validated σ-5 detector on one designation."""
+        """Option 1: Run validated σ-5 detector on one designation (brief summary)."""
         designation = self._ask("NEO designation (e.g. '99942', '2020 SO', 'tesla')").strip()
         if not designation:
             self.show_error("No designation provided.")
@@ -159,7 +159,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
             return
 
         self._detection_results[designation.upper()] = result
-        self._display_detection_result(designation, result, verbose=True)
+        self._display_detection_result(designation, result, verbose=False)
         self._persist_detection_result_async(designation, result)
 
     def _detect_multi_evidence(self) -> None:
@@ -431,7 +431,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
         for ca in approaches:
             dist = getattr(ca, "distance_au", None) or getattr(ca, "dist", None)
             vel = getattr(ca, "relative_velocity_km_s", None) or getattr(ca, "v_rel", None)
-            date = getattr(ca, "date", None) or getattr(ca, "t_ca", "?")
+            date = getattr(ca, "close_approach_date", None) or getattr(ca, "date", None) or getattr(ca, "t_ca", "?")
             rows.append([
                 str(date)[:10],
                 f"{dist:.5f} AU" if dist is not None else "?",
@@ -811,7 +811,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
         pp = getattr(neo_data, "physical_properties", None)
         if pp is not None:
             if getattr(pp, "diameter_km", None) is not None:
-                physical["diameter"] = pp.diameter_km
+                # Detector expects diameter in metres; store both keys for compatibility
+                physical["diameter"] = pp.diameter_km * 1000   # metres (detector units)
+                physical["diameter_km"] = pp.diameter_km       # km (indicator trigger key)
             if getattr(pp, "albedo", None) is not None:
                 physical["albedo"] = pp.albedo
             if getattr(pp, "spectral_type", None) is not None:
@@ -834,7 +836,8 @@ class ANEOSMenuV2(ANEOSMenuBase):
         if approaches:
             additional["close_approach_history"] = [
                 {
-                    "date": str(getattr(ca, "date", "")),
+                    "date": str(getattr(ca, "close_approach_date", None)
+                               or getattr(ca, "date", "") or ""),
                     "distance_au": getattr(ca, "distance_au", 0.0),
                 }
                 for ca in approaches
@@ -984,7 +987,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
                     or float("inf"),
                 )
                 nd = getattr(nearest, "distance_au", None)
-                nd_date = getattr(nearest, "date", None)
+                nd_date = getattr(nearest, "close_approach_date", None) or getattr(nearest, "date", None)
                 nd_str = (
                     f"  |  nearest: {nd:.4f} AU"
                     + (f" ({str(nd_date)[:10]})" if nd_date else "")
@@ -1299,11 +1302,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
             db = SessionLocal()
             try:
                 service = AnalysisService(db)
-                results = service.get_analysis_results(limit=20)
-                matches = [
-                    r for r in results
-                    if r.get("designation", "").lower() == designation.lower()
-                ]
+                matches = service.get_analysis_results(designation=designation, limit=20)
                 if matches:
                     rows = [
                         [

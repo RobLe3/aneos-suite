@@ -291,9 +291,10 @@ if HAS_ENHANCED_ANALYSIS and HAS_FASTAPI:
 
             scores = [r.overall_score for r in rows if r.overall_score is not None]
             total = len(rows)
-            mean_score = sum(scores) / total if total else 0.0
+            n_scores = len(scores)
+            mean_score = sum(scores) / n_scores if n_scores else 0.0
             sorted_scores = sorted(scores)
-            median_score = sorted_scores[total // 2] if scores else 0.0
+            median_score = sorted_scores[n_scores // 2] if scores else 0.0
 
             # Count by classification
             rec_counts: Dict[str, int] = {"accept": 0, "expert_review": 0, "reject": 0, "unknown": 0}

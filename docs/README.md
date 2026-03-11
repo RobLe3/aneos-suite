@@ -36,6 +36,7 @@ Welcome to the comprehensive documentation for the aNEOS (Advanced Near Earth Ob
 - **[Troubleshooting Guide](troubleshooting/troubleshooting-guide.md)** — Common issues and fixes
 
 ### Release Notes
+- **[Current State Summary](current-state-summary.md)** — v1.2.2 capabilities, limitations, and architecture overview
 - **[v0.7.0 Release Notes](releases/v0.7.0.md)** — Legacy branch information
 
 ### Archive
@@ -85,7 +86,7 @@ The documentation is version-controlled with the code. When contributing:
 
 ---
 
-**Project Version**: 1.2.0 (Phase 21)
-**Documentation Last Updated**: 2026-03-10
+**Project Version**: 1.2.2 (Phase 24)
+**Documentation Last Updated**: 2026-03-11
 **Maintainer**: aNEOS Development Team
 **Community**: https://community.openastronomy.org/t/open-source-python-tool-for-checking-neo-anomalies-aneos/1374

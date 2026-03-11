@@ -128,7 +128,7 @@ class TestOption1DetectSingle:
              patch.object(menu, "_persist_detection_result_async") as mock_persist:
             menu._detect_single()
 
-        mock_display.assert_called_once_with("99942", det_result, verbose=True)
+        mock_display.assert_called_once_with("99942", det_result, verbose=False)
         mock_persist.assert_called_once_with("99942", det_result)
         assert "99942" in menu._detection_results
 
@@ -829,7 +829,9 @@ class TestRunDetectionAdditionalData:
 
         call_kwargs = mock_analyze.call_args[1]
         assert "physical_data" in call_kwargs
-        assert call_kwargs["physical_data"].get("diameter") == pytest.approx(0.37)
+        # diameter is now in metres (0.37 km × 1000 = 370 m) to match detector's population stats
+        assert call_kwargs["physical_data"].get("diameter") == pytest.approx(370.0)
+        assert call_kwargs["physical_data"].get("diameter_km") == pytest.approx(0.37)
 
     def test_orbital_history_reaches_detector(self):
         menu = _make_menu()

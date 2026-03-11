@@ -10,6 +10,11 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
+try:
+    from datetime import UTC
+except ImportError:
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 
 try:
     from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
@@ -165,7 +170,7 @@ class ANEOSApp:
             logger.info("✓ DB users loaded into API_KEY_MAP")
             
             self.services_initialized = True
-            self.startup_time = datetime.now()
+            self.startup_time = datetime.now(UTC)
             
             logger.info("🚀 Basic API services initialized successfully")
             
@@ -173,7 +178,7 @@ class ANEOSApp:
             logger.error(f"Failed to initialize services: {e}")
             # Don't raise - allow basic API to work even with limited functionality
             self.services_initialized = True
-            self.startup_time = datetime.now()
+            self.startup_time = datetime.now(UTC)
             logger.warning("⚠️  API started with limited functionality")
     
     async def shutdown_services(self) -> None:

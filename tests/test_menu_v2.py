@@ -295,7 +295,10 @@ class TestANEOSMenuV2Helpers:
         neo_data.physical_properties = pp
         neo_data.sources_used = []
         result = menu._build_physical_dict(neo_data)
-        assert result.get("diameter") == pytest.approx(0.37)
+        # diameter stored in metres (0.37 km × 1000 = 370 m) for detector compatibility
+        assert result.get("diameter") == pytest.approx(370.0)
+        # diameter_km also stored as the trigger key for physical indicators
+        assert result.get("diameter_km") == pytest.approx(0.37)
         assert result.get("absolute_magnitude") == pytest.approx(19.7)
 
     def test_rough_torino_low_probability(self):

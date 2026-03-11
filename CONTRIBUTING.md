@@ -35,7 +35,7 @@ python aneos.py api --dev  # starts REST API at http://localhost:8000
 
 # 4. Run tests to confirm your environment is clean
 python -m pytest tests/ aneos_core/tests/ -m "not network" -q
-# Expected: 308 passed, 0 failed (277 in tests/ + 31 in aneos_core/tests/)
+# Expected: 360 passed, 0 failed
 ```
 
 ---
@@ -70,7 +70,7 @@ aneos-suite/
 ├── aneos_menu.py         # Legacy 121-option menu (--legacy-menu flag)
 ├── aneos_menu_base.py    # Shared UI helpers: progress bars, file browser
 ├── aneos.py              # CLI entry point
-├── tests/                # pytest test suite (277 tests)
+├── tests/                # pytest test suite (360 tests)
 └── docs/
     ├── architecture/
     │   ├── ADR.md        # 59 Architecture Decision Records
@@ -170,7 +170,7 @@ def test_natural_eccentricity_stays_inconclusive(e):
 aNEOS uses Architecture Decision Records to track every significant design choice.
 Before adding a new component, data source, or detection method:
 
-1. Read `docs/architecture/ADR.md` (currently 59 ADRs) — find the closest existing
+1. Read `docs/architecture/ADR.md` (currently 60 ADRs) — find the closest existing
    decision. If your change is within its scope, add an update note.
 2. If it's a genuinely new decision, append a new ADR at the bottom:
    ```markdown

@@ -141,7 +141,7 @@ async def get_current_metrics(
         
         # Get recent alerts
         alert_manager = await get_alert_manager()
-        recent_alerts = alert_manager.get_recent_alerts(limit=10) if alert_manager else []
+        recent_alerts = alert_manager.get_recent_alerts(hours=1) if alert_manager else []
         alert_responses = [
             AlertResponse(
                 alert_id=alert.alert_id,
@@ -364,7 +364,7 @@ async def get_dashboard_data(
         ml_metrics = metrics_collector.get_ml_metrics()
         
         # Get recent alerts
-        recent_alerts = alert_manager.get_recent_alerts(limit=5) if alert_manager else []
+        recent_alerts = alert_manager.get_recent_alerts(hours=1) if alert_manager else []
         active_alerts = [a for a in recent_alerts if not a.resolved]
         
         # Build dashboard data
