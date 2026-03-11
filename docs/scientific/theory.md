@@ -367,7 +367,7 @@ The highest risk of false positives arises from:
 
 ---
 
-## 6. Peer Review Status and References
+## 6. Peer Review Status and Future Work
 
 The Artificial NEOs Theory is currently an independent research hypothesis. It has
 not been submitted to or accepted by a peer-reviewed journal. The aNEOS detection
@@ -423,6 +423,74 @@ a publication-ready state:
   physical indicators; ADR-058 ATLAS scoring; ADR-059 proxy discipline)
 - `docs/architecture/DDD.md` — Bounded Contexts (BC3 anomaly scoring; BC11 population
   pattern analysis)
+
+---
+
+## 7. Connection to the Fermi Paradox
+
+### 7.1 The Paradox
+
+In 1950, Enrico Fermi asked: given the age and size of the galaxy, the high estimated frequency of Earth-like planets, and the relatively short timescales required for interstellar travel at sub-light speeds (Tipler 1980; Hart 1975), where is the evidence of extraterrestrial civilisations? The absence of any confirmed detection -- no radio signals, no megastructures, no artefacts -- is the Fermi Paradox.
+
+Proposed resolutions span a wide range:
+
+| Resolution class | Core claim |
+|-----------------|-----------|
+| Rare Earth / Great Filter | Intelligent life is extraordinarily rare; we may be alone in the observable universe (Ward & Brownlee 2000) |
+| Great Silence | Civilisations exist but choose not to communicate (radio silence, "dark forest" dynamics) |
+| Zoo / Quarantine | Civilisations observe but do not contact pre-technological species |
+| Artefact hypothesis | Civilisations send long-duration physical probes rather than radio signals (Bracewell 1960; Freitas 1983) |
+| We haven't looked | The search has been narrow (radio, optical SETI); other channels remain unexamined |
+
+### 7.2 The Observational Gap aNEOS Addresses
+
+Every resolution in the table above rests, in part, on the claim that we have searched our immediate environment systematically and found nothing. aNEOS challenges that claim on one specific, testable channel: the solar system's own asteroid catalogue.
+
+**The key fact**: At least four human-made objects currently orbit the Sun in asteroid-like orbits. They were catalogued as asteroids by automated surveys and were only identified as artificial through targeted anomaly analysis after the fact. This proves the category exists and is detectable.
+
+**The untested assumption**: Before aNEOS, there was no published, open-source, statistically rigorous programme to screen the full NEO catalogue for such objects. The standard SETI literature focuses on electromagnetic signals. The NEO catalogues are maintained by planetary defence agencies focused on impact risk, not origin classification. The intersection -- systematic anomaly screening of a physical object catalogue for non-natural origin -- was essentially unoccupied.
+
+aNEOS occupies that intersection.
+
+### 7.3 How This Research Programme Could Falsify or Support the Paradox
+
+**Outcome A (null result):** After screening the complete NEO catalogue (currently ~36,000 objects), every object is consistent with natural dynamics at a credible statistical threshold. This is a genuine data point. It does not resolve the Fermi Paradox -- absence of evidence is not evidence of absence, and the catalogue is size-limited and survey-incomplete (Granvik et al. 2018) -- but it quantifies the constraint: "no statistical outliers consistent with artificial origin exist among objects larger than X metres with orbital arcs longer than Y years at sigma >= 5."
+
+**Outcome B (candidate detection):** One or more objects pass the full validation pipeline (sigma >= 5, Bayesian posterior above calibrated threshold, all known natural explanations -- dark comets, binary tumbling, short-arc artefacts -- ruled out by follow-up observation). This would be the first physical evidence of a non-human engineered object in the solar system, constituting a direct counterexample to the observational premise of the Fermi Paradox. It would not confirm intelligence or intent; it would confirm that our solar system contains at least one anomalous object requiring non-natural explanation.
+
+Neither outcome is pre-judged. The value of the programme is the systematic test, not a predetermined answer.
+
+### 7.4 Why This Approach Is Scientifically Testable
+
+The Artificial NEOs Theory is falsifiable in a way that most SETI proposals are not:
+
+1. **The data already exists.** The NEO catalogue is public, continuously updated, and machine-readable. No new telescope time is required to screen the existing population.
+2. **The null distribution is measurable.** The statistical properties of natural NEOs are characterised from hundreds of thousands of confirmed natural objects. Departures from this distribution can be quantified with known error rates.
+3. **The detection threshold is defined.** Sigma >= 5 matches the conventional threshold for scientific discovery claims (p < 5.7e-7). Results below this threshold are explicitly labelled as inconclusive.
+4. **The result can be independently reproduced.** aNEOS is open-source. Any researcher can rerun the analysis, apply different thresholds, or extend the methodology.
+
+### 7.5 Current Status and Path Forward
+
+aNEOS v1.2.2 implements the screening framework and has validated it against the known artificial objects in the catalogue. The immediate path to advancing the programme:
+
+| Step | Prerequisite | Status |
+|------|-------------|--------|
+| Screen the complete NEO catalogue (~36,000 objects) | Batch detection pipeline | Available (Option 3 / API) |
+| Empirically calibrate likelihood ratios from a labelled corpus | >= 50 confirmed artificial objects | Pending; only 4 known |
+| Cross-match candidates with radar and spectral archives | Telescope archive access | Partially available (Goldstone, IRTF) |
+| Submit statistically significant candidates for observational follow-up | Sigma >= 3 candidates from screening | Pending screening run |
+| Independent peer review of methodology | Items above | Planned (target venue: *Icarus* or *AJ*) |
+
+The bottleneck is the small size of the confirmed-artificial corpus, which limits calibration precision. Every additional confirmed heliocentric spacecraft (from any space agency's historical records) expands the calibration set and tightens the detection thresholds.
+
+### References (Fermi Paradox)
+
+- Bracewell, R. N. (1960). *Communications from superior galactic communities.* Nature, 186, 670-671.
+- Freitas, R. A. (1983). *The search for extraterrestrial artefacts.* Acta Astronautica, 12(12), 1027-1034.
+- Hart, M. H. (1975). *Explanation for the absence of extraterrestrials on Earth.* Quarterly Journal of the Royal Astronomical Society, 16, 128-135.
+- Kardashev, N. S. (1964). *Transmission of information by extraterrestrial civilizations.* Soviet Astronomy, 8(2), 217-221.
+- Tipler, F. J. (1980). *Extraterrestrial intelligent beings do not exist.* Quarterly Journal of the Royal Astronomical Society, 21, 267-281.
+- Ward, P. D., & Brownlee, D. (2000). *Rare Earth: Why Complex Life is Uncommon in the Universe.* Copernicus Books.
 
 ---
 

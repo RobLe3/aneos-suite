@@ -13,10 +13,36 @@ aNEOS is an open-source Python research platform with two independent missions:
 
 ---
 
+## Long-Term Goal: Addressing the Fermi Paradox Empirically
+
+The **Fermi Paradox** asks a deceptively simple question: given the age and scale of the galaxy, where is everybody? If intelligent civilisations arise at even a modest rate across billions of stars over billions of years, our solar system should statistically have been visited, observed, or contacted by now. The absence of any confirmed evidence is the paradox.
+
+Most proposed resolutions fall into two camps: either civilisations are rare or short-lived (the "rare Earth" and "great filter" families), or the universe is populated but we are not looking in the right places or with the right instruments (the "dark forest", "zoo", and "artefact" families).
+
+aNEOS is built on a specific, testable version of the second camp.
+
+**The core argument:**
+
+The solar system's Near Earth Object catalogue contains tens of thousands of rocky bodies whose orbits have been measured with high precision. We know, with certainty, that at least four human-made spacecraft currently orbit the Sun disguised as asteroids -- they were classified as natural objects by automated surveys before their artificial origin was recognised through anomaly detection. If human technology from the 1960s and 2018 can produce heliocentric objects indistinguishable from asteroids, then any sufficiently advanced technology could do the same. And if it did, those objects would already be in our catalogues, waiting to be identified.
+
+The Fermi Paradox is partly an argument from silence: "we see no engineered objects, therefore none exist." But until aNEOS, no systematic, statistically rigorous tool existed to check whether the NEO catalogue already contains such objects. The silence has not been tested -- it has been assumed.
+
+**What falsification looks like:**
+
+- If aNEOS screens the entire known NEO population and every single object is consistent with natural dynamics at a credible confidence level, that is a genuine, quantified data point supporting the "rare Earth" resolutions.
+- If even one object survives the full validation pipeline (sigma >= 5, Bayesian posterior above threshold, all known natural explanations ruled out by follow-up observation), that is a direct counterexample to the observational premise of the Fermi Paradox -- and the first physical evidence of extraterrestrial technology.
+
+Neither outcome is assumed. The goal is to make the question answerable with existing data.
+
+aNEOS is the first open-source implementation of this programme. See `docs/scientific/theory.md` for the full scientific framing and `docs/scientific/VALIDATION_INTEGRITY.md` for an honest account of current limitations.
+
+---
+
 ## Table of Contents
 
 **Part 1: Introduction**
 - [What is aNEOS (Plain English)](#part-1-what-is-aneos)
+- [Long-Term Goal: Addressing the Fermi Paradox](#long-term-goal-addressing-the-fermi-paradox-empirically)
 - [What it is not](#what-it-is-not)
 
 **Part 2: Getting Started**

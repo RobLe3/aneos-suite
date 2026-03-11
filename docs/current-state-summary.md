@@ -15,6 +15,14 @@ aNEOS is an open-source Python research platform with two missions:
 
 It is a **research tool**, not an operational system. Results require independent verification.
 
+### Long-Term Goal
+
+The long-term scientific goal of aNEOS is to address the **Fermi Paradox** empirically. The paradox rests partly on the assumption that no engineered objects exist in our solar system -- but that assumption has never been systematically tested against the NEO catalogue with a rigorous statistical framework. aNEOS is built to perform that test.
+
+If the complete NEO population screens as consistent with natural dynamics, that is a quantified null result. If even one object survives the full validation pipeline and all natural explanations are ruled out by follow-up observation, it constitutes direct physical evidence that changes the terms of the paradox entirely.
+
+See `docs/scientific/theory.md` Section 7 for the full scientific argument.
+
 ---
 
 ## What Works Right Now (v1.2.2)
