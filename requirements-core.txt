@@ -50,3 +50,4 @@ scipy>=1.10.0
 pydantic>=2.5.0
 sqlalchemy>=2.0.0
 fastapi>=0.104.0
+httpx>=0.25.0  # FastAPI/Starlette test client
