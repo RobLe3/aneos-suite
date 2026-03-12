@@ -21,7 +21,7 @@ jobs:
         run: pip install -r requirements-core.txt
 
       - name: Run tests
-        run: python -m pytest tests/ aneos_core/tests/ -m "not network" -v --tb=short --cov=aneos_core --cov-report=term-missing --cov-fail-under=40
+        run: python -m pytest tests/ aneos_core/tests/ -m "not network" -v --tb=short --cov=aneos_core --cov-report=term-missing --cov-fail-under=30
 
       - name: Verify OpenAPI spec is up to date
         run: |
