@@ -39,3 +39,6 @@ hypothesis>=6.92.0
 
 # Async HTTP (used in data/sources/base.py)
 aiohttp>=3.9.0
+
+# System monitoring (used in monitoring/metrics.py)
+psutil>=5.9.0
