@@ -42,3 +42,11 @@ aiohttp>=3.9.0
 
 # System monitoring (used in monitoring/metrics.py)
 psutil>=5.9.0
+
+# Validation modules (statistical_testing.py, spectral_outlier_analysis.py)
+scipy>=1.10.0
+
+# API / database layer (required by tests that import aneos_api)
+pydantic>=2.5.0
+sqlalchemy>=2.0.0
+fastapi>=0.104.0
