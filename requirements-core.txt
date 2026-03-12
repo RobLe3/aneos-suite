@@ -34,4 +34,8 @@ pandas>=1.5.0  # For data analysis (optional)
 pytest>=7.4.0
 pytest-cov>=4.1.0
 pytest-mock>=3.12.0
+pytest-asyncio>=0.23.0
 hypothesis>=6.92.0
+
+# Async HTTP (used in data/sources/base.py)
+aiohttp>=3.9.0

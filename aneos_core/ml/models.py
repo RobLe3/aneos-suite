@@ -323,7 +323,7 @@ class AutoencoderModel(AnomalyDetectionModel):
         
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-    def _create_autoencoder(self, input_size: int) -> nn.Module:
+    def _create_autoencoder(self, input_size: int) -> "nn.Module":
         """Create autoencoder architecture."""
         
         class Autoencoder(nn.Module):
