@@ -122,6 +122,8 @@ test_*.py
 !tests/test_pipeline_scoring.py
 !tests/test_kardashev_generator.py
 !tests/test_kardashev_training.py
+!tests/test_property_based.py
+!tests/test_auth.py
 
 # Development directory - track structure, ignore contents
 development/**/*
@@ -148,6 +150,7 @@ minimal_*.py
 deep_diagnostic_*.py
 gamma_*.py
 delta_*.py
+!aneos_core/validation/delta_bic_analysis.py
 beta_*.py
 
 # Docker and deployment
