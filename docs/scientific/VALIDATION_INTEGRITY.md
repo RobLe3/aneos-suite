@@ -1,3 +1,10 @@
+> **ADR-069 review-branch update (2026-11-12):** core AnalysisPipeline and
+> `/analyze` now delegate to shared uncalibrated screening. Source failure abstains;
+> compatibility ranks are not probabilities or significance. Legacy ML fusion is
+> unavailable with this contract; screening classes cannot supply training truth.
+> Independent calibration, physical fitting, enhanced REST migration and durable
+> execution remain open. Engineering controls do not establish scientific accuracy.
+
 > **ADR-068 review-branch update (2026-11-12):** direct MultiStageValidator
 > placeholder science and pass-on-error contracts are withdrawn; legacy inputs
 > use canonical screening plus unavailable/inconclusive scientific prerequisites.

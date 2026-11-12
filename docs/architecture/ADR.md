@@ -2205,3 +2205,50 @@ controlled deprecations, executable positive/negative/null controls and remainin
 core AnalysisPipeline/API/CLI migration. Scientific capability remains unavailable;
 these engineering tests do not satisfy independent accuracy or fit/calibration
 requirements. No existing scientific/CI acceptance gate is lowered.
+
+---
+
+## ADR-069: Make core analysis a shared-screening adapter, not a second classifier
+
+**Date:** 2026-11-12
+**Status:** Implemented on review branch; scientific calibration unavailable
+**Related:** ADR-065–068; issues #2, #6, #11, #12, #15–17
+
+**Context:** AnalysisPipeline independently scored legacy indicators, returned
+`natural`/zero on acquisition or processing failure, reconstructed nested cached
+objects incorrectly, and populated an uncalibrated population analyzer. `/analyze`
+expected missing result attributes and treated a dict as an object. Its
+identity-only response cache could hide changed evidence. ML consumers assumed
+bounded score/probability units and generated labels from screening decisions.
+
+**Decision:** Core acquisition delegates to typed DataFetcher; ranking delegates
+to ScreeningAnalysisService. `canonical-analysis-v1` results carry the full
+assessment, policy/evidence IDs, actual NEO data, nullable compatibility score
+view and explicit execution status. `overall_score` means uncalibrated ranking
+units. Missing source/invalid evidence/internal error abstain rather than produce
+a natural-origin result. Completeness counts presence, not reliability.
+
+Retain standalone legacy indicators/calculators for research, but do not invoke
+them or accumulate their statistical interpretation on this deployed path.
+Deprecate the separate source manager (including mock source fallbacks). Use
+bounded async batch scheduling with ordered per-object outcomes; callback errors
+cannot discard results. Cancellation does not terminate a blocking provider worker.
+
+`/analyze` consumes the typed result and existing flags, returns 503/422 for
+unavailable/invalid source evidence, and does not read a designation-only result
+cache. Existing retrieval/export uses evidence/policy-keyed in-memory snapshots;
+this is not durable case history. JSON retains replay metadata; CSV names ranking
+units explicitly. Existing CLI core-result displays preserve null values.
+
+Reject legacy ML fusion/cache use with the new core score contract before any
+prediction/dispatch. Require independently supplied binary labels and provenance
+rather than deriving supervised truth from screening classifications. This guard
+does not install a new model, validate supplied labels, or certify retained ML
+research utilities. Enhanced wrapper/validator accepts the typed core assessment;
+the separately mocked enhanced REST adapter still requires remediation.
+
+**Consequences and evidence:** No new bounded context, route or UI. Contracts and
+network-denied controls: `docs/engineering/core-analysis-contract.md`. Independent
+calibration, observational fits, complete interface migration, global provider
+scheduling and restart-safe persistence remain unfinished. No scientific or CI
+quality gate is reduced; no five-sigma claim is enabled.

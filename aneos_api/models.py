@@ -89,21 +89,27 @@ class CloseApproachResponse(BaseModel):
     relative_velocity_km_s: Optional[float] = None
     infinity_velocity_km_s: Optional[float] = None
     subpoint: Optional[List[float]] = Field(None, description="[latitude, longitude]")
+    epoch_jd_tdb: Optional[float] = None
+    time_scale: Optional[str] = None
+    native_calendar: Optional[str] = None
+    body: Optional[str] = None
+    evidence_metadata: Dict[str, Any] = Field(default_factory=dict)
 
 class IndicatorResultResponse(BaseModel):
     """Indicator result response model."""
     indicator_name: str
-    raw_score: float
-    weighted_score: float
-    confidence: float
+    raw_score: Optional[float] = None
+    weighted_score: Optional[float] = None
+    confidence: Optional[float] = None
     contributing_factors: List[str] = []
     metadata: Dict[str, Any] = {}
 
 class AnomalyScoreResponse(BaseModel):
     """Anomaly score response model."""
-    overall_score: float
-    confidence: float
-    classification: str = Field(..., description="natural, suspicious, highly_suspicious, or artificial")
+    overall_score: Optional[float] = Field(None, description="Uncalibrated ranking units, not sigma or probability")
+    confidence: Optional[float] = None
+    score_semantics: str = "uncalibrated_screening_rank"
+    classification: str = Field(..., description="FOLLOW_UP_CANDIDATE, NOT_FLAGGED, or INCONCLUSIVE; not origin")
     risk_factors: List[str] = []
     indicator_scores: Dict[str, IndicatorResultResponse] = {}
     statistical_summary: Dict[str, Any] = {}
@@ -117,6 +123,11 @@ class AnalysisResponse(APIResponse):
     orbital_elements: Optional[OrbitalElementsResponse] = None
     close_approaches: List[CloseApproachResponse] = []
     raw_neo_data: Optional[Dict[str, Any]] = None
+    screening_assessment: Dict[str, Any]
+    analysis_metadata: Dict[str, Any] = Field(default_factory=dict)
+    status: str
+    errors: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
 
 # ML Prediction Models
 class PredictionRequest(BaseModel):
@@ -282,8 +293,8 @@ class SortOrder(str, Enum):
 class AnalysisFilter(BaseModel):
     """Analysis results filter model."""
     classification: Optional[List[str]] = Field(None, description="Filter by classification")
-    min_score: Optional[float] = Field(None, ge=0.0, le=1.0)
-    max_score: Optional[float] = Field(None, ge=0.0, le=1.0)
+    min_score: Optional[float] = Field(None, ge=0.0, allow_inf_nan=False, description="Minimum uncalibrated ranking units")
+    max_score: Optional[float] = Field(None, ge=0.0, allow_inf_nan=False, description="Maximum uncalibrated ranking units")
     date_from: Optional[datetime] = None
     date_to: Optional[datetime] = None
     designations: Optional[List[str]] = None

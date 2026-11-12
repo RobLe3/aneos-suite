@@ -135,62 +135,42 @@ async def analyze_neo(
     pipeline: AnalysisPipeline = Depends(get_analysis_pipeline),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
-    """
-    Analyze a single NEO for anomaly indicators.
-    
-    Performs comprehensive analysis including orbital mechanics,
-    approach patterns, and anomaly detection.
-    """
+    """Acquire current evidence and return the shared uncalibrated screening result."""
     try:
-        logger.info(f"Starting analysis for NEO: {request.designation}")
-        start_time = datetime.now()
-        
-        # Check cache first (unless force refresh requested)
-        cache_key = f"{request.designation}_{request.include_raw_data}_{request.include_indicators}"
-        if not request.force_refresh and cache_key in _analysis_cache:
-            cached_result = _analysis_cache[cache_key]
-            logger.info(f"Returning cached analysis for {request.designation}")
-            return cached_result
-        
-        # Perform analysis
-        analysis_result = await pipeline.analyze_neo(request.designation)
-        
-        if not analysis_result:
-            raise HTTPException(
-                status_code=404, 
-                detail=f"NEO {request.designation} not found or analysis failed"
-            )
-        
-        # Build response
-        processing_time = (datetime.now() - start_time).total_seconds()
-        
+        result = await pipeline.analyze_neo(request.designation, force_refresh=request.force_refresh)
+        if result.errors:
+            code = {'source_unavailable': 503, 'invalid_evidence': 422}.get(result.status, 500)
+            raise HTTPException(status_code=code, detail={
+                'status': result.status, 'errors': result.errors,
+                'classification': 'INCONCLUSIVE', 'screening_score': None})
+        neo = result.neo_data
+        raw = neo.to_dict() if neo is not None else {}
+        score = result.anomaly_score.to_dict()
+        if not request.include_indicators:
+            score['indicator_scores'] = {}
         response = AnalysisResponse(
-            designation=request.designation,
-            anomaly_score=analysis_result.anomaly_score.__dict__,
-            processing_time=processing_time,
-            data_quality=analysis_result.data_quality.__dict__,
-            orbital_elements=analysis_result.neo_data.orbital_elements.__dict__ if analysis_result.neo_data.orbital_elements else None,
-            close_approaches=[ca.__dict__ for ca in analysis_result.neo_data.close_approaches] if analysis_result.neo_data.close_approaches else [],
-            raw_neo_data=analysis_result.neo_data.__dict__ if request.include_raw_data else None
-        )
-        
-        # Cache result
+            designation=result.designation, anomaly_score=score,
+            processing_time=result.processing_time, data_quality=result.data_quality,
+            orbital_elements=raw.get('orbital_elements'),
+            close_approaches=raw.get('close_approaches', []),
+            raw_neo_data=raw if request.include_raw_data else None,
+            screening_assessment=result.screening_assessment,
+            analysis_metadata=result.analysis_metadata, status=result.status,
+            errors=result.errors, warnings=result.warnings)
+        # Snapshot history for retrieval/export, never a designation-only read cache.
+        evidence_id = result.screening_assessment['evidence_id']
+        policy_id = result.screening_assessment['policy_id']
+        cache_key = f'{request.designation}:{evidence_id}:{policy_id}:{request.include_raw_data}:{request.include_indicators}'
         _analysis_cache[cache_key] = response
-        
-        # Log completion
-        background_tasks.add_task(
-            _log_analysis_completion,
-            request.designation, 
-            processing_time,
-            analysis_result.anomaly_score.overall_score
-        )
-        
-        logger.info(f"Analysis completed for {request.designation} in {processing_time:.2f}s")
+        _detection_cache[request.designation] = result.screening_assessment
+        background_tasks.add_task(_log_analysis_completion, request.designation,
+            result.processing_time, result.anomaly_score.overall_score)
         return response
-        
-    except Exception as e:
-        logger.error(f"Analysis failed for {request.designation}: {e}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception('Analysis failed for %s', request.designation)
+        raise HTTPException(status_code=500, detail='Analysis failed') from exc
 
 @router.get(
     "/detect",
@@ -353,8 +333,8 @@ async def analyze_batch(
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
     """
-    Analyze multiple NEOs for artificial signatures (batch mode).
-    Uses the same DataFetcher + ValidatedSigma5 path as GET /detect.
+    Screen multiple NEOs using the same DataFetcher + shared service as GET /detect.
+    Results remain in-memory; restart durability is tracked separately.
     """
     batch_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
     _batch_store[batch_id] = {
@@ -366,7 +346,8 @@ async def analyze_batch(
         'results': [],
         'started_at': datetime.now().isoformat(),
     }
-    background_tasks.add_task(_run_batch_detection, batch_id, request.designations)
+    background_tasks.add_task(_run_batch_detection, batch_id, request.designations,
+        force_refresh=request.force_refresh, include_raw_data=request.include_raw_data)
     return {
         'batch_id': batch_id,
         'status': 'processing',
@@ -394,7 +375,7 @@ async def get_analysis_result(
     if designation in _detection_cache:
         return _detection_cache[designation]
     # Check analysis cache
-    for key, result in _analysis_cache.items():
+    for result in reversed(list(_analysis_cache.values())):
         if result.designation.upper() == designation.upper():
             return result
     # DB fallback
@@ -437,19 +418,19 @@ async def search_analyses(
             if request.filters.classification:
                 filtered_results = [
                     r for r in filtered_results 
-                    if r.anomaly_score.get('classification') in request.filters.classification
+                    if r.anomaly_score.classification in request.filters.classification
                 ]
             
             if request.filters.min_score is not None:
                 filtered_results = [
                     r for r in filtered_results 
-                    if r.anomaly_score.get('overall_score', 0) >= request.filters.min_score
+                    if r.anomaly_score.overall_score is not None and r.anomaly_score.overall_score >= request.filters.min_score
                 ]
             
             if request.filters.max_score is not None:
                 filtered_results = [
                     r for r in filtered_results 
-                    if r.anomaly_score.get('overall_score', 1) <= request.filters.max_score
+                    if r.anomaly_score.overall_score is not None and r.anomaly_score.overall_score <= request.filters.max_score
                 ]
         
         # Apply pagination
@@ -585,16 +566,17 @@ async def get_analysis_stats(
 async def _log_analysis_completion(
     designation: str,
     processing_time: float,
-    overall_score: float
+    overall_score: Optional[float]
 ):
     """Log analysis completion for monitoring."""
     logger.info(
         f"Analysis completed: {designation}, "
-        f"Score: {overall_score:.3f}, "
+        f"Uncalibrated rank: {overall_score if overall_score is not None else 'unavailable'}, "
         f"Time: {processing_time:.2f}s"
     )
 
-async def _run_batch_detection(batch_id: str, designations: List[str]):
+async def _run_batch_detection(batch_id: str, designations: List[str],
+                               force_refresh: bool = False, include_raw_data: bool = False):
     """Use the same snapshot service as single-object screening."""
     import asyncio
     from aneos_core.data.fetcher import DataFetcher
@@ -604,8 +586,10 @@ async def _run_batch_detection(batch_id: str, designations: List[str]):
     service = ScreeningAnalysisService()
     for designation in designations:
         try:
-            neo = await asyncio.to_thread(fetcher.fetch_neo_data, designation)
+            neo = await asyncio.to_thread(fetcher.fetch_neo_data, designation, force_refresh=force_refresh)
             payload = _screening_payload(neo, service)
+            if include_raw_data:
+                payload['raw_neo_data'] = neo.to_dict()
             store['results'].append({**payload, 'status': 'success'})
             _detection_cache[designation] = payload
             await asyncio.to_thread(_persist_detection_result, designation, payload)
@@ -704,22 +688,20 @@ async def _process_export(export_id: str, request: ExportRequest):
         if fmt == 'csv':
             buf = io.StringIO()
             writer = csv.writer(buf)
-            writer.writerow(['designation', 'sigma_confidence', 'artificial_probability', 'classification'])
+            writer.writerow(['designation', 'screening_score', 'score_semantics', 'classification',
+                             'significance_status', 'evidence_id', 'policy_id'])
             for item in items:
-                score = item.anomaly_score if isinstance(item.anomaly_score, dict) else {}
-                writer.writerow([
-                    item.designation,
-                    score.get('sigma_confidence', ''),
-                    score.get('artificial_probability', ''),
-                    score.get('classification', ''),
-                ])
+                assessment = item.screening_assessment
+                writer.writerow([item.designation, assessment['screening_score'],
+                    item.anomaly_score.score_semantics, assessment['classification'],
+                    assessment['significance_status'], assessment['evidence_id'], assessment['policy_id']])
             content = buf.getvalue().encode('utf-8')
+        elif fmt == 'json':
+            content = _json.dumps([i.model_dump(mode='json', exclude={'raw_neo_data'})
+                if not request.include_raw_data else i.model_dump(mode='json') for i in items],
+                allow_nan=False).encode('utf-8')
         else:
-            data = [
-                {'designation': i.designation, 'anomaly_score': i.anomaly_score}
-                for i in items
-            ]
-            content = _json.dumps(data, default=str).encode('utf-8')
+            raise ValueError('Only JSON and CSV analysis exports are implemented')
         job['content'] = content
         job['status'] = 'completed'
         job['file_size_bytes'] = len(content)

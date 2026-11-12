@@ -1116,3 +1116,22 @@ supply one. Current capability is unavailable, explicitly not a confirmed natura
 finding. Core legacy AnalysisPipeline/API/CLI migration and broader interface
 claim review remain unfinished under #6/#12/#17. Durable assessment identity and
 case lifecycle remain #15/#13; current collector deduplication is in-process only.
+
+## Core analysis adapter correction — 2026-11-12 (ADR-069)
+
+The existing analysis boundary now orchestrates typed acquisition and shared
+screening, instead of independently interpreting legacy indicators. The core
+result carries actual NEO evidence and canonical assessment together. Operational
+status is separate from candidate status and from unavailable origin inference.
+Field-presence completeness is not source reliability. No new bounded context.
+
+**Implemented/integrated:** core single/batch, `/analyze`, existing batch request
+flags, core CLI displays, JSON/CSV export, required-validator/fallback transport.
+ML integration rejects incompatible rank/probability units and requires explicit
+independent label inputs. **Regression evidence:** network-denied contract tests,
+actual HTTP serialization, candidate positive/negative controls, source failure,
+timeout, replay and nullable display. **Not scientifically validated:** physical
+origin, probability/significance, reference-population calibration or independent
+performance. The enhanced REST endpoint still supplies mock acquisition/pipeline
+and is explicitly outside this increment; #6/#12 remain open. Old research model
+modules do not establish a deployed validated capability.

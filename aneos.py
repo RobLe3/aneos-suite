@@ -91,14 +91,15 @@ try:
                 print("🔄 Falling back to pipeline analysis...")
                 
                 # Fallback to pipeline analysis
+                from aneos_core.analysis.presentation import format_optional_number
                 pipeline = create_analysis_pipeline()
                 pipeline_result = await pipeline.analyze_neo('{designation}')
                 
                 if pipeline_result:
                     print(f"\\n📊 Pipeline Analysis Results for {designation}:")
-                    print(f"Overall Score: {{pipeline_result.anomaly_score.overall_score:.3f}}")
+                    print(f"Uncalibrated screening rank: {{format_optional_number(pipeline_result.anomaly_score.overall_score)}}")
                     print(f"Classification: {{pipeline_result.anomaly_score.classification}}")
-                    print(f"Confidence: {{pipeline_result.anomaly_score.confidence:.3f}}")
+                    print(f"Confidence: {{format_optional_number(pipeline_result.anomaly_score.confidence)}}")
                     print(f"Processing Time: {{pipeline_result.processing_time:.2f}}s")
                     
                     if pipeline_result.anomaly_score.risk_factors:

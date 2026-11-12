@@ -73,8 +73,37 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "description": "Filter by classification",
             "title": "Classification"
+          },
+          "min_score": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Minimum uncalibrated ranking units",
+            "title": "Min Score"
+          },
+          "max_score": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Maximum uncalibrated ranking units",
+            "title": "Max Score"
           },
           "date_from": {
             "anyOf": [
@@ -86,6 +115,7 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Date From"
           },
           "date_to": {
@@ -98,6 +128,7 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Date To"
           },
           "designations": {
@@ -112,33 +143,8 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Designations"
-          },
-          "max_score": {
-            "anyOf": [
-              {
-                "maximum": 1.0,
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Max Score"
-          },
-          "min_score": {
-            "anyOf": [
-              {
-                "maximum": 1.0,
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Min Score"
           }
         },
         "title": "AnalysisFilter",
@@ -225,24 +231,14 @@
       "AnalysisResponse": {
         "description": "Complete analysis response model.",
         "properties": {
-          "anomaly_score": {
-            "$ref": "#/components/schemas/AnomalyScoreResponse"
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
           },
-          "close_approaches": {
-            "default": [],
-            "items": {
-              "$ref": "#/components/schemas/CloseApproachResponse"
-            },
-            "title": "Close Approaches",
-            "type": "array"
-          },
-          "data_quality": {
-            "additionalProperties": true,
-            "title": "Data Quality",
-            "type": "object"
-          },
-          "designation": {
-            "title": "Designation",
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
             "type": "string"
           },
           "execution_time_ms": {
@@ -254,7 +250,24 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Execution Time Ms"
+          },
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "anomaly_score": {
+            "$ref": "#/components/schemas/AnomalyScoreResponse"
+          },
+          "processing_time": {
+            "title": "Processing Time",
+            "type": "number"
+          },
+          "data_quality": {
+            "additionalProperties": true,
+            "title": "Data Quality",
+            "type": "object"
           },
           "orbital_elements": {
             "anyOf": [
@@ -264,11 +277,16 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "default": null
           },
-          "processing_time": {
-            "title": "Processing Time",
-            "type": "number"
+          "close_approaches": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CloseApproachResponse"
+            },
+            "title": "Close Approaches",
+            "type": "array"
           },
           "raw_neo_data": {
             "anyOf": [
@@ -280,24 +298,45 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Raw Neo Data"
           },
-          "success": {
-            "default": true,
-            "title": "Success",
-            "type": "boolean"
+          "screening_assessment": {
+            "additionalProperties": true,
+            "title": "Screening Assessment",
+            "type": "object"
           },
-          "timestamp": {
-            "format": "date-time",
-            "title": "Timestamp",
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "title": "Analysis Metadata",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
             "type": "string"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
           }
         },
         "required": [
           "designation",
           "anomaly_score",
           "processing_time",
-          "data_quality"
+          "data_quality",
+          "screening_assessment",
+          "status"
         ],
         "title": "AnalysisResponse",
         "type": "object"
@@ -305,26 +344,40 @@
       "AnomalyScoreResponse": {
         "description": "Anomaly score response model.",
         "properties": {
-          "classification": {
-            "description": "natural, suspicious, highly_suspicious, or artificial",
-            "title": "Classification",
-            "type": "string"
+          "overall_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Uncalibrated ranking units, not sigma or probability",
+            "title": "Overall Score"
           },
           "confidence": {
-            "title": "Confidence",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Confidence"
           },
-          "indicator_scores": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/IndicatorResultResponse"
-            },
-            "default": {},
-            "title": "Indicator Scores",
-            "type": "object"
+          "score_semantics": {
+            "default": "uncalibrated_screening_rank",
+            "title": "Score Semantics",
+            "type": "string"
           },
-          "overall_score": {
-            "title": "Overall Score",
-            "type": "number"
+          "classification": {
+            "description": "FOLLOW_UP_CANDIDATE, NOT_FLAGGED, or INCONCLUSIVE; not origin",
+            "title": "Classification",
+            "type": "string"
           },
           "risk_factors": {
             "default": [],
@@ -334,6 +387,14 @@
             "title": "Risk Factors",
             "type": "array"
           },
+          "indicator_scores": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IndicatorResultResponse"
+            },
+            "default": {},
+            "title": "Indicator Scores",
+            "type": "object"
+          },
           "statistical_summary": {
             "additionalProperties": true,
             "default": {},
@@ -342,8 +403,6 @@
           }
         },
         "required": [
-          "overall_score",
-          "confidence",
           "classification"
         ],
         "title": "AnomalyScoreResponse",
@@ -461,6 +520,7 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Close Approach Date"
           },
           "distance_au": {
@@ -472,6 +532,7 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Distance Au"
           },
           "distance_km": {
@@ -483,18 +544,8 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Distance Km"
-          },
-          "infinity_velocity_km_s": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Infinity Velocity Km S"
           },
           "relative_velocity_km_s": {
             "anyOf": [
@@ -505,7 +556,20 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Relative Velocity Km S"
+          },
+          "infinity_velocity_km_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Infinity Velocity Km S"
           },
           "subpoint": {
             "anyOf": [
@@ -519,8 +583,62 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "description": "[latitude, longitude]",
             "title": "Subpoint"
+          },
+          "epoch_jd_tdb": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Epoch Jd Tdb"
+          },
+          "time_scale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Time Scale"
+          },
+          "native_calendar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Native Calendar"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Body"
+          },
+          "evidence_metadata": {
+            "additionalProperties": true,
+            "title": "Evidence Metadata",
+            "type": "object"
           }
         },
         "title": "CloseApproachResponse",
@@ -1382,9 +1500,45 @@
       "IndicatorResultResponse": {
         "description": "Indicator result response model.",
         "properties": {
+          "indicator_name": {
+            "title": "Indicator Name",
+            "type": "string"
+          },
+          "raw_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Raw Score"
+          },
+          "weighted_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Weighted Score"
+          },
           "confidence": {
-            "title": "Confidence",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Confidence"
           },
           "contributing_factors": {
             "default": [],
@@ -1394,30 +1548,15 @@
             "title": "Contributing Factors",
             "type": "array"
           },
-          "indicator_name": {
-            "title": "Indicator Name",
-            "type": "string"
-          },
           "metadata": {
             "additionalProperties": true,
             "default": {},
             "title": "Metadata",
             "type": "object"
-          },
-          "raw_score": {
-            "title": "Raw Score",
-            "type": "number"
-          },
-          "weighted_score": {
-            "title": "Weighted Score",
-            "type": "number"
           }
         },
         "required": [
-          "indicator_name",
-          "raw_score",
-          "weighted_score",
-          "confidence"
+          "indicator_name"
         ],
         "title": "IndicatorResultResponse",
         "type": "object"
@@ -1818,7 +1957,7 @@
       "OrbitalElementsResponse": {
         "description": "Orbital elements response model.",
         "properties": {
-          "argument_of_perihelion": {
+          "eccentricity": {
             "anyOf": [
               {
                 "type": "number"
@@ -1827,7 +1966,32 @@
                 "type": "null"
               }
             ],
-            "title": "Argument Of Perihelion"
+            "default": null,
+            "title": "Eccentricity"
+          },
+          "inclination": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Inclination"
+          },
+          "semi_major_axis": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Semi Major Axis"
           },
           "ascending_node": {
             "anyOf": [
@@ -1838,9 +2002,10 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Ascending Node"
           },
-          "eccentricity": {
+          "argument_of_perihelion": {
             "anyOf": [
               {
                 "type": "number"
@@ -1849,7 +2014,20 @@
                 "type": "null"
               }
             ],
-            "title": "Eccentricity"
+            "default": null,
+            "title": "Argument Of Perihelion"
+          },
+          "mean_anomaly": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Mean Anomaly"
           },
           "epoch": {
             "anyOf": [
@@ -1861,29 +2039,8 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Epoch"
-          },
-          "inclination": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Inclination"
-          },
-          "mean_anomaly": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Mean Anomaly"
           },
           "orbital_period": {
             "anyOf": [
@@ -1894,18 +2051,8 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Orbital Period"
-          },
-          "semi_major_axis": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Semi Major Axis"
           }
         },
         "title": "OrbitalElementsResponse",
@@ -3277,7 +3424,7 @@
     },
     "/api/v1/analysis/analyze": {
       "post": {
-        "description": "Analyze a single NEO for anomaly indicators.\n\nPerforms comprehensive analysis including orbital mechanics,\napproach patterns, and anomaly detection.",
+        "description": "Acquire typed evidence and delegate to shared uncalibrated screening. Missing source data is 503; invalid evidence is 422. A ranking score is not statistical significance or an origin probability.",
         "operationId": "analyze_neo_api_v1_analysis_analyze_post",
         "requestBody": {
           "content": {
@@ -3301,14 +3448,10 @@
             "description": "Successful Response"
           },
           "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
+            "description": "Invalid request or source evidence"
+          },
+          "503": {
+            "description": "Source evidence unavailable; not a natural negative"
           }
         },
         "security": [

@@ -99,6 +99,8 @@ class EnhancedAnalysisPipeline:
             # Step 1: Run original analysis (COMPLETELY UNCHANGED)
             self.logger.info(f"Running original analysis for {designation}")
             original_result = await self.original_pipeline.analyze_neo(designation, neo_data)
+            if neo_data is None:
+                neo_data = getattr(original_result, 'neo_data', None)
             
             # Step 2: Apply enhanced validation if enabled and requested
             if enhanced and self.validation_available and original_result:
@@ -210,7 +212,7 @@ class EnhancedAnalysisPipeline:
         from ..validation.statistical_testing import MultipleTestingResult
         
         assessment = None
-        original_payload = (getattr(original_result, 'analysis', {}) or {}).get('assessment')
+        original_payload = getattr(original_result, 'screening_assessment', None) or (getattr(original_result, 'analysis', {}) or {}).get('assessment')
         if isinstance(original_payload, dict) and original_payload.get('schema_version') == 'screening-assessment-v1':
             try:
                 from .screening import ScreeningAnalysisService

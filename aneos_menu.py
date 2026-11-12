@@ -101,6 +101,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from aneos_core.analysis.presentation import format_optional_number
+
+
 class ANEOSMenu(ANEOSMenuBase):
     """Mission-focused aNEOS menu system with intelligent automation."""
     
@@ -999,7 +1002,7 @@ class ANEOSMenu(ANEOSMenuBase):
                 
                 if result:
                     print(f"Analysis complete for {designation}")
-                    print(f"Overall Score: {result.anomaly_score.overall_score:.3f}")
+                    print(f"Uncalibrated screening rank: {format_optional_number(result.anomaly_score.overall_score)}")
                     print(f"Classification: {result.anomaly_score.classification}")
                 else:
                     print(f"Analysis failed for {designation}")
@@ -1581,9 +1584,9 @@ class ANEOSMenu(ANEOSMenuBase):
             table.add_column("Value", style="white")
             
             if hasattr(result, 'anomaly_score'):
-                table.add_row("Overall Score", f"{result.anomaly_score.overall_score:.3f}")
+                table.add_row("Uncalibrated screening rank", f"{format_optional_number(result.anomaly_score.overall_score)}")
                 table.add_row("Classification", result.anomaly_score.classification)
-                table.add_row("Confidence", f"{result.anomaly_score.confidence:.3f}")
+                table.add_row("Confidence", f"{format_optional_number(result.anomaly_score.confidence)}")
             
             if hasattr(result, 'processing_time'):
                 table.add_row("Processing Time", f"{result.processing_time:.2f}s")
@@ -1592,9 +1595,9 @@ class ANEOSMenu(ANEOSMenuBase):
         else:
             print(f"\nAnalysis Result: {getattr(result, 'designation', 'Unknown')}")
             if hasattr(result, 'anomaly_score'):
-                print(f"Overall Score: {result.anomaly_score.overall_score:.3f}")
+                print(f"Uncalibrated screening rank: {format_optional_number(result.anomaly_score.overall_score)}")
                 print(f"Classification: {result.anomaly_score.classification}")
-                print(f"Confidence: {result.anomaly_score.confidence:.3f}")
+                print(f"Confidence: {format_optional_number(result.anomaly_score.confidence)}")
     
     def display_validated_result(self, result):
         """Display validated sigma 5 detector results."""

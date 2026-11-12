@@ -391,7 +391,7 @@ class MultiStageValidator:
             if not isinstance(neo_data, NEOData):
                 raise ValueError('NEO evidence unavailable or invalid')
             original = analysis_result
-            payload = (getattr(analysis_result, 'analysis', {}) or {}).get('assessment')
+            payload = getattr(analysis_result, 'screening_assessment', None) or (getattr(analysis_result, 'analysis', {}) or {}).get('assessment')
             service = ScreeningAnalysisService()
             if isinstance(payload, dict) and payload.get('schema_version') == 'screening-assessment-v1':
                 replay = service.replay(payload['evidence_snapshot'], payload['evidence_id'])

@@ -58,12 +58,18 @@ else:
 _prediction_cache: Dict[str, PredictionResponse] = {}
 _batch_predictions: Dict[str, Dict[str, Any]] = {}
 
+def _require_prediction_contract(predictor):
+    if getattr(getattr(predictor, 'analysis_pipeline', None), 'score_contract', None) == 'uncalibrated_screening_rank':
+        raise HTTPException(status_code=503, detail='ML prediction unavailable: no calibrated model compatible with the screening rank contract')
+
+
 async def get_ml_predictor() -> RealTimePredictor:
     """Get the ML predictor from the application."""
     from ..app import get_aneos_app  # Import here to avoid circular imports
     aneos_app = get_aneos_app()
     if not aneos_app.ml_predictor:
         raise HTTPException(status_code=503, detail="ML predictor not available")
+    _require_prediction_contract(aneos_app.ml_predictor)
     return aneos_app.ml_predictor
 
 @router.post("/predict", response_model=PredictionResponse)
@@ -79,6 +85,7 @@ async def predict_anomaly(
     Uses trained ensemble models to provide real-time anomaly predictions
     with confidence scores and feature contributions.
     """
+    _require_prediction_contract(predictor)
     try:
         logger.info(f"Starting ML prediction for NEO: {request.designation}")
         start_time = datetime.now()
@@ -155,6 +162,7 @@ async def predict_batch(
     
     Processes multiple NEO predictions concurrently with progress tracking.
     """
+    _require_prediction_contract(predictor)
     try:
         logger.info(f"Starting batch prediction for {len(request.designations)} NEOs")
         

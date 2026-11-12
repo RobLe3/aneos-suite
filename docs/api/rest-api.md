@@ -688,3 +688,30 @@ accuracy. Scatter coordinates use a supplied uncalibrated screening rank, never
 perfect confidence. Standalone core legacy `/analyze` response migration remains
 unfinished; do not infer that its older examples establish scientific validation.
 See [the contract correction](../engineering/legacy-validation-integrity.md).
+
+### Core `/analyze` correction (ADR-069, 2026-11-12 review branch)
+
+`POST /api/v1/analysis/analyze` now acquires typed evidence and returns the same
+`screening_assessment` as shared screening for identical input/policy. The
+compatibility `anomaly_score.overall_score` is **uncalibrated ranking units**;
+confidence is null. `status` distinguishes completed ranking from inconclusive
+input; source failure is HTTP 503 and invalid measurements HTTP 422. Neither
+condition means natural origin. Results include evidence/policy IDs and replay
+inputs; the full observational fit/calibration capability is still unavailable.
+
+`force_refresh` reaches DataFetcher. `include_indicators=false` omits descriptive
+proxy diagnostics from the compatibility score view, not the canonical assessment.
+`include_raw_data` controls the typed source-data sidecar. The existing batch
+route now forwards refresh/raw-data flags; its jobs are still in-memory.
+No designation-only result cache is read by `/analyze`.
+
+Analysis JSON export retains a structured assessment and reproducibility metadata;
+CSV identifies raw ranking units, classification and evidence/policy IDs. These
+are in-memory convenience exports, not durable append-only case history. Other
+advertised analysis export formats are explicitly unsupported rather than
+silently returning JSON. ML prediction with the new core contract returns HTTP
+503 until a compatible independently calibrated model is integrated; old cached
+predictions cannot bypass that guard. Standalone research models are retained.
+
+The separately mocked enhanced REST endpoint is **not** repaired by these core
+changes. Do not use it as a scientific assessment; follow #6/#12 for its migration.
