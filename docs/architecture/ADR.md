@@ -2293,3 +2293,47 @@ positive controls, not independent scientific certification. Persistence of new
 enhanced reports, restart recovery, global provider control and wider legacy
 menu/model/network reporting remain separate unfinished work. No five-sigma
 permission, observational fit or origin conclusion is introduced.
+
+---
+
+## ADR-071: Unify primary legacy menu/launcher screening and reproducible reports
+
+**Date:** 2026-11-12
+**Status:** Implemented on review branch; scientific calibration remains unavailable
+**Related:** ADR-065–070; issues #2, #6, #12, #13, #15–17, #30
+
+**Context:** Rich/plain legacy menu paths differed, substituted name-based demo
+orbits/history, labeled null origin as natural and formatted unavailable sigma as
+a number. Workflow/report helpers manufactured probabilities/readiness. The direct
+launcher interpolated a designation into executable Python and preferred another
+analyzer. Its raw physical adapter used kilometres under the metres-based ranking
+key. Entering the legacy menu silently cleaned caches and changed environment.
+
+**Decision:** Primary single/batch/interactive, scientific-suite and predefined
+workflow entrypoints delegate to the actual shared core pipeline. Keep native
+computed Horizons history as a separate, non-observational sidecar, without a
+fabricated observed epoch-zero fallback. Preserve function names; controlled-
+deprecate defective prototype inference/workflow/sigma-conversion contracts.
+Thresholds or detector agreement cannot establish publication readiness.
+
+Use a replay-checked `scientific-screening-report-v1` presentation with canonical
+assessment, full normalized NEO record, review-input/report fingerprints, source
+basis/dependencies and explicit unavailable inference. Include run/source-file
+metadata with stated limits: hashes are not authentication, a loaded-bytecode
+proof, environment lock or preservation of dirty source. JSON and Markdown share
+the same assessment. Keep the existing Rich UI, using neutral rendering.
+
+Route launcher analysis/simple/detect aliases directly to the shared CLI service,
+not interpolated Python or another detection engine. Document/test refresh,
+JSON/Markdown and exclusive report-file output; failed acquisition/report writes
+return nonzero. Exclusive creation prevents normal overwrite, not crash-safe
+persistence. Entering a menu performs no implicit cleanup, database initialization
+or environment changes; explicit maintenance remains separately available.
+
+**Evidence/consequences:** `docs/engineering/legacy-menu-contract.md` records
+regressions and the controlled migration of a test that required fabricated alias
+data plus typed/unit fixture corrections. No gate is weakened. No new engine, UI
+or bounded context; core planetary-defense modules are unchanged, not newly
+validated. Remaining standalone analyzer/prototype paths are #30 and the wider
+#6/#12 audit. No independent performance, physical fitting, durability or
+five-sigma permission is introduced.

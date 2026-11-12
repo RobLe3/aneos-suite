@@ -830,3 +830,31 @@ git diff --stat docs/api/openapi.json          # confirm spec is current
 ---
 
 *aNEOS v1.2.2 | Phase 24 complete | Bug fixes: NEODyS provisional designation misparse, Gaia stdout suppression, DetectionResult falsy-zero guard, monitoring alert kwarg | Input validation: Pydantic bounds on OrbitalInput (a/e/i), designation length on AnalysisRequest | Endpoint wiring: get_validation_summary uses real DB, SSE streaming uses real alert_manager | Demo NEO list updated with real designations | REST API: 52+ endpoints | Test suite: 360 pass / 0 fail*
+
+### Review-branch scientific screening contract (2026-11-12)
+
+The primary launcher and legacy menu analysis routes now use the same typed
+acquisition/shared screening path as the REST core. A rank is not Gaussian sigma,
+a calibrated origin probability or a natural-origin finding. Missing evidence and
+provider errors remain inconclusive; scientific fitting/calibration is unfinished.
+
+```sh
+python aneos.py analyze "1998 KY26"                  # human-readable Markdown
+python aneos.py analyze "1998 KY26" --json           # versioned JSON report
+python aneos.py analyze "1998 KY26" --force-refresh  # bypass source cache
+python aneos.py analyze "1998 KY26" --json --output result.json
+```
+
+`analysis`, `a`, `simple` and `detect` are aliases for this same service, not a
+separate classifier. `--output` creates a new file and refuses an existing path.
+This prevents normal overwrite, not interrupted/partial writes or later manual
+editing/deletion. New reports do not overwrite the frozen KY26 baseline. Entering
+the legacy menu no longer silently deletes cache files or changes environment.
+
+Reports retain normalized source data, native A1/A2/A3 units/uncertainty, covariance,
+evidence/policy/review IDs and a report checksum. Source-file hashes and selected
+runtime versions are not an environment lock or proof of loaded code; preserve
+any dirty source separately. See [the exact scope and limitations](docs/engineering/legacy-menu-contract.md).
+The standalone `simple_neo_analyzer.py` and remaining prototype paths are still
+under review in [issue #30](https://github.com/RobLe3/aneos-suite/issues/30); the
+launcher migration does not validate those library APIs or claim five-sigma readiness.

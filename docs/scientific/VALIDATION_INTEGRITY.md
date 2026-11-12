@@ -1,3 +1,9 @@
+> **ADR-071 review-branch update (2026-11-12):** primary legacy menu and
+> launcher analysis now share actual screening and replayable JSON/Markdown
+> reports. Name-based demos, null-to-natural display and fabricated workflow
+> inference are withdrawn from those routes. Standalone/prototype coverage is
+> still incomplete (#30/#6/#12). No calibrated significance or origin finding follows.
+
 > **ADR-070 review-branch update (2026-11-12):** enhanced REST now uses the
 > actual core pipeline and explicit nullable review outcomes. Stored summary ranks
 > are not FP probabilities; natural/inconclusive labels do not grant acceptance.

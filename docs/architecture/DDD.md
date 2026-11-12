@@ -1156,3 +1156,23 @@ Summary units are persisted assessment rows, not independent objects. Enhanced
 reports currently log but are not durable case history; #15/#13 remain open.
 This corrects the enhanced REST migration gap noted in ADR-069, not the remaining
 legacy menu/pattern/standalone research-model claim audit (#6/#12).
+
+## Primary legacy menu/launcher correction — 2026-11-12 (ADR-071)
+
+The existing presentation boundary consumes shared analysis rather than creating
+another scientific decision. Primary legacy single/batch/interactive, suite and
+predefined workflow routes now carry canonical assessment and actual normalized
+source data. Computed history is separate from observed acceleration/residuals.
+Menu startup is not an authorization to clean research files or change settings.
+No new bounded context.
+
+**Implemented/integrated:** primary menu/launcher adapters, current-policy replay,
+JSON/Markdown reports, native acceleration evidence, exclusive normal report
+creation and scoped software/input/report fingerprints. **Regression-tested:**
+Rich/plain parity, candidate positives, source failures, aliases without demo data,
+ordered duplicates, history errors, native A3 sigma/covariance, malicious-designation
+nonexecution, CLI flags/exits and tamper/binding checks. **Not established:** full
+legacy/standalone/impact/report coverage, calibrated inference, independent
+performance, complete environment reproduction or restart-safe case history.
+Retained names for prototype inference raise explicit controlled deprecation
+rather than silently produce numbers; core scientific libraries remain available.

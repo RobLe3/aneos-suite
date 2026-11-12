@@ -758,3 +758,18 @@ workflow passes using explicit stage outcomes and ranking/full-review IDs. A val
 candidate remains visible when review transport fails. Unsupported legacy review
 probability/confidence scalars remain null until a calibrated model contract is
 installed; native measured parameter evidence is preserved separately.
+
+### Shared human/machine screening reports (ADR-071)
+
+The primary launcher analysis aliases now consume the same canonical assessment as
+core REST. `aneos.py analyze DESIGNATION --json` emits `scientific-screening-report-v1`;
+without `--json` it renders Markdown. `--force-refresh` reaches acquisition;
+`--output PATH` creates a new file without overwriting an existing report. Options
+and nonzero failures are integration-tested. No new REST route/format is implied
+by these CLI options; API export/Markdown integration remains separate #12 work.
+
+The report contains full normalized NEO input, source/covariance metadata,
+ranking/full-review/report IDs and scoped runtime metadata. Its checksum detects
+accidental change, not malicious authorship. Current-policy replay verifies the
+assessment, not scientific calibration. Computed ephemeris sidecars are not
+astrometric observations or independent origin evidence.

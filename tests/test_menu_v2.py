@@ -27,20 +27,10 @@ class TestFetchRealOrbitalDataPhysicalProps:
     """Verify physical data is read from physical_properties, not OrbitalElements."""
 
     def _make_neo_data(self, pp_attrs: dict):
-        neo_data = MagicMock()
-        oe = MagicMock()
-        # Remove removed fields so hasattr returns False
-        del oe.diameter
-        del oe.albedo
-        del oe.spectral_type
-        del oe.rot_per
-        neo_data.orbital_elements = oe
-        pp = MagicMock()
-        for k, v in pp_attrs.items():
-            setattr(pp, k, v)
-        neo_data.physical_properties = pp
-        neo_data.sources_used = ["SBDB"]
-        return neo_data
+        from aneos_core.data.models import NEOData, OrbitalElements, PhysicalProperties
+        return NEOData('99942', orbital_elements=OrbitalElements(
+            semi_major_axis=1., eccentricity=.2, inclination=15.),
+            physical_properties=PhysicalProperties(**pp_attrs), sources_used=['SBDB'])
 
     def test_diameter_from_physical_properties(self):
         """diameter_km on PhysicalProperties appears in returned physical dict."""
@@ -56,7 +46,8 @@ class TestFetchRealOrbitalDataPhysicalProps:
         assert result is not None
         _, physical = result
         assert "diameter" in physical
-        assert abs(physical["diameter"] - 0.37) < 1e-9
+        assert abs(physical["diameter"] - 370.) < 1e-9
+        assert physical["_units"]["diameter"] == "m"
 
     def test_albedo_from_physical_properties(self):
         """albedo on PhysicalProperties appears in returned physical dict."""
@@ -93,14 +84,15 @@ class TestGetTestDataNoSilentFallback:
             with pytest.raises(ValueError, match="Cannot resolve orbital data"):
                 menu._get_test_data("COMPLETELY_UNKNOWN_9999_XYZ")
 
-    def test_known_alias_still_works(self):
-        """Known aliases (tesla, apophis, etc.) must still return data without fetch."""
+    def test_known_alias_cannot_return_demo_data_without_fetch(self):
+        """Names are resolved by the actual source seam, never a hard-coded fixture."""
         from aneos_menu import ANEOSMenu
         menu = ANEOSMenu.__new__(ANEOSMenu)
         menu.console = None
-
-        orbital, physical = menu._get_test_data("tesla")
-        assert orbital["a"] == pytest.approx(1.325)
+        with patch.object(menu, "_fetch_real_orbital_data", return_value=None) as fetch:
+            with pytest.raises(ValueError, match="Cannot resolve orbital data"):
+                menu._get_test_data("tesla")
+        fetch.assert_called_once_with("tesla")
 
     def test_live_fetch_success_bypasses_error(self):
         """If _fetch_real_orbital_data returns data, no ValueError is raised."""
