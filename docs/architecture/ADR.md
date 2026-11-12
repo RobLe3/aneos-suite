@@ -2252,3 +2252,44 @@ network-denied controls: `docs/engineering/core-analysis-contract.md`. Independe
 calibration, observational fits, complete interface migration, global provider
 scheduling and restart-safe persistence remain unfinished. No scientific or CI
 quality gate is reduced; no five-sigma claim is enabled.
+
+---
+
+## ADR-070: Connect enhanced REST to actual screening and explicit review status
+
+**Date:** 2026-11-12
+**Status:** Implemented on review branch; no calibrated scientific model installed
+**Related:** ADR-065–069; issues #2, #6, #12, #15–17
+
+**Context:** Enhanced REST used MockNEOData and a MockPipeline returning fixed
+score/confidence/artificial classification. Its Pydantic models could not import
+in the installed runtime, required unavailable inference as numbers, and its
+routes were not registered in the main app. Batch flags/outcomes were lost. Its
+summary interpreted mixed legacy ranks as false-positive probabilities and
+accepted natural/inconclusive labels as validation outcomes.
+
+**Decision:** Register the existing declared routes under the existing analysis
+prefix and authentication dependency. Acquire/analyze once through the actual
+application AnalysisPipeline, bind the review wrapper to that current service,
+and expose the canonical assessment and required-review outcomes separately.
+Refresh reaches acquisition. Disabling optional review is `not_requested`, never
+a pass, and cannot mutate another request's validator. Retain method preferences
+as requested-but-unperformed where models are unavailable; no fast/statistical-only
+bypass is installed. Unknown inference and uninstrumented diagnostic timings are
+null; only actual top-level elapsed time is reported numerically.
+
+Keep every ordered batch outcome, including duplicates, abstentions, invalid
+measurements, provider failures and timeouts. Operational counts are not accuracy.
+Read-only historical summaries replay supported current-policy assessments;
+exclude and count legacy, modified and unsupported-policy records without
+rewriting them. Never infer FDR, origin probability or acceptance from rank or
+classification. Report the row-based unit and restricted summary scope.
+
+**Consequences:** Existing routes become reachable in the app; no new engine,
+UI or bounded context. Updated request/nullable-response/OpenAPI contracts and
+network-denied actual HTTP/SQLite controls are recorded in
+`docs/engineering/enhanced-rest-contract.md`. Review transport has synthetic
+positive controls, not independent scientific certification. Persistence of new
+enhanced reports, restart recovery, global provider control and wider legacy
+menu/model/network reporting remain separate unfinished work. No five-sigma
+permission, observational fit or origin conclusion is introduced.

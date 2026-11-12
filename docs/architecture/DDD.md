@@ -1135,3 +1135,24 @@ origin, probability/significance, reference-population calibration or independen
 performance. The enhanced REST endpoint still supplies mock acquisition/pipeline
 and is explicitly outside this increment; #6/#12 remain open. Old research model
 modules do not establish a deployed validated capability.
+
+## Enhanced REST correction — 2026-11-12 (ADR-070)
+
+The existing analysis/reporting boundaries now connect the previously declared
+enhanced routes to the current application pipeline. The core owns acquisition,
+evidence and screening; the review wrapper owns explicit required-prerequisite
+outcomes. An initialized component, disabled review, request preference or
+available database is not scientific validation. No new bounded context.
+
+**Implemented/integrated:** enhanced single/batch/summary registration and typed
+HTTP transport, current-service identity, refresh/options, nullable uncertainty,
+all ordered outcomes and descriptive persisted-screening summaries.
+**Regression-tested:** actual main-app HTTP routing, source/missing/invalid cases,
+candidate controls, synthetic review-transport positive control, concurrent
+request options, timeout, native A3/covariance, read-only SQLite summary and
+OpenAPI parity. **Not independently validated:** physical models, calibrated null
+or origin probabilities, detection performance, provider-wide limits or durability.
+Summary units are persisted assessment rows, not independent objects. Enhanced
+reports currently log but are not durable case history; #15/#13 remain open.
+This corrects the enhanced REST migration gap noted in ADR-069, not the remaining
+legacy menu/pattern/standalone research-model claim audit (#6/#12).

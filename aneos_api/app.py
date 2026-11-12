@@ -260,6 +260,9 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
     from fastapi import APIRouter
     if isinstance(analysis.router, APIRouter):
         app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Analysis"])
+    from .endpoints import enhanced_analysis
+    if isinstance(enhanced_analysis.router, APIRouter):
+        app.include_router(enhanced_analysis.router, prefix="/api/v1/analysis", tags=["Scientific review"])
     if isinstance(prediction.router, APIRouter):
         app.include_router(prediction.router, prefix="/api/v1/prediction", tags=["ML Prediction"])
     if isinstance(monitoring.router, APIRouter):

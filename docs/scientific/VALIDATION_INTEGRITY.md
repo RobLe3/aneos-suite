@@ -1,3 +1,9 @@
+> **ADR-070 review-branch update (2026-11-12):** enhanced REST now uses the
+> actual core pipeline and explicit nullable review outcomes. Stored summary ranks
+> are not FP probabilities; natural/inconclusive labels do not grant acceptance.
+> The prior enhanced-route migration warning is superseded. No calibrated model,
+> independent performance, durable review history or five-sigma permission follows.
+
 > **ADR-069 review-branch update (2026-11-12):** core AnalysisPipeline and
 > `/analyze` now delegate to shared uncalibrated screening. Source failure abstains;
 > compatibility ranks are not probabilities or significance. Legacy ML fusion is

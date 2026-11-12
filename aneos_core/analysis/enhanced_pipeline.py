@@ -1,16 +1,8 @@
-"""
-Enhanced Analysis Pipeline for aNEOS Scientific Rigor Enhancement.
+"""Review-prerequisite wrapper around shared candidate screening.
 
-This module provides a wrapper around the existing analysis pipeline that
-adds scientific rigor validation without modifying the original analysis logic.
-Uses additive architecture principles to preserve all existing functionality.
-
-Key Features:
-- Wraps existing AnalysisPipeline without modification
-- Adds 5-stage validation pipeline for false positive prevention
-- Provides statistical testing and uncertainty quantification
-- Maintains backward compatibility with all existing code
-- Optional enhanced functionality that gracefully degrades
+Component availability is not scientific validation. Uninstalled physical/null
+models, uncertainty calculations and origin inference remain explicitly unavailable.
+Standalone research utilities do not provide an automatic validation pass.
 """
 
 import logging
@@ -31,13 +23,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 class EnhancedAnalysisPipeline:
-    """
-    Enhanced wrapper around existing AnalysisPipeline with scientific rigor validation.
-    
-    This class wraps the original analysis pipeline and adds comprehensive
-    validation capabilities while preserving all original functionality.
-    The enhanced features are additive and fail gracefully if unavailable.
-    """
+    """Keep canonical screening and explicit required-review outcomes together."""
     
     def __init__(
         self, 
@@ -79,13 +65,14 @@ class EnhancedAnalysisPipeline:
         self, 
         designation: str, 
         neo_data: Optional[Any] = None,
-        enhanced: bool = True
+        enhanced: bool = True,
+        force_refresh: bool = False
     ) -> Union[Any, EnhancedAnalysisResult]:
         """
         Analyze NEO with optional enhanced validation.
         
-        This method preserves the exact signature and behavior of the original
-        analyze_neo method while optionally adding enhanced validation.
+        The underlying analysis result remains accessible separately. Review
+        availability does not imply that physical or statistical models ran.
         
         Args:
             designation: NEO designation (same as original)
@@ -96,9 +83,13 @@ class EnhancedAnalysisPipeline:
             Original analysis result OR EnhancedAnalysisResult if validation enabled
         """
         try:
-            # Step 1: Run original analysis (COMPLETELY UNCHANGED)
+            # Underlying analysis owns acquisition and the shared screening decision.
             self.logger.info(f"Running original analysis for {designation}")
-            original_result = await self.original_pipeline.analyze_neo(designation, neo_data)
+            if force_refresh:
+                original_result = await self.original_pipeline.analyze_neo(designation, neo_data,
+                    force_refresh=True)
+            else:
+                original_result = await self.original_pipeline.analyze_neo(designation, neo_data)
             if neo_data is None:
                 neo_data = getattr(original_result, 'neo_data', None)
             
@@ -137,31 +128,22 @@ class EnhancedAnalysisPipeline:
             raise
     
     async def analyze_neo_with_validation(
-        self, 
-        designation: str, 
-        neo_data: Optional[Any] = None
+        self, designation: str, neo_data: Optional[Any] = None,
+        force_refresh: bool = False, enable_validation: bool = True
     ) -> EnhancedAnalysisResult:
+        """Retain screening and explicit review availability for every request.
+
+        Disabling a request's optional review never mutates the shared validator
+        or grants the required scientific prerequisites.
         """
-        Convenience method that always applies enhanced validation.
-        
-        This method guarantees enhanced validation will be applied,
-        falling back to basic enhancement if full validation fails.
-        
-        Args:
-            designation: NEO designation
-            neo_data: Optional NEO data
-            
-        Returns:
-            EnhancedAnalysisResult with validation data
-        """
-        result = await self.analyze_neo(designation, neo_data, enhanced=True)
-        
-        if isinstance(result, EnhancedAnalysisResult):
-            return result
-        else:
-            # Create basic enhanced result if validation wasn't applied
-            return self._create_basic_enhanced_result(result)
-    
+        result = await self.analyze_neo(designation, neo_data, enhanced=enable_validation,
+            force_refresh=force_refresh)
+        if not isinstance(result, EnhancedAnalysisResult):
+            result = self._create_basic_enhanced_result(result)
+        if not enable_validation:
+            result.validation_result.validation_status = 'not_requested'
+        return result
+
     async def analyze_neo_original(
         self, 
         designation: str, 
@@ -170,8 +152,8 @@ class EnhancedAnalysisPipeline:
         """
         Run original analysis without any enhancement.
         
-        This method provides access to the original analysis behavior
-        exactly as it was before enhancement.
+        This delegates directly to the underlying pipeline without additional
+        review. Its current scientific contract still applies.
         
         Args:
             designation: NEO designation

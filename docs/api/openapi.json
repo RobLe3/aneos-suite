@@ -1266,12 +1266,12 @@
             "items": {
               "$ref": "#/components/schemas/ValidationError"
             },
-            "title": "Detail",
-            "type": "array"
+            "type": "array",
+            "title": "Detail"
           }
         },
-        "title": "HTTPValidationError",
-        "type": "object"
+        "type": "object",
+        "title": "HTTPValidationError"
       },
       "HarmonicSignalResult": {
         "properties": {
@@ -2736,25 +2736,895 @@
                 }
               ]
             },
-            "title": "Location",
-            "type": "array"
+            "type": "array",
+            "title": "Location"
           },
           "msg": {
-            "title": "Message",
-            "type": "string"
+            "type": "string",
+            "title": "Message"
           },
           "type": {
-            "title": "Error Type",
-            "type": "string"
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
+        "type": "object",
         "required": [
           "loc",
           "msg",
           "type"
         ],
-        "title": "ValidationError",
-        "type": "object"
+        "title": "ValidationError"
+      },
+      "EnhancedAnalysisResponse": {
+        "properties": {
+          "designation": {
+            "type": "string",
+            "title": "Designation"
+          },
+          "overall_score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Score",
+            "description": "Uncalibrated ranking units, not sigma or probability"
+          },
+          "score_semantics": {
+            "type": "string",
+            "title": "Score Semantics",
+            "default": "uncalibrated_screening_rank"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "classification": {
+            "type": "string",
+            "title": "Classification"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "processing_time_ms": {
+            "type": "number",
+            "title": "Processing Time Ms"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "screening_assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screening Assessment"
+          },
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Analysis Metadata"
+          },
+          "raw_neo_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Neo Data"
+          },
+          "indicator_scores": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Indicator Scores"
+          },
+          "validation_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ValidationResultModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "statistical_tests": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/StatisticalTestResultModel"
+            },
+            "type": "object",
+            "title": "Statistical Tests"
+          },
+          "uncertainty_analysis": {
+            "$ref": "#/components/schemas/UncertaintyAnalysisModel"
+          },
+          "execution_options": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Execution Options"
+          },
+          "enhancement_timestamp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enhancement Timestamp"
+          },
+          "enhancement_version": {
+            "type": "string",
+            "title": "Enhancement Version",
+            "default": "enhanced-rest-v1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "designation",
+          "classification",
+          "status",
+          "processing_time_ms",
+          "timestamp"
+        ],
+        "title": "EnhancedAnalysisResponse"
+      },
+      "UncertaintyAnalysisModel": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "unavailable"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "overall_uncertainty": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Uncertainty"
+          },
+          "confidence_interval_95": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Interval 95"
+          },
+          "confidence_interval_99": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Interval 99"
+          },
+          "indicator_uncertainties": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Indicator Uncertainties"
+          },
+          "sensitivity_analysis": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Sensitivity Analysis"
+          },
+          "uncertainty_breakdown": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Uncertainty Breakdown"
+          },
+          "analysis_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Method"
+          }
+        },
+        "type": "object",
+        "title": "UncertaintyAnalysisModel"
+      },
+      "StatisticalTestResultModel": {
+        "properties": {
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "effect_size": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect Size"
+          },
+          "confidence_interval": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Interval"
+          },
+          "is_significant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Significant"
+          },
+          "test_statistic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Statistic"
+          },
+          "test_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Type"
+          },
+          "alpha_level": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha Level"
+          }
+        },
+        "type": "object",
+        "title": "StatisticalTestResultModel"
+      },
+      "ValidationResultModel": {
+        "properties": {
+          "overall_validation_passed": {
+            "type": "boolean",
+            "title": "Overall Validation Passed"
+          },
+          "overall_false_positive_probability": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall False Positive Probability"
+          },
+          "overall_confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Confidence"
+          },
+          "stage_results": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationStageResultModel"
+            },
+            "type": "array",
+            "title": "Stage Results"
+          },
+          "space_debris_matches": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceDebrisMatchModel"
+            },
+            "type": "array",
+            "title": "Space Debris Matches"
+          },
+          "synthetic_population_percentile": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Population Percentile"
+          },
+          "statistical_significance_summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statistical Significance Summary"
+          },
+          "recommendation": {
+            "type": "string",
+            "title": "Recommendation"
+          },
+          "expert_review_priority": {
+            "type": "string",
+            "pattern": "^(low|medium|high|urgent)$",
+            "title": "Expert Review Priority"
+          },
+          "total_processing_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Processing Time Ms"
+          },
+          "timing_status": {
+            "type": "string",
+            "title": "Timing Status",
+            "default": "unavailable_not_instrumented"
+          },
+          "validation_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Validation Timestamp"
+          },
+          "contract_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Version"
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          },
+          "evidence_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Id"
+          },
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "validation_evidence_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Evidence Id"
+          },
+          "screening_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screening Score"
+          },
+          "non_gravitational_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Non Gravitational Evidence"
+          },
+          "transport_limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Transport Limitations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "overall_validation_passed",
+          "recommendation",
+          "expert_review_priority",
+          "validation_timestamp"
+        ],
+        "title": "ValidationResultModel"
+      },
+      "SpaceDebrisMatchModel": {
+        "properties": {
+          "catalog": {
+            "type": "string",
+            "title": "Catalog"
+          },
+          "object_id": {
+            "type": "string",
+            "title": "Object Id"
+          },
+          "object_name": {
+            "type": "string",
+            "title": "Object Name"
+          },
+          "match_confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Match Confidence"
+          },
+          "delta_v": {
+            "type": "number",
+            "title": "Delta V"
+          },
+          "orbital_similarity": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Orbital Similarity"
+          },
+          "epoch_difference": {
+            "type": "number",
+            "title": "Epoch Difference"
+          },
+          "match_criteria": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Match Criteria"
+          }
+        },
+        "type": "object",
+        "required": [
+          "catalog",
+          "object_id",
+          "object_name",
+          "match_confidence",
+          "delta_v",
+          "orbital_similarity",
+          "epoch_difference"
+        ],
+        "title": "SpaceDebrisMatchModel"
+      },
+      "ValidationStageResultModel": {
+        "properties": {
+          "stage_number": {
+            "type": "integer",
+            "title": "Stage Number"
+          },
+          "stage_name": {
+            "type": "string",
+            "title": "Stage Name"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "false_positive_reduction": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "False Positive Reduction"
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details"
+          },
+          "processing_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processing Time Ms"
+          },
+          "timing_status": {
+            "type": "string",
+            "title": "Timing Status",
+            "default": "unavailable_not_instrumented"
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage_number",
+          "stage_name",
+          "passed"
+        ],
+        "title": "ValidationStageResultModel"
+      },
+      "ValidationSummaryResponse": {
+        "properties": {
+          "total_analyses": {
+            "type": "integer",
+            "title": "Total Analyses"
+          },
+          "included_screening_assessments": {
+            "type": "integer",
+            "title": "Included Screening Assessments",
+            "default": 0
+          },
+          "excluded_rows": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Excluded Rows"
+          },
+          "screening_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Screening Counts"
+          },
+          "policy_groups": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Policy Groups"
+          },
+          "false_positive_statistics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "False Positive Statistics"
+          },
+          "recommendations": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Recommendations"
+          },
+          "overall_score_statistics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Overall Score Statistics"
+          },
+          "validation_system_status": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Validation System Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_analyses",
+          "false_positive_statistics",
+          "recommendations",
+          "overall_score_statistics",
+          "validation_system_status"
+        ],
+        "title": "ValidationSummaryResponse"
+      },
+      "EnhancedBatchAnalysisResponse": {
+        "properties": {
+          "batch_id": {
+            "type": "string",
+            "title": "Batch Id"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/EnhancedAnalysisResponse"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "summary_statistics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Summary Statistics"
+          },
+          "total_processing_time_ms": {
+            "type": "number",
+            "title": "Total Processing Time Ms"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batch_id",
+          "results",
+          "total_processing_time_ms",
+          "timestamp"
+        ],
+        "title": "EnhancedBatchAnalysisResponse"
+      },
+      "EnhancedAnalysisRequest": {
+        "properties": {
+          "designation": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Designation"
+          },
+          "force_refresh": {
+            "type": "boolean",
+            "title": "Force Refresh",
+            "default": false
+          },
+          "include_raw_data": {
+            "type": "boolean",
+            "title": "Include Raw Data",
+            "default": false
+          },
+          "include_indicators": {
+            "type": "boolean",
+            "title": "Include Indicators",
+            "default": true
+          },
+          "enable_validation": {
+            "type": "boolean",
+            "title": "Enable Validation",
+            "default": true
+          },
+          "validation_method": {
+            "type": "string",
+            "pattern": "^(full|fast|statistical_only)$",
+            "title": "Validation Method",
+            "default": "full"
+          },
+          "uncertainty_method": {
+            "type": "string",
+            "pattern": "^(monte_carlo|bootstrap|analytical)$",
+            "title": "Uncertainty Method",
+            "default": "monte_carlo"
+          },
+          "monte_carlo_samples": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 50000.0,
+                "minimum": 100.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monte Carlo Samples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "designation"
+        ],
+        "title": "EnhancedAnalysisRequest"
       }
     },
     "securitySchemes": {
@@ -5513,6 +6383,188 @@
           }
         },
         "summary": "Health Check"
+      }
+    },
+    "/api/v1/analysis/enhanced": {
+      "post": {
+        "tags": [
+          "Scientific review"
+        ],
+        "summary": "Analyze Neo Enhanced",
+        "description": "Shared screening plus explicit required-review status, not calibrated science.",
+        "operationId": "analyze_neo_enhanced_api_v1_analysis_enhanced_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnhancedAnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnhancedAnalysisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/analysis/enhanced/batch": {
+      "post": {
+        "tags": [
+          "Scientific review"
+        ],
+        "summary": "Batch Analyze Enhanced",
+        "description": "Ordered outcomes for every object, including source failures and abstentions.",
+        "operationId": "batch_analyze_enhanced_api_v1_analysis_enhanced_batch_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "force_refresh",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Force Refresh"
+            }
+          },
+          {
+            "name": "enable_validation",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Enable Validation"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "maxItems": 100,
+                "title": "Designations"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnhancedBatchAnalysisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/enhanced/summary": {
+      "get": {
+        "tags": [
+          "Scientific review"
+        ],
+        "summary": "Get Validation Summary",
+        "description": "Descriptive stored screening counts, never inferred FDR or acceptance.",
+        "operationId": "get_validation_summary_api_v1_analysis_enhanced_summary_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 365,
+              "minimum": 1,
+              "default": 7,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

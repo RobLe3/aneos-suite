@@ -715,3 +715,46 @@ predictions cannot bypass that guard. Standalone research models are retained.
 
 The separately mocked enhanced REST endpoint is **not** repaired by these core
 changes. Do not use it as a scientific assessment; follow #6/#12 for its migration.
+
+### Enhanced REST correction (ADR-070, 2026-11-12 review branch)
+
+This supersedes the enhanced-REST migration warning in the ADR-069 section above.
+The existing declared routes are now registered in the main application under
+its existing authentication dependency:
+
+- `POST /api/v1/analysis/enhanced`: existing request object; same canonical
+  screening assessment as `/analyze` for identical evidence/policy. Source failure
+  is 503, invalid source evidence 422, processing failure 500. Missing orbit can
+  return an inconclusive assessment with null rank, never a natural/zero result.
+- `POST /api/v1/analysis/enhanced/batch`: existing bare JSON list body; existing
+  `force_refresh` and `enable_validation` query flags. One to 100 nonblank
+  designations; duplicates and all per-object failures retain their input order.
+  Failed items have null rank/assessment and explicit status/errors, not removal.
+- `GET /api/v1/analysis/enhanced/summary?days=7`: descriptive stored screening
+  rows by database assessment date, not observation date or independent-object
+  performance. Replayable current-policy payloads are summarized; legacy,
+  modified or unsupported records are counted as excluded, not rewritten.
+  Scalar legacy score/classification columns do not supply validation evidence.
+
+Enhanced results expose `screening_assessment`, provenance/replay IDs, optional
+raw-data and proxy sidecars, required-review outcomes and execution options.
+`overall_score` is uncalibrated ranking units; confidence, FP probability,
+uncertainty intervals and uninstrumented diagnostic timings are null. Top-level
+elapsed time is measured. Optional-review disablement is `not_requested`, never
+an approval. Method/sampling preferences are recorded but explicitly not
+performed without an installed scientific model; changing `validation_method`
+cannot bypass prerequisites. A workflow review pass is not an origin finding.
+
+Summary probability/risk estimates remain null (`not_reliably_estimated`),
+recommendations remain unknown without recorded valid review evidence, and empty
+rank statistics are null rather than zero. Counts are operational descriptions,
+not FDR, classifier accuracy or independent validation. New enhanced reports are
+not yet persisted by these routes; summaries concern existing stored screening
+records, not a complete enhanced-review history. Jobs/case history, provider-wide
+rate control and crash/restart recovery remain #15/#13/#16.
+
+The enhanced review adapter also rejects incomplete, truthy, errored or stale
+workflow passes using explicit stage outcomes and ranking/full-review IDs. A valid
+candidate remains visible when review transport fails. Unsupported legacy review
+probability/confidence scalars remain null until a calibrated model contract is
+installed; native measured parameter evidence is preserved separately.
