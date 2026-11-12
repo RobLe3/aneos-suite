@@ -293,8 +293,10 @@ def test_documented_core_analysis_openapi_contract():
     from pathlib import Path
     from aneos_api.models import AnalysisResponse
     documented = json.loads((Path(__file__).parents[1] / 'docs/api/openapi.json').read_text())
-    actual = AnalysisResponse.model_json_schema(ref_template='#/components/schemas/{model}')
-    actual.pop('$defs', None)
+    from aneos_api.app import create_app
+    actual = create_app().openapi()['components']['schemas']['AnalysisResponse']
+    # FastAPI omits null-valued defaults, but nullable inference remains explicit.
+    assert any(branch.get('type') == 'null' for branch in actual['properties']['raw_neo_data']['anyOf'])
     assert documented['components']['schemas']['AnalysisResponse'] == actual
 
 

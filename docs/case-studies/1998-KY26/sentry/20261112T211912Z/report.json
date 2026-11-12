@@ -1,0 +1,59 @@
+{
+  "schema_version": "sentry-object-evidence-v1",
+  "designation": "1998 KY26",
+  "status": "not_listed",
+  "assessment_basis": "authoritative_external_catalogue_lookup",
+  "identity": {
+    "query_designation": "1998 KY26",
+    "canonical_designation": null,
+    "verification": "query_bound_no_object_row"
+  },
+  "collision_probability": null,
+  "probability_uncertainty": null,
+  "calculation_confidence": null,
+  "moon_collision_probability": null,
+  "moon_earth_ratio": null,
+  "risk_level": "not_assessed",
+  "impact_energy_mt": null,
+  "crater_diameter_km": null,
+  "damage_radius_km": null,
+  "time_to_impact_years": null,
+  "peak_risk_period": null,
+  "collision_probability_per_year": null,
+  "comparative_risk": null,
+  "keyhole_passages": null,
+  "primary_risk_factors": null,
+  "impact_probability_by_decade": null,
+  "source_torino_max": null,
+  "source_palermo_cumulative": null,
+  "source": {
+    "name": "JPL Sentry",
+    "api_version": "2.0",
+    "endpoint": "https://ssd-api.jpl.nasa.gov/sentry.api",
+    "query": {
+      "des": "1998 KY26"
+    },
+    "retrieved_at": "2026-11-12T21:19:13.177037+00:00",
+    "method": null,
+    "documentation": "https://ssd-api.jpl.nasa.gov/doc/sentry.html",
+    "computation_time": null,
+    "palermo_computation_time": null,
+    "removed_at_utc": null
+  },
+  "time_scope": null,
+  "virtual_impactors": [],
+  "physical_estimate_basis": null,
+  "source_snapshot": {
+    "raw_utf8": "{\"error\":\"specified object not found\",\"signature\":{\"source\":\"NASA/JPL Sentry Data API\",\"version\":\"2.0\"}}\n",
+    "sha256": "722bec8de705159e59e00f6be8592e1233b0301370c65a786e2a0072cfeba2b9"
+  },
+  "limitations": [
+    "External Sentry model output, not an aNEOS observational fit or independent validation.",
+    "JPL states impact probabilities may be inaccurate by factors of a few, occasionally a factor of ten or more.",
+    "Probability covers tabulated virtual impactors, not all future times or every possible trajectory.",
+    "Not listed, removed, unavailable and invalid responses do not establish zero probability or negligible risk.",
+    "No lunar impact probability, calibrated aNEOS confidence, Gaussian discovery significance or origin inference is supplied.",
+    "Source physical quantities may be assumed estimates; they are not automatically independent measurements."
+  ],
+  "report_sha256": "7b7de1592593fc476c895b2ad429f7bb8db05f306640d2f7242be40ea15fe947"
+}

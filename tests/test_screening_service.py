@@ -217,8 +217,10 @@ def test_documented_openapi_matches_detection_inference_contract():
     from pathlib import Path
     from aneos_api.schemas.detection import DetectionResponse
     documented = json.loads((Path(__file__).parents[1] / 'docs/api/openapi.json').read_text())
-    actual = DetectionResponse.model_json_schema(ref_template='#/components/schemas/{model}')
-    actual.pop('$defs', None)
+    from aneos_api.app import create_app
+    actual = create_app().openapi()['components']['schemas']['DetectionResponse']
+    # FastAPI omits null-valued defaults, but nullable inference remains explicit.
+    assert any(branch.get('type') == 'null' for branch in actual['properties']['artificial_probability']['anyOf'])
     assert documented['components']['schemas']['DetectionResponse'] == actual
 
 

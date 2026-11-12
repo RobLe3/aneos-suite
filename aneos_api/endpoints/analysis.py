@@ -39,6 +39,7 @@ from ..auth import get_current_user
 from ..schemas.detection import DetectionResponse, EvidenceSummary, OrbitalInput
 from ..schemas.history import OrbitalHistoryResponse, OrbitalElementPoint
 from ..schemas.impact import ImpactResponse
+from aneos_core.analysis.impact_evidence import get_sentry_impact_service
 from ..schemas.network import NetworkRequest, NetworkStatusResponse
 
 logger = logging.getLogger(__name__)
@@ -207,61 +208,44 @@ async def detect_neo(
         raise HTTPException(status_code=500, detail="Screening failed") from exc
 
 @router.get(
-    "/impact",
-    response_model=ImpactResponse,
+    "/impact", response_model=ImpactResponse,
     responses={
-        404: {"model": ErrorResponse, "description": "No orbital data for designation"},
-        500: {"model": ErrorResponse, "description": "Impact calculation failure"},
+        422: {"model": ErrorResponse, "description": "Use a primary number or provisional designation"},
+        502: {"model": ErrorResponse, "description": "Invalid or unsupported Sentry response"},
+        503: {"model": ErrorResponse, "description": "Authoritative impact source unavailable"},
     },
 )
 async def impact_neo(
-    designation: str = Query(..., description="NEO designation, e.g. '99942'"),
-    current_user: Optional[Dict] = Depends(get_current_user)
+    designation: str = Query(..., description="Primary asteroid number or unpacked provisional designation; names/aliases are not resolved"),
+    force_refresh: bool = Query(False, description="Explicitly bypass the per-process Sentry TTL cache"),
+    current_user: Optional[Dict] = Depends(get_current_user),
+    impact_service=Depends(get_sentry_impact_service),
 ):
-    """
-    Calculate Earth/Moon impact probability for a named NEO.
+    """Return replayable JPL Sentry evidence for its tabulated Earth-impact events.
 
-    Returns collision_probability, moon_collision_probability, risk_level,
-    impact_energy_mt, and crater_diameter_km.
+    Not listed/removed is not zero risk. No lunar probability, local fitted
+    probability, calibrated confidence, damage prediction or origin inference.
+    Source method, dates, uncertainty limits and complete input snapshot accompany
+    every result. This endpoint does not use the legacy heuristic calculator.
     """
+    from aneos_core.data.sources.sentry import normalize_designation, SentryResponseError, verify_sentry_report
+    from aneos_core.data.provider_http import ProviderUnavailableError
     try:
-        from aneos_core.data.fetcher import DataFetcher
-        from aneos_core.analysis.impact_probability import ImpactProbabilityCalculator
-        fetcher = DataFetcher()
-        neo = fetcher.fetch_neo_data(designation)
-        oe = neo.orbital_elements
-        if oe is None:
-            raise HTTPException(status_code=404, detail=f"No orbital data for {designation}")
-        oe.designation = designation
-        calc = ImpactProbabilityCalculator()
-        result = calc.calculate_comprehensive_impact_probability(
-            orbital_elements=oe,
-            close_approaches=neo.close_approaches or [],
-            physical_properties=neo.physical_properties,
-        )
-        return ImpactResponse(
-            designation=designation,
-            collision_probability=result.collision_probability,
-            probability_uncertainty=list(result.probability_uncertainty),
-            calculation_confidence=result.calculation_confidence,
-            moon_collision_probability=result.moon_collision_probability,
-            moon_earth_ratio=result.earth_vs_moon_impact_ratio,
-            impact_energy_mt=result.impact_energy_mt,
-            crater_diameter_km=result.crater_diameter_km,
-            damage_radius_km=result.damage_radius_km,
-            risk_level=result.risk_level,
-            comparative_risk=result.comparative_risk,
-            time_to_impact_years=result.time_to_impact_years,
-            peak_risk_period=list(result.peak_risk_period) if result.peak_risk_period else None,
-            keyhole_passages=result.keyhole_passages,
-            primary_risk_factors=result.primary_risk_factors,
-            impact_probability_by_decade=result.impact_probability_by_decade,
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Impact calculation failed for {designation}: {e}")
-        raise HTTPException(status_code=500, detail=f"Impact calculation failed: {str(e)}")
+        canonical = normalize_designation(designation)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    try:
+        report = await asyncio.to_thread(impact_service.assess, canonical, force_refresh=force_refresh)
+        if not verify_sentry_report(report) or report.get('designation') != canonical:
+            raise SentryResponseError('Invalid or modified Sentry report')
+        return ImpactResponse(**report)
+    except SentryResponseError as exc:
+        raise HTTPException(status_code=502, detail="Sentry evidence schema or identity could not be verified") from exc
+    except ProviderUnavailableError as exc:
+        raise HTTPException(status_code=503, detail="Sentry impact source unavailable; no probability assessment") from exc
+    except Exception as exc:
+        logger.exception("Authoritative impact retrieval failed")
+        raise HTTPException(status_code=500, detail="Impact evidence retrieval failed; no probability assessment") from exc
 
 
 @router.post("/detect", response_model=DetectionResponse)

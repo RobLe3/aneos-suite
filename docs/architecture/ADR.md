@@ -2424,3 +2424,40 @@ roots, other applications, multiple hosts and unusual filesystem semantics are
 not covered. Wider cache reuse, endpoint version enforcement, configuration
 isolation, pagination, overload control and durable jobs remain open. See
 `docs/engineering/jpl-provider-transport.md` for exact controls and operations.
+
+### ADR-074: Scoped authoritative impact evidence at the existing REST boundary
+
+**Status:** Implemented/integrated on draft remediation branch; offline engineering
+controls plus one real KY26 source transaction. Not local impact-model validation.
+2026-11-12; issues #32/#16/#12/#17 and case register #7.
+
+**Context:** `/analysis/impact` called a heuristic calculator using catalogue
+elements, no residual fit/covariance propagation and an implicit 30-day arc. Its
+mandatory probability output and numeric intervals/confidence implied evidence
+that had not been established. Source transport coordination alone (ADR-073)
+did not repair this scientific contract. Legacy menu/library paths remain separate
+confirmed findings under #32.
+
+**Decision:** Reuse the existing Data Acquisition boundary to retrieve Sentry
+Mode O results through shared provider transport. Do not implement a competing
+impact engine. Require supported signature/version, matching primary designation,
+known method, compatible event records/counts, finite values and valid native dates.
+Preserve exact bytes/hash, source computation/retrieval dates, method-specific
+fit-coordinate metrics, listed-event scope and substantial source uncertainty.
+These are external model predictions, not measured impacts or aNEOS validation.
+
+The existing route returns the same replayable evidence as the source/report
+service. Unknown names require identity resolution rather than trusting a possibly
+unrelated result. Removed/unlisted outcomes remain distinct from transport/schema
+failure and never imply zero risk. No guessed intervals, local confidence, lunar/
+annual risk, damage model, local Torino class, origin or discovery significance.
+Cache valid source outcomes per process with bounded TTL/size and copy isolation;
+single-flight waiters share the actual attempt's result or failure, not a stale
+success after a failed refresh. Async routing offloads the blocking source service.
+
+**Evidence/limits:** See `docs/engineering/sentry-impact-contract.md`. The live KY26
+transaction returned not listed and is frozen separately from historical screening.
+Replay hashes are consistency checks, not source authentication. Names/aliases,
+cross-process cache reuse, durable source/case/job history, independent local fits
+and the remaining legacy menu/library/impact-pipeline claims remain open. No new
+bounded context, UI, scientific solver or five-sigma permission is created.

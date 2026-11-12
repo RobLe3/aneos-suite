@@ -293,3 +293,11 @@ not independent scientific validation. Synthetic concurrency/outage/restart test
 do not establish provider availability, impact probability, calibrated origin
 probability or five-sigma significance. See
 [the scoped transport report](../engineering/jpl-provider-transport.md).
+
+### Scoped external impact evidence (2026-11-12, ADR-074)
+
+The existing REST impact route now reports version/identity-checked Sentry model
+evidence with source snapshots, listed-event scope and documented uncertainty.
+Not listed/removed is not zero risk. This does not validate a local impact solver,
+the legacy menu/library/enhanced-impact paths, origin inference or discovery sigma.
+See [scope and regression evidence](../engineering/sentry-impact-contract.md).

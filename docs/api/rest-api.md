@@ -786,7 +786,53 @@ timezone-aware datetime, not an unlabelled Julian date. Unsupported per-call sou
 selection raises instead of claiming success. Async methods are available rather
 than nesting an event loop. No new REST endpoint is implied.
 
-**Remaining limitation:** the separate `/impact` route still calls the legacy
-heuristic calculator rather than a verified observational impact solution (#32).
-Do not interpret the standalone prerequisite guard as certification of that REST
-route. New facade impact output is unavailable/not-assessed, not zero risk.
+**Historical limitation (superseded for REST by ADR-074):** at ADR-072 the
+separate `/impact` route still used an unfitted heuristic calculator. The correction
+below applies to that REST route only; legacy menu/library/impact-pipeline claim
+surfaces remain open under #32.
+
+### Authoritative Sentry impact evidence (ADR-074)
+
+Existing `GET /api/v1/analysis/impact?designation=1998%20KY26` now returns
+`sentry-object-evidence-v1`, not a locally calculated collision probability.
+Use a primary asteroid number or unpacked provisional designation. Names/aliases
+without identity resolution return 422 instead of risking a cross-object result.
+`force_refresh=true` explicitly bypasses the per-process one-hour TTL cache; it does
+not bypass shared JPL serialization/backoff. Authentication dependencies remain
+unchanged. This endpoint is not an emergency-warning or deflection advisory service.
+
+- `available`: a version/source/primary-identity-checked Sentry object result.
+  `collision_probability` is the source cumulative Earth-impact probability for
+  **tabulated virtual impactors**, with native IOBS/LOV/MC method, listed-event span,
+  computation clocks, observation dates and event rows. It is not all-future risk.
+- `not_listed` and `removed`: explicit source catalogue outcomes, with **null**
+  probability/risk inference—not zero or negligible risk. Removed date is retained
+  when supplied. No object row means identity is query-bound, not independently matched.
+- 503: provider unavailable/rate-limited/timed out. 502: invalid/unsupported source
+  evidence or identity mismatch. 500: unexpected internal failure. None is a
+  successful natural/zero-risk result; failures do not expose internal details.
+
+The response retains exact UTF-8 source bytes, SHA-256, source/retrieval metadata,
+report digest, complete event evidence and explicit limits. Replay checks consistency,
+not source authentication. Native Pacific Local computation time is not guessed as
+UTC. Method-specific fit metrics are not Gaussian discovery significance. Approximate
+source diameter/mass/energy values are not automatically independent measurements.
+No lunar probability, annualized/decadal risk, probability interval, aNEOS confidence,
+crater/damage prediction or local Torino classification is invented: those legacy
+compatibility fields are null. JPL documents substantial probability uncertainty;
+that limitation accompanies every result rather than a fabricated confidence interval.
+
+The source adapter/shared report can be used directly:
+
+```python
+from aneos_core.analysis.impact_evidence import get_sentry_impact_service, render_sentry_markdown
+report = get_sentry_impact_service().assess("1998 KY26")
+markdown = render_sentry_markdown(report)
+```
+
+`report` is JSON-serializable. Markdown rendering rejects modified/unreplayable
+reports. No new REST format route, CLI flag or persistent case service is implied.
+Per-process cache reuse is bounded to 128 objects and returns copies; expiry/refresh
+creates new snapshots, not amendments to previously returned ones. It is not durable
+case history or cross-process cache deduplication. See the
+[scoped implementation report](../engineering/sentry-impact-contract.md).

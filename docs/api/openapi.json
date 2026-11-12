@@ -73,37 +73,8 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "description": "Filter by classification",
             "title": "Classification"
-          },
-          "min_score": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Minimum uncalibrated ranking units",
-            "title": "Min Score"
-          },
-          "max_score": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Maximum uncalibrated ranking units",
-            "title": "Max Score"
           },
           "date_from": {
             "anyOf": [
@@ -115,7 +86,6 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Date From"
           },
           "date_to": {
@@ -128,7 +98,6 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Date To"
           },
           "designations": {
@@ -143,8 +112,33 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Designations"
+          },
+          "max_score": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Maximum uncalibrated ranking units",
+            "title": "Max Score"
+          },
+          "min_score": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Minimum uncalibrated ranking units",
+            "title": "Min Score"
           }
         },
         "title": "AnalysisFilter",
@@ -199,7 +193,9 @@
         "description": "Request model for NEO analysis.",
         "properties": {
           "designation": {
-            "description": "NEO designation (e.g., '2024 AB123')",
+            "description": "NEO designation, e.g. '99942 Apophis'",
+            "maxLength": 50,
+            "minLength": 1,
             "title": "Designation",
             "type": "string"
           },
@@ -231,15 +227,37 @@
       "AnalysisResponse": {
         "description": "Complete analysis response model.",
         "properties": {
-          "success": {
-            "default": true,
-            "title": "Success",
-            "type": "boolean"
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "title": "Analysis Metadata",
+            "type": "object"
           },
-          "timestamp": {
-            "format": "date-time",
-            "title": "Timestamp",
+          "anomaly_score": {
+            "$ref": "#/components/schemas/AnomalyScoreResponse"
+          },
+          "close_approaches": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CloseApproachResponse"
+            },
+            "title": "Close Approaches",
+            "type": "array"
+          },
+          "data_quality": {
+            "additionalProperties": true,
+            "title": "Data Quality",
+            "type": "object"
+          },
+          "designation": {
+            "title": "Designation",
             "type": "string"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
           },
           "execution_time_ms": {
             "anyOf": [
@@ -250,24 +268,7 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Execution Time Ms"
-          },
-          "designation": {
-            "title": "Designation",
-            "type": "string"
-          },
-          "anomaly_score": {
-            "$ref": "#/components/schemas/AnomalyScoreResponse"
-          },
-          "processing_time": {
-            "title": "Processing Time",
-            "type": "number"
-          },
-          "data_quality": {
-            "additionalProperties": true,
-            "title": "Data Quality",
-            "type": "object"
           },
           "orbital_elements": {
             "anyOf": [
@@ -277,16 +278,11 @@
               {
                 "type": "null"
               }
-            ],
-            "default": null
+            ]
           },
-          "close_approaches": {
-            "default": [],
-            "items": {
-              "$ref": "#/components/schemas/CloseApproachResponse"
-            },
-            "title": "Close Approaches",
-            "type": "array"
+          "processing_time": {
+            "title": "Processing Time",
+            "type": "number"
           },
           "raw_neo_data": {
             "anyOf": [
@@ -298,7 +294,6 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Raw Neo Data"
           },
           "screening_assessment": {
@@ -306,21 +301,19 @@
             "title": "Screening Assessment",
             "type": "object"
           },
-          "analysis_metadata": {
-            "additionalProperties": true,
-            "title": "Analysis Metadata",
-            "type": "object"
-          },
           "status": {
             "title": "Status",
             "type": "string"
           },
-          "errors": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Errors",
-            "type": "array"
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
           },
           "warnings": {
             "items": {
@@ -344,18 +337,10 @@
       "AnomalyScoreResponse": {
         "description": "Anomaly score response model.",
         "properties": {
-          "overall_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Uncalibrated ranking units, not sigma or probability",
-            "title": "Overall Score"
+          "classification": {
+            "description": "FOLLOW_UP_CANDIDATE, NOT_FLAGGED, or INCONCLUSIVE; not origin",
+            "title": "Classification",
+            "type": "string"
           },
           "confidence": {
             "anyOf": [
@@ -366,18 +351,27 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Confidence"
           },
-          "score_semantics": {
-            "default": "uncalibrated_screening_rank",
-            "title": "Score Semantics",
-            "type": "string"
+          "indicator_scores": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/IndicatorResultResponse"
+            },
+            "default": {},
+            "title": "Indicator Scores",
+            "type": "object"
           },
-          "classification": {
-            "description": "FOLLOW_UP_CANDIDATE, NOT_FLAGGED, or INCONCLUSIVE; not origin",
-            "title": "Classification",
-            "type": "string"
+          "overall_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Uncalibrated ranking units, not sigma or probability",
+            "title": "Overall Score"
           },
           "risk_factors": {
             "default": [],
@@ -387,13 +381,10 @@
             "title": "Risk Factors",
             "type": "array"
           },
-          "indicator_scores": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/IndicatorResultResponse"
-            },
-            "default": {},
-            "title": "Indicator Scores",
-            "type": "object"
+          "score_semantics": {
+            "default": "uncalibrated_screening_rank",
+            "title": "Score Semantics",
+            "type": "string"
           },
           "statistical_summary": {
             "additionalProperties": true,
@@ -510,6 +501,17 @@
       "CloseApproachResponse": {
         "description": "Close approach response model.",
         "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
           "close_approach_date": {
             "anyOf": [
               {
@@ -520,7 +522,6 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Close Approach Date"
           },
           "distance_au": {
@@ -532,7 +533,6 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Distance Au"
           },
           "distance_km": {
@@ -544,10 +544,9 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Distance Km"
           },
-          "relative_velocity_km_s": {
+          "epoch_jd_tdb": {
             "anyOf": [
               {
                 "type": "number"
@@ -556,8 +555,12 @@
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Relative Velocity Km S"
+            "title": "Epoch Jd Tdb"
+          },
+          "evidence_metadata": {
+            "additionalProperties": true,
+            "title": "Evidence Metadata",
+            "type": "object"
           },
           "infinity_velocity_km_s": {
             "anyOf": [
@@ -568,8 +571,29 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Infinity Velocity Km S"
+          },
+          "native_calendar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Calendar"
+          },
+          "relative_velocity_km_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative Velocity Km S"
           },
           "subpoint": {
             "anyOf": [
@@ -583,21 +607,8 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "description": "[latitude, longitude]",
             "title": "Subpoint"
-          },
-          "epoch_jd_tdb": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Epoch Jd Tdb"
           },
           "time_scale": {
             "anyOf": [
@@ -608,37 +619,7 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Time Scale"
-          },
-          "native_calendar": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Native Calendar"
-          },
-          "body": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Body"
-          },
-          "evidence_metadata": {
-            "additionalProperties": true,
-            "title": "Evidence Metadata",
-            "type": "object"
           }
         },
         "title": "CloseApproachResponse",
@@ -718,8 +699,127 @@
       },
       "DetectionResponse": {
         "properties": {
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Analysis Metadata",
+            "type": "object"
+          },
+          "artificial_probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artificial Probability"
+          },
+          "candidate": {
+            "default": false,
+            "title": "Candidate",
+            "type": "boolean"
+          },
+          "classification": {
+            "title": "Classification",
+            "type": "string"
+          },
+          "combined_p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Combined P Value"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "data_freshness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Freshness"
+          },
+          "data_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Source"
+          },
           "designation": {
             "title": "Designation",
+            "type": "string"
+          },
+          "engine_version": {
+            "default": "catalogue-ranking-v1",
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "evidence_count": {
+            "default": 0,
+            "title": "Evidence Count",
+            "type": "integer"
+          },
+          "evidence_id": {
+            "default": "",
+            "title": "Evidence Id",
+            "type": "string"
+          },
+          "evidence_snapshot": {
+            "additionalProperties": true,
+            "title": "Evidence Snapshot",
+            "type": "object"
+          },
+          "evidence_sources": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/EvidenceSummary"
+            },
+            "title": "Evidence Sources",
+            "type": "array"
+          },
+          "false_discovery_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "False Discovery Rate"
+          },
+          "human_origin_status": {
+            "default": "not_assessed",
+            "title": "Human Origin Status",
+            "type": "string"
+          },
+          "interpretation": {
+            "default": "",
+            "title": "Interpretation",
             "type": "string"
           },
           "is_artificial": {
@@ -731,79 +831,14 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Is Artificial"
           },
-          "artificial_probability": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Artificial Probability"
-          },
-          "sigma_confidence": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Sigma Confidence"
-          },
-          "screening_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Screening Score"
-          },
-          "candidate": {
-            "default": false,
-            "title": "Candidate",
-            "type": "boolean"
-          },
-          "significance_status": {
-            "default": "unavailable_uncalibrated_model",
-            "title": "Significance Status",
-            "type": "string"
-          },
-          "origin_status": {
-            "default": "inconclusive",
-            "title": "Origin Status",
-            "type": "string"
-          },
-          "human_origin_status": {
-            "default": "not_assessed",
-            "title": "Human Origin Status",
-            "type": "string"
-          },
-          "evidence_id": {
-            "default": "",
-            "title": "Evidence Id",
-            "type": "string"
-          },
-          "policy_id": {
-            "default": "",
-            "title": "Policy Id",
-            "type": "string"
-          },
-          "evidence_snapshot": {
-            "additionalProperties": true,
-            "title": "Evidence Snapshot",
-            "type": "object"
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
           },
           "non_gravitational_evidence": {
             "anyOf": [
@@ -815,36 +850,24 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Non Gravitational Evidence"
           },
-          "limitations": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Limitations",
-            "type": "array"
+          "origin_status": {
+            "default": "inconclusive",
+            "title": "Origin Status",
+            "type": "string"
+          },
+          "policy_id": {
+            "default": "",
+            "title": "Policy Id",
+            "type": "string"
           },
           "schema_version": {
             "default": "screening-assessment-v1",
             "title": "Schema Version",
             "type": "string"
           },
-          "engine_version": {
-            "default": "catalogue-ranking-v1",
-            "title": "Engine Version",
-            "type": "string"
-          },
-          "sigma_tier": {
-            "default": "UNAVAILABLE",
-            "title": "Sigma Tier",
-            "type": "string"
-          },
-          "classification": {
-            "title": "Classification",
-            "type": "string"
-          },
-          "confidence": {
+          "screening_score": {
             "anyOf": [
               {
                 "type": "number"
@@ -853,21 +876,28 @@
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Confidence"
+            "title": "Screening Score"
           },
-          "evidence_count": {
-            "default": 0,
-            "title": "Evidence Count",
-            "type": "integer"
+          "sigma_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sigma Confidence"
           },
-          "evidence_sources": {
-            "default": [],
-            "items": {
-              "$ref": "#/components/schemas/EvidenceSummary"
-            },
-            "title": "Evidence Sources",
-            "type": "array"
+          "sigma_tier": {
+            "default": "UNAVAILABLE",
+            "title": "Sigma Tier",
+            "type": "string"
+          },
+          "significance_status": {
+            "default": "unavailable_uncalibrated_model",
+            "title": "Significance Status",
+            "type": "string"
           },
           "spacecraft_veto": {
             "default": false,
@@ -883,67 +913,7 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Veto Reason"
-          },
-          "data_source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Data Source"
-          },
-          "data_freshness": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Data Freshness"
-          },
-          "interpretation": {
-            "default": "",
-            "title": "Interpretation",
-            "type": "string"
-          },
-          "combined_p_value": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Combined P Value"
-          },
-          "false_discovery_rate": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "False Discovery Rate"
-          },
-          "analysis_metadata": {
-            "additionalProperties": true,
-            "default": {},
-            "title": "Analysis Metadata",
-            "type": "object"
           }
         },
         "required": [
@@ -951,6 +921,258 @@
           "classification"
         ],
         "title": "DetectionResponse",
+        "type": "object"
+      },
+      "EnhancedAnalysisRequest": {
+        "properties": {
+          "designation": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Designation",
+            "type": "string"
+          },
+          "enable_validation": {
+            "default": true,
+            "title": "Enable Validation",
+            "type": "boolean"
+          },
+          "force_refresh": {
+            "default": false,
+            "title": "Force Refresh",
+            "type": "boolean"
+          },
+          "include_indicators": {
+            "default": true,
+            "title": "Include Indicators",
+            "type": "boolean"
+          },
+          "include_raw_data": {
+            "default": false,
+            "title": "Include Raw Data",
+            "type": "boolean"
+          },
+          "monte_carlo_samples": {
+            "anyOf": [
+              {
+                "maximum": 50000.0,
+                "minimum": 100.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monte Carlo Samples"
+          },
+          "uncertainty_method": {
+            "default": "monte_carlo",
+            "pattern": "^(monte_carlo|bootstrap|analytical)$",
+            "title": "Uncertainty Method",
+            "type": "string"
+          },
+          "validation_method": {
+            "default": "full",
+            "pattern": "^(full|fast|statistical_only)$",
+            "title": "Validation Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "designation"
+        ],
+        "title": "EnhancedAnalysisRequest",
+        "type": "object"
+      },
+      "EnhancedAnalysisResponse": {
+        "properties": {
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "title": "Analysis Metadata",
+            "type": "object"
+          },
+          "classification": {
+            "title": "Classification",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "enhancement_timestamp": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enhancement Timestamp"
+          },
+          "enhancement_version": {
+            "default": "enhanced-rest-v1",
+            "title": "Enhancement Version",
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "execution_options": {
+            "additionalProperties": true,
+            "title": "Execution Options",
+            "type": "object"
+          },
+          "indicator_scores": {
+            "additionalProperties": true,
+            "title": "Indicator Scores",
+            "type": "object"
+          },
+          "overall_score": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Uncalibrated ranking units, not sigma or probability",
+            "title": "Overall Score"
+          },
+          "processing_time_ms": {
+            "title": "Processing Time Ms",
+            "type": "number"
+          },
+          "raw_neo_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Neo Data"
+          },
+          "score_semantics": {
+            "default": "uncalibrated_screening_rank",
+            "title": "Score Semantics",
+            "type": "string"
+          },
+          "screening_assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screening Assessment"
+          },
+          "statistical_tests": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/StatisticalTestResultModel"
+            },
+            "title": "Statistical Tests",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "uncertainty_analysis": {
+            "$ref": "#/components/schemas/UncertaintyAnalysisModel"
+          },
+          "validation_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ValidationResultModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "designation",
+          "classification",
+          "status",
+          "processing_time_ms",
+          "timestamp"
+        ],
+        "title": "EnhancedAnalysisResponse",
+        "type": "object"
+      },
+      "EnhancedBatchAnalysisResponse": {
+        "properties": {
+          "batch_id": {
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/EnhancedAnalysisResponse"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "summary_statistics": {
+            "additionalProperties": true,
+            "title": "Summary Statistics",
+            "type": "object"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "total_processing_time_ms": {
+            "title": "Total Processing Time Ms",
+            "type": "number"
+          }
+        },
+        "required": [
+          "batch_id",
+          "results",
+          "total_processing_time_ms",
+          "timestamp"
+        ],
+        "title": "EnhancedBatchAnalysisResponse",
         "type": "object"
       },
       "ErrorResponse": {
@@ -991,9 +1213,10 @@
       },
       "EvidenceSummary": {
         "properties": {
-          "type": {
-            "title": "Type",
-            "type": "string"
+          "analyzed": {
+            "default": true,
+            "title": "Analyzed",
+            "type": "boolean"
           },
           "anomaly_score": {
             "anyOf": [
@@ -1005,6 +1228,46 @@
               }
             ],
             "title": "Anomaly Score"
+          },
+          "confidence_interval": {
+            "default": [],
+            "items": {
+              "type": "number"
+            },
+            "title": "Confidence Interval",
+            "type": "array"
+          },
+          "data_available": {
+            "default": true,
+            "title": "Data Available",
+            "type": "boolean"
+          },
+          "dependency_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dependency Group"
+          },
+          "effect_size": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect Size"
+          },
+          "evidence_basis": {
+            "default": "heuristic_proxy",
+            "title": "Evidence Basis",
+            "type": "string"
           },
           "p_value": {
             "anyOf": [
@@ -1028,39 +1291,19 @@
             ],
             "title": "Quality Score"
           },
-          "effect_size": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Effect Size"
-          },
-          "confidence_interval": {
-            "default": [],
-            "items": {
-              "type": "number"
-            },
-            "title": "Confidence Interval",
-            "type": "array"
-          },
           "sample_size": {
             "default": 0,
             "title": "Sample Size",
             "type": "integer"
           },
-          "analyzed": {
-            "default": true,
-            "title": "Analyzed",
-            "type": "boolean"
+          "score_semantics": {
+            "default": "uncalibrated_ranking_heuristic",
+            "title": "Score Semantics",
+            "type": "string"
           },
-          "data_available": {
-            "default": true,
-            "title": "Data Available",
-            "type": "boolean"
+          "type": {
+            "title": "Type",
+            "type": "string"
           },
           "unavailable_reason": {
             "anyOf": [
@@ -1071,30 +1314,7 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Unavailable Reason"
-          },
-          "score_semantics": {
-            "default": "uncalibrated_ranking_heuristic",
-            "title": "Score Semantics",
-            "type": "string"
-          },
-          "evidence_basis": {
-            "default": "heuristic_proxy",
-            "title": "Evidence Basis",
-            "type": "string"
-          },
-          "dependency_group": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Dependency Group"
           }
         },
         "required": [
@@ -1266,12 +1486,12 @@
             "items": {
               "$ref": "#/components/schemas/ValidationError"
             },
-            "type": "array",
-            "title": "Detail"
+            "title": "Detail",
+            "type": "array"
           }
         },
-        "type": "object",
-        "title": "HTTPValidationError"
+        "title": "HTTPValidationError",
+        "type": "object"
       },
       "HarmonicSignalResult": {
         "properties": {
@@ -1340,7 +1560,12 @@
         "type": "object"
       },
       "ImpactResponse": {
+        "description": "Scoped external model evidence, not a local probability calculation.\n\nLegacy numeric keys remain nullable; absent evidence is never zero risk.\nComplete source snapshots and hashes permit deterministic report replay.",
         "properties": {
+          "assessment_basis": {
+            "title": "Assessment Basis",
+            "type": "string"
+          },
           "calculation_confidence": {
             "anyOf": [
               {
@@ -1353,8 +1578,26 @@
             "title": "Calculation Confidence"
           },
           "collision_probability": {
-            "title": "Collision Probability",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collision Probability"
+          },
+          "collision_probability_per_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collision Probability Per Year"
           },
           "comparative_risk": {
             "anyOf": [
@@ -1393,6 +1636,11 @@
             "title": "Designation",
             "type": "string"
           },
+          "identity": {
+            "additionalProperties": true,
+            "title": "Identity",
+            "type": "object"
+          },
           "impact_energy_mt": {
             "anyOf": [
               {
@@ -1405,20 +1653,39 @@
             "title": "Impact Energy Mt"
           },
           "impact_probability_by_decade": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "default": {},
-            "title": "Impact Probability By Decade",
-            "type": "object"
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact Probability By Decade"
           },
           "keyhole_passages": {
-            "default": [],
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keyhole Passages"
+          },
+          "limitations": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "type": "string"
             },
-            "title": "Keyhole Passages",
+            "title": "Limitations",
             "type": "array"
           },
           "moon_collision_probability": {
@@ -1457,25 +1724,105 @@
             ],
             "title": "Peak Risk Period"
           },
+          "physical_estimate_basis": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Physical Estimate Basis"
+          },
           "primary_risk_factors": {
-            "default": [],
-            "items": {
-              "type": "string"
-            },
-            "title": "Primary Risk Factors",
-            "type": "array"
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Risk Factors"
           },
           "probability_uncertainty": {
-            "default": [],
-            "items": {
-              "type": "number"
-            },
-            "title": "Probability Uncertainty",
-            "type": "array"
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability Uncertainty"
+          },
+          "report_sha256": {
+            "title": "Report Sha256",
+            "type": "string"
           },
           "risk_level": {
             "title": "Risk Level",
             "type": "string"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "source": {
+            "additionalProperties": true,
+            "title": "Source",
+            "type": "object"
+          },
+          "source_palermo_cumulative": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Palermo Cumulative"
+          },
+          "source_snapshot": {
+            "additionalProperties": true,
+            "title": "Source Snapshot",
+            "type": "object"
+          },
+          "source_torino_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Torino Max"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "time_scope": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Scope"
           },
           "time_to_impact_years": {
             "anyOf": [
@@ -1487,12 +1834,27 @@
               }
             ],
             "title": "Time To Impact Years"
+          },
+          "virtual_impactors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Virtual Impactors",
+            "type": "array"
           }
         },
         "required": [
+          "schema_version",
           "designation",
-          "collision_probability",
-          "risk_level"
+          "status",
+          "assessment_basis",
+          "identity",
+          "risk_level",
+          "source",
+          "source_snapshot",
+          "report_sha256",
+          "limitations"
         ],
         "title": "ImpactResponse",
         "type": "object"
@@ -1500,9 +1862,34 @@
       "IndicatorResultResponse": {
         "description": "Indicator result response model.",
         "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "contributing_factors": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Contributing Factors",
+            "type": "array"
+          },
           "indicator_name": {
             "title": "Indicator Name",
             "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Metadata",
+            "type": "object"
           },
           "raw_score": {
             "anyOf": [
@@ -1513,7 +1900,6 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Raw Score"
           },
           "weighted_score": {
@@ -1525,34 +1911,7 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Weighted Score"
-          },
-          "confidence": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Confidence"
-          },
-          "contributing_factors": {
-            "default": [],
-            "items": {
-              "type": "string"
-            },
-            "title": "Contributing Factors",
-            "type": "array"
-          },
-          "metadata": {
-            "additionalProperties": true,
-            "default": {},
-            "title": "Metadata",
-            "type": "object"
           }
         },
         "required": [
@@ -1957,7 +2316,7 @@
       "OrbitalElementsResponse": {
         "description": "Orbital elements response model.",
         "properties": {
-          "eccentricity": {
+          "argument_of_perihelion": {
             "anyOf": [
               {
                 "type": "number"
@@ -1966,32 +2325,7 @@
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Eccentricity"
-          },
-          "inclination": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Inclination"
-          },
-          "semi_major_axis": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Semi Major Axis"
+            "title": "Argument Of Perihelion"
           },
           "ascending_node": {
             "anyOf": [
@@ -2002,10 +2336,9 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Ascending Node"
           },
-          "argument_of_perihelion": {
+          "eccentricity": {
             "anyOf": [
               {
                 "type": "number"
@@ -2014,20 +2347,7 @@
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Argument Of Perihelion"
-          },
-          "mean_anomaly": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Mean Anomaly"
+            "title": "Eccentricity"
           },
           "epoch": {
             "anyOf": [
@@ -2039,8 +2359,29 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Epoch"
+          },
+          "inclination": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inclination"
+          },
+          "mean_anomaly": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Anomaly"
           },
           "orbital_period": {
             "anyOf": [
@@ -2051,8 +2392,18 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Orbital Period"
+          },
+          "semi_major_axis": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Semi Major Axis"
           }
         },
         "title": "OrbitalElementsResponse",
@@ -2098,19 +2449,41 @@
             "title": "A",
             "type": "number"
           },
-          "e": {
-            "description": "Eccentricity (0\u20131 bound, up to 2 for hyperbolic)",
-            "maximum": 2.0,
-            "minimum": 0.0,
-            "title": "E",
-            "type": "number"
+          "absolute_magnitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Absolute Magnitude"
           },
-          "i": {
-            "description": "Inclination (degrees)",
-            "maximum": 180.0,
-            "minimum": 0.0,
-            "title": "I",
-            "type": "number"
+          "additional_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Additional Data"
+          },
+          "albedo": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Albedo"
           },
           "designation": {
             "anyOf": [
@@ -2123,7 +2496,6 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Designation"
           },
           "diameter_km": {
@@ -2137,59 +2509,14 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Diameter Km"
           },
-          "albedo": {
-            "anyOf": [
-              {
-                "maximum": 1.0,
-                "minimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Albedo"
-          },
-          "absolute_magnitude": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Absolute Magnitude"
-          },
-          "spectral_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Spectral Type"
-          },
-          "additional_data": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Additional Data"
+          "e": {
+            "description": "Eccentricity (0\u20131 bound, up to 2 for hyperbolic)",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "E",
+            "type": "number"
           },
           "evidence_metadata": {
             "anyOf": [
@@ -2201,8 +2528,14 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Evidence Metadata"
+          },
+          "i": {
+            "description": "Inclination (degrees)",
+            "maximum": 180.0,
+            "minimum": 0.0,
+            "title": "I",
+            "type": "number"
           },
           "orbital_history": {
             "anyOf": [
@@ -2217,8 +2550,18 @@
                 "type": "null"
               }
             ],
-            "default": null,
             "title": "Orbital History"
+          },
+          "spectral_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spectral Type"
           }
         },
         "required": [
@@ -2388,6 +2731,155 @@
         ],
         "title": "SortOrder",
         "type": "string"
+      },
+      "SpaceDebrisMatchModel": {
+        "properties": {
+          "catalog": {
+            "title": "Catalog",
+            "type": "string"
+          },
+          "delta_v": {
+            "title": "Delta V",
+            "type": "number"
+          },
+          "epoch_difference": {
+            "title": "Epoch Difference",
+            "type": "number"
+          },
+          "match_confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Match Confidence",
+            "type": "number"
+          },
+          "match_criteria": {
+            "additionalProperties": true,
+            "title": "Match Criteria",
+            "type": "object"
+          },
+          "object_id": {
+            "title": "Object Id",
+            "type": "string"
+          },
+          "object_name": {
+            "title": "Object Name",
+            "type": "string"
+          },
+          "orbital_similarity": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Orbital Similarity",
+            "type": "number"
+          }
+        },
+        "required": [
+          "catalog",
+          "object_id",
+          "object_name",
+          "match_confidence",
+          "delta_v",
+          "orbital_similarity",
+          "epoch_difference"
+        ],
+        "title": "SpaceDebrisMatchModel",
+        "type": "object"
+      },
+      "StatisticalTestResultModel": {
+        "properties": {
+          "alpha_level": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha Level"
+          },
+          "confidence_interval": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Interval"
+          },
+          "effect_size": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect Size"
+          },
+          "is_significant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Significant"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "test_statistic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Statistic"
+          },
+          "test_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Type"
+          }
+        },
+        "title": "StatisticalTestResultModel",
+        "type": "object"
       },
       "SystemMetricsResponse": {
         "description": "System metrics response model.",
@@ -2662,6 +3154,115 @@
         "title": "TrainingResponse",
         "type": "object"
       },
+      "UncertaintyAnalysisModel": {
+        "properties": {
+          "analysis_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Method"
+          },
+          "confidence_interval_95": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Interval 95"
+          },
+          "confidence_interval_99": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Interval 99"
+          },
+          "indicator_uncertainties": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Indicator Uncertainties",
+            "type": "object"
+          },
+          "overall_uncertainty": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Uncertainty"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "sensitivity_analysis": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Sensitivity Analysis",
+            "type": "object"
+          },
+          "status": {
+            "default": "unavailable",
+            "title": "Status",
+            "type": "string"
+          },
+          "uncertainty_breakdown": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Uncertainty Breakdown",
+            "type": "object"
+          }
+        },
+        "title": "UncertaintyAnalysisModel",
+        "type": "object"
+      },
       "UserResponse": {
         "description": "User response model.",
         "properties": {
@@ -2725,6 +3326,13 @@
       },
       "ValidationError": {
         "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
           "loc": {
             "items": {
               "anyOf": [
@@ -2736,495 +3344,28 @@
                 }
               ]
             },
-            "type": "array",
-            "title": "Location"
+            "title": "Location",
+            "type": "array"
           },
           "msg": {
-            "type": "string",
-            "title": "Message"
+            "title": "Message",
+            "type": "string"
           },
           "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
+            "title": "Error Type",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "loc",
           "msg",
           "type"
         ],
-        "title": "ValidationError"
-      },
-      "EnhancedAnalysisResponse": {
-        "properties": {
-          "designation": {
-            "type": "string",
-            "title": "Designation"
-          },
-          "overall_score": {
-            "anyOf": [
-              {
-                "type": "number",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Overall Score",
-            "description": "Uncalibrated ranking units, not sigma or probability"
-          },
-          "score_semantics": {
-            "type": "string",
-            "title": "Score Semantics",
-            "default": "uncalibrated_screening_rank"
-          },
-          "confidence": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confidence"
-          },
-          "classification": {
-            "type": "string",
-            "title": "Classification"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "errors": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Errors"
-          },
-          "warnings": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Warnings"
-          },
-          "processing_time_ms": {
-            "type": "number",
-            "title": "Processing Time Ms"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timestamp"
-          },
-          "screening_assessment": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Screening Assessment"
-          },
-          "analysis_metadata": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Analysis Metadata"
-          },
-          "raw_neo_data": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Raw Neo Data"
-          },
-          "indicator_scores": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Indicator Scores"
-          },
-          "validation_result": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ValidationResultModel"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "statistical_tests": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/StatisticalTestResultModel"
-            },
-            "type": "object",
-            "title": "Statistical Tests"
-          },
-          "uncertainty_analysis": {
-            "$ref": "#/components/schemas/UncertaintyAnalysisModel"
-          },
-          "execution_options": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Execution Options"
-          },
-          "enhancement_timestamp": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Enhancement Timestamp"
-          },
-          "enhancement_version": {
-            "type": "string",
-            "title": "Enhancement Version",
-            "default": "enhanced-rest-v1"
-          }
-        },
-        "type": "object",
-        "required": [
-          "designation",
-          "classification",
-          "status",
-          "processing_time_ms",
-          "timestamp"
-        ],
-        "title": "EnhancedAnalysisResponse"
-      },
-      "UncertaintyAnalysisModel": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "title": "Status",
-            "default": "unavailable"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          },
-          "overall_uncertainty": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Overall Uncertainty"
-          },
-          "confidence_interval_95": {
-            "anyOf": [
-              {
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array",
-                "maxItems": 2,
-                "minItems": 2
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confidence Interval 95"
-          },
-          "confidence_interval_99": {
-            "anyOf": [
-              {
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array",
-                "maxItems": 2,
-                "minItems": 2
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confidence Interval 99"
-          },
-          "indicator_uncertainties": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "type": "object",
-            "title": "Indicator Uncertainties"
-          },
-          "sensitivity_analysis": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "type": "object",
-            "title": "Sensitivity Analysis"
-          },
-          "uncertainty_breakdown": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "type": "object",
-            "title": "Uncertainty Breakdown"
-          },
-          "analysis_method": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Analysis Method"
-          }
-        },
-        "type": "object",
-        "title": "UncertaintyAnalysisModel"
-      },
-      "StatisticalTestResultModel": {
-        "properties": {
-          "p_value": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "P Value"
-          },
-          "effect_size": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Effect Size"
-          },
-          "confidence_interval": {
-            "anyOf": [
-              {
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array",
-                "maxItems": 2,
-                "minItems": 2
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confidence Interval"
-          },
-          "is_significant": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Is Significant"
-          },
-          "test_statistic": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Test Statistic"
-          },
-          "test_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Test Type"
-          },
-          "alpha_level": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Alpha Level"
-          }
-        },
-        "type": "object",
-        "title": "StatisticalTestResultModel"
+        "title": "ValidationError",
+        "type": "object"
       },
       "ValidationResultModel": {
         "properties": {
-          "overall_validation_passed": {
-            "type": "boolean",
-            "title": "Overall Validation Passed"
-          },
-          "overall_false_positive_probability": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Overall False Positive Probability"
-          },
-          "overall_confidence": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Overall Confidence"
-          },
-          "stage_results": {
-            "items": {
-              "$ref": "#/components/schemas/ValidationStageResultModel"
-            },
-            "type": "array",
-            "title": "Stage Results"
-          },
-          "space_debris_matches": {
-            "items": {
-              "$ref": "#/components/schemas/SpaceDebrisMatchModel"
-            },
-            "type": "array",
-            "title": "Space Debris Matches"
-          },
-          "synthetic_population_percentile": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 100.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Synthetic Population Percentile"
-          },
-          "statistical_significance_summary": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Statistical Significance Summary"
-          },
-          "recommendation": {
-            "type": "string",
-            "title": "Recommendation"
-          },
-          "expert_review_priority": {
-            "type": "string",
-            "pattern": "^(low|medium|high|urgent)$",
-            "title": "Expert Review Priority"
-          },
-          "total_processing_time_ms": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Processing Time Ms"
-          },
-          "timing_status": {
-            "type": "string",
-            "title": "Timing Status",
-            "default": "unavailable_not_instrumented"
-          },
-          "validation_timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Validation Timestamp"
-          },
           "contract_version": {
             "anyOf": [
               {
@@ -3235,17 +3376,6 @@
               }
             ],
             "title": "Contract Version"
-          },
-          "validation_status": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Validation Status"
           },
           "evidence_id": {
             "anyOf": [
@@ -3258,38 +3388,10 @@
             ],
             "title": "Evidence Id"
           },
-          "policy_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Policy Id"
-          },
-          "validation_evidence_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Validation Evidence Id"
-          },
-          "screening_score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Screening Score"
+          "expert_review_priority": {
+            "pattern": "^(low|medium|high|urgent)$",
+            "title": "Expert Review Priority",
+            "type": "string"
           },
           "non_gravitational_evidence": {
             "anyOf": [
@@ -3303,108 +3405,169 @@
             ],
             "title": "Non Gravitational Evidence"
           },
+          "overall_confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Confidence"
+          },
+          "overall_false_positive_probability": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall False Positive Probability"
+          },
+          "overall_validation_passed": {
+            "title": "Overall Validation Passed",
+            "type": "boolean"
+          },
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "recommendation": {
+            "title": "Recommendation",
+            "type": "string"
+          },
+          "screening_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screening Score"
+          },
+          "space_debris_matches": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceDebrisMatchModel"
+            },
+            "title": "Space Debris Matches",
+            "type": "array"
+          },
+          "stage_results": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationStageResultModel"
+            },
+            "title": "Stage Results",
+            "type": "array"
+          },
+          "statistical_significance_summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statistical Significance Summary"
+          },
+          "synthetic_population_percentile": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Population Percentile"
+          },
+          "timing_status": {
+            "default": "unavailable_not_instrumented",
+            "title": "Timing Status",
+            "type": "string"
+          },
+          "total_processing_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Processing Time Ms"
+          },
           "transport_limitations": {
             "items": {
               "type": "string"
             },
-            "type": "array",
-            "title": "Transport Limitations"
+            "title": "Transport Limitations",
+            "type": "array"
+          },
+          "validation_evidence_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Evidence Id"
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          },
+          "validation_timestamp": {
+            "format": "date-time",
+            "title": "Validation Timestamp",
+            "type": "string"
           }
         },
-        "type": "object",
         "required": [
           "overall_validation_passed",
           "recommendation",
           "expert_review_priority",
           "validation_timestamp"
         ],
-        "title": "ValidationResultModel"
-      },
-      "SpaceDebrisMatchModel": {
-        "properties": {
-          "catalog": {
-            "type": "string",
-            "title": "Catalog"
-          },
-          "object_id": {
-            "type": "string",
-            "title": "Object Id"
-          },
-          "object_name": {
-            "type": "string",
-            "title": "Object Name"
-          },
-          "match_confidence": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Match Confidence"
-          },
-          "delta_v": {
-            "type": "number",
-            "title": "Delta V"
-          },
-          "orbital_similarity": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Orbital Similarity"
-          },
-          "epoch_difference": {
-            "type": "number",
-            "title": "Epoch Difference"
-          },
-          "match_criteria": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Match Criteria"
-          }
-        },
-        "type": "object",
-        "required": [
-          "catalog",
-          "object_id",
-          "object_name",
-          "match_confidence",
-          "delta_v",
-          "orbital_similarity",
-          "epoch_difference"
-        ],
-        "title": "SpaceDebrisMatchModel"
+        "title": "ValidationResultModel",
+        "type": "object"
       },
       "ValidationStageResultModel": {
         "properties": {
-          "stage_number": {
-            "type": "integer",
-            "title": "Stage Number"
-          },
-          "stage_name": {
-            "type": "string",
-            "title": "Stage Name"
-          },
-          "passed": {
-            "type": "boolean",
-            "title": "Passed"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "type": "number",
-                "maximum": 1.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score"
-          },
           "confidence": {
             "anyOf": [
               {
-                "type": "number",
                 "maximum": 1.0,
-                "minimum": 0.0
+                "minimum": 0.0,
+                "type": "number"
               },
               {
                 "type": "null"
@@ -3412,12 +3575,17 @@
             ],
             "title": "Confidence"
           },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
           "false_positive_reduction": {
             "anyOf": [
               {
-                "type": "number",
                 "maximum": 1.0,
-                "minimum": 0.0
+                "minimum": 0.0,
+                "type": "number"
               },
               {
                 "type": "null"
@@ -3425,10 +3593,9 @@
             ],
             "title": "False Positive Reduction"
           },
-          "details": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Details"
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
           },
           "processing_time_ms": {
             "anyOf": [
@@ -3441,10 +3608,31 @@
             ],
             "title": "Processing Time Ms"
           },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "stage_name": {
+            "title": "Stage Name",
+            "type": "string"
+          },
+          "stage_number": {
+            "title": "Stage Number",
+            "type": "integer"
+          },
           "timing_status": {
-            "type": "string",
+            "default": "unavailable_not_instrumented",
             "title": "Timing Status",
-            "default": "unavailable_not_instrumented"
+            "type": "string"
           },
           "validation_status": {
             "anyOf": [
@@ -3458,68 +3646,67 @@
             "title": "Validation Status"
           }
         },
-        "type": "object",
         "required": [
           "stage_number",
           "stage_name",
           "passed"
         ],
-        "title": "ValidationStageResultModel"
+        "title": "ValidationStageResultModel",
+        "type": "object"
       },
       "ValidationSummaryResponse": {
         "properties": {
-          "total_analyses": {
-            "type": "integer",
-            "title": "Total Analyses"
-          },
-          "included_screening_assessments": {
-            "type": "integer",
-            "title": "Included Screening Assessments",
-            "default": 0
-          },
           "excluded_rows": {
             "additionalProperties": {
               "type": "integer"
             },
-            "type": "object",
-            "title": "Excluded Rows"
-          },
-          "screening_counts": {
-            "additionalProperties": {
-              "type": "integer"
-            },
-            "type": "object",
-            "title": "Screening Counts"
-          },
-          "policy_groups": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Policy Groups"
+            "title": "Excluded Rows",
+            "type": "object"
           },
           "false_positive_statistics": {
             "additionalProperties": true,
-            "type": "object",
-            "title": "False Positive Statistics"
+            "title": "False Positive Statistics",
+            "type": "object"
+          },
+          "included_screening_assessments": {
+            "default": 0,
+            "title": "Included Screening Assessments",
+            "type": "integer"
+          },
+          "overall_score_statistics": {
+            "additionalProperties": true,
+            "title": "Overall Score Statistics",
+            "type": "object"
+          },
+          "policy_groups": {
+            "additionalProperties": true,
+            "title": "Policy Groups",
+            "type": "object"
           },
           "recommendations": {
             "additionalProperties": {
               "type": "integer"
             },
-            "type": "object",
-            "title": "Recommendations"
+            "title": "Recommendations",
+            "type": "object"
           },
-          "overall_score_statistics": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Overall Score Statistics"
+          "screening_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Screening Counts",
+            "type": "object"
+          },
+          "total_analyses": {
+            "title": "Total Analyses",
+            "type": "integer"
           },
           "validation_system_status": {
             "additionalProperties": true,
-            "type": "object",
-            "title": "Validation System Status"
+            "title": "Validation System Status",
+            "type": "object"
           }
         },
-        "type": "object",
         "required": [
           "total_analyses",
           "false_positive_statistics",
@@ -3527,104 +3714,8 @@
           "overall_score_statistics",
           "validation_system_status"
         ],
-        "title": "ValidationSummaryResponse"
-      },
-      "EnhancedBatchAnalysisResponse": {
-        "properties": {
-          "batch_id": {
-            "type": "string",
-            "title": "Batch Id"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/EnhancedAnalysisResponse"
-            },
-            "type": "array",
-            "title": "Results"
-          },
-          "summary_statistics": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Summary Statistics"
-          },
-          "total_processing_time_ms": {
-            "type": "number",
-            "title": "Total Processing Time Ms"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Timestamp"
-          }
-        },
-        "type": "object",
-        "required": [
-          "batch_id",
-          "results",
-          "total_processing_time_ms",
-          "timestamp"
-        ],
-        "title": "EnhancedBatchAnalysisResponse"
-      },
-      "EnhancedAnalysisRequest": {
-        "properties": {
-          "designation": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Designation"
-          },
-          "force_refresh": {
-            "type": "boolean",
-            "title": "Force Refresh",
-            "default": false
-          },
-          "include_raw_data": {
-            "type": "boolean",
-            "title": "Include Raw Data",
-            "default": false
-          },
-          "include_indicators": {
-            "type": "boolean",
-            "title": "Include Indicators",
-            "default": true
-          },
-          "enable_validation": {
-            "type": "boolean",
-            "title": "Enable Validation",
-            "default": true
-          },
-          "validation_method": {
-            "type": "string",
-            "pattern": "^(full|fast|statistical_only)$",
-            "title": "Validation Method",
-            "default": "full"
-          },
-          "uncertainty_method": {
-            "type": "string",
-            "pattern": "^(monte_carlo|bootstrap|analytical)$",
-            "title": "Uncertainty Method",
-            "default": "monte_carlo"
-          },
-          "monte_carlo_samples": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 50000.0,
-                "minimum": 100.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Monte Carlo Samples"
-          }
-        },
-        "type": "object",
-        "required": [
-          "designation"
-        ],
-        "title": "EnhancedAnalysisRequest"
+        "title": "ValidationSummaryResponse",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -4294,7 +4385,7 @@
     },
     "/api/v1/analysis/analyze": {
       "post": {
-        "description": "Acquire typed evidence and delegate to shared uncalibrated screening. Missing source data is 503; invalid evidence is 422. A ranking score is not statistical significance or an origin probability.",
+        "description": "Acquire current evidence and return the shared uncalibrated screening result.",
         "operationId": "analyze_neo_api_v1_analysis_analyze_post",
         "requestBody": {
           "content": {
@@ -4318,10 +4409,14 @@
             "description": "Successful Response"
           },
           "422": {
-            "description": "Invalid request or source evidence"
-          },
-          "503": {
-            "description": "Source evidence unavailable; not a natural negative"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -4340,7 +4435,7 @@
     },
     "/api/v1/analysis/analyze/batch": {
       "post": {
-        "description": "Analyze multiple NEOs for artificial signatures (batch mode).\nUses the same DataFetcher + ValidatedSigma5 path as GET /detect.",
+        "description": "Screen multiple NEOs using the same DataFetcher + shared service as GET /detect.\nResults remain in-memory; restart durability is tracked separately.",
         "operationId": "analyze_batch_api_v1_analysis_analyze_batch_post",
         "requestBody": {
           "content": {
@@ -4528,7 +4623,7 @@
     },
     "/api/v1/analysis/detect": {
       "get": {
-        "description": "Uncalibrated candidate screening; significance, FDR and origin probability remain unavailable. Ranking is not a confirmed-origin decision.",
+        "description": "Screen a named object; unavailable significance/origin remain null.",
         "operationId": "detect_neo_api_v1_analysis_detect_get",
         "parameters": [
           {
@@ -4566,7 +4661,7 @@
             },
             "description": "Successful Response"
           },
-          "404": {
+          "422": {
             "content": {
               "application/json": {
                 "schema": {
@@ -4574,17 +4669,7 @@
                 }
               }
             },
-            "description": "No orbital data for designation"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
+            "description": "Invalid source measurements"
           },
           "500": {
             "content": {
@@ -4595,6 +4680,16 @@
               }
             },
             "description": "Detection pipeline failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Source data unavailable"
           }
         },
         "security": [
@@ -4611,7 +4706,7 @@
         ]
       },
       "post": {
-        "description": "Uncalibrated candidate screening; significance, FDR and origin probability remain unavailable. Ranking is not a confirmed-origin decision.",
+        "description": "Screen supplied measurements; a name alone is not origin evidence.",
         "operationId": "detect_neo_raw_api_v1_analysis_detect_post",
         "requestBody": {
           "content": {
@@ -4656,6 +4751,188 @@
         "summary": "Detect Neo Raw",
         "tags": [
           "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/enhanced": {
+      "post": {
+        "description": "Shared screening plus explicit required-review status, not calibrated science.",
+        "operationId": "analyze_neo_enhanced_api_v1_analysis_enhanced_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnhancedAnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnhancedAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Analyze Neo Enhanced",
+        "tags": [
+          "Scientific review"
+        ]
+      }
+    },
+    "/api/v1/analysis/enhanced/batch": {
+      "post": {
+        "description": "Ordered outcomes for every object, including source failures and abstentions.",
+        "operationId": "batch_analyze_enhanced_api_v1_analysis_enhanced_batch_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "force_refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Force Refresh",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "enable_validation",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Enable Validation",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "minItems": 1,
+                "title": "Designations",
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnhancedBatchAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Batch Analyze Enhanced",
+        "tags": [
+          "Scientific review"
+        ]
+      }
+    },
+    "/api/v1/analysis/enhanced/summary": {
+      "get": {
+        "description": "Descriptive stored screening counts, never inferred FDR or acceptance.",
+        "operationId": "get_validation_summary_api_v1_analysis_enhanced_summary_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "maximum": 365,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationSummaryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Validation Summary",
+        "tags": [
+          "Scientific review"
         ]
       }
     },
@@ -4878,18 +5155,30 @@
     },
     "/api/v1/analysis/impact": {
       "get": {
-        "description": "Calculate Earth/Moon impact probability for a named NEO.\n\nReturns collision_probability, moon_collision_probability, risk_level,\nimpact_energy_mt, and crater_diameter_km.",
+        "description": "Return replayable JPL Sentry evidence for its tabulated Earth-impact events.\n\nNot listed/removed is not zero risk. No lunar probability, local fitted\nprobability, calibrated confidence, damage prediction or origin inference.\nSource method, dates, uncertainty limits and complete input snapshot accompany\nevery result. This endpoint does not use the legacy heuristic calculator.",
         "operationId": "impact_neo_api_v1_analysis_impact_get",
         "parameters": [
           {
-            "description": "NEO designation, e.g. '99942'",
+            "description": "Primary asteroid number or unpacked provisional designation; names/aliases are not resolved",
             "in": "query",
             "name": "designation",
             "required": true,
             "schema": {
-              "description": "NEO designation, e.g. '99942'",
+              "description": "Primary asteroid number or unpacked provisional designation; names/aliases are not resolved",
               "title": "Designation",
               "type": "string"
+            }
+          },
+          {
+            "description": "Explicitly bypass the per-process Sentry TTL cache",
+            "in": "query",
+            "name": "force_refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Explicitly bypass the per-process Sentry TTL cache",
+              "title": "Force Refresh",
+              "type": "boolean"
             }
           }
         ],
@@ -4904,27 +5193,17 @@
             },
             "description": "Successful Response"
           },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "No orbital data for designation"
-          },
           "422": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "Use a primary number or provisional designation"
           },
-          "500": {
+          "502": {
             "content": {
               "application/json": {
                 "schema": {
@@ -4932,7 +5211,17 @@
                 }
               }
             },
-            "description": "Impact calculation failure"
+            "description": "Invalid or unsupported Sentry response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authoritative impact source unavailable"
           }
         },
         "security": [
@@ -6383,188 +6672,6 @@
           }
         },
         "summary": "Health Check"
-      }
-    },
-    "/api/v1/analysis/enhanced": {
-      "post": {
-        "tags": [
-          "Scientific review"
-        ],
-        "summary": "Analyze Neo Enhanced",
-        "description": "Shared screening plus explicit required-review status, not calibrated science.",
-        "operationId": "analyze_neo_enhanced_api_v1_analysis_enhanced_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EnhancedAnalysisRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnhancedAnalysisResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "APIKeyHeader": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/analysis/enhanced/batch": {
-      "post": {
-        "tags": [
-          "Scientific review"
-        ],
-        "summary": "Batch Analyze Enhanced",
-        "description": "Ordered outcomes for every object, including source failures and abstentions.",
-        "operationId": "batch_analyze_enhanced_api_v1_analysis_enhanced_batch_post",
-        "security": [
-          {
-            "APIKeyHeader": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "force_refresh",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Force Refresh"
-            }
-          },
-          {
-            "name": "enable_validation",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true,
-              "title": "Enable Validation"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "minItems": 1,
-                "maxItems": 100,
-                "title": "Designations"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EnhancedBatchAnalysisResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/analysis/enhanced/summary": {
-      "get": {
-        "tags": [
-          "Scientific review"
-        ],
-        "summary": "Get Validation Summary",
-        "description": "Descriptive stored screening counts, never inferred FDR or acceptance.",
-        "operationId": "get_validation_summary_api_v1_analysis_enhanced_summary_get",
-        "security": [
-          {
-            "APIKeyHeader": []
-          },
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "days",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 365,
-              "minimum": 1,
-              "default": 7,
-              "title": "Days"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationSummaryResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
       }
     }
   }

@@ -34,3 +34,48 @@ def describe_impact_prerequisites(neo=None):
             'Independent validation or scoped authoritative impact solution'],
         'interpretation':'Unavailable is neither zero probability nor negligible risk. Origin screening does not establish impact probability.',
     }
+
+
+import threading
+
+_sentry_service_lock = threading.Lock()
+_sentry_service_instance = None
+
+
+def get_sentry_impact_service():
+    """One process-local source service, including concurrent first requests."""
+    global _sentry_service_instance
+    with _sentry_service_lock:
+        if _sentry_service_instance is None:
+            from ..data.sources.sentry import SentryImpactService
+            _sentry_service_instance = SentryImpactService()
+        return _sentry_service_instance
+
+
+def render_sentry_markdown(report):
+    """Render only replay-verified reports; no local Torino/risk estimate."""
+    from ..data.sources.sentry import verify_sentry_report
+    if not verify_sentry_report(report):
+        raise ValueError('Invalid or modified Sentry report')
+    source = report['source']
+    probability = report['collision_probability']
+    lines = [f"# Sentry impact evidence — {report['designation']}",
+        f"Status: {report['status']}",
+        'Basis: external JPL model output, not a local aNEOS fit.',
+        f"Retrieved (UTC): {source['retrieved_at']}",
+        f"Source API: {source['api_version']}; method: {source['method'] or 'not available'}",
+        f"Tabulated Earth-impact probability: {probability if probability is not None else 'not available'}",
+        'Probability interval / aNEOS confidence: not supplied.',
+        'Lunar probability / aNEOS risk classification: not assessed.']
+    if report['time_scope']:
+        scope = report['time_scope']
+        lines.append(f"Listed-event span (UTC): {scope['first_listed_event_utc']} to {scope['last_listed_event_utc']}; {scope['event_count']} virtual impactors.")
+    if source['computation_time']:
+        lines.append(f"Source computation: {source['computation_time']['native']} [Pacific Local; not converted to UTC].")
+    if source['removed_at_utc']:
+        lines.append(f"Source removal time (UTC): {source['removed_at_utc']}")
+    lines += ['','## Limits'] + [f'- {item}' for item in report['limitations']]
+    lines += ['', f"Source: {source['documentation']}",
+        f"Raw response SHA-256: {report['source_snapshot']['sha256']}",
+        f"Report SHA-256: {report['report_sha256']}"]
+    return '\n'.join(lines) + '\n'

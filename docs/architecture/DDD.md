@@ -1219,3 +1219,21 @@ full API-version/cache/pagination compliance, live provider performance, durable
 jobs/cases or scientific accuracy. No new bounded context is needed. The impact
 boundary still requires #32's authoritative-source and scientific-contract work;
 a transport adapter does not validate impact probability.
+
+## Authoritative impact evidence — 2026-11-12 (ADR-074)
+
+Data Acquisition's Sentry anti-corruption adapter owns source version, object
+identity, native method/event parsing and response provenance. The existing Impact
+Assessment boundary owns the interpretation: a scoped external Earth-impact model
+output is not origin inference, an observed collision, a local covariance fit,
+lunar risk or a damage prediction. A source catalogue absence/removal is not a
+negative scientific measurement. Shared reports carry that distinction to REST.
+
+**Implemented/integrated:** strict source service, per-process TTL/single-flight
+reuse, existing REST route/model, JSON and replay-checked Markdown helper; one
+current KY26 not-listed capture. **Regression-tested:** all supported methods,
+positive events, absent/removed/failing/mismatched/tampered records, refresh/cohort
+failure, actual application routing and frozen capture replay. **Not established:**
+local impact probability/calibration, legacy menu/core enhanced-impact correctness,
+full alias resolution, distributed cache, durable cases/jobs, or readiness for
+planetary-defense decisions. No new bounded context is introduced; #32 stays open.
