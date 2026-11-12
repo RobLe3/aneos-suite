@@ -580,12 +580,14 @@ class EnhancedNEOPoller:
                 'limit': limit
             }
             
-            response = self.session.get('https://ssd-api.jpl.nasa.gov/cad.api', params=params, timeout=self.config['CAD_TIMEOUT'])
+            from aneos_core.data.sources.base import _APPLICATION_HEADERS
+            response = self.session.get('https://ssd-api.jpl.nasa.gov/cad.api', params=params,
+                                        headers=_APPLICATION_HEADERS, timeout=self.config['CAD_TIMEOUT'])
             response.raise_for_status()
             
             data = response.json()
             
-            if 'data' in data and len(data['data']) > 0:
+            if ('data' in data and len(data['data']) > 0) or data.get('count') == 0:
                 # Cache the result
                 try:
                     with shelve.open(self.cad_cache_file) as cache:

@@ -427,13 +427,18 @@ class ANEOSMenuV2(ANEOSMenuBase):
             )
             return
 
+        coverage = getattr(approaches, 'query_metadata', {})
+        if isinstance(coverage, dict) and coverage:
+            self.show_info(f"CAD query coverage: {coverage.get('completeness_status', 'unverified')}; "
+                f"returned {coverage.get('count', '?')} of {coverage.get('total', '?')} matching encounters. "
+                "Computed encounters are not an observation history; dates retain their native time scale.")
         rows = []
         for ca in approaches:
             dist = getattr(ca, "distance_au", None) or getattr(ca, "dist", None)
             vel = getattr(ca, "relative_velocity_km_s", None) or getattr(ca, "v_rel", None)
             date = getattr(ca, "close_approach_date", None) or getattr(ca, "date", None) or getattr(ca, "t_ca", "?")
             rows.append([
-                str(date)[:10],
+                str(date)[:10] + (f" [{getattr(ca, 'time_scale', None)}]" if getattr(ca, 'time_scale', None) else ""),
                 f"{dist:.5f} AU" if dist is not None else "?",
                 f"{vel:.2f} km/s" if vel is not None else "?",
             ])

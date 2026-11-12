@@ -202,3 +202,5 @@ enhanced_neo_poll_*.json
 !tests/test_screening_numerics.py
 
 !tests/test_required_validation_gate.py
+
+!tests/test_cad_evidence_integrity.py

@@ -145,10 +145,11 @@ class ScreeningAnalysisService:
         extra = dict(additional_data or {})
         if neo.close_approaches:
             extra['close_approach_history'] = [
-                {'epoch': getattr(ca, 'epoch_jd_tdb', None), 'time_scale': None,
+                {'epoch': getattr(ca, 'epoch_jd_tdb', None), 'time_scale': ca.time_scale,
                  'catalogue_date': ca.close_approach_date.isoformat() if ca.close_approach_date else None,
                  'distance_au': ca.distance_au,
-                 'velocity_km_s': ca.relative_velocity_km_s, 'kind': 'predicted_encounter'}
+                 'velocity_km_s': ca.relative_velocity_km_s, 'kind': 'computed_encounter',
+                 'provenance': ca.evidence_metadata, 'body': ca.body}
                 for ca in neo.close_approaches]
         if neo.nongrav is not None:
             extra['non_gravitational_evidence'] = neo.nongrav.evidence_report()

@@ -256,7 +256,8 @@ class AutomaticReviewPipeline:
                             processing_time_seconds=(datetime.now() - start_time).total_seconds(),
                             success=True,
                             candidates=raw_objects[:1000],
-                            stage_metrics={'total_chunks': historical_result.total_chunks_processed}
+                            stage_metrics={'total_chunks': historical_result.total_chunks_processed,
+                        'source_coverage': getattr(historical_result, 'summary_stats', {})}
                         )
                         
                         # Stage 2: XVIII SWARM First-Stage Review
@@ -305,7 +306,8 @@ class AutomaticReviewPipeline:
                     processing_time_seconds=(datetime.now() - start_time).total_seconds(),
                     success=True,
                     candidates=raw_objects[:1000],
-                    stage_metrics={'total_chunks': historical_result.total_chunks_processed}
+                    stage_metrics={'total_chunks': historical_result.total_chunks_processed,
+                        'source_coverage': getattr(historical_result, 'summary_stats', {})}
                 )
                 
                 first_stage_result = await self._stage_first_review(raw_objects)
@@ -376,15 +378,15 @@ class AutomaticReviewPipeline:
     
     def _extract_raw_objects(self, historical_result: HistoricalPollingResult) -> List[Dict]:
         """Extract all raw NEO objects from historical polling results."""
-        raw_objects = []
-        
-        for chunk_result in historical_result.chunk_results:
-            if chunk_result.success and chunk_result.chunk_data:
-                raw_objects.extend(chunk_result.chunk_data)
-        
-        self.logger.info(f"Extracted {len(raw_objects)} raw objects from historical polling")
+        chunks = historical_result.chunk_results
+        successful = [chunk for chunk in chunks if chunk.success]
+        if chunks and not successful:
+            from ..utils.errors import DataSourceUnavailableError
+            raise DataSourceUnavailableError('All historical CAD chunks failed; not an empty successful survey')
+        raw_objects = HistoricalChunkedPoller._merge_chunks([chunk.chunk_data or [] for chunk in successful])
+        self.logger.info('Extracted %s distinct computed encounters', len(raw_objects))
         return raw_objects
-    
+
     def _compute_designation_frequencies(self, raw_objects: List[Dict]) -> Dict[str, int]:
         """Count how many times each designation appears across all chunks.
 
@@ -513,7 +515,7 @@ class AutomaticReviewPipeline:
             if self.xviii_swarm_scorer:
                 # Use the actual XVIII SWARM advanced scoring system
                 # Prefer top-level CAD fields; fall back to orbital element proxies
-                orbital_elements = neo_obj.get('orbital_elements', {})
+                orbital_elements = (neo_obj.get('orbital_elements') or {})
                 eccentricity = orbital_elements.get('eccentricity', 0.0)
                 inclination = orbital_elements.get('inclination', 0.0)
 
@@ -710,7 +712,7 @@ class AutomaticReviewPipeline:
                 }
 
             # Fallback: orbital elements only (no CAD data)
-            orbital_elements = neo_obj.get('orbital_elements', {})
+            orbital_elements = (neo_obj.get('orbital_elements') or {})
             eccentricity = orbital_elements.get('eccentricity', 0.0)
             inclination = orbital_elements.get('inclination', 0.0)
             orb_score = 0.0

@@ -292,6 +292,12 @@ class CloseApproach:
     infinity_velocity_km_s: Optional[float] = None  # km/s
     subpoint: Optional[tuple] = None  # (lat, lon) in degrees
     
+    epoch_jd_tdb: Optional[float] = None
+    time_scale: Optional[str] = None
+    native_calendar: Optional[str] = None
+    body: Optional[str] = None
+    evidence_metadata: Dict[str, Any] = field(default_factory=dict)
+
     def __post_init__(self):
         """Calculate derived values."""
         # Convert distance units if only one is provided
@@ -310,6 +316,11 @@ class CloseApproach:
             "distance_km": self.distance_km,
             "v_rel": self.relative_velocity_km_s,
             "v_inf": self.infinity_velocity_km_s,
+            "epoch_jd_tdb": self.epoch_jd_tdb,
+            "time_scale": self.time_scale,
+            "native_calendar": self.native_calendar,
+            "body": self.body,
+            "evidence_metadata": copy.deepcopy(self.evidence_metadata),
             "subpoint": self.subpoint
         }
     
@@ -340,7 +351,9 @@ class CloseApproach:
             distance_km=data.get("distance_km"),
             relative_velocity_km_s=data.get("v_rel"),
             infinity_velocity_km_s=data.get("v_inf"),
-            subpoint=data.get("subpoint")
+            subpoint=data.get("subpoint"), epoch_jd_tdb=data.get("epoch_jd_tdb"),
+            time_scale=data.get("time_scale"), native_calendar=data.get("native_calendar"), body=data.get("body"),
+            evidence_metadata=copy.deepcopy(data.get("evidence_metadata", {}))
         )
 
 @dataclass
@@ -437,13 +450,7 @@ class NEOData:
             "last_observation": self.last_observation.isoformat() if self.last_observation else None,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "physical_properties": {
-                "diameter_km":           self.physical_properties.diameter_km,
-                "albedo":                self.physical_properties.albedo,
-                "rotation_period_hours": self.physical_properties.rotation_period_hours,
-                "spectral_type":         self.physical_properties.spectral_type,
-                "absolute_magnitude_h":  self.physical_properties.absolute_magnitude_h,
-            } if self.physical_properties else None,
+            "physical_properties": copy.deepcopy(self.physical_properties.to_dict()) if self.physical_properties else None,
             "fetched_at": self.fetched_at.isoformat() if self.fetched_at else None,
             "nongrav": self.nongrav.to_dict() if self.nongrav else None,
         }
@@ -477,13 +484,7 @@ class NEOData:
         pp_data = data.get("physical_properties")
         physical_properties = None
         if pp_data:
-            physical_properties = PhysicalProperties(
-                diameter_km=pp_data.get("diameter_km"),
-                albedo=pp_data.get("albedo"),
-                rotation_period_hours=pp_data.get("rotation_period_hours"),
-                spectral_type=pp_data.get("spectral_type"),
-                absolute_magnitude_h=pp_data.get("absolute_magnitude_h"),
-            )
+            physical_properties = PhysicalProperties.from_dict(copy.deepcopy(pp_data))
 
         ng_data = data.get("nongrav")
         nongrav = None

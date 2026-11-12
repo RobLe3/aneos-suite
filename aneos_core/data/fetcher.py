@@ -160,8 +160,9 @@ class DataFetcher:
             approaches = self._fetch_close_approaches(designation)
             for approach in approaches:
                 neo_data.add_close_approach(approach)
-        except Exception:
-            pass
+            neo_data.evidence_metadata['close_approach_query'] = getattr(approaches, 'query_metadata', {'status': 'unverified_legacy_adapter'})
+        except Exception as exc:
+            neo_data.evidence_metadata['close_approach_query'] = {'status': 'unavailable', 'reason': str(exc)}
 
         return neo_data
 
@@ -212,75 +213,36 @@ class DataFetcher:
         return merged
 
     def _fetch_close_approaches(self, designation: str, date_min: str = "now") -> List:
-        """Fetch close approaches from SBDB CAD API for a single designation."""
+        """A bounded CAD query, with native TDB evidence and explicit source failure."""
         import requests
-        from datetime import datetime as _dt
-        from .models import CloseApproach
+        from .sources.cad import parse_cad_payload, close_approach_from_record, CloseApproachQuery
+        from .sources.base import _APPLICATION_HEADERS
+        query = {'des': designation, 'date-min': date_min, 'dist-max': '0.2',
+                 'body': 'Earth', 'limit': 10, 'fullname': 'true'}
         try:
-            resp = requests.get(
-                "https://ssd-api.jpl.nasa.gov/cad.api",
-                params={
-                    "des": designation,
-                    "date-min": date_min,
-                    "dist-max": "0.2",
-                    "limit": "10",
-                    "fullname": "true",
-                },
-                timeout=15,
-            )
-            if not resp.ok:
-                return []
-            data = resp.json()
-            approaches = []
-            for row in data.get("data", []):
-                # CAD API columns: des,orbit_id,jd,cd,dist,dist_min,dist_max,v_rel,v_inf,t_sigma_f,body
-                try:
-                    ca = CloseApproach(
-                        designation=designation,
-                        close_approach_date=_dt.strptime(row[3].strip(), "%Y-%b-%d %H:%M"),
-                        distance_au=float(row[4]),
-                        relative_velocity_km_s=float(row[7]) if row[7] else None,
-                    )
-                    approaches.append(ca)
-                except Exception:
-                    continue
-            return approaches
-        except Exception as e:
-            self.logger.debug(f"CAD API fetch failed for {designation}: {e}")
-            return []
+            response = requests.get('https://ssd-api.jpl.nasa.gov/cad.api', params=query,
+                                    headers=_APPLICATION_HEADERS, timeout=15)
+            response.raise_for_status()
+            parsed = parse_cad_payload(response.json(), query=query, require_complete=False,
+                retrieved_at=datetime.now(timezone.utc).isoformat())
+            return CloseApproachQuery([close_approach_from_record(r) for r in parsed['records']], parsed['metadata'])
+        except Exception as exc:
+            raise DataSourceUnavailableError(f'CAD query unavailable for {designation}: {exc}') from exc
 
-    def fetch_historical_approaches(
-        self, designation: str, years_back: int = 30
-    ) -> List:
-        """
-        Fetch historical close approaches for population pattern analysis.
-        NOT called in the standard detection path — used only by NetworkAnalysisSession.
-        Results are cached with a 7-day TTL.
-        """
-        from datetime import datetime as _dt, timedelta
+    def fetch_historical_approaches(self, designation: str, years_back: int = 30) -> List:
+        """Bounded historical CAD query, not a complete observation time series."""
+        from datetime import timedelta
         from .models import CloseApproach
-        cache_key = f"neo_cad_hist:{designation}:{years_back}"
-        cached = self.cache_manager.get(cache_key)
-        if cached:
-            result = []
-            for item in cached:
-                try:
-                    result.append(CloseApproach.from_dict(item))
-                except Exception:
-                    pass
-            return result
-
-        date_min = (
-            _dt.now(timezone.utc) - timedelta(days=years_back * 365)
-        ).strftime("%Y-%m-%d")
+        from .sources.cad import CloseApproachQuery
+        key = f'cad_v1_hist:{designation}:{years_back}'
+        cached = self.cache_manager.get(key)
+        if isinstance(cached, dict) and cached.get('schema_version') == 'cad-approaches-v1':
+            return CloseApproachQuery([CloseApproach.from_dict(r) for r in cached['approaches']], cached['query_metadata'])
+        date_min = (datetime.now(timezone.utc) - timedelta(days=years_back * 365)).strftime('%Y-%m-%d')
         approaches = self._fetch_close_approaches(designation, date_min=date_min)
-
-        # Cache with 7-day TTL (604800 seconds)
-        self.cache_manager.set(
-            cache_key,
-            [a.to_dict() for a in approaches],
-            ttl=604800,
-        )
+        self.cache_manager.set(key, {'schema_version': 'cad-approaches-v1',
+            'approaches': [ca.to_dict() for ca in approaches],
+            'query_metadata': approaches.query_metadata}, ttl=604800)
         return approaches
 
     def _fetch_from_source(self, source_name: str, source: DataSourceBase, designation: str) -> Optional[NEOData]:

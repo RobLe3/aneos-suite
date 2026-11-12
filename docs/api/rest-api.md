@@ -667,3 +667,13 @@ A2, nor omit A3 in favor of a scalar velocity/acceleration proxy.
 
 This does not fix the legacy score's calibration or establish artificial origin;
 those remain separate work in issues #6 and #8–#11.
+
+
+### CAD evidence correction (2026-11-12 review branch)
+
+Encounter evidence in screening snapshots preserves native TDB, body, provenance
+and query coverage; it is not raw astrometry or manoeuvre evidence. Supplemental
+history queries can be bounded/partial. Source failures are explicit and must not
+be read as empty successful surveys. See
+[CAD integrity scope](../engineering/cad-evidence-integrity.md). No new REST route
+or calibrated physical-origin capability is introduced.

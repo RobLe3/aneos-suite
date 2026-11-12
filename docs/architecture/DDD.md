@@ -1081,3 +1081,19 @@ independent evidence streams. A gate-positive synthetic fixture is engineering
 control evidence only. Legacy helper/direct-call science remains unverified and
 requires #23. Normal JSON report history protection is implemented; transactional
 jobs/restart recovery remain designed work under #15.
+
+## CAD intake correction — 2026-11-12 (ADR-067)
+
+A **computed encounter** is a catalogue prediction with object/body/time identity,
+not a raw observation, fitted orbit, discovery date or origin indication. The
+existing acquisition boundary owns CAD schema/units/native TDB/provenance. Orbit
+acquisition remains a separate whole-solution responsibility. The existing
+analysis service owns ranking; absence of orbit means abstention, not natural.
+
+Intake counts distinguish records, overlap-deduplicated encounters and unique
+designations. All records are retained across the historical→review boundary;
+only their review eligibility is filtered. Source coverage and execution status
+are independent of scientific validation status. New operational caches are
+versioned/checksummed; they are not authenticated scientific archives. Physical
+measurement source ingestion (#25), provider-wide scheduling (#16), restart-safe
+execution (#15) and calibrated observation-based inference remain unfinished.

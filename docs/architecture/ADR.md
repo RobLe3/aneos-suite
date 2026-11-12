@@ -2136,3 +2136,36 @@ context. Enhanced unavailable fallback no longer assumes success. JSON reports
 retain non-advancing outcomes; exclusive unique filenames preserve prior normal
 writes, but durable/crash-safe execution remains #15. Rich presentation accepts
 null inference. Tests and exact limits: `docs/engineering/required-validation-gate.md`.
+
+---
+
+## ADR-067: Preserve computed CAD encounters separately from fitted orbits
+
+**Date:** 2026-11-12
+**Status:** Implemented on review branch; scientific validation unavailable
+**Related:** ADR-064–066; issues #2, #22, #25, #16, #15, #17
+
+**Context:** Historical polling fabricated orbital/default data, guessed column
+positions, randomized screening and hid acquisition failures as empty surveys.
+Cache adapters lost physical fields and collapsed distinct encounters.
+
+**Decision:** Parse CAD1.5 by returned labels; retain native TDB, units, raw row,
+query/source metadata and explicit missingness. CAD is computed encounter evidence,
+not an orbit/observation source. Obtain separate orbit data through DataFetcher or
+abstain; never invent a historical discovery/observation arc. Reuse the canonical
+ranking service rather than another classifier. Preserve every encountered record
+and distinguish query failure, partial coverage, abstention and candidate status.
+
+Use encounter identity for overlap deduplication and preserve source versions.
+Version/checksum/expire new caches, keep legacy caches unmodified but untrusted,
+and preserve complete physical fields through model serialization. Propagate
+failure/coverage through workflow/reporting; exclusive normal report creation
+must not overwrite prior history. Defer optional Gaia service import until an
+explicit query so importing required validation cannot contact that service.
+
+**Evidence and limits:** Network-denied controls, fresh-process import and query
+positive controls, optional live KY26 contract, typed cache/source propagation,
+first-stage→required-gate integration and failure reporting are documented in
+`docs/engineering/cad-evidence-integrity.md`. No new bounded context/UI. No fitted
+likelihood, calibrated significance, source authentication, complete historical
+population, provider-wide scheduling or restart-safe job execution is established.

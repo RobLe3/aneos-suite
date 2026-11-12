@@ -94,3 +94,13 @@ explicit partial/outage/capacity results and canonical inconclusive science.
 It does not install calibrated or observation-fit models. See
 `required-validation-gate.md` for engineering positive-control scope and the
 legacy/direct-call limitations tracked in #23.
+
+
+The CAD integrity increment (ADR-067, stacked on #24) removes fabricated
+orbital/default encounter values and random poller scoring; distinguishes source
+outage/empty/partial data; preserves encounter identity, physical fields and native
+TDB provenance; and contains import-time Gaia network activity. See
+`cad-evidence-integrity.md` for exact evidence and remaining request-scope limits.
+New [#25](https://github.com/RobLe3/aneos-suite/issues/25) tracks physical source
+measurement uncertainties not yet consumed by typed SBDB adapters. Cache
+roundtrip preservation is implemented; that source-ingestion work is not.

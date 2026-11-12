@@ -18,7 +18,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Generator, Tuple, Union
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import json
 import time
@@ -58,6 +58,7 @@ class ChunkConfig:
     retry_attempts: int = 3  # Retry failed chunks
     rate_limit_delay: float = 1.0  # Delay between API calls
     enable_caching: bool = True  # Cache chunk results
+    cache_ttl_seconds: float = 86400
     
 @dataclass
 class ChunkResult:
@@ -71,6 +72,8 @@ class ChunkResult:
     success: bool
     error_message: Optional[str] = None
     chunk_data: Optional[List[Dict]] = None
+    schema_version: str = "cad-intake-v1"
+    intake_metrics: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
 class HistoricalPollingResult:
@@ -84,6 +87,12 @@ class HistoricalPollingResult:
     chunk_results: List[ChunkResult]
     summary_stats: Dict[str, Any]
     
+class _EncounterRecords(list):
+    def __init__(self, records, metadata):
+        super().__init__(records)
+        self.metadata = metadata
+
+
 class HistoricalChunkedPoller:
     """
     Chunked historical polling system for 200-year NEO data processing.
@@ -110,7 +119,9 @@ class HistoricalChunkedPoller:
         
         # Initialize polling components (will be set by caller)
         self.base_poller = None  # Enhanced NEO Poller instance
-        self.xviii_swarm_scorer = None  # Advanced scoring system
+        self.xviii_swarm_scorer = None  # Legacy injection retained; never selects a random model
+        self.data_fetcher = None
+        self._orbit_cache = {}
         
     def _ensure_directories(self):
         """Create necessary directories for caching and results."""
@@ -120,7 +131,7 @@ class HistoricalChunkedPoller:
         except Exception as e:
             self.logger.warning(f"Failed to create directories: {e}")
     
-    def set_components(self, base_poller=None, xviii_swarm_scorer=None):
+    def set_components(self, base_poller=None, xviii_swarm_scorer=None, data_fetcher=None):
         """
         Set external components needed for polling and scoring.
         
@@ -130,6 +141,7 @@ class HistoricalChunkedPoller:
         """
         self.base_poller = base_poller
         self.xviii_swarm_scorer = xviii_swarm_scorer
+        self.data_fetcher = data_fetcher
         
     def generate_time_chunks(
         self, 
@@ -146,6 +158,8 @@ class HistoricalChunkedPoller:
         Yields:
             Tuples of (start_date, end_date) for each chunk
         """
+        if type(years_back) is not int or years_back <= 0:
+            raise ValueError('Historical years_back must be a positive integer')
         if end_date is None:
             end_date = datetime.now()
         
@@ -208,507 +222,247 @@ class HistoricalChunkedPoller:
             'estimated_processing_time_minutes': estimated_objects / 1000  # Rough estimate
         }
     
-    async def process_single_chunk(
-        self, 
-        start_date: datetime, 
-        end_date: datetime,
-        chunk_id: int
-    ) -> ChunkResult:
-        """
-        Process a single time chunk for NEO data.
-        
-        Args:
-            start_date: Chunk start date
-            end_date: Chunk end date  
-            chunk_id: Unique identifier for this chunk
-            
-        Returns:
-            ChunkResult with processing results
-        """
-        start_time = time.time()
-        
+    async def process_single_chunk(self, start_date, end_date, chunk_id):
+        """Acquire all encounters; ranking abstention never discards intake evidence."""
+        start = time.time()
+        key = f"cad_v1_chunk_{chunk_id}_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}_limit{self.config.max_objects_per_chunk}"
         try:
-            self.logger.info(
-                f"Processing chunk {chunk_id}: {start_date.strftime('%Y-%m-%d')} to "
-                f"{end_date.strftime('%Y-%m-%d')}"
-            )
-            
-            # Check cache first
-            cache_key = f"chunk_{chunk_id}_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}"
-            cached_result = self._load_cached_chunk(cache_key)
-            
-            if cached_result and self.config.enable_caching:
-                self.logger.info(f"Using cached result for chunk {chunk_id}")
-                return cached_result
-            
-            # Fetch NEO data for this time period
-            if not self.base_poller:
-                raise ValueError("Base poller not configured - call set_components() first")
-            
-            # Calculate time period string for existing poller
-            years_span = (end_date - start_date).days / 365.25
-            if years_span >= 10:
-                period_str = f"{int(years_span)}y"
-            elif years_span >= 1:
-                period_str = f"{int(years_span * 12)}m"  
-            else:
-                period_str = f"{int((end_date - start_date).days)}d"
-            
-            # Fetch raw NEO data
-            raw_data = await self._fetch_chunk_data(start_date, end_date)
-            
-            if not raw_data:
-                return ChunkResult(
-                    start_date=start_date,
-                    end_date=end_date,
-                    object_count=0,
-                    processed_count=0,
-                    candidate_count=0,
-                    processing_time_ms=(time.time() - start_time) * 1000,
-                    success=True,
-                    chunk_data=[]
-                )
-            
-            # Process objects in batches to manage memory
-            processed_objects = []
-            candidate_objects = []
-            
-            for i in range(0, len(raw_data), self.config.batch_size):
-                batch = raw_data[i:i + self.config.batch_size]
-                batch_results = await self._process_object_batch(batch)
-                
-                processed_objects.extend(batch_results['processed'])
-                candidate_objects.extend(batch_results['candidates'])
-                
-                # Rate limiting
-                await asyncio.sleep(self.config.rate_limit_delay)
-            
-            # Create result
-            result = ChunkResult(
-                start_date=start_date,
-                end_date=end_date,
-                object_count=len(raw_data),
-                processed_count=len(processed_objects),
-                candidate_count=len(candidate_objects),
-                processing_time_ms=(time.time() - start_time) * 1000,
-                success=True,
-                chunk_data=candidate_objects  # Only store candidates to save memory
-            )
-            
-            # Cache the result
             if self.config.enable_caching:
-                self._save_cached_chunk(cache_key, result)
-            
+                cached = self._load_cached_chunk(key)
+                if cached is not None:
+                    return cached
+            raw = await self._fetch_chunk_data(start_date, end_date)
+            processed, candidates = [], []
+            for index in range(0, len(raw), self.config.batch_size):
+                batch = await self._process_object_batch(raw[index:index + self.config.batch_size])
+                processed.extend(batch['processed'])
+                candidates.extend(batch['candidates'])
+            statuses = [obj.get('orbit_acquisition', {}).get('status') for obj in processed]
+            metrics = {
+                'acquisition_status': getattr(raw, 'metadata', {}).get('completeness_status', 'unverified'),
+                'source_metadata': getattr(raw, 'metadata', {}),
+                'encounter_count': len(raw),
+                'scored_count': sum(obj['screening_assessment']['screening_score'] is not None for obj in processed),
+                'abstention_count': sum(obj['screening_assessment']['screening_score'] is None for obj in processed),
+                'enrichment_errors': statuses.count('unavailable'),
+                'screening_status': 'partial' if 'unavailable' in statuses else 'executed',
+                'count_unit': 'computed_encounters_not_unique_objects_or_observations',
+            }
+            result = ChunkResult(start_date, end_date, len(raw), len(processed), len(candidates),
+                (time.time() - start) * 1000, True, chunk_data=processed, intake_metrics=metrics)
+            if self.config.enable_caching and not metrics['enrichment_errors']:
+                self._save_cached_chunk(key, result)
             return result
-            
-        except Exception as e:
-            self.logger.error(f"Failed to process chunk {chunk_id}: {e}")
-            return ChunkResult(
-                start_date=start_date,
-                end_date=end_date,
-                object_count=0,
-                processed_count=0,
-                candidate_count=0,
-                processing_time_ms=(time.time() - start_time) * 1000,
-                success=False,
-                error_message=str(e)
-            )
-    
-    async def _fetch_chunk_data(self, start_date: datetime, end_date: datetime) -> List[Dict]:
-        """
-        Fetch raw NEO data for a time chunk using real API sources.
-        """
-        try:
-            if self.base_poller:
-                # Use the enhanced NEO poller to fetch real data
-                years_span = (end_date - start_date).days / 365.25
-                self.logger.info(f"Fetching real NEO data for {years_span:.1f} years ({start_date.year}-{end_date.year})")
-                
-                # Call the enhanced poller's main polling method
-                poller_result = await self._call_enhanced_poller(start_date, end_date)
-                
-                if poller_result and 'neos' in poller_result:
-                    neo_list = poller_result['neos']
-                    self.logger.info(f"Fetched {len(neo_list)} NEO objects from enhanced poller")
-                    return neo_list
-                else:
-                    self.logger.warning("Enhanced poller returned no data")
-                    return []
-            
-        except Exception as e:
-            self.logger.error(f"Failed to fetch chunk data: {e}")
-            return []
-    
-    async def _call_enhanced_poller(self, start_date: datetime, end_date: datetime) -> Dict:
-        """Call the enhanced NEO poller for real data."""
-        try:
-            # Convert dates to string format expected by NEOPoller
-            start_date_str = start_date.strftime("%Y-%m-%d")
-            end_date_str = end_date.strftime("%Y-%m-%d")
-            
-            self.logger.info(f"Calling enhanced poller with dates: {start_date_str} to {end_date_str}")
-            
-            # Use direct CAD data fetching with explicit date ranges
-            # This ensures we get the exact historical time periods we want
-            # Accept either method name — EnhancedNEOPoller exposes fetch_cad_data_with_cache
-            _cad_method = (
-                getattr(self.base_poller, 'fetch_cad_data', None)
-                or getattr(self.base_poller, 'fetch_cad_data_with_cache', None)
-            )
-            if _cad_method:
-                # Calculate and display the actual time span for this chunk
-                years_span = (end_date - start_date).days / 365.25
+        except Exception as exc:
+            self.logger.warning('CAD chunk unavailable: %s', exc)
+            return ChunkResult(start_date, end_date, 0, 0, 0, (time.time() - start) * 1000,
+                False, error_message=f'{type(exc).__name__}: {exc}', chunk_data=[],
+                intake_metrics={'acquisition_status': 'unavailable', 'reason': str(exc)})
 
-                if years_span >= 1:
-                    period_display = f"{years_span:.1f} Years" if years_span != int(years_span) else f"{int(years_span)} Years"
-                else:
-                    days_span = (end_date - start_date).days
-                    period_display = f"{days_span} Days"
+    async def _fetch_chunk_data(self, start_date, end_date):
+        if self.base_poller is None:
+            return await self._fetch_nasa_cad_data(start_date, end_date)
+        result = await self._call_enhanced_poller(start_date, end_date)
+        return _EncounterRecords(result['neos'], result['metadata'])
 
-                # Display polling information in the same format as the regular poller
-                if self.console:
-                    self.console.print(f"\n🔍 Polling NASA Close Approach Data")
-                    self.console.print(f"📅 Period: {start_date_str} to {end_date_str} ({period_display})")
-                    self.console.print(f"🎯 Max results: 5000")
-                else:
-                    print(f"\n🔍 Polling NASA Close Approach Data")
-                    print(f"📅 Period: {start_date_str} to {end_date_str} ({period_display})")
-                    print(f"🎯 Max results: 5000")
+    async def _call_enhanced_poller(self, start_date, end_date):
+        """Validate the base adapter response, including zero results and truncation."""
+        from ..data.sources.cad import parse_cad_payload
+        method = (getattr(self.base_poller, 'fetch_cad_data', None)
+                  or getattr(self.base_poller, 'fetch_cad_data_with_cache', None))
+        if method is None:
+            raise ValueError('Configured CAD adapter has no supported fetch method')
+        limit = self.config.max_objects_per_chunk
+        payload = await asyncio.to_thread(method, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'), limit)
+        query = {'date-min': start_date.strftime('%Y-%m-%d'), 'date-max': end_date.strftime('%Y-%m-%d'),
+                 'limit': limit, 'body': 'Earth', 'dist-max': '.05', 'scope_basis': 'base_adapter_CAD_default_filters'}
+        parsed = parse_cad_payload(payload, query=query)
+        return {'neos': parsed['records'], 'metadata': parsed['metadata']}
 
-                # Also log for debugging
-                self.logger.info(f"Polling CAD data: {start_date_str} to {end_date_str} ({period_display})")
+    def _convert_cad_to_neo_format(self, row, fields, discovery_date):
+        """Compatibility adapter: query start is not an object discovery date."""
+        from ..data.sources.cad import parse_cad_row
+        return parse_cad_row(row, fields, {'schema_status': 'unverified_row_only'})
 
-                cad_data = await asyncio.to_thread(
-                    _cad_method,
-                    start_date_str,
-                    end_date_str,
-                    5000  # Limit per chunk
-                )
-                
-                if cad_data and 'data' in cad_data:
-                    # Display results in the same format as the regular poller
-                    if self.console:
-                        self.console.print(f"✅ Found {len(cad_data['data'])} NEO close approaches")
-                    else:
-                        print(f"✅ Found {len(cad_data['data'])} NEO close approaches")
-                    
-                    # Convert CAD data to NEO format
-                    neo_list = []
-                    fields = cad_data.get('fields', [])
-                    
-                    # Convert data without nested progress bars to avoid Rich conflicts
-                    if self.console:
-                        self.console.print("  Analyzing NEOs...", end="")
-                    else:
-                        print("  Analyzing NEOs...", end="")
-                    
-                    # Process all rows without progress bar to avoid conflicts
-                    for row in cad_data['data']:
-                        try:
-                            neo_obj = self._convert_cad_to_neo_format(row, fields, start_date)
-                            if neo_obj:
-                                neo_list.append(neo_obj)
-                        except Exception as e:
-                            self.logger.debug(f"Failed to convert CAD row: {e}")
-                            continue
-                    
-                    # Complete the line
-                    if self.console:
-                        self.console.print(f" ✅ Converted {len(neo_list)} objects")
-                    else:
-                        print(f" ✅ Converted {len(neo_list)} objects")
-                    
-                    return {'neos': neo_list}
-                else:
-                    warning_msg = f"⚠️ No data found for period {start_date_str} to {end_date_str}"
-                    if self.console:
-                        self.console.print(warning_msg)
-                    else:
-                        print(warning_msg)
-                    return {'neos': []}
-            else:
-                self.logger.warning("Enhanced poller doesn't have expected methods")
-                return {'neos': []}
-                
-        except Exception as e:
-            self.logger.error(f"Enhanced poller call failed: {e}")
-            # Return empty neos list instead of empty dict to maintain interface
-            return {'neos': []}
-    
-    def _convert_cad_to_neo_format(self, row: List, fields: List[str], discovery_date: datetime) -> Optional[Dict]:
-        """Convert NASA CAD data row to NEO format."""
-        try:
-            # NASA CAD fields typically: des, orbit_id, jd, cd, dist, dist_min, dist_max, v_rel, v_inf, t_sigma_f, h
-            designation = row[0] if len(row) > 0 else f'NEO_{id(row)}'
-            
-            # Parse close approach date
-            if len(row) > 3 and row[3]:
-                try:
-                    # NASA CAD close approach date format
-                    ca_date_str = str(row[3])
-                    ca_date = datetime.strptime(ca_date_str, "%Y-%b-%d %H:%M") if ":" in ca_date_str else discovery_date
-                except (ValueError, IndexError):
-                    ca_date = discovery_date
-            else:
-                ca_date = discovery_date
-            
-            dist_au = float(row[4]) if len(row) > 4 and row[4] else 0.5
-            v_rel_kms = float(row[7]) if len(row) > 7 and row[7] else 10.0
+    async def _fetch_nasa_cad_data(self, start_date, end_date):
+        from ..data.sources.cad import parse_cad_payload
+        from ..data.sources.base import _APPLICATION_HEADERS
+        import requests
+        query = {'date-min': start_date.strftime('%Y-%m-%d'), 'date-max': end_date.strftime('%Y-%m-%d'),
+                 'body': 'Earth', 'dist-max': '.05', 'diameter': 'true', 'fullname': 'true',
+                 'limit': self.config.max_objects_per_chunk}
+        def request():
+            response = requests.get('https://ssd-api.jpl.nasa.gov/cad.api', params=query,
+                                    headers=_APPLICATION_HEADERS, timeout=30)
+            response.raise_for_status()
+            return response.json()
+        payload = await asyncio.to_thread(request)
+        from datetime import timezone
+        parsed = parse_cad_payload(payload, query=query, retrieved_at=datetime.now(timezone.utc).isoformat())
+        return _EncounterRecords(parsed['records'], parsed['metadata'])
 
-            neo_obj = {
-                'designation': designation,
-                'discovery_date': discovery_date,
-                # Top-level fields consumed directly by XVIII SWARM encounter_geometry scorer
-                'miss_distance_au': dist_au,
-                'relative_velocity_km_s': v_rel_kms,
-                'orbital_elements': {
-                    'eccentricity': 0.1,  # Placeholder — no orbital elements in CAD data
-                    'inclination': 10.0,
-                    'semi_major_axis': 1.0
-                },
-                'close_approach': {
-                    'date': ca_date.isoformat(),
-                    'distance': dist_au,
-                    'velocity': v_rel_kms,
-                },
-                'data_source': 'NASA_CAD',
-                'raw_cad_data': row,
-                'h_magnitude': float(row[10]) if len(row) > 10 and row[10] else None
-            }
-            
-            return neo_obj
-            
-        except Exception as e:
-            self.logger.warning(f"Failed to convert CAD row to NEO format: {e}")
-            return None
-    
-    async def _fetch_nasa_cad_data(self, start_date: datetime, end_date: datetime) -> List[Dict]:
-        """Direct NASA CAD API fetch as fallback."""
-        try:
-            import requests
-            import asyncio
-            
-            # NASA CAD API endpoint
-            url = "https://ssd-api.jpl.nasa.gov/cad.api"
-            
-            # Format dates for NASA API
-            date_min = start_date.strftime("%Y-%m-%d")
-            date_max = end_date.strftime("%Y-%m-%d")
-            
-            params = {
-                'date-min': date_min,
-                'date-max': date_max,
-                'diameter': '1',  # Only objects with diameter data
-                'fullname': 'true'
-            }
-            
-            self.logger.info(f"Fetching NASA CAD data from {date_min} to {date_max}")
-            
-            # Make async request
-            def make_request():
-                response = requests.get(url, params=params, timeout=30)
-                response.raise_for_status()
-                return response.json()
-            
-            data = await asyncio.to_thread(make_request)
-            
-            if 'data' in data and data['data']:
-                # Convert NASA CAD format to our format
-                neo_list = []
-                fields = data.get('fields', [])
-                
-                for row in data['data']:
-                    try:
-                        # Create NEO object from NASA CAD data
-                        # Parse NASA date format: "2025-Jul-09 18:22"
-                        discovery_date = start_date
-                        if len(row) > 3 and row[3]:
-                            date_str = str(row[3])
-                            try:
-                                # Try NASA format: "2025-Jul-09 18:22"
-                                discovery_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M")
-                            except ValueError:
-                                try:
-                                    # Fallback to simple date format
-                                    discovery_date = datetime.strptime(date_str, "%Y-%m-%d")
-                                except ValueError:
-                                    # Use start_date as fallback
-                                    self.logger.debug(f"Could not parse date '{date_str}', using start_date")
-                                    discovery_date = start_date
-                        
-                        neo_obj = {
-                            'designation': row[0] if len(row) > 0 else f'NEO_{len(neo_list)}',
-                            'discovery_date': discovery_date,
-                            'orbital_elements': {
-                                'eccentricity': float(row[7]) if len(row) > 7 and row[7] else 0.1,
-                                'inclination': float(row[8]) if len(row) > 8 and row[8] else 10,
-                                'semi_major_axis': float(row[6]) if len(row) > 6 and row[6] else 1.0
-                            },
-                            'close_approach': {
-                                'date': row[3] if len(row) > 3 else start_date.isoformat(),
-                                'distance': float(row[4]) if len(row) > 4 and row[4] else 1.0,
-                                'velocity': float(row[5]) if len(row) > 5 and row[5] else 10.0
-                            },
-                            'source': 'NASA_CAD'
-                        }
-                        neo_list.append(neo_obj)
-                    except (ValueError, IndexError) as e:
-                        self.logger.warning(f"Failed to parse NEO data row: {e}")
-                        continue
-                
-                self.logger.info(f"Successfully fetched {len(neo_list)} real NEO objects from NASA CAD")
-                return neo_list
-            else:
-                self.logger.warning("NASA CAD API returned no data")
-                return []
-                
-        except Exception as e:
-            self.logger.error(f"NASA CAD API fetch failed: {e}")
-            return []
-    
-    async def _process_object_batch(self, batch: List[Dict]) -> Dict[str, List]:
-        """
-        Process a batch of NEO objects with XVIII SWARM first-stage review.
-        
-        Args:
-            batch: List of NEO objects to process
-            
-        Returns:
-            Dictionary with processed and candidate objects
-        """
-        processed = []
-        candidates = []
-        
-        for neo_obj in batch:
+    @staticmethod
+    def _record_to_neo(neo_obj):
+        from ..data.models import NEOData, PhysicalProperties
+        from ..data.sources.cad import close_approach_from_record
+        from copy import deepcopy
+        neo = deepcopy(neo_obj['neo_data']) if isinstance(neo_obj.get('neo_data'), NEOData) else NEOData.from_dict(neo_obj)
+        if neo.physical_properties is None and any(neo_obj.get(k) is not None for k in ('diameter_km', 'absolute_magnitude_h')):
+            neo.physical_properties = PhysicalProperties(diameter_km=neo_obj.get('diameter_km'),
+                diameter_uncertainty=neo_obj.get('diameter_uncertainty'), absolute_magnitude_h=neo_obj.get('absolute_magnitude_h'))
+        if neo_obj.get('cad_evidence'):
+            approach = close_approach_from_record(neo_obj)
+            if not any(ca.epoch_jd_tdb == approach.epoch_jd_tdb and ca.orbit_id == approach.orbit_id
+                       and ca.native_calendar == approach.native_calendar and ca.body == approach.body for ca in neo.close_approaches):
+                neo.add_close_approach(approach)
+            neo.evidence_metadata.setdefault('cad_intake', {})[neo_obj['encounter_id']] = neo_obj['cad_evidence']
+        return neo
+
+    async def _enrich_orbit(self, neo_obj):
+        from ..data.models import NEOData
+        from copy import deepcopy
+        neo = self._record_to_neo(neo_obj)
+        if neo.orbital_elements is not None:
+            neo_obj['orbit_acquisition'] = {'status': 'provided', 'basis': 'provided_catalogue_input_not_independent_validation'}
+        else:
             try:
-                # Apply XVIII SWARM first-stage review
-                if self.xviii_swarm_scorer:
-                    # This would use the actual XVIII SWARM scoring
-                    score = await self._apply_xviii_swarm_first_stage(neo_obj)
-                    
-                    # Add scoring results to object
-                    neo_obj['xviii_swarm_score'] = score
-                    neo_obj['processed_timestamp'] = datetime.now().isoformat()
-                    
-                    processed.append(neo_obj)
-                    
-                    # Flag as candidate if score is above threshold
-                    if score.get('overall_score', 0) > 0.3:  # First-stage threshold
-                        candidates.append(neo_obj)
-                else:
-                    # Fallback: simple heuristic screening
-                    if self._simple_artificial_screening(neo_obj):
-                        candidates.append(neo_obj)
-                    processed.append(neo_obj)
-                    
-            except Exception as e:
-                self.logger.warning(f"Failed to process object {neo_obj.get('designation', 'unknown')}: {e}")
-                continue
-        
+                if self.data_fetcher is None:
+                    from ..data.fetcher import DataFetcher
+                    self.data_fetcher = DataFetcher()
+                if getattr(self, '_enrichment_provider_id', None) != id(self.data_fetcher):
+                    self._enrichment_provider_id = id(self.data_fetcher)
+                    self._orbit_cache, self._orbit_failures = {}, {}
+                des = neo_obj['designation']
+                failure = self._orbit_failures.get(des)
+                if failure and time.monotonic() < failure['retry_after']:
+                    raise RuntimeError(failure['reason'])
+                cached = self._orbit_cache.get(des)
+                if cached and time.monotonic() - cached[0] > min(self.config.cache_ttl_seconds, 3600):
+                    cached = None
+                if cached is None:
+                    try:
+                        value = await asyncio.to_thread(self.data_fetcher.fetch_neo_data, des)
+                        if not isinstance(value, NEOData) or value.designation != des:
+                            raise ValueError('Orbit acquisition returned an invalid or different object')
+                    except Exception as exc:
+                        self._orbit_failures[des] = {'reason': str(exc), 'retry_after': time.monotonic() + max(30, self.config.rate_limit_delay)}
+                        raise
+                    self._orbit_cache[des] = (time.monotonic(), value)
+                    await asyncio.sleep(self.config.rate_limit_delay)
+                acquired = deepcopy(self._orbit_cache[des][1])
+                if not isinstance(acquired, NEOData) or acquired.designation != des:
+                    raise ValueError('Orbit acquisition returned an invalid or different object')
+                neo_obj['neo_data'] = acquired
+                neo = self._record_to_neo(neo_obj)
+                neo_obj['orbit_acquisition'] = {'status': 'available' if neo.orbital_elements else 'not_available',
+                    'basis': 'separate_catalogue_orbit_solution'}
+            except Exception as exc:
+                neo_obj['orbit_acquisition'] = {'status': 'unavailable', 'reason': f'{type(exc).__name__}: {exc}'}
+        neo_obj['neo_data'] = neo
+        neo_obj['orbital_elements'] = neo.orbital_elements.to_dict() if neo.orbital_elements else None
+        return neo
+
+    async def _process_object_batch(self, batch):
+        from ..analysis.screening import ScreeningAnalysisService
+        processed, candidates = [], []
+        for item in batch:
+            neo = await self._enrich_orbit(item)
+            assessment = ScreeningAnalysisService().analyze_neo(neo)
+            payload = assessment.to_payload()
+            item['screening_assessment'] = payload
+            item['xviii_swarm_score'] = {**payload, 'overall_score': payload['screening_score'],
+                'processing_level': 'uncalibrated_canonical_screening'}
+            processed.append(item)
+            if assessment.candidate:
+                candidates.append(item)
         return {'processed': processed, 'candidates': candidates}
-    
-    async def _apply_xviii_swarm_first_stage(self, neo_obj: Dict) -> Dict:
-        """
-        Apply XVIII SWARM first-stage review to a NEO object.
-        
-        This is a simplified version optimized for high-throughput screening.
-        """
-        try:
-            # Mock XVIII SWARM first-stage scoring
-            # In real implementation, this would use the actual advanced scorer
-            
-            orbital_elements = neo_obj.get('orbital_elements', {})
-            eccentricity = orbital_elements.get('eccentricity', 0)
-            inclination = orbital_elements.get('inclination', 0)
-            
-            # Simple first-stage scoring based on suspicious orbital characteristics
-            score = 0.0
-            
-            # High eccentricity suggests possible artificial origin
-            if eccentricity > 0.8:
-                score += 0.4
-            elif eccentricity > 0.5:
-                score += 0.2
-                
-            # Unusual inclination patterns
-            if inclination > 150 or inclination < 30:
-                score += 0.3
-                
-            # Add some randomness for testing
-            import random
-            score += random.uniform(0, 0.3)
-            
-            return {
-                'overall_score': min(score, 1.0),
-                'first_stage_flags': [],
-                'confidence': 0.7,  # First stage has lower confidence
-                'processing_level': 'first_stage'
-            }
-            
-        except Exception as e:
-            self.logger.error(f"XVIII SWARM first-stage failed: {e}")
-            return {'overall_score': 0.0, 'error': str(e)}
-    
-    def _simple_artificial_screening(self, neo_obj: Dict) -> bool:
-        """
-        Simple heuristic screening for potentially artificial objects.
-        
-        Fallback method when XVIII SWARM is not available.
-        """
-        try:
-            orbital_elements = neo_obj.get('orbital_elements', {})
 
-            eccentricity = orbital_elements.get('eccentricity', 0)
-            inclination = orbital_elements.get('inclination', 0)
-            semi_major_axis = orbital_elements.get('semi_major_axis', 0)
+    async def _apply_xviii_swarm_first_stage(self, neo_obj):
+        """Legacy function name; deterministic canonical rank, never random scoring."""
+        from ..analysis.screening import ScreeningAnalysisService
+        payload = ScreeningAnalysisService().analyze_neo(self._record_to_neo(neo_obj)).to_payload()
+        return {**payload, 'overall_score': payload['screening_score'],
+                'processing_level': 'uncalibrated_canonical_screening'}
 
-            # Skip objects with placeholder orbital elements — no real signal
-            if eccentricity == 0.1 and inclination == 10.0 and semi_major_axis == 1.0:
-                return False
+    def _simple_artificial_screening(self, neo_obj):
+        """Compatibility candidate flag, not an artificial-origin classification."""
+        from ..analysis.screening import ScreeningAnalysisService
+        return ScreeningAnalysisService().analyze_neo(self._record_to_neo(neo_obj)).candidate
 
-            # Flag objects with very high eccentricity or unusual inclination
-            if eccentricity > 0.9 or inclination > 160 or inclination < 20:
-                return True
+    @staticmethod
+    def _cache_policy_id():
+        from ..analysis.screening import ScreeningAnalysisService
+        return ScreeningAnalysisService().analyze_raw('CACHE_POLICY', {}).policy_id
 
-            return False
-            
-        except Exception:
-            return False
-    
-    def _load_cached_chunk(self, cache_key: str) -> Optional[ChunkResult]:
-        """Load cached chunk result."""
-        try:
-            cache_file = self.cache_dir / f"{cache_key}.json"
-            if cache_file.exists():
-                with open(cache_file, 'r') as f:
-                    data = json.load(f)
-                    # Convert back to ChunkResult
-                    return ChunkResult(**data)
-        except Exception as e:
-            self.logger.warning(f"Failed to load cached chunk {cache_key}: {e}")
+    def _load_cached_chunk(self, cache_key):
+        from ..data.models import NEOData
+        from datetime import timezone
+        paths = list(self.cache_dir.glob(f'{cache_key}_*.json'))
+        exact = self.cache_dir / f'{cache_key}.json'
+        if exact.exists():
+            paths.append(exact)
+        for path in sorted(paths, reverse=True):
+            try:
+                data = json.loads(path.read_text())
+                from ..data.sources.cad import _hash
+                checksum = data.pop('content_sha256', None)
+                if checksum != _hash(data):
+                    continue
+                if data.get('schema_version') != 'cad-intake-v1' or data.get('cache_policy_id') != self._cache_policy_id():
+                    continue  # Historical legacy cache is preserved, not silently trusted.
+                stamp = datetime.fromisoformat(data.pop('cached_at'))
+                age = (datetime.now(timezone.utc) - stamp).total_seconds()
+                if age < 0 or age > self.config.cache_ttl_seconds:
+                    continue
+                data.pop('cache_policy_id')
+                for key in ('start_date', 'end_date'):
+                    data[key] = datetime.fromisoformat(data[key])
+                for record in data.get('chunk_data', []):
+                    if isinstance(record.get('neo_data'), dict):
+                        record['neo_data'] = NEOData.from_dict(record['neo_data'])
+                return ChunkResult(**data)
+            except Exception as exc:
+                self.logger.warning('Unusable CAD cache %s: %s', path.name, exc)
         return None
-    
-    def _save_cached_chunk(self, cache_key: str, result: ChunkResult):
-        """Save chunk result to cache."""
+
+    def _save_cached_chunk(self, cache_key, result):
+        from dataclasses import asdict
+        from datetime import timezone
+        from uuid import uuid4
+        from ..data.models import NEOData
+        from copy import deepcopy
         try:
-            cache_file = self.cache_dir / f"{cache_key}.json"
-            with open(cache_file, 'w') as f:
-                # Convert ChunkResult to dict for JSON serialization
-                data = {
-                    'start_date': result.start_date.isoformat(),
-                    'end_date': result.end_date.isoformat(),
-                    'object_count': result.object_count,
-                    'processed_count': result.processed_count,
-                    'candidate_count': result.candidate_count,
-                    'processing_time_ms': result.processing_time_ms,
-                    'success': result.success,
-                    'error_message': result.error_message,
-                    'chunk_data': result.chunk_data
-                }
-                json.dump(data, f, indent=2)
-        except Exception as e:
-            self.logger.warning(f"Failed to save cached chunk {cache_key}: {e}")
-    
+            data = asdict(result)
+            data['start_date'], data['end_date'] = result.start_date.isoformat(), result.end_date.isoformat()
+            data['chunk_data'] = deepcopy(result.chunk_data)
+            for record in data['chunk_data'] or []:
+                neo = record.get('neo_data')
+                if isinstance(neo, NEOData):
+                    record['neo_data'] = neo.to_dict()
+                    if neo.physical_properties:
+                        record['neo_data']['physical_properties'] = neo.physical_properties.to_dict()
+            data.update(cache_policy_id=self._cache_policy_id(), cached_at=datetime.now(timezone.utc).isoformat())
+            from ..data.sources.cad import _hash
+            data['content_sha256'] = _hash(data)
+            serialized = json.dumps(data, indent=2, allow_nan=False)
+            path = self.cache_dir / f"{cache_key}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}_{uuid4().hex[:8]}.json"
+            with path.open('x') as handle:
+                handle.write(serialized)
+        except Exception as exc:
+            self.logger.warning('Could not cache CAD intake: %s', exc)
+
+    async def _process_chunk_with_retries(self, start_date, end_date, chunk_id):
+        attempts = self.config.retry_attempts
+        if type(attempts) is not int or attempts < 1:
+            raise ValueError('CAD retry attempts must be a positive integer')
+        for attempt in range(attempts):
+            result = await self.process_single_chunk(start_date, end_date, chunk_id)
+            if result.success:
+                return result
+            if attempt + 1 < attempts:
+                await asyncio.sleep(max(1., self.config.rate_limit_delay) * 2 ** attempt)
+        return result
+
     async def poll_historical_data(
         self, 
         years_back: int = 200,
@@ -759,27 +513,8 @@ class HistoricalChunkedPoller:
                     for i, (start_date, end_date) in enumerate(chunks):
                         progress.update(task, chunk_info=f"Chunk {i+1}/{total_chunks}: {start_date.year}-{end_date.year}", status="Processing...")
                         
-                        # Process chunk with retry logic
-                        for attempt in range(self.config.retry_attempts):
-                            try:
-                                result = await self.process_single_chunk(start_date, end_date, i)
-                                if result.success:
-                                    break
-                            except Exception as e:
-                                self.logger.warning(f"Chunk {i} attempt {attempt+1} failed: {e}")
-                                if attempt == self.config.retry_attempts - 1:
-                                    # Create failed result
-                                    result = ChunkResult(
-                                        start_date=start_date,
-                                        end_date=end_date,
-                                        object_count=0,
-                                        processed_count=0,
-                                        candidate_count=0,
-                                        processing_time_ms=0,
-                                        success=False,
-                                        error_message=f"Failed after {self.config.retry_attempts} attempts"
-                                    )
-                        
+                        result = await self._process_chunk_with_retries(start_date, end_date, i)
+
                         chunk_results.append(result)
                         
                         if result.success:
@@ -799,7 +534,7 @@ class HistoricalChunkedPoller:
             for i, (start_date, end_date) in enumerate(chunks):
                 print(f"Processing chunk {i+1}/{total_chunks}: {start_date.year}-{end_date.year}")
                 
-                result = await self.process_single_chunk(start_date, end_date, i)
+                result = await self._process_chunk_with_retries(start_date, end_date, i)
                 chunk_results.append(result)
                 
                 if result.success:
@@ -813,7 +548,13 @@ class HistoricalChunkedPoller:
         failed_chunks = total_chunks - successful_chunks
         total_processing_time = sum(r.processing_time_ms for r in chunk_results) / 1000  # Convert to seconds
         
+        distinct = self._merge_chunks([r.chunk_data or [] for r in chunk_results if r.success])
         summary_stats = {
+            'count_unit': 'computed_encounter_records_before_overlap_dedup',
+            'distinct_encounters': len(distinct),
+            'unique_designations': len({r.get('designation') for r in distinct}),
+            'scored_distinct_encounters': sum(r.get('screening_assessment', {}).get('screening_score') is not None for r in distinct),
+            'source_coverage_status': 'complete' if failed_chunks == 0 else 'partial' if successful_chunks else 'unavailable',
             'successful_chunks': successful_chunks,
             'failed_chunks': failed_chunks,
             'success_rate': successful_chunks / total_chunks if total_chunks > 0 else 0,
@@ -843,30 +584,31 @@ class HistoricalChunkedPoller:
         
         return result
     
-    def _merge_chunks(self, chunks: list) -> list:
-        """Merge objects from multiple chunks, deduplicating by designation.
-
-        When the same object appears in two chunks (e.g. at a boundary), the
-        entry with more non-None fields is retained.
-        """
-        seen: Dict[str, Dict] = {}
+    @staticmethod
+    def _merge_chunks(chunks):
+        """Deduplicate the same encounter while preserving distinct dated events."""
+        from hashlib import sha256
+        seen = {}
         for chunk in chunks:
             for obj in chunk:
-                desig = obj.get("designation", "")
-                if desig not in seen:
-                    seen[desig] = obj
-                else:
-                    existing = seen[desig]
-                    if (sum(v is not None for v in obj.values()) >
-                            sum(v is not None for v in existing.values())):
-                        seen[desig] = obj
+                identity = obj.get('encounter_id')
+                if identity is None:
+                    identity = sha256(json.dumps({'designation': obj.get('designation'),
+                        'date': obj.get('close_approach_date'), 'encounter': obj.get('close_approach')},
+                        sort_keys=True, default=str).encode()).hexdigest()
+                if identity not in seen:
+                    seen[identity] = obj
+                elif obj.get('cad_evidence') != seen[identity].get('cad_evidence'):
+                    from copy import deepcopy
+                    seen[identity].setdefault('duplicate_encounter_versions', []).append(deepcopy(obj.get('cad_evidence')))
         return list(seen.values())
 
     def _save_historical_results(self, result: HistoricalPollingResult):
         """Save complete historical polling results."""
         try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"historical_poll_{result.total_time_span_years}y_{timestamp}.json"
+            from uuid import uuid4
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            filename = f"historical_poll_{result.total_time_span_years}y_{timestamp}_{uuid4().hex[:8]}.json"
             filepath = self.results_dir / filename
             
             # Convert result to JSON-serializable format
@@ -880,6 +622,11 @@ class HistoricalChunkedPoller:
                 'summary_stats': result.summary_stats,
                 'chunk_count': len(result.chunk_results),
                 'successful_chunks': sum(1 for r in result.chunk_results if r.success),
+                'chunk_summaries': [{'start_date': r.start_date.isoformat(), 'end_date': r.end_date.isoformat(),
+                    'success': r.success, 'error_message': r.error_message, 'intake_metrics': r.intake_metrics}
+                    for r in result.chunk_results],
+                'evidence_storage': {'chunk_cache_enabled': self.config.enable_caching,
+                    'note': 'Operational intake/cache, not a frozen scientific case dataset'},
                 # Don't save all chunk data to avoid huge files
                 'sample_chunk_results': [
                     {
@@ -893,7 +640,7 @@ class HistoricalChunkedPoller:
                 ]
             }
             
-            with open(filepath, 'w') as f:
+            with open(filepath, 'x') as f:
                 json.dump(data, f, indent=2)
                 
             self.logger.info(f"Historical results saved to: {filepath}")
