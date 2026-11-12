@@ -1306,3 +1306,20 @@ stop/deadline, storage uncertainty and internal errors have separate execution c
 Heartbeat/fencing/recovery handle old workers without granting them write authority.
 This library is not yet hosted by the API lifecycle or authenticated REST ownership;
 no additional bounded context, queue product or detection engine is introduced.
+
+## Persistent network API and ownership — 2026-11-13 (ADR-079)
+
+Existing network submission/polling now crosses verified-principal -> scoped SQL
+execution -> registered acquisition/report handler -> verified persisted presentation.
+Execution status, evidence completeness and scientific validity remain distinct.
+Stable service/SQL-user principals own jobs; role grants write capability, not access
+to another principal's history. Scoped credentials are revalidated against active
+configuration/database state. No client-supplied owner identity or development mock
+authorizes this boundary.
+
+API lifecycle owns worker admission, start/stop/join and observed readiness. Storage
+and handler contracts remain reusable, not independent detection engines. Current
+other API job families and legacy authentication are not upgraded by this integration.
+Object-wide assertion/enrichment/conflict history, explanations, graphical/menu QA,
+scientific suitability and documentation/version consistency are tracked #40–#46;
+review existing boundaries before adding any material new context.

@@ -910,3 +910,36 @@ network routes' process-memory scheduling. Authenticated principal ownership and
 managed API worker lifecycle remain required before that migration. There are no
 new endpoints/options in this library change. See
 [scope, recovery controls and integration gates](../engineering/resumable-network-worker.md).
+
+## Durable owned population jobs — 2026-11-13 (ADR-079)
+
+This supersedes prior process-memory network notes only. Existing
+`POST /api/v1/analysis/analyze/network` commits a persistent owned job before returning
+its ID/status URL; optional `Idempotency-Key` preserves the first request/window.
+`GET /api/v1/analysis/analyze/network/{job_id}/status` reads the same owner's SQL
+state and verified report; `DELETE /api/v1/analysis/analyze/network/{job_id}` cancels
+owned pending/running work. Analyst/admin may write; viewer may read owned history.
+No admin cross-owner exemption. Different owner/unknown404, invalid credentials401,
+insufficient role403, changed idempotent intent409, full queue429, unready/unconfirmed
+storage503. Null sigma/p and explicit execution_status remain separate from science.
+
+Use a configured or active SQL-user API key, not mock tokens/default placeholders.
+For a scoped bearer token, explicitly request the existing exchange:
+
+```sh
+curl -X POST 'http://localhost:8000/api/v1/auth/token?audience=network-jobs-v1' \
+  -H "X-API-Key: $ANEOS_ANALYST_API_KEY"
+curl -X POST 'http://localhost:8000/api/v1/analysis/analyze/network' \
+  -H "X-API-Key: $ANEOS_ANALYST_API_KEY" -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: your-unique-query-id' \
+  -d '{"designations":["1998 KY26"],"harmonics":true}'
+```
+
+These are network-enabled examples requiring configured credentials, source access
+and provider pacing, not recorded observations or a guarantee of complete data.
+Scoped token signing also requires existing configured signing support. Raw keys are
+never query parameters. Credential rotation/revocation is checked afresh. Default
+worker lifecycle starts with the app; disabling it permits owned reads/cancellation,
+not new submission. See [scope, actual tests and limits](../engineering/durable-network-api.md).
+Other routes retain heterogeneous legacy authentication; this is not a suite-wide
+security certification or evidence of scientifically calibrated results.

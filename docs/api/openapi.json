@@ -2033,6 +2033,7 @@
         "type": "object"
       },
       "NetworkRequest": {
+        "additionalProperties": false,
         "properties": {
           "clustering": {
             "default": true,
@@ -2061,7 +2062,7 @@
           },
           "historical_years": {
             "default": 30,
-            "description": "Requested historical horizon (1\u2013100); current descriptor session does not acquire or establish window coverage",
+            "description": "Fixed years-times-365-day CAD window anchored at first submission; bounded row coverage remains explicit",
             "maximum": 100.0,
             "minimum": 1.0,
             "title": "Historical Years",
@@ -2094,6 +2095,16 @@
             "default": {},
             "title": "Analysis Metadata",
             "type": "object"
+          },
+          "attempts": {
+            "default": 0,
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "checkpoint_count": {
+            "default": 0,
+            "title": "Checkpoint Count",
+            "type": "integer"
           },
           "clusters": {
             "default": [],
@@ -2140,6 +2151,23 @@
             ],
             "title": "Error"
           },
+          "execution_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Result"
+          },
+          "execution_status": {
+            "default": "queued",
+            "title": "Execution Status",
+            "type": "string"
+          },
           "harmonic_signals": {
             "default": [],
             "items": {
@@ -2167,6 +2195,11 @@
             "default": "UNAVAILABLE",
             "title": "Network Tier",
             "type": "string"
+          },
+          "revision": {
+            "default": 0,
+            "title": "Revision",
+            "type": "integer"
           },
           "scientific_report": {
             "anyOf": [
@@ -4553,8 +4586,25 @@
     },
     "/api/v1/analysis/analyze/network": {
       "post": {
-        "description": "Submit a batch for population-level pattern analysis. Returns a job_id immediately.",
-        "operationId": "start_network_analysis_api_v1_analysis_analyze_network_post",
+        "operationId": "submit_network_api_v1_analysis_analyze_network_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4585,16 +4635,23 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Start population pattern analysis",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit authenticated durable population analysis",
         "tags": [
           "Analysis"
         ]
       }
     },
-    "/api/v1/analysis/analyze/network/{job_id}/status": {
-      "get": {
-        "description": "Return current status / results for a network analysis job.",
-        "operationId": "get_network_status_api_v1_analysis_analyze_network__job_id__status_get",
+    "/api/v1/analysis/analyze/network/{job_id}": {
+      "delete": {
+        "operationId": "cancel_network_api_v1_analysis_analyze_network__job_id__delete",
         "parameters": [
           {
             "in": "path",
@@ -4628,7 +4685,65 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Poll population pattern analysis status",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel an owned persistent population job",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/analyze/network/{job_id}/status": {
+      "get": {
+        "operationId": "network_status_api_v1_analysis_analyze_network__job_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read an owned persistent population job",
         "tags": [
           "Analysis"
         ]
@@ -5506,6 +5621,24 @@
       "post": {
         "description": "Exchange a valid X-API-Key for a signed JWT bearer token.\n\nSet ANEOS_SECRET_KEY in your environment before using this endpoint.\nGenerate a key with::\n\n    python -c \"import secrets; print(secrets.token_hex(32))\"",
         "operationId": "get_token_api_v1_auth_token_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "audience",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Audience"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5516,6 +5649,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [

@@ -2651,3 +2651,39 @@ still uses its old process-memory worker until that migration is complete.
 See `docs/engineering/resumable-network-worker.md` for actual SQL/process controls,
 limitations and commands. No probability, force-model fit, calibration or origin
 claim is introduced; execution completion remains separate from scientific validation.
+
+### ADR-079: Authenticated persistent network REST and managed execution lifecycle
+
+**Status:** Integrated/tested for existing network routes with injected source/SQL
+controls; not whole-suite authentication or scientific-readiness certification.
+2026-11-13; #15/#17/#6. Composes ADR-076–078, no new bounded context.
+
+Replace the normal network route's daemon/dictionary scheduling with app-owned
+NetworkRuntime/SQL JobStore and the registered worker. Startup confirms schema/queue
+and starts a non-daemon supervised worker; shutdown stops admission, signals stop and
+joins within a declared budget. Unconfirmed shutdown raises instead of claiming
+cleanup. Worker failure stops admission. Health reads observed worker state, never
+starts services from GET, reports degraded failed checks and redacts inspection errors.
+Explicitly disabled workers permit owned reads/cancellation, not new admission.
+
+Persistent jobs require fresh verified configured/SQL API keys, or explicitly scoped
+JWTs from existing `/auth/token?audience=network-jobs-v1`. Reject placeholders, legacy
+mock tokens, mixed/duplicate credentials and ambiguous active-key assignments. Scoped
+JWT verification pins algorithm/issuer/audience/required time claims and rechecks
+active principal, credential and current role on every request. No cached mock map or
+role claim grants access. Subject/credential binding keeps key revocation effective;
+key rotation retains stable ownership. Configured role keys represent shared service
+principals, not individual human accounts. General legacy auth remains #17 work.
+
+Keep existing submission/status paths; add tested/documented owned cancellation.
+Derive owner scope from verified identity; no client owner field or admin cross-owner
+bypass. Commit before acknowledgement; reuse scoped idempotency identity and original
+query window across retries, reject conflicting intent, expose bounded backpressure.
+Return actual persisted execution state and separately verified complete report, not
+queued/completed default significance. Verify domain result before serving it.
+
+Retain old direct helper names as controlled deprecations; do not consume or delete
+legacy process-memory research automatically. No scientific validation, full source
+enrichment, complete dataset, human-origin exclusion or five-sigma claim follows from
+successful execution. See `durable-network-api.md` and the additional user-quality
+requirements register (#40–#46) before claiming whole-project readiness.

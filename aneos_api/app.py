@@ -228,11 +228,21 @@ async def lifespan(app: FastAPI):
     if init_database() is not True:
         raise RuntimeError('Application database schema unavailable; startup not complete')
     aneos_app = get_aneos_app()
+    from .network_runtime import default_runtime
+    runtime = None
     try:
         await aneos_app.initialize_services()
+        factory = getattr(app.state, 'network_runtime_factory', None) or default_runtime
+        runtime = factory()
+        runtime.start()
+        app.state.network_runtime = runtime
         yield
     finally:
-        await aneos_app.shutdown_services()
+        try:
+            if runtime is not None:
+                await asyncio.to_thread(runtime.close)
+        finally:
+            await aneos_app.shutdown_services()
 
 def create_app(config_path: Optional[str] = None) -> FastAPI:
     """Create and configure FastAPI application."""
@@ -243,11 +253,10 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
     app = FastAPI(
         title="aNEOS API",
         description=(
-            "aNEOS REST API. "
-            "Read endpoints (GET /detect, GET /impact, GET /health) "
-            "are accessible without authentication in development mode. "
-            "Use 'Authorization: Bearer mock_admin_token' for write endpoints in dev, "
-            "or configure ANEOS_ADMIN_API_KEY for production."
+            "Uncalibrated NEO screening and scoped research evidence. "
+            "Persistent network jobs require verified API credentials or scoped JWTs; "
+            "development mock tokens do not authorize them. "
+            "Authentication on other routes varies; see their documented contracts."
         ),
         version="2.0.0",
         docs_url="/docs",
@@ -285,10 +294,10 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
         """Health check endpoint."""
         try:
             aneos_app = get_aneos_app()
-            if not aneos_app.services_initialized:
-                await aneos_app.initialize_services()
             raw = aneos_app.get_health_status()
             services = raw.get('services', {})
+            network = getattr(app.state, 'network_runtime', None)
+            services['network_worker'] = bool(network and network.ready)
             checks = {
                 svc: CheckResult(
                     status="ok" if ok else "degraded",
@@ -297,14 +306,14 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
                 for svc, ok in services.items()
             }
             return HealthResponse(
-                status=raw.get('status', 'unknown'),
+                status=raw.get('status', 'unknown') if checks and all(c.status == 'ok' for c in checks.values()) else 'degraded',
                 checks=checks,
                 version=raw.get('version', '0.7.0'),
             )
         except Exception as e:
             return HealthResponse(
                 status="error",
-                checks={"api": CheckResult(status="error", detail=str(e))},
+                checks={"api": CheckResult(status="error", detail="Health inspection unavailable")},
             )
     
     @app.get("/", response_model=Dict[str, Any])

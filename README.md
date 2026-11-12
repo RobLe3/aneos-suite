@@ -895,3 +895,20 @@ worker API; no automatic daemon or new CLI/REST option is introduced.
 **Not yet integrated:** current authenticated API ownership, worker lifespan/health
 and persistent REST jobs. See [the exact worker controls and remaining gates](docs/engineering/resumable-network-worker.md).
 Completion is execution evidence, not calibrated scientific validation.
+
+### Durable owned population API (ADR-079, review branch)
+
+The existing population API now commits SQL jobs, runs a managed registered worker,
+serves owner-scoped verified reports and supports cancellation/idempotent retries.
+Configured/SQL API keys or explicitly scoped signed tokens are required; development
+mocks do not authorize these jobs. Restart/partial-acquisition, positive-owner and
+cross-owner controls are documented in [the scoped integration report](docs/engineering/durable-network-api.md).
+Other job families and general authentication still need review. Successful execution
+is not complete object knowledge, calibrated significance or origin confirmation.
+
+### Additional user-quality programme
+
+Requested source completeness/local enrichment, every-menu render QA, verified object
+explanations/graphics, scientific suitability, current user documentation and version
+consistency are tracked separately in [the requirements register](docs/engineering/user-quality-programme.md).
+They remain acceptance work, not claims already achieved by engineering test counts.

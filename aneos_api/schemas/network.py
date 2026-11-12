@@ -1,6 +1,6 @@
 """Population Pattern Analysis — API response schemas (ADR-448)."""
 from typing import Any, Dict, List, Optional, Tuple
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, field_validator, StrictBool, StrictInt
 
 
 class OrbitalClusterResult(BaseModel):
@@ -32,18 +32,27 @@ class CorrelationMatrixResult(BaseModel):
 
 
 class NetworkRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("designations")
+    @classmethod
+    def valid_designations(cls,values):
+        if any(not d or d!=d.strip() or len(d)>80 or any(ord(c)<32 for c in d) for d in values):
+            raise ValueError("Invalid designation")
+        return values
+
     designations: List[str] = Field(
         ..., min_length=1, max_length=500,
         description="1–500 NEO designations to analyse as a population"
     )
-    historical_years: int = Field(
+    historical_years: StrictInt = Field(
         30, ge=1, le=100,
-        description="Requested historical horizon (1–100); current descriptor session does not acquire or establish window coverage"
+        description="Fixed years-times-365-day CAD window anchored at first submission; bounded row coverage remains explicit"
     )
-    clustering: bool = True
-    harmonics: bool = True
-    correlation: bool = False
-    rendezvous: bool = False
+    clustering: StrictBool = True
+    harmonics: StrictBool = True
+    correlation: StrictBool = False
+    rendezvous: StrictBool = False
 
 
 class NetworkStatusResponse(BaseModel):
@@ -61,3 +70,8 @@ class NetworkStatusResponse(BaseModel):
     scientific_report: Optional[Dict[str, Any]] = None
     acquisition_outcomes: List[Dict[str, Any]] = Field(default_factory=list)
     error: Optional[str] = None
+    execution_status: str = "queued"
+    execution_result: Optional[Dict[str, Any]] = None
+    attempts: int = 0
+    checkpoint_count: int = 0
+    revision: int = 0

@@ -584,103 +584,25 @@ async def _run_batch_detection(batch_id: str, designations: List[str],
     store['status'] = 'completed'
     store['finished_at'] = datetime.now().isoformat()
 
-def _run_network_analysis(job_id: str, request: NetworkRequest) -> None:
-    """Background worker for population pattern analysis."""
-    try:
-        _network_store[job_id]["status"] = "processing"
-        from aneos_core.data.fetcher import DataFetcher
-        from aneos_core.pattern_analysis.session import (
-            NetworkAnalysisSession, PatternAnalysisConfig
-        )
-        fetcher = DataFetcher()
-        designations = request.designations
-        from aneos_core.data.models import NEOData
-        neo_objects, outcomes, acquired = [], [], {}
-        for index, des in enumerate(designations):
-            # Repeated request identity uses one frozen acquisition, not a fresh
-            # orbit solution or a larger population sample per occurrence.
-            if des not in acquired:
-                try:
-                    neo = fetcher.fetch_neo_data(des)
-                    status = ('identity_mismatch' if isinstance(neo, NEOData) and neo.designation != des
-                              else 'available' if isinstance(neo, NEOData) else 'unavailable')
-                    acquired[des] = (neo if status == 'available' else None, status)
-                except Exception:
-                    acquired[des] = (None, 'acquisition_failed')
-            neo, status = acquired[des]
-            outcome = {'input_index': index, 'designation': des, 'status': status}
-            if neo is not None:
-                neo_objects.append(neo)
-                outcome['canonical_designation'] = neo.designation
-            outcomes.append(outcome)
-        _network_store[job_id]['acquisition_outcomes'] = outcomes
-
-        cfg = PatternAnalysisConfig(
-            clustering=request.clustering,
-            harmonics=request.harmonics,
-            correlation=request.correlation,
-            rendezvous=request.rendezvous,
-            historical_years=request.historical_years,
-        )
-        session = NetworkAnalysisSession(config=cfg, fetcher=fetcher)
-        result = session.run(neo_objects)
-        _network_store[job_id].update(result)
-        _network_store[job_id]["scientific_report"] = result
-        _network_store[job_id]["analysis_metadata"] = {
-            **result['analysis_metadata'],
-            'acquisition_status': 'available' if len(neo_objects)==len(designations)
-                else 'partial' if neo_objects else 'unavailable',
-            'execution_storage': 'legacy_process_memory_not_durable',
-        }
-        _network_store[job_id]["status"] = "complete" if neo_objects else "error"
-        if not neo_objects:
-            _network_store[job_id]['error'] = 'NO_AVAILABLE_INPUTS'
-    except Exception as exc:
-        logger.exception(f"Network analysis job {job_id} failed: {exc}")
-        _network_store[job_id]["status"] = "error"
-        _network_store[job_id]["error"] = "NETWORK_ANALYSIS_FAILED"
+def _run_network_analysis(*args, **kwargs):
+    """Controlled deprecation: daemon/dictionary execution is not durable."""
+    raise NotImplementedError('Use the registered SQL NetworkWorker; process-memory execution withdrawn')
 
 
-@router.post("/analyze/network", summary="Start population pattern analysis")
-async def start_network_analysis(request: NetworkRequest):
-    """Submit a batch for population-level pattern analysis. Returns a job_id immediately."""
-    import threading
-    import uuid
-    from datetime import datetime as _dt, timezone as _tz
-    job_id = f"net_{_dt.now(_tz.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-    _network_store[job_id] = {
-        "status": "queued",
-        "designations_analyzed": 0,
-        "clusters": [],
-        "harmonic_signals": [],
-        "correlation_matrix": None,
-        "network_sigma": None,
-        "network_tier": "UNAVAILABLE",
-        "combined_p_value": None,
-        "sub_module_p_values": {},
-        "analysis_metadata": {},
-        "error": None,
-    }
-    thread = threading.Thread(
-        target=_run_network_analysis, args=(job_id, request), daemon=True
-    )
-    thread.start()
-    return {
-        "job_id": job_id,
-        "status": "queued",
-        "status_url": f"/api/v1/analysis/analyze/network/{job_id}/status",
-    }
+async def start_network_analysis(*args, **kwargs):
+    raise NotImplementedError('Use the authenticated durable network HTTP route')
 
 
-@router.get("/analyze/network/{job_id}/status",
-            response_model=NetworkStatusResponse,
-            summary="Poll population pattern analysis status")
-async def get_network_status(job_id: str):
-    """Return current status / results for a network analysis job."""
-    store = _network_store.get(job_id)
-    if store is None:
-        raise HTTPException(status_code=404, detail=f"Job {job_id!r} not found")
-    return NetworkStatusResponse(job_id=job_id, **store)
+async def get_network_status(*args, **kwargs):
+    raise NotImplementedError('Use the owner-filtered persistent network HTTP route')
+
+
+from ..network_routes import submit_network, network_status, cancel_network
+router.post('/analyze/network', summary='Submit authenticated durable population analysis')(submit_network)
+router.get('/analyze/network/{job_id}/status', response_model=NetworkStatusResponse,
+           summary='Read an owned persistent population job')(network_status)
+router.delete('/analyze/network/{job_id}', response_model=NetworkStatusResponse,
+              summary='Cancel an owned persistent population job')(cancel_network)
 
 
 async def _process_export(export_id: str, request: ExportRequest):

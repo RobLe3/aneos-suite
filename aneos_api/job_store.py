@@ -334,6 +334,13 @@ class JobStore:
         except SQLAlchemyError as exc:
             raise JobStorageUnavailable('Job submission not confirmed; retry only with the same idempotency identity') from exc
 
+    def find_submission(self,owner_scope,kind,idempotency_key):
+        owner=_scope(owner_scope);kind=_identifier(kind,'kind',80)
+        key=_identifier(idempotency_key,'idempotency key',128)
+        with self._transaction(read_only=True) as session:
+            row=session.query(DurableJob).filter_by(owner_scope=owner,kind=kind,idempotency_key=key).first()
+            return self._view(session,row) if row else None
+
     def get(self, owner_scope, job_id):
         owner=_scope(owner_scope)
         with self._transaction(read_only=True) as session:
