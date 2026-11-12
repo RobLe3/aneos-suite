@@ -193,3 +193,4 @@ enhanced_neo_poll_*.json
 # Archive directory - track all content (must be last to override name-based patterns above)
 !docs/archive/
 !docs/archive/**
+!tests/test_ky26_baseline.py

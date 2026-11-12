@@ -1,0 +1,94 @@
+{
+  "schema_version": "ky26-historical-baseline-v1",
+  "designation": "1998 KY26",
+  "historical_record": {
+    "reported_date": "2026-11-12",
+    "provenance": "User-supplied historical output in this task; original full-precision input and raw provider responses not supplied.",
+    "classification": "SUSPICIOUS",
+    "displayed_anomaly_score": 4.142,
+    "score_semantics": "legacy weighted effect-size heuristic, not calibrated Gaussian significance",
+    "uncalibrated_artificial_probability": 0.0367,
+    "combined_p_value": 0.0012976288,
+    "evidence_sources": 2,
+    "orbital_effect": 2.645,
+    "orbital_p_value": 0.0720053,
+    "physical_effect": 3.904,
+    "physical_p_value": 0.00045306,
+    "physical_quality": 0.6667,
+    "reported_completeness_percent": 85
+  },
+  "rounded_input": {
+    "orbital": {
+      "a": 1.23,
+      "e": 0.2,
+      "i": 1.49
+    },
+    "physical": {
+      "diameter": 11.0,
+      "albedo": 0.52,
+      "absolute_magnitude": 25.9,
+      "rotation_period": 0.09
+    }
+  },
+  "units": {
+    "a": "AU",
+    "e": "dimensionless",
+    "i": "deg",
+    "diameter": "m",
+    "rotation_period": "h",
+    "absolute_magnitude": "mag",
+    "albedo": "dimensionless"
+  },
+  "historical_source_metadata": {
+    "orbit_solution_id": null,
+    "epoch_jd_tdb": null,
+    "observation_arc_reported": "1998–2024",
+    "retrieved_at": null,
+    "raw_responses": null,
+    "individual_physical_measurement_sources": null,
+    "original_execution_revision": null
+  },
+  "reproduction": {
+    "code_revision": "42cab0acd7a1e5e7781a26831f07b11a77f48ead",
+    "frozen_source": "tests/fixtures/ky26_legacy_detector.py",
+    "source_sha256": "52be6e804a1eda29fa450f34a04c20f05eadf384e2ecabba393e548feee470fa",
+    "rounded_input_expected": {
+      "sigma_confidence": 4.141288008229254,
+      "bayesian_probability": 0.03674337652291626,
+      "combined_p_value": 0.0013052410308005413,
+      "is_artificial": false,
+      "evidence": [
+        {
+          "type": "orbital_dynamics",
+          "effect_size": 2.6451142085847565,
+          "p_value": 0.07200528974611509,
+          "quality": 1.0
+        },
+        {
+          "type": "physical_properties",
+          "effect_size": 3.902621655498992,
+          "p_value": 0.00045601621771029777,
+          "quality": 0.6666666666666666
+        }
+      ]
+    },
+    "reference_environment": {
+      "python": "3.11.9",
+      "numpy": "2.2.2",
+      "scipy": "1.15.1"
+    },
+    "scope": "Reproduction of archived main code using rounded supplied inputs. Not an exact reproduction of the original display; no inputs tuned to force agreement."
+  },
+  "scientific_status": {
+    "origin": "unresolved",
+    "gaussian_significance": "not calibrated",
+    "artificial_probability": "not calibrated",
+    "false_discovery_rate": "not reliably estimated"
+  },
+  "open_evidence": [
+    "Original full-precision physical/orbital inputs",
+    "Original raw source responses, solution ID, epoch and retrieval time",
+    "Exact original execution revision/configuration",
+    "Observation-level uncertainties and physical source provenance"
+  ]
+}
