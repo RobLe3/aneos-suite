@@ -136,7 +136,7 @@ def render_screening_markdown(report):
         f"Review input ID: {_cell(report.get('review_input_id'))}",
         f"Report ID: {_cell(report.get('report_id'))}",
         f"Repository commit: {_cell(report.get('software', {}).get('repository_commit'))}",
-        f"Working tree dirty: {_cell(report.get('software', {}).get('working_tree_dirty'))}", '', 
+        f"Working tree dirty: {_cell(report.get('software', {}).get('working_tree_dirty'))}", '',
         '## Non-gravitational coefficients', '',
         '| Component | Native value | Uncertainty | Units | Estimation status | Evidence basis/status |',
         '| --- | --- | --- | --- | --- | --- |']
