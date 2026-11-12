@@ -194,3 +194,5 @@ enhanced_neo_poll_*.json
 !docs/archive/
 !docs/archive/**
 !tests/test_ky26_baseline.py
+
+!tests/test_nongrav_evidence.py

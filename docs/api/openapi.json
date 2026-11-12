@@ -688,6 +688,19 @@
             "title": "Is Artificial",
             "type": "boolean"
           },
+          "non_gravitational_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Non Gravitational Evidence"
+          },
           "sigma_confidence": {
             "title": "Sigma Confidence",
             "type": "number"

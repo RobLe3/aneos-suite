@@ -29,6 +29,8 @@ from ..cache import CacheManager
 
 logger = logging.getLogger(__name__)
 
+_APPLICATION_HEADERS = {"User-Agent": "aNEOS/1.2.2 scientific-research (+https://github.com/RobLe3/aneos-suite/issues)"}
+
 @dataclass
 class DataSourceStatus:
     """Status information for a data source."""
@@ -275,7 +277,7 @@ class HTTPDataSource(DataSourceBase):
         """Perform HTTP health check."""
         try:
             timeout = aiohttp.ClientTimeout(total=5)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with aiohttp.ClientSession(timeout=timeout, headers=_APPLICATION_HEADERS) as session:
                 async with session.get(self.base_url) as response:
                     is_healthy = response.status in [200, 400]  # 400 expected for some APIs
 
@@ -306,7 +308,7 @@ class HTTPDataSource(DataSourceBase):
         """Perform HTTP GET request with a per-request session to avoid event-loop reuse issues."""
         url = self._build_url(endpoint, params)
         timeout = aiohttp.ClientTimeout(total=self.config.request_timeout)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with aiohttp.ClientSession(timeout=timeout, headers=_APPLICATION_HEADERS) as session:
             async with session.get(url) as response:
                 response.raise_for_status()
                 return await response.json()

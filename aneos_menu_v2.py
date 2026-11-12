@@ -665,6 +665,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 "classification": getattr(result, "classification", None),
                 "evidence_count": (getattr(result, "metadata", {}) or {}).get("evidence_count"),
                 "combined_p_value": (getattr(result, "metadata", {}) or {}).get("combined_p_value"),
+                "non_gravitational_evidence": (getattr(result, "metadata", {}) or {}).get("non_gravitational_evidence"),
             })
         for desg, impact in self._impact_results.items():
             records.append({
@@ -829,6 +830,10 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     def _build_additional_dict(self, neo_data) -> dict:
         additional = {}
+        from aneos_core.data.models import NonGravitationalParameters
+        ng = getattr(neo_data, 'nongrav', None)
+        if isinstance(ng, NonGravitationalParameters):
+            additional['non_gravitational_evidence'] = ng.evidence_report()
         history = getattr(neo_data, "orbital_history", None)
         if history:
             additional["orbital_history"] = history
@@ -907,6 +912,23 @@ class ANEOSMenuV2(ANEOSMenuBase):
         lines = []
 
         # Orbital elements
+        from aneos_core.data.models import NonGravitationalParameters
+        ng = getattr(neo_data, 'nongrav', None)
+        if isinstance(ng, NonGravitationalParameters):
+            report = ng.evidence_report()
+            lines.append('[bold]Non-gravitational orbit-fit evidence (not thrust):[/bold]')
+            for name, component in report['components'].items():
+                if component['status'] == 'available':
+                    native = component['native']
+                    sigma = native['sigma'] if native['sigma'] is not None else 'not available'
+                    lines.append(f"{name}: {native['value']} ± {sigma} {native['units']} ({native['kind']})")
+                else:
+                    lines.append(f"{name}: {component['status']}")
+            if ng.covariance:
+                lines.append(f'Covariance: JD(TDB) {ng.covariance.epoch_jd_tdb}; order {ng.covariance.labels}')
+            if report['covariance_applies_to_display_epoch'] is False:
+                lines.append('Covariance epoch differs from displayed orbit; propagation is required before joint use.')
+
         oe = getattr(neo_data, "orbital_elements", None)
         if oe is not None:
             a = getattr(oe, "semi_major_axis", None)

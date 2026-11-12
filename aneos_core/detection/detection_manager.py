@@ -194,6 +194,7 @@ class DetectionManager:
                         'false_discovery_rate': result.false_discovery_rate,
                         'validation_available': result.validation_metrics is not None,
                         'physical_data_available': _phys_available,
+                        'non_gravitational_evidence': extra.get('non_gravitational_evidence'),
                     }
                 )
             

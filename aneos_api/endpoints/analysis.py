@@ -287,16 +287,10 @@ async def detect_neo(
         except Exception as _hist_exc:
             logger.debug(f"Horizons orbital history unavailable for {designation}: {_hist_exc}")
 
-        # Build observation_data for propulsion signature analysis
-        # Includes non-gravitational acceleration (A2) if fetched from SBDB
-        observation_data: Dict[str, Any] = {}
-        if neo.nongrav is not None:
-            if neo.nongrav.a2 is not None:
-                observation_data["non_gravitational_accel"] = abs(neo.nongrav.a2)
-            if neo.nongrav.a1 is not None:
-                observation_data["nongrav_a1"] = neo.nongrav.a1
-            if neo.nongrav.a3 is not None:
-                observation_data["nongrav_a3"] = neo.nongrav.a3
+        # Fitted A1/A2/A3 coefficients are retained as typed evidence, never
+        # passed to the legacy scalar thrust heuristic (which used wrong units).
+        nongrav_evidence = neo.nongrav.evidence_report() if neo.nongrav is not None else None
+        observation_data = None
 
         detector = ValidatedSigma5ArtificialNEODetector()
         result = detector.analyze_neo_validated(
@@ -335,6 +329,7 @@ async def detect_neo(
             'evidence_count': len(result.evidence_sources),
             'data_source': data_source,
             'data_freshness': data_freshness,
+            'non_gravitational_evidence': nongrav_evidence,
         }
         _detection_cache[designation] = detection_dict
         import threading
@@ -359,6 +354,7 @@ async def detect_neo(
             combined_p_value=result.combined_p_value,
             false_discovery_rate=result.false_discovery_rate,
             analysis_metadata=result.analysis_metadata,
+            non_gravitational_evidence=nongrav_evidence,
         )
     except HTTPException:
         raise
@@ -817,14 +813,8 @@ async def _run_batch_detection(batch_id: str, designations: List[str]):
                     }
                     for ca in neo.close_approaches
                 ]
-            observation_data: Dict[str, Any] = {}
-            if neo.nongrav is not None:
-                if neo.nongrav.a2 is not None:
-                    observation_data["non_gravitational_accel"] = abs(neo.nongrav.a2)
-                if neo.nongrav.a1 is not None:
-                    observation_data["nongrav_a1"] = neo.nongrav.a1
-                if neo.nongrav.a3 is not None:
-                    observation_data["nongrav_a3"] = neo.nongrav.a3
+            nongrav_evidence = neo.nongrav.evidence_report() if neo.nongrav is not None else None
+            observation_data = None
             result = detector.analyze_neo_validated(
                 orbital_dict,
                 physical_data=physical_data,
@@ -842,6 +832,7 @@ async def _run_batch_detection(batch_id: str, designations: List[str]):
                 'artificial_probability': result.bayesian_probability,
                 'combined_p_value': result.combined_p_value,
                 'false_discovery_rate': result.false_discovery_rate,
+                'non_gravitational_evidence': nongrav_evidence,
                 'classification': 'ARTIFICIAL' if result.is_artificial else 'NATURAL',
                 'evidence_count': len(result.evidence_sources),
                 'evidence_sources': [

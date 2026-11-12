@@ -52,4 +52,5 @@ class DetectionResponse(BaseModel):
     interpretation: str = ""
     combined_p_value: Optional[float] = None       # Fisher's combined probability across evidence
     false_discovery_rate: Optional[float] = None   # Expected FDR at current sigma threshold
+    non_gravitational_evidence: Optional[Dict[str, Any]] = None
     analysis_metadata: Dict[str, Any] = {}         # Detector version, method, population refs

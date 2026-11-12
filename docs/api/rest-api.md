@@ -630,3 +630,24 @@ Features:
 ---
 
 **The aNEOS REST API provides comprehensive programmatic access to all platform capabilities. Use the interactive documentation for real-time testing and exploration!** 🚀
+### Non-gravitational evidence sidecar (issue #5)
+
+`GET /api/v1/analysis/detect` and existing batch detection results include
+`non_gravitational_evidence` when catalogue coefficients are supplied. Missing
+coefficients remain `not_available`/null, not zero. This field is descriptive
+orbit-fit evidence, not a new origin classifier.
+
+The record retains A1/A2/A3 native values, uncertainty, units, SET/EST/CON status,
+raw numerical literals, force-model constants, solution identity, provider schema,
+retrieval time and canonical-response hash. Supported SI conversions label both
+value and sigma as **coefficients**, not instantaneous accelerations. Unknown
+units are retained natively and do not receive an invented conversion.
+
+Covariance carries its native labels, order, matrix, raw matrix, TDB epoch and
+solution-epoch elements. `covariance_applies_to_display_epoch=false` means that
+it must not be applied to displayed elements without explicit propagation.
+Off-diagonal correlations are preserved. The API does not infer propulsion from
+A2, nor omit A3 in favor of a scalar velocity/acceleration proxy.
+
+This does not fix the legacy score's calibration or establish artificial origin;
+those remain separate work in issues #6 and #8–#11.

@@ -1025,3 +1025,18 @@ of designations through sub-module execution to `NetworkReport` production.
 ---
 
 _End of Domain-Driven Design Document_
+
+## Non-gravitational evidence implementation — 2026-11-12
+
+BC1 acquisition and BC2 core data own the new `OrbitModelParameter` and
+`OrbitalCovariance` value objects, composed by the existing
+`NonGravitationalParameters`. They preserve native values, uncertainties,
+estimation kind, model constants, coordinate labels, provenance and distinct
+TDB epochs. Their purpose is faithful evidence transport, not origin inference.
+BC7/BC8 expose this evidence through the existing Rich/REST surfaces. BC4 retains
+responsibility for future physical-model fitting and epoch-aware covariance
+propagation. No new bounded context is needed for these changes (ADR-064).
+
+Implementation and offline path coverage do not mean that the legacy detector's
+sigma/probability output or a KY26 origin hypothesis has been validated. Those
+requirements remain open in the programme issues.

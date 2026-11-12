@@ -6,6 +6,8 @@ error handling, and data quality assessment.
 """
 
 import logging
+import copy
+from dataclasses import fields
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, Optional, List, Union
 from datetime import datetime, timezone
@@ -128,43 +130,30 @@ class DataFetcher:
     
     def _fetch_from_all_sources(self, designation: str) -> Optional[NEOData]:
         """Fetch data from all available sources concurrently."""
-        neo_data = None
-        
-        # Submit tasks to thread pool
+        results = {}
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            future_to_source = {
-                executor.submit(self._fetch_from_source, source_name, source, designation): source_name
-                for source_name, source in self.sources.items()
+            pending = {
+                executor.submit(self._fetch_from_source, name, source, designation): name
+                for name, source in self.sources.items()
             }
-            
-            # Collect results as they complete
-            for future in as_completed(future_to_source):
-                source_name = future_to_source[future]
+            for future in as_completed(pending):
+                name = pending[future]
                 try:
-                    source_data = future.result()
-                    if source_data:
-                        self.fetch_stats["source_successes"][source_name] += 1
-                        
-                        if neo_data is None:
-                            neo_data = source_data
-                        else:
-                            # Merge: accumulate sources; first successful result wins for orbital data
-                            for s in source_data.sources_used:
-                                if s not in neo_data.sources_used:
-                                    neo_data.sources_used.append(s)
+                    result = future.result()
+                    if result is not None and result.orbital_elements is not None:
+                        results[name] = result
+                        self.fetch_stats["source_successes"][name] += 1
                     else:
-                        self.fetch_stats["source_failures"][source_name] += 1
-                        
-                except Exception as e:
-                    self.fetch_stats["source_failures"][source_name] += 1
-                    self.logger.error(f"Error fetching from {source_name}: {e}")
-        
-        if neo_data is None:
+                        self.fetch_stats["source_failures"][name] += 1
+                except Exception as exc:
+                    self.fetch_stats["source_failures"][name] += 1
+                    self.logger.error("Error fetching from %s: %s", name, exc)
+        if not results:
             raise DataSourceUnavailableError(
                 f"All data sources failed for '{designation}'. "
-                f"Tried: {', '.join(self.source_priority)}. "
-                f"Check network access and API availability."
+                f"Tried: {', '.join(self.source_priority)}."
             )
+        neo_data = self._reconcile_sources(results)
 
         # Augment with close approach data from CAD API (supplemental — never blocks)
         try:
@@ -175,6 +164,52 @@ class DataFetcher:
             pass
 
         return neo_data
+
+    def _reconcile_sources(self, results: Dict[str, NEOData]) -> NEOData:
+        """Resolve by configured authority, never by response timing.
+
+        Orbit solutions and their coefficients remain atomic: never combine
+        elements or A2 from different epochs/solutions. Independent physical
+        measurements may fill gaps, with per-field provenance and conflicts.
+        """
+        order = list(dict.fromkeys(self.source_priority + sorted(results)))
+        order = [name for name in order if name in results]
+        primary = order[0]
+        merged = copy.deepcopy(results[primary])
+        merged.sources_used = order
+        provenance = {"orbital_elements": primary}
+        conflicts = {}
+        if merged.nongrav is not None:
+            provenance["nongrav"] = primary
+        for name in order:
+            source = results[name]
+            if name != primary and source.orbital_elements.to_dict() != merged.orbital_elements.to_dict():
+                conflicts[f"orbital_elements:{name}"] = source.orbital_elements.to_dict()
+            pp = source.physical_properties
+            if pp is None:
+                continue
+            if merged.physical_properties is None:
+                merged.physical_properties = copy.deepcopy(pp)
+            for item in fields(pp):
+                value = getattr(pp, item.name)
+                if value is None:
+                    continue
+                key = f"physical_properties.{item.name}"
+                current = getattr(merged.physical_properties, item.name)
+                if current is None:
+                    setattr(merged.physical_properties, item.name, value)
+                    provenance[key] = name
+                elif key not in provenance:
+                    provenance[key] = name
+                elif current != value:
+                    conflicts[f"{key}:{name}"] = value
+        merged.evidence_metadata = {
+            "schema_version": "source-reconciliation-v1",
+            "field_sources": provenance,
+            "source_solutions": {name: copy.deepcopy(results[name].evidence_metadata) for name in order},
+            "conflicts": conflicts,
+        }
+        return merged
 
     def _fetch_close_approaches(self, designation: str, date_min: str = "now") -> List:
         """Fetch close approaches from SBDB CAD API for a single designation."""
@@ -310,14 +345,11 @@ class DataFetcher:
                 if ng_raw:
                     from .models import NonGravitationalParameters
                     try:
-                        nongrav = NonGravitationalParameters(
-                            a1=ng_raw.get("a1"),
-                            a2=ng_raw.get("a2"),
-                            a3=ng_raw.get("a3"),
-                            model=ng_raw.get("model"),
-                        )
-                    except Exception:
-                        pass
+                        nongrav = NonGravitationalParameters.from_dict(ng_raw)
+                    except Exception as exc:
+                        # A malformed coefficient/covariance is a source error,
+                        # not a successful fetch with acceleration silently lost.
+                        raise ValueError(f'Invalid non-gravitational evidence: {exc}') from exc
 
             if orbital_elements:
                 neo_data = NEOData(
@@ -326,6 +358,7 @@ class DataFetcher:
                     physical_properties=physical_properties,
                     nongrav=nongrav,
                     sources_used=[source_name],
+                    evidence_metadata=orbital_elements_data.get("_evidence_metadata", {}),
                 )
                 neo_data.fetched_at = datetime.now(timezone.utc)
 

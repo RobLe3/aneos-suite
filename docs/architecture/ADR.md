@@ -2027,3 +2027,46 @@ No production code changes are required.
 ---
 
 _End of Architecture Decision Records_
+
+## Scientific evidence correction — 2026-11-12
+
+### ADR-064: Labelled non-gravitational fit evidence and atomic orbit solutions
+
+**Status**: Implemented with offline contract and path tests; observational
+physical-model comparison and scientific calibration are not validated.
+
+**Decision**: Parse SBDB 1.3 `orbit.model_pars`, using documented `full-prec` and
+`cov=mat` options. Preserve A1/A2/A3 values, sigmas, units, estimation kind,
+parameter index/raw literals and force-model constants in typed records.
+`NonGravitationalParameters` retains its scalar accessors and legacy cache reader;
+new serialization preserves the full evidence, including labelled covariance.
+
+Covariance remains at its own TDB solution epoch with native coordinate order
+and solution-epoch elements. Validate finite values, dimensions, unique labels,
+normalized symmetry and positive semidefiniteness; do not use a universal absolute
+tolerance that hides invalid small acceleration variances. SI conversion is an
+explicit linear coefficient/unit transformation, never a thrust determination.
+Unknown units, missing sigmas and absent covariance remain explicit.
+
+Select whole orbit solutions by configured source authority, not response timing.
+Never splice non-gravitational coefficients from another source/epoch into the
+selected orbit. Independent physical fields may fill gaps with field provenance
+and retained conflicts. Source metadata and native fit evidence survive cache
+replay. Unsupported provider schema versions or malformed fit evidence fail the
+fetch rather than silently dropping acceleration data.
+
+Expose all three axes through the existing Rich panel, detector metadata and
+GET/batch REST sidecar. Do not pass fitted AU/day² A2 directly to the legacy
+m/s² propulsion heuristic. This is a correction of a documented units/meaning
+error, not score tuning for KY26. No new classifier, endpoint or bounded context
+is introduced. Existing five-sigma interpretation remains unresolved in issue #6.
+
+**Evidence**: `tests/test_nongrav_evidence.py` includes provider-shaped synthetic
+controls, covariance rejection/round-trip/unit tests, source timing permutations,
+cache→menu→detector→API paths and positive A3 preservation. The optional live KY26
+contract test is network-marked and makes no collection-time requests.
+
+**Limits**: No covariance propagation between epochs, observation residual fit,
+physical-origin inference or independent calibration is supplied by this ADR.
+Provider-wide multi-worker request serialization/backoff remains issue #16; an
+identifying application User-Agent does not establish full fair-use compliance.

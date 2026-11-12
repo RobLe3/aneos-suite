@@ -17,6 +17,11 @@ except ImportError:
 from .base import HTTPDataSource, FetchResult, DataSourceException
 from ...config.settings import APIConfig
 from ..cache import CacheManager
+from ..models import NonGravitationalParameters
+from ..orbit_evidence import OrbitModelParameter, OrbitalCovariance, finite_number
+import copy
+import hashlib
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -37,20 +42,15 @@ class SBDBSource(HTTPDataSource):
             params = {
                 "sstr": designation,
                 "phys-par": "true",
+                "full-prec": "true",
+                "cov": "mat",
             }
 
             response_data = await self._http_get("", params)
 
-            # Optionally enrich with non-gravitational parameters (only ~3% of NEOs
-            # have these; requesting nongrav=1 for the rest returns HTTP 400).
-            try:
-                ng_params = {"sstr": designation, "phys-par": "false", "nongrav": "1"}
-                ng_response = await self._http_get("", ng_params)
-                if "nongrav_params" in ng_response:
-                    response_data["nongrav_params"] = ng_response["nongrav_params"]
-            except Exception as _ng_exc:
-                logger.debug("Non-gravitational fetch skipped for %s: %s", designation, _ng_exc)
-            
+            # A1/A2/A3 and force-model constants are in orbit.model_pars.
+            # Do not issue the undocumented nongrav=1 probe.
+
             if "orbit" not in response_data:
                 return FetchResult(
                     success=False,
@@ -79,6 +79,15 @@ class SBDBSource(HTTPDataSource):
     
     def _parse_sbdb_response(self, data: Dict[str, Any], designation: str) -> Dict[str, Any]:
         """Parse SBDB API response into standardized format."""
+        if not isinstance(data, dict):
+            raise ValueError('SBDB payload must be an object')
+        signature = data.get('signature', {})
+        if not isinstance(signature, dict):
+            raise ValueError('SBDB signature must be an object')
+        if 'orbit' in data and not isinstance(data['orbit'], dict):
+            raise ValueError('SBDB orbit section must be an object')
+        if signature and signature.get('version') != '1.3':
+            raise ValueError(f"Unsupported SBDB schema version: {signature.get('version')}")
         orbital_data = {}
 
         # Extract orbital elements (list of {name, value, ...} dicts)
@@ -129,25 +138,65 @@ class SBDBSource(HTTPDataSource):
         # Store physical data separately for consumers that use NEOData.physical_properties
         orbital_data["_physical"] = physical_data
 
-        # Non-gravitational parameters (present for ~3% of NEOs)
-        ng_list = data.get("nongrav_params", [])
-        nongrav_data: Dict[str, Any] = {}
-        for item in ng_list:
-            name = item.get("name", "")
-            value = item.get("value")
-            if value is not None:
-                try:
-                    if name == "A1":
-                        nongrav_data["a1"] = float(value)
-                    elif name == "A2":
-                        nongrav_data["a2"] = float(value)
-                    elif name == "A3":
-                        nongrav_data["a3"] = float(value)
-                    elif name in ("model", "Model"):
-                        nongrav_data["model"] = str(value)
-                except (ValueError, TypeError):
-                    pass
-        orbital_data["_nongrav"] = nongrav_data if nongrav_data else None
+        orbit_section = data.get('orbit', {})
+        if not isinstance(orbit_section, dict):
+            raise ValueError('SBDB orbit section must be an object')
+        parameters = {}
+        model_pars = orbit_section.get('model_pars', [])
+        if not isinstance(model_pars, list):
+            raise ValueError('SBDB model_pars must be an array')
+        for item in model_pars:
+            if not isinstance(item, dict) or 'name' not in item:
+                raise ValueError('SBDB model parameter must be a named object')
+            record = OrbitModelParameter.from_provider(item)
+            if record.name in parameters:
+                raise ValueError(f'Duplicate model parameter: {record.name}')
+            parameters[record.name] = record
+        native_cov = orbit_section.get('covariance')
+        if native_cov is not None and (not isinstance(native_cov, dict) or
+                                      not {'labels', 'data', 'epoch'}.issubset(native_cov)):
+            raise ValueError('Incomplete SBDB covariance object')
+        covariance = OrbitalCovariance.from_provider(native_cov) if native_cov is not None else None
+        if covariance is not None:
+            base = {'e', 'q', 'tp', 'node', 'peri', 'i'}
+            actual = set(covariance.labels)
+            if not base.issubset(actual):
+                raise ValueError('Covariance missing required orbital-coordinate labels')
+            expected = {key for key, parameter in parameters.items() if parameter.kind in {'EST', 'CON'} and parameter.n}
+            if not expected.issubset(actual):
+                raise ValueError('Covariance missing estimated/considered model parameters')
+            if actual - base - set(parameters):
+                raise ValueError('Unknown covariance labels without model parameter definitions')
+            if any(parameters[key].kind == 'SET' for key in actual - base):
+                raise ValueError('Fixed model parameter cannot be an estimated covariance coordinate')
+        solution = {
+            'source': 'JPL SBDB', 'schema_version': signature.get('version'),
+            'retrieved_at': datetime.now(UTC).isoformat(),
+            'canonical_response_sha256': hashlib.sha256(json.dumps(data, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest(),
+            'orbit_id': orbit_section.get('orbit_id'), 'epoch_jd_tdb': orbit_section.get('epoch'),
+            'solution_date': orbit_section.get('soln_date'), 'time_scale': 'TDB',
+            'equinox': orbit_section.get('equinox'),
+            'fit_metadata': {key: orbit_section.get(key) for key in
+                             ('rms', 'data_arc', 'n_obs_used', 'n_del_obs_used', 'n_dop_obs_used', 'producer')},
+            'object': copy.deepcopy(data.get('object', {})),
+            'elements': copy.deepcopy(orbit_section.get('elements', [])),
+            'first_obs': orbit_section.get('first_obs'), 'last_obs': orbit_section.get('last_obs'),
+        }
+        if solution['epoch_jd_tdb'] is not None:
+            finite_number(solution['epoch_jd_tdb'], 'orbit epoch')
+        if any(key in parameters for key in ('A1', 'A2', 'A3')):
+            ng = NonGravitationalParameters(parameters=parameters, covariance=covariance, solution=solution)
+            orbital_data['_nongrav'] = ng.to_dict()
+        else:
+            orbital_data['_nongrav'] = None
+        orbital_data['_evidence_metadata'] = {
+            'schema_status': 'supported' if signature else 'unverified_missing_signature',
+            'signature': copy.deepcopy(signature), 'solution': solution,
+            'nongrav_status': 'available' if orbital_data['_nongrav'] else 'not_available',
+            'covariance': covariance.to_dict() if covariance else None,
+            'model_pars': [parameter.to_dict() for parameter in parameters.values()],
+            'physical_measurements': copy.deepcopy(data.get('phys_par', [])),
+        }
 
         # Observation window (first_obs / last_obs from orbit section)
         orbit_section = data.get("orbit", {})
