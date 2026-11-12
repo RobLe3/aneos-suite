@@ -901,3 +901,12 @@ claim. The SQL JobStore has not yet been wired to them. See
 [the report contract and next integration gates](../engineering/network-evidence-report.md).
 Older numeric network examples are superseded by this correction. The generated
 OpenAPI snapshot reflects the registered application, not a hand-edited schema.
+
+## Execution-library dependency — 2026-11-13 (ADR-078)
+
+A registered resumable network worker now composes SQL JobStore with frozen source
+acquisitions and the replayable report contract. This does **not** replace current
+network routes' process-memory scheduling. Authenticated principal ownership and
+managed API worker lifecycle remain required before that migration. There are no
+new endpoints/options in this library change. See
+[scope, recovery controls and integration gates](../engineering/resumable-network-worker.md).

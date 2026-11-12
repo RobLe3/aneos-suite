@@ -2605,3 +2605,49 @@ not durable or owner-isolated**; ADR-076 is a storage foundation, not automatic
 integration. Next work must register a resumable authenticated worker and validate
 this report/request binding before JobStore.finish. No new bounded context, UI,
 physical solver, calibrated probability, fitted origin model or five-sigma claim.
+
+### ADR-078: Registered resumable network execution with committed evidence binding
+
+**Status:** Implemented/tested worker library and fixed-window acquisition adapter;
+**not integrated with authenticated REST or API lifecycle**. 2026-11-13; #6/#15/#16/#17.
+Extends ADR-076 storage and ADR-077 report boundaries, not a new bounded context.
+
+A persistent execution request freezes ordered designations, exact pattern policy,
+canonical screening reference/policy ID, report engine, source configuration
+fingerprint and explicit CAD calendar query bounds. Unknown/changed contracts are
+rejected, not silently upgraded. The source fingerprint is not source authenticity,
+plaintext credential storage or a full dependency/environment lock.
+
+Register `network-evidence-job-v1` as the worker's sole claimable kind. Acquire each
+unique identity once, validate returned typed identity and freeze its complete input
+before historical acquisition or dependent work. Freeze successful bounded historical
+responses separately with exact requested bounds and count/coverage evidence. Never
+replace a committed measurement on retry; failure is not an immutable zero measurement.
+Historical CAD events replace supplemental current/future encounters in the derived
+report input; the original full NEO snapshot remains separately accessible.
+
+Only completed versioned requests and evidence reports are eligible for terminal
+storage. Full report replay is necessary but insufficient: validate reported
+acquisitions against the actual immutable SQL checkpoints and request before finish.
+An internally consistent rehashed report cannot substitute another acquisition.
+Checkpointed final reports can recover without constructing a provider. Scientific
+policy/version drift requires explicit handling, not silently recomputing old jobs.
+
+Provider and numerical work run outside SQL transactions. Lease heartbeats renew
+only live attempts; stop/deadline ends renewal even when a provider remains blocked.
+SQL fencing denies late checkpoint/final writes after cancellation/expiry/reclaim.
+Attempt limits and retry deadlines are persisted; honor exposed provider cooldown
+hints without retrying earlier. Existing shared JPL transport coordination remains
+authoritative where adapters wrap exceptions. Read-only requests may repeat after
+an uncommitted interruption; no exactly-once external effects are promised.
+
+`serve` is an explicit blocking/cooperatively stopped loop, not import-time or daemon
+API activation. Driver/provider calls cannot be forcibly interrupted in-process;
+lease recovery is distinct from terminating the old thread. Database/driver timeouts,
+process supervision, authenticated principal mapping, managed API worker health/
+startup/shutdown and end-to-end REST recovery remain required. Current network REST
+still uses its old process-memory worker until that migration is complete.
+
+See `docs/engineering/resumable-network-worker.md` for actual SQL/process controls,
+limitations and commands. No probability, force-model fit, calibration or origin
+claim is introduced; execution completion remains separate from scientific validation.

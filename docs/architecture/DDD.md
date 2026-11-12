@@ -1288,3 +1288,21 @@ terminal commits. Current network REST/menu consume the report; legacy API job
 scheduling still uses process memory with no principal ownership. Durable activation,
 case histories, independent population calibration and observational model fits
 remain separate open work. No new bounded context is introduced.
+
+## Registered population execution — 2026-11-13 (ADR-078)
+
+Execution infrastructure now composes acquisition, BC11 reporting and SQL storage
+through a versioned `network-evidence-job-v1` handler. Requests bind ordered identities,
+scientific configuration/reference policy, acquisition fingerprint and fixed calendar
+query bounds. Immutable checkpoints bind each unique source snapshot/history and
+final report to the request. Replaying a report against its own snapshots does not
+alone prove execution provenance: terminal commit also compares acquisitions to the
+actual stored checkpoints. A committed execution is not a calibrated scientific finding.
+
+Transient provider outage leaves missing acquisition work for bounded retry; valid
+committed evidence is reused, never refreshed. Missing physical properties may yield
+canonical scientific inconclusive results, whereas source outage, invalid identity,
+stop/deadline, storage uncertainty and internal errors have separate execution codes.
+Heartbeat/fencing/recovery handle old workers without granting them write authority.
+This library is not yet hosted by the API lifecycle or authenticated REST ownership;
+no additional bounded context, queue product or detection engine is introduced.

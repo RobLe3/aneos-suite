@@ -883,3 +883,15 @@ availability and full A1/A2/A3 inventory replace unsupported network significanc
 `verify_network_report` fully recomputes the report; `network_report_to_markdown`
 includes verified JSON for replay. No network acquisition occurs inside this session.
 See [the exact scope and remaining acceptance gates](docs/engineering/network-evidence-report.md).
+
+### Registered resumable worker (ADR-078, review branch)
+
+`aneos_api.network_jobs.NetworkWorker` executes the registered population job against
+the SQL store: fixed request/query bounds, successful immutable source checkpoints,
+resume without refreshing committed evidence, lease heartbeats/fencing and full
+request/checkpoint/report verification before completion. It is an explicit Python
+worker API; no automatic daemon or new CLI/REST option is introduced.
+
+**Not yet integrated:** current authenticated API ownership, worker lifespan/health
+and persistent REST jobs. See [the exact worker controls and remaining gates](docs/engineering/resumable-network-worker.md).
+Completion is execution evidence, not calibrated scientific validation.

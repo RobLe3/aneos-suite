@@ -213,13 +213,15 @@ class DataFetcher:
         }
         return merged
 
-    def _fetch_close_approaches(self, designation: str, date_min: str = "now") -> List:
+    def _fetch_close_approaches(self, designation: str, date_min: str = "now", date_max: Optional[str] = None) -> List:
         """A bounded CAD query, with native TDB evidence and explicit source failure."""
         import requests
         from .sources.cad import parse_cad_payload, close_approach_from_record, CloseApproachQuery
         from .sources.base import _APPLICATION_HEADERS
         query = {'des': designation, 'date-min': date_min, 'dist-max': '0.2',
                  'body': 'Earth', 'limit': 10, 'fullname': 'true'}
+        if date_max is not None:
+            query['date-max'] = date_max
         try:
             response = provider_get('https://ssd-api.jpl.nasa.gov/cad.api', params=query,
                                     headers=_APPLICATION_HEADERS, timeout=15)
@@ -229,6 +231,19 @@ class DataFetcher:
             return CloseApproachQuery([close_approach_from_record(r) for r in parsed['records']], parsed['metadata'])
         except Exception as exc:
             raise DataSourceUnavailableError(f'CAD query unavailable for {designation}: {exc}') from exc
+
+    def fetch_approaches_between(self, designation: str, date_min: str, date_max: str) -> List:
+        """Explicit frozen CAD calendar window, bounded rows and visible coverage.
+
+        Dates are TDB query calendar labels, not converted observation timestamps.
+        Does not reuse a relative-horizon cache whose window can drift on retry.
+        """
+        from datetime import date
+        if (not isinstance(date_min,str) or not isinstance(date_max,str) or
+            date.fromisoformat(date_min).isoformat()!=date_min or
+            date.fromisoformat(date_max).isoformat()!=date_max or date_min>date_max):
+            raise ValueError('Expected ordered ISO calendar query bounds')
+        return self._fetch_close_approaches(designation,date_min=date_min,date_max=date_max)
 
     def fetch_historical_approaches(self, designation: str, years_back: int = 30) -> List:
         """Bounded historical CAD query, not a complete observation time series."""

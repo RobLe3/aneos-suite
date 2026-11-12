@@ -29,6 +29,9 @@ jobs:
       - name: Verify population report component coverage
         run: python -m pytest tests/test_network_evidence_report.py tests/test_pattern_api.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-network-report.ini --cov-report=term-missing --cov-fail-under=90
 
+      - name: Verify resumable network worker component coverage
+        run: python -m pytest tests/test_network_job_worker.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-worker.ini --cov-report=term-missing --cov-fail-under=90
+
   docker-build:
     name: Docker build
     runs-on: ubuntu-latest
