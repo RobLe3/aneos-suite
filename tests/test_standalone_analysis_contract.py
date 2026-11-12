@@ -178,13 +178,15 @@ def test_advanced_native_nongrav_uncertainty_and_correlations_survive(pipeline):
     from aneos_core.data.orbit_evidence import OrbitModelParameter,OrbitalCovariance
     from aneos_core.analysis.reporting import verify_screening_report
     n=neo();n.nongrav=NonGravitationalParameters(parameters={
+        'A1':OrbitModelParameter('A1',3e-11,1e-11,'au/d^2','EST',raw_value='3e-11',raw_sigma='1e-11'),
         'A3':OrbitModelParameter('A3',1.2e-12,2e-13,'au/d^2','EST',raw_value='1.2e-12',raw_sigma='2e-13')},
-        covariance=OrbitalCovariance(['A3'],[[4e-26]],2451545.))
+        covariance=OrbitalCovariance(['A1','A3'],[[1e-22,2e-25],[2e-25,4e-26]],2451545.))
     pipeline.data_fetcher.fetch_neo_data.side_effect=lambda d,**kw:n
     analyzer=AdvancedaNEOSAnalyzer(pipeline=pipeline)
     result=analyzer.analyze_neo_comprehensive('marker')
     report=analyzer.generate_comprehensive_report(result)
     assert report['neo_data']['nongrav']==n.nongrav.to_dict()
+    assert report['neo_data']['nongrav']['covariance']['data'][0][1]==2e-25
     assert report['screening_assessment']['non_gravitational_evidence']==n.nongrav.evidence_report()
     assert report['impact_assessment']['input_inventory']['covariance_epoch_jd_tdb']==2451545.
     assert report['impact_assessment']['collision_probability'] is None
