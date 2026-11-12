@@ -23,17 +23,24 @@ class TestNEODySResolveNumber:
         from aneos_core.data.sources.neodys import NEODySSource
         return NEODySSource()
 
-    def test_provisional_1998ky26_not_misparse(self):
-        src = self._get_source()
-        result = src._resolve_number("1998 KY26")
-        # Must NOT return 1998 (the year)
-        assert result != 1998, f"Still returning year: {result}"
+    def test_provisional_1998ky26_not_misparse(self, monkeypatch):
+        # Synthetic MPC reply, not a claim about this object's catalogue number.
+        from astroquery.mpc import MPC
+        from unittest.mock import Mock
+        query = Mock(return_value=[{'number':'876543'}])
+        monkeypatch.setattr(MPC, 'query_object', query)
+        result = self._get_source()._resolve_number("1998 KY26")
+        assert result == 876543 and result != 1998
+        query.assert_called_once_with('asteroid', name='1998 KY26')
 
-    def test_provisional_2004mn4_not_misparse(self):
-        src = self._get_source()
-        result = src._resolve_number("2004 MN4")
-        # Must NOT return 2004 (the year)
-        assert result != 2004, f"Still returning year: {result}"
+    def test_provisional_2004mn4_not_misparse(self, monkeypatch):
+        from astroquery.mpc import MPC
+        from unittest.mock import Mock
+        query = Mock(return_value=[{'number':'765432'}])
+        monkeypatch.setattr(MPC, 'query_object', query)
+        result = self._get_source()._resolve_number("2004 MN4")
+        assert result == 765432 and result != 2004
+        query.assert_called_once_with('asteroid', name='2004 MN4')
 
     def test_numbered_with_name_resolves(self):
         src = self._get_source()

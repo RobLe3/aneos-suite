@@ -141,13 +141,24 @@ controls and 2031 predictions remain open. No five-sigma permission is granted.
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 \
-ANEOS_DATABASE_URL=sqlite:////tmp/aneos-impact-entry-final4.db \
+ANEOS_DATABASE_URL=sqlite:////tmp/aneos-impact-entry-final5.db \
 /Users/roble/.venvs/aneos-suite/bin/python -m pytest tests/ aneos_core/tests/ \
   -m 'not network' -q --tb=short --cov=aneos_core \
   --cov-report=term-missing --cov-fail-under=30
 ```
 
-Final local result: **857 passed, five network deselected, five warnings in 36.55s;
-45.05% core coverage, unchanged 30% gate**. The selected suite now enforces offline
+Final local result: **857 passed, five network deselected, five warnings in 35.63s;
+45.06% core coverage, unchanged 30% gate**. The selected suite now enforces offline
 isolation as described above. The PR records the final revision/remote CI separately.
 No repository database or original research result is changed by this branch.
+
+### Clean-runner offline fixture correction
+
+The first remote #36 run had **857 passing tests and two offline-guard teardown
+errors**. Both were pre-existing NEODyS provisional-designation tests calling the
+real MPC resolver without an injected response. Their weak `result != year` checks
+could pass even after a failed live lookup. Local behavior had not exposed the same
+cold-runner path. The tests now inject explicit synthetic MPC record replies and
+assert exact returned identifiers **and** query arguments. Those synthetic numbers
+are not object catalogue identifications. The offline gate remains unchanged;
+no network marker, skip, xfail or weaker acceptance is introduced.
