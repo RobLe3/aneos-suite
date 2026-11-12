@@ -859,3 +859,18 @@ This archive does **not** provide durable API jobs/case lifecycle or automatical
 persist every REST response. Those remain #15/#13. Menu JSON/CSV exports retain
 complete replayable evidence and use exclusive creation without an overwrite fallback.
 See [implementation, restart controls and filesystem limits](../engineering/impact-entrypoint-contract.md).
+
+### Durable execution storage is not yet a REST job migration (ADR-076)
+
+The existing database now has a tested JobStore foundation. No new endpoint or
+background worker is activated by it. Current network/automatic/polling routes still
+need the explicit integration and scientific-result corrections in #6/#15; their
+in-memory statuses are not certified by storage-layer tests. Owner scope filtering
+inside the store is not API authentication: future routes must derive scopes from
+verified principals and test cross-owner denial.
+
+Importing database/job models now has no schema/service side effect. Use explicit
+`init_database()`/`JobStore.initialize_schema()` for the appropriate setup; full API
+lifespan performs and confirms schema initialization before services. It does not
+validate every existing migration or optional backend. API users must not be told
+that a generic stored `completed` result is scientifically validated.

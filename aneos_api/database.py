@@ -21,6 +21,7 @@ try:
     from sqlalchemy.orm import declarative_base
     from sqlalchemy.orm import sessionmaker, Session
     from sqlalchemy.pool import StaticPool
+    from sqlalchemy.engine import make_url
     HAS_SQLALCHEMY = True
 except ImportError:
     HAS_SQLALCHEMY = False
@@ -42,10 +43,16 @@ DATABASE_PATH = Path("aneos.db")
 if HAS_SQLALCHEMY:
     # Create engine and session
     if DATABASE_URL.startswith("sqlite"):
+        sqlite_url = make_url(DATABASE_URL)
+        memory_database = (sqlite_url.database in (None, '', ':memory:')
+                           or str(sqlite_url.database).startswith('file::memory:')
+                           or sqlite_url.query.get('mode') == 'memory')
         engine = create_engine(
             DATABASE_URL,
             connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
+            # File DB transactions need independent connections. Only explicitly
+            # ephemeral memory DBs use a shared connection for legacy callers.
+            **({'poolclass': StaticPool} if memory_database else {}),
             echo=False
         )
     else:
@@ -313,6 +320,7 @@ class DatabaseManager:
             return False
         
         try:
+            from . import job_store  # Register durable-job tables on the same Base.
             Base.metadata.create_all(bind=self.engine)
             logger.info("Database initialized successfully")
             return True
@@ -944,9 +952,5 @@ def cleanup_old_data(days: int = 30) -> Dict[str, int]:
         logger.error(f"Failed to cleanup old data: {e}")
         return {'error': str(e)}
 
-# Initialize database on import
-if HAS_SQLALCHEMY:
-    init_result = init_database()
-    logger.info(f"Database initialization: {'success' if init_result else 'failed'}")
-else:
-    logger.warning("Database features disabled - SQLAlchemy not available")
+# Schema initialization is explicit via init_database() or API lifespan startup.
+# Importing storage models must not create/modify a database or compose services.

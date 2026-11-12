@@ -222,14 +222,17 @@ def get_aneos_app() -> ANEOSApp:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI lifespan context manager."""
-    # Startup
+    # Starting the full API is an explicit schema operation, unlike importing
+    # storage models. Never report a usable persistent service after failed setup.
+    from .database import init_database
+    if init_database() is not True:
+        raise RuntimeError('Application database schema unavailable; startup not complete')
     aneos_app = get_aneos_app()
-    await aneos_app.initialize_services()
-    
-    yield
-    
-    # Shutdown
-    await aneos_app.shutdown_services()
+    try:
+        await aneos_app.initialize_services()
+        yield
+    finally:
+        await aneos_app.shutdown_services()
 
 def create_app(config_path: Optional[str] = None) -> FastAPI:
     """Create and configure FastAPI application."""

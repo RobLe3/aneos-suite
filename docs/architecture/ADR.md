@@ -2504,3 +2504,49 @@ network analysis and durable execution remain #6/#15, not certified by those tes
 
 No new UI, solver or bounded context. See `docs/engineering/impact-entrypoint-contract.md`
 for archive filesystem/rollback limits, changed tests and exact scoped evidence.
+
+### ADR-076: Transactional durable-job storage before worker/API activation
+
+**Status:** Implemented and regression-tested storage boundary; **not integrated**
+with the current network/automatic/polling API workers. 2026-11-12; #15/#6/#17.
+No claim that existing in-memory jobs are now recoverable or scientifically valid.
+
+**Context:** Population jobs use daemon threads and in-memory state; queued records
+already contain numeric sigma/p-value defaults. There was no reusable persistent
+execution store. File SQLite used StaticPool, sharing one connection across thread
+transactions. Importing the API package assembled optional web/ML services; importing
+database models also initialized schema. Storage tools therefore had unrelated
+runtime and write side effects. A targeted run encountered a native Torch import
+fault before storage tests; importing persistence must not depend on that backend.
+
+**Decision:** Extend the existing SQLAlchemy Base/database, not introduce a new
+queue service or competing scientific engine. Add persistent admission/job/event/
+checkpoint tables with owner-scoped reads/cancellation, bounded atomic admission,
+request idempotency, leased claims, fencing tokens, bounded retries, immutable input
+checkpoints and atomic terminal result/event/admission commits. Checksums bind
+requests/results and checkpoint/event envelopes; they are not cryptographic source
+authentication or domain/scientific validation. Backend owner scopes are trusted
+caller inputs, not a substitute for authenticating API principals.
+
+For file SQLite, use independent pooled connections; retain shared connections only
+for legacy explicitly in-memory databases, which JobStore rejects as nondurable.
+Short job write transactions use explicit BEGIN IMMEDIATE (reads use BEGIN), disk journaling and FULL/EXTRA
+synchronization; require SQLite >=3.35 for RETURNING. No provider/calculation work
+runs under these transactions. Recheck lease expiry after acquiring the write lock:
+a timestamp sampled before a lock wait must not authorize an expired worker.
+
+API package exports become lazy with names retained. Storage import starts no
+services and creates no database. Schema creation is explicit via existing
+init_database/JobStore.initialize_schema; the full API lifespan confirms schema
+setup before services and fails rather than yielding on unconfirmed setup.
+Existing columns/keys and admission accounting are checked without destructive repair.
+Generic database initialization registers the tables, but queue admission settings
+still require explicit initialization. No automatic migration/deletion/requeue.
+
+**Required next integration:** a versioned evidence-bound network report and domain
+validator; trusted authenticated owner mapping; real worker/checkpoint/heartbeat/
+retry/cancellation lifecycle; persistent REST statuses and correct status URL; startup
+recovery and cross-owner/restart/provider-outage positive/negative controls. Existing
+network numeric placeholders and uncalibrated feature fusion remain #6/#15, not fixed
+by this storage layer. See `docs/engineering/durable-job-store.md` for exact evidence,
+limits, operational setup and integration acceptance gates. No new bounded context.

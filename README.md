@@ -859,3 +859,17 @@ safe verdict. The separate public impact REST/menu/core heuristic contract remai
 [issue #32](https://github.com/RobLe3/aneos-suite/issues/32); core scenario/research
 functions remain available but are not validated by this facade correction.
 [Exact scope, tests and reproduction](docs/engineering/standalone-analysis-contract.md).
+
+### Durable execution foundation (ADR-076, review branch)
+
+`aneos_api.job_store.JobStore` adds transactional execution storage on the existing
+SQLAlchemy database: scoped reads, idempotent admission, fenced leases, immutable
+checkpoints, atomic terminal commits and retained history. Storage import does not
+assemble web/ML services or create a database. Schema setup is explicit; starting
+the full API confirms setup before services and cleans up on lifecycle failure.
+
+**Not yet integrated:** current network/automatic/polling API workers. They are not
+made durable merely by adding this component. Network queued numeric inference and
+uncalibrated feature-fusion claims still require #6/#15 remediation. Execution
+completion does not mean scientific validation. See
+[the storage controls, setup and integration gates](docs/engineering/durable-job-store.md).

@@ -1252,3 +1252,20 @@ local restart read-back are bounded engineering evidence, not durable job schedu
 full case lifecycle, backups, distributed storage or independently validated science.
 No new bounded context is required. Restored/get-by-ID evidence must replay against its
 source input; a complete case history/workflow and API-wide persistence remain open.
+
+## Durable execution storage foundation — 2026-11-12 (ADR-076)
+
+Execution persistence belongs to existing API/database infrastructure, separate from
+scientific analysis and source acquisition. A stored `completed` state means an
+execution result was committed; it is not scientific validation, origin confirmation
+or five-sigma significance. A handler must validate its own versioned, evidence-bound
+result before commit. Missing results remain null; no scientific default is generated.
+
+**Implemented/regression-tested:** same-Base SQL job/admission/checkpoint/event
+storage, owner scope filters, idempotency, lease fencing/recovery, immutable snapshots,
+atomic transitions, rollback and process restart controls; side-effect-free storage
+imports and explicit full-API schema startup. **Not integrated:** current network/
+automatic/polling workers, REST persistence, authenticated principal mapping, domain
+report validation or case lifecycle. **Not validated:** PostgreSQL execution, cross-host
+clock behavior, backups, hardware/power-loss recovery or scientific accuracy. No new
+queue service or bounded context is introduced. Current API jobs remain #6/#15 work.
