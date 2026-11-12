@@ -104,3 +104,12 @@ TDB provenance; and contains import-time Gaia network activity. See
 New [#25](https://github.com/RobLe3/aneos-suite/issues/25) tracks physical source
 measurement uncertainties not yet consumed by typed SBDB adapters. Cache
 roundtrip preservation is implemented; that source-ingestion work is not.
+
+
+The legacy validation increment (ADR-068, stacked on #26) removes direct-validator
+placeholder inputs/pass-on-error/probability reduction; retains real inventories
+or unavailable outcomes; replaces mock integration scoring; and propagates null
+inference through existing monitoring and frontend paths. See
+`legacy-validation-integrity.md`. This does not complete core AnalysisPipeline/
+legacy API/CLI migration (#6), install calibrated physical/null models, or certify
+independent detection performance. Those requirements remain open.

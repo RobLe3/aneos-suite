@@ -498,7 +498,7 @@ class AutomaticReviewPipeline:
                 
                 # Check if candidate passes threshold
                 overall_score = score_result.get('overall_score', 0.0)
-                if score_result['screening_candidate'] or overall_score >= self.config.first_stage.score_threshold:
+                if score_result['screening_candidate'] or (overall_score is not None and overall_score >= self.config.first_stage.score_threshold):
                     candidates.append(neo_obj)
                     
             except Exception as e:
@@ -507,125 +507,18 @@ class AutomaticReviewPipeline:
         
         return candidates
     
-    async def _apply_xviii_swarm_scoring(self, neo_obj: Dict) -> Dict:
-        """Apply real XVIII SWARM advanced scoring to individual object."""
-        try:
-            designation = neo_obj.get('designation', 'unknown')
-            
-            if self.xviii_swarm_scorer:
-                # Use the actual XVIII SWARM advanced scoring system
-                # Prefer top-level CAD fields; fall back to orbital element proxies
-                orbital_elements = (neo_obj.get('orbital_elements') or {})
-                eccentricity = orbital_elements.get('eccentricity', 0.0)
-                inclination = orbital_elements.get('inclination', 0.0)
+    async def _apply_xviii_swarm_scoring(self, neo_obj):
+        """Compatibility triage wrapper; no fabricated stage/physical inputs.
 
-                # If CAD distance/velocity fields are present, use them for regularity proxy
-                dist_au = neo_obj.get('miss_distance_au')
-                v_kms = neo_obj.get('relative_velocity_km_s')
-                if dist_au is not None:
-                    import math
-                    approach_regularity_score = min(math.exp(-dist_au / 0.1), 0.9)
-                else:
-                    approach_regularity_score = min(eccentricity * 0.1, 0.3)
+        Standalone AdvancedScoreCalculator remains available for explicitly
+        sourced research inputs. Automatic origin/rank decisions use the shared
+        service; this legacy name no longer registers proxy ΔBIC or zero-filled
+        radar/thermal/spectral evidence.
+        """
+        result = self._simple_first_stage_scoring(neo_obj)
+        result['legacy_atlas_status'] = 'proxy_fusion_withdrawn'
+        return result
 
-                if v_kms is not None:
-                    # Low velocity proxy: orbital geometry only, NOT actual ΔBIC fit.
-                    # Cap at 0.5 so score never exceeds the Δ flag threshold (0.65).
-                    # Confidence kept low (0.35) to signal this is a proxy, not a measurement.
-                    delta_bic_score = min(max(0.0, (10.0 - v_kms) / 10.0), 0.5) if v_kms < 10 else min(v_kms / 100.0, 0.2)
-                    delta_bic_confidence = neo_obj.get('delta_bic_confidence', 0.35)
-                else:
-                    delta_bic_score = min(abs(inclination - 90) / 180 * 0.2, 0.2)
-                    delta_bic_confidence = 0.25
-
-                # Radar, thermal, and spectral data are NOT available from the CAD API.
-                # Setting these to 0.0 prevents fabricated "physical evidence" explanations.
-                # Real values require dedicated observational campaigns (ADR-053).
-                radar_score = neo_obj.get('radar_score', 0.0)
-                thermal_score = neo_obj.get('thermal_score', 0.0)
-                spectral_score = neo_obj.get('spectral_score', 0.0)
-                hardware_score = 0.0  # Conservative for natural objects
-
-                indicator_results = {
-                    # Orbital behavior indicators
-                    # Confidence 0.35 signals this is a single close-approach proximity
-                    # proxy, not a multi-epoch regularity measurement.
-                    'approach_regularity': {
-                        'raw_score': neo_obj.get('approach_regularity', approach_regularity_score),
-                        'confidence': neo_obj.get('approach_confidence', 0.35)
-                    },
-
-                    # Velocity-proxy ΔBIC: low confidence, score capped at 0.5
-                    # (below Δ flag threshold of 0.65). Real ΔBIC requires trajectory fit.
-                    'delta_bic_analysis': {
-                        'weighted_score': neo_obj.get('delta_bic_score', delta_bic_score),
-                        'raw_score': neo_obj.get('delta_bic_raw', delta_bic_score),
-                        'confidence': delta_bic_confidence
-                    },
-
-                    # Physical trait indicators: 0.0 unless object carries measured values
-                    'radar_polarization': {
-                        'weighted_score': radar_score,
-                        'raw_score': neo_obj.get('radar_raw', radar_score),
-                        'confidence': neo_obj.get('radar_confidence', 0.7)
-                    },
-
-                    'thermal_ir_analysis': {
-                        'weighted_score': thermal_score,
-                        'raw_score': neo_obj.get('thermal_raw', thermal_score),
-                        'confidence': neo_obj.get('thermal_confidence', 0.6)
-                    },
-
-                    # Spectral analysis: 0.0 unless object carries measured values
-                    'spectral_outlier': {
-                        'weighted_score': spectral_score,
-                        'raw_score': neo_obj.get('spectral_raw', spectral_score),
-                        'confidence': neo_obj.get('spectral_confidence', 0.7)
-                    },
-
-                    # Human origin analysis
-                    'human_hardware': {
-                        'weighted_score': neo_obj.get('hardware_score', hardware_score),
-                        'raw_score': neo_obj.get('hardware_raw', hardware_score),
-                        'confidence': neo_obj.get('hardware_confidence', 0.8)
-                    }
-                }
-                
-                # Calculate individual advanced score for this specific object
-                score_result = self.xviii_swarm_scorer.calculate_score(neo_obj, indicator_results)
-                
-                # Convert AdvancedAnomalyScore to dict format for pipeline
-                return {
-                    'overall_score': score_result.overall_score,
-                    'raw_weighted_sum': score_result.raw_weighted_sum,
-                    'confidence': score_result.confidence,
-                    'classification': score_result.classification,
-                    'category_scores': score_result.category_scores,
-                    'flag_string': score_result.flag_string,
-                    'clue_contributions': [
-                        {
-                            'name': c.name,
-                            'category': c.category, 
-                            'score': c.normalized_score,
-                            'contribution': c.contribution,
-                            'confidence': c.confidence,
-                            'flag': c.flag,
-                            'explanation': c.explanation
-                        } for c in score_result.clue_contributions
-                    ],
-                    'debris_penalty_applied': score_result.debris_penalty_applied,
-                    'processing_stage': 'xviii_swarm_advanced',
-                    'designation': designation,
-                    'analysis_timestamp': datetime.now().isoformat()
-                }
-            else:
-                # Fallback: Simple heuristic scoring for individual object
-                return self._simple_first_stage_scoring(neo_obj)
-            
-        except Exception as e:
-            self.logger.error(f"XVIII SWARM scoring failed for {neo_obj.get('designation', 'unknown')}: {e}")
-            return {'overall_score': 0.0, 'error': str(e), 'designation': neo_obj.get('designation', 'unknown')}
-    
     def _simple_first_stage_scoring(self, neo_obj: Dict) -> Dict:
         """Multi-signal first-stage scorer for CAD and orbital-element data.
 
@@ -696,13 +589,14 @@ class AutomaticReviewPipeline:
 
             if dist_au is not None or v_kms is not None:
                 dist_score = math.exp(-dist_au / 0.02) if dist_au is not None else 0.0
-                vel_bonus = (0.30 if v_kms and v_kms < 3 else (
-                             0.15 if v_kms and v_kms < 5 else (
-                             0.06 if v_kms and v_kms < 8 else 0.0)))
+                vel_bonus = (0.30 if v_kms is not None and v_kms < 3 else (
+                             0.15 if v_kms is not None and v_kms < 5 else (
+                             0.06 if v_kms is not None and v_kms < 8 else 0.0)))
                 return {
                     'overall_score': min(score, 1.0),
                     'flags': flags if flags else ['cad_no_signal'],
-                    'confidence': 0.7,
+                    'confidence': None,
+                    'score_semantics': 'uncalibrated_encounter_triage_not_origin',
                     'processing_stage': 'cad_multi_signal',
                     'signal_breakdown': {
                         'distance': dist_score,
@@ -711,27 +605,15 @@ class AutomaticReviewPipeline:
                     },
                 }
 
-            # Fallback: orbital elements only (no CAD data)
-            orbital_elements = (neo_obj.get('orbital_elements') or {})
-            eccentricity = orbital_elements.get('eccentricity', 0.0)
-            inclination = orbital_elements.get('inclination', 0.0)
-            orb_score = 0.0
-            if eccentricity > 0.9:
-                orb_score += 0.5
-            elif eccentricity > 0.7:
-                orb_score += 0.3
-            if inclination > 150 or (inclination < 30 and inclination != 10.0):
-                orb_score += 0.3
-            return {
-                'overall_score': orb_score,
-                'flags': ['orbital_heuristic'],
-                'confidence': 0.4,
-                'processing_stage': 'orbital_heuristic',
-            }
+            # No encounter measurements: do not synthesize zero inclination/eccentricity.
+            # The shared screening service independently handles any real orbit.
+            return {'overall_score': None, 'flags': ['encounter_data_unavailable'],
+                    'confidence': None, 'processing_stage': 'unavailable_input',
+                    'score_semantics': 'uncalibrated_encounter_triage_not_origin'}
+        except Exception as exc:
+            return {'overall_score': None, 'confidence': None, 'error': str(exc),
+                    'processing_stage': 'unavailable_input'}
 
-        except Exception:
-            return {'overall_score': 0.0, 'error': 'scoring_failed'}
-    
     async def _detect_artificial_neo(self, neo_obj: Dict):
         """Use the same snapshot contract as API, menu and batch screening."""
         from ..analysis.screening import ScreeningAnalysisService

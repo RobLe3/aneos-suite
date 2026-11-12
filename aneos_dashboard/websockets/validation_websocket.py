@@ -341,7 +341,11 @@ class ValidationWebSocketManager:
                 'session_id': session_id,
                 'object_designation': getattr(validation_result, 'object_designation', 'unknown'),
                 'recommendation': validation_result.recommendation,
+                'validation_status': getattr(validation_result, 'validation_status', 'unavailable'),
+                'evidence_id': getattr(validation_result, 'evidence_id', None),
+                'policy_id': getattr(validation_result, 'policy_id', None),
                 'confidence': validation_result.overall_confidence,
+                'screening_score': getattr(validation_result, 'screening_score', None),
                 'false_positive_probability': validation_result.overall_false_positive_probability,
                 'processing_time_ms': processing_time_ms,
                 'stage_results': [
@@ -349,6 +353,7 @@ class ValidationWebSocketManager:
                         'stage_number': stage.stage_number,
                         'stage_name': stage.stage_name,
                         'passed': stage.passed,
+                        'validation_status': getattr(stage, 'validation_status', 'unavailable'),
                         'score': stage.score,
                         'confidence': stage.confidence,
                         'processing_time_ms': stage.processing_time_ms

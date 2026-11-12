@@ -108,16 +108,10 @@ class PipelineIntegration:
             
             # Try to initialize enhanced analysis components
             try:
-                # Mock original pipeline for enhanced wrapper
-                class MockOriginalPipeline:
-                    async def analyze_neo(self, designation, neo_data=None):
-                        return type('MockResult', (), {'overall_score': 0.5})()
-                
+                from ..analysis.screening import CanonicalAnalysisAdapter
                 self.enhanced_pipeline = EnhancedAnalysisPipeline(
-                    MockOriginalPipeline(),
-                    enable_validation=True
-                )
-                
+                    CanonicalAnalysisAdapter(), enable_validation=True)
+
                 # Initialize ATLAS scorer
                 config_path = Path("aneos_core/config/advanced_scoring_weights.json")
                 if config_path.exists():

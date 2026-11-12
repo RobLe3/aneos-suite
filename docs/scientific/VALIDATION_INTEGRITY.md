@@ -1,3 +1,10 @@
+> **ADR-068 review-branch update (2026-11-12):** direct MultiStageValidator
+> placeholder science and pass-on-error contracts are withdrawn; legacy inputs
+> use canonical screening plus unavailable/inconclusive scientific prerequisites.
+> This is not a calibrated origin model or independent performance result. Core
+> legacy AnalysisPipeline/API/CLI migration remains #6. The prior audit remains
+> historical evidence rather than certification of current capability.
+
 > **2026-11-12 review-branch correction:** ADR-065 withdraws constructor toy
 > performance/sigma/posterior claims on canonical screening. ADR-066 requires
 > evidence-bound validation outcomes but installs no calibrated physical/null

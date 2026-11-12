@@ -1068,7 +1068,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
         lines = [
             f"[bold]Designation:[/bold]      {self.format_designation(designation)}",
-            f"[bold]ATLAS score:[/bold]      {overall:.4f}  (flags: {flags})",
+            f"[bold]Encounter triage:[/bold] {self._format_score(overall)}  (flags: {flags})",
             f"[bold]Scoring stage:[/bold]    {stage}",
         ]
         if dist is not None:

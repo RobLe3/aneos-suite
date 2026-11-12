@@ -2169,3 +2169,39 @@ first-stage→required-gate integration and failure reporting are documented in
 `docs/engineering/cad-evidence-integrity.md`. No new bounded context/UI. No fitted
 likelihood, calibrated significance, source authentication, complete historical
 population, provider-wide scheduling or restart-safe job execution is established.
+
+---
+
+## ADR-068: Withdraw placeholder science from legacy validation and consumers
+
+**Date:** 2026-11-12
+**Status:** Implemented on review branch; calibrated scientific models not installed
+**Related:** ADR-065–067; issues #2, #23, #6, #12, #15, #17
+
+**Context:** Direct legacy validation still fabricated source/orbit/uncertainty
+inputs and could pass on errors. Consumers could turn unavailable probability
+into a perfect score, double-count transported results, or alert on thresholds.
+
+**Decision:** Preserve function names but withdraw defective numerical/validation
+contracts. Use actual input inventories or explicit unavailable/inconclusive
+outcomes. No default null, calibrated source-quality scalar, unitless mixed-orbit
+uncertainty, invented category count or asserted FP-reduction probability is
+installed. Require explicit complete outcomes even for review eligibility.
+
+Adapt legacy validation inputs through canonical screening while retaining the
+original separately. Guard scientific claim aliases against legacy promotion.
+Replace mock integration scoring with a real acquisition/shared-service adapter.
+Keep stand-alone research analyzers available, but do not register them as
+validated evidence or fuse unavailable stages into measured clues.
+
+Propagate missingness through the existing dashboard/REST/WebSocket/JavaScript
+paths; distinguish report availability, workflow outcomes and scientific
+inference. No `1-FPR` origin/score interpretation or threshold-only origin alert
+is supported. In-process transport deduplication is not durable exactly-once
+execution. No new bounded context or UI is introduced.
+
+**Evidence/limits:** `docs/engineering/legacy-validation-integrity.md` records
+controlled deprecations, executable positive/negative/null controls and remaining
+core AnalysisPipeline/API/CLI migration. Scientific capability remains unavailable;
+these engineering tests do not satisfy independent accuracy or fit/calibration
+requirements. No existing scientific/CI acceptance gate is lowered.

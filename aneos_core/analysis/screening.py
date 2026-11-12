@@ -255,3 +255,23 @@ class ScreeningAnalysisService:
                 'unavailable_reason': reason, 'evidence_basis': 'heuristic_proxy',
                 'dependency_group': 'physical_size_photometry' if kind in {'physical_properties', 'spectral_analysis'} else 'orbital_catalogue',
                 'score_semantics': 'uncalibrated_ranking_heuristic'}
+
+
+class CanonicalAnalysisAdapter:
+    """Async original-pipeline interface backed by real acquisition/shared screening."""
+    def __init__(self, service=None, fetcher=None):
+        self.service = service or ScreeningAnalysisService()
+        self.fetcher = fetcher
+
+    async def analyze_neo(self, designation, neo_data=None):
+        if neo_data is None:
+            import asyncio
+            if self.fetcher is None:
+                from ..data.fetcher import DataFetcher
+                self.fetcher = DataFetcher()
+            neo_data = await asyncio.to_thread(self.fetcher.fetch_neo_data, designation)
+        if neo_data is None or neo_data.designation != designation:
+            raise ValueError('Acquired evidence unavailable or object identity mismatch')
+        result = self.service.analyze_neo(neo_data).to_detection_result()
+        result.neo_data = neo_data
+        return result

@@ -677,3 +677,14 @@ history queries can be bounded/partial. Source failures are explicit and must no
 be read as empty successful surveys. See
 [CAD integrity scope](../engineering/cad-evidence-integrity.md). No new REST route
 or calibrated physical-origin capability is introduced.
+
+
+### Legacy validation consumers (2026-11-12 review branch)
+
+Required validation and dashboard responses expose nullable confidence/FP
+probability and explicit validation status. Workflow outcomes are not classifier
+accuracy. Scatter coordinates use a supplied uncalibrated screening rank, never
+`1 - false_positive_probability`. Unknown coordinates are not plotted as zero or
+perfect confidence. Standalone core legacy `/analyze` response migration remains
+unfinished; do not infer that its older examples establish scientific validation.
+See [the contract correction](../engineering/legacy-validation-integrity.md).

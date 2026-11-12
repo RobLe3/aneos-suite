@@ -1097,3 +1097,22 @@ are independent of scientific validation status. New operational caches are
 versioned/checksummed; they are not authenticated scientific archives. Physical
 measurement source ingestion (#25), provider-wide scheduling (#16), restart-safe
 execution (#15) and calibrated observation-based inference remain unfinished.
+
+## Legacy scientific-contract correction — 2026-11-12 (ADR-068)
+
+Validation owns prerequisite status, not an origin verdict inferred from a rank.
+A field-presence fraction is descriptive completeness, not source reliability,
+quality or independent-evidence count. Actual observation span and orbital
+coordinates may be reported; unavailable inference cannot be filled with constants.
+
+Enhanced results retain legacy input under `original_result` and expose canonical
+claim-bearing fields. Standalone research diagnostics remain distinct from
+installed validated model evidence. Monitoring consumes authoritative outcomes
+rather than independently orchestrating science. Its pass fractions and transport
+counts are operational metrics, not measured FDR or classifier performance.
+
+Automatic origin alerts require a real origin model; a scalar threshold does not
+supply one. Current capability is unavailable, explicitly not a confirmed natural
+finding. Core legacy AnalysisPipeline/API/CLI migration and broader interface
+claim review remain unfinished under #6/#12/#17. Durable assessment identity and
+case lifecycle remain #15/#13; current collector deduplication is in-process only.

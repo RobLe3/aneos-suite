@@ -105,7 +105,7 @@ class EnhancedAnalysisPipeline:
                 try:
                     self.logger.info(f"Applying enhanced validation for {designation}")
                     enhanced_result = await self.validator.validate_analysis_result(
-                        neo_data, original_result
+                        neo_data if neo_data is not None else getattr(original_result, 'neo_data', None), original_result
                     )
                     
                     # Log validation results
@@ -209,6 +209,17 @@ class EnhancedAnalysisPipeline:
         from ..validation.multi_stage_validator import ValidationResult, ValidationStageResult
         from ..validation.statistical_testing import MultipleTestingResult
         
+        assessment = None
+        original_payload = (getattr(original_result, 'analysis', {}) or {}).get('assessment')
+        if isinstance(original_payload, dict) and original_payload.get('schema_version') == 'screening-assessment-v1':
+            try:
+                from .screening import ScreeningAnalysisService
+                replay = ScreeningAnalysisService().replay(original_payload['evidence_snapshot'], original_payload['evidence_id'])
+                if replay.policy_id == original_payload['policy_id']:
+                    assessment = replay.to_payload()
+            except (KeyError, TypeError, ValueError):
+                pass  # Preserve unavailable inference; never trust a malformed legacy claim.
+
         # Create minimal validation result
         minimal_validation = ValidationResult(
             overall_validation_passed=False,  # Unavailable validation cannot grant a pass
@@ -231,7 +242,7 @@ class EnhancedAnalysisPipeline:
             statistical_tests={},
             uncertainty_analysis={'status': 'unavailable'},
             enhancement_timestamp=datetime.now(),
-            enhancement_version="minimal"
+            enhancement_version="minimal", screening_assessment=assessment
         )
     
     # Proxy all other methods to original pipeline
@@ -245,111 +256,15 @@ class EnhancedAnalysisPipeline:
         """
         return getattr(self.original_pipeline, name)
     
-    async def analyze_neo_with_advanced_scoring(
-        self,
-        designation: str,
-        neo_data: Optional[Any] = None
-    ) -> Dict[str, Any]:
-        """
-        Analyze NEO with XVIII SWARM advanced anomaly scoring.
-        
-        This method applies the new multi-indicator scoring system with:
-        - Continuous scoring (0→1) instead of binary classification
-        - Human-readable flag strings 
-        - Transparent threshold system
-        - Space debris penalty system
-        
-        Args:
-            designation: NEO designation
-            neo_data: Optional NEO data
-            
-        Returns:
-            Dictionary containing original results plus advanced scoring
-        """
-        if not self.validation_available:
-            raise ValueError("Advanced scoring requires validation system to be enabled")
-        
-        try:
-            # Step 1: Run enhanced analysis to get indicator results
-            enhanced_result = await self.analyze_neo_with_validation(designation, neo_data)
-            
-            # Step 2: Extract data for advanced scoring
-            if hasattr(enhanced_result, 'original_result'):
-                original_data = enhanced_result.original_result
-            else:
-                original_data = enhanced_result
-                
-            # Convert enhanced result indicators to format expected by advanced scorer
-            indicator_results = {}
-            if hasattr(enhanced_result, 'validation_result') and enhanced_result.validation_result:
-                validation_result = enhanced_result.validation_result
-                
-                # Extract validation results for scoring
-                if hasattr(validation_result, 'stage_results'):
-                    # Handle both list and dict formats for stage_results
-                    stage_results = validation_result.stage_results
-                    
-                    if isinstance(stage_results, list):
-                        # Handle list format: iterate through ValidationStageResult objects
-                        for stage_result in stage_results:
-                            if hasattr(stage_result, 'stage_name'):
-                                stage_name = stage_result.stage_name
-                                if hasattr(stage_result, 'confidence') and hasattr(stage_result, 'score'):
-                                    indicator_results[stage_name] = {
-                                        'raw_score': getattr(stage_result, 'score', 0.0),
-                                        'weighted_score': getattr(stage_result, 'score', 0.0),
-                                        'confidence': getattr(stage_result, 'confidence', 0.5)
-                                    }
-                    elif isinstance(stage_results, dict):
-                        # Handle dict format: iterate through key-value pairs
-                        for stage_name, stage_result in stage_results.items():
-                            if hasattr(stage_result, 'confidence') and hasattr(stage_result, 'score'):
-                                indicator_results[stage_name] = {
-                                    'raw_score': getattr(stage_result, 'score', 0.0),
-                                    'weighted_score': getattr(stage_result, 'score', 0.0),
-                                    'confidence': getattr(stage_result, 'confidence', 0.5)
-                                }
-            
-            # Step 3: Convert NEO data to expected format
-            neo_data_dict = {}
-            if neo_data:
-                if hasattr(neo_data, '__dict__'):
-                    neo_data_dict = vars(neo_data)
-                elif isinstance(neo_data, dict):
-                    neo_data_dict = neo_data
-                else:
-                    neo_data_dict = {'designation': designation}
-            else:
-                neo_data_dict = {'designation': designation}
-            
-            # Step 4: Calculate advanced score
-            self.logger.info(f"Calculating XVIII SWARM advanced score for {designation}")
-            advanced_score = self.advanced_scorer.calculate_score(neo_data_dict, indicator_results)
-            
-            # Step 5: Generate explanation
-            explanation = self.advanced_scorer.explain_score(advanced_score)
-            
-            # Step 6: Combine results
-            result = {
-                'designation': designation,
-                'enhanced_analysis': enhanced_result,
-                'advanced_score': advanced_score.to_dict(),
-                'scoring_explanation': explanation,
-                'xviii_swarm_version': '1.0'
-            }
-            
-            self.logger.info(
-                f"Advanced scoring complete for {designation}: "
-                f"Score: {advanced_score.overall_score:.3f} ({advanced_score.classification}), "
-                f"Flags: {advanced_score.flag_string}"
-            )
-            
-            return result
-            
-        except Exception as e:
-            self.logger.error(f"Advanced scoring failed for {designation}: {e}")
-            raise
-    
+    async def analyze_neo_with_advanced_scoring(self, designation, neo_data=None):
+        """Compatibility wrapper: unavailable stages cannot become measured clues."""
+        enhanced = await self.analyze_neo_with_validation(designation, neo_data)
+        return {'designation': designation, 'enhanced_analysis': enhanced,
+            'screening_assessment': enhanced.screening_assessment,
+            'advanced_score': None, 'advanced_scoring_status': 'unavailable_scientific_prerequisites',
+            'scoring_explanation': 'Legacy stage-to-clue fusion withdrawn: observational and calibration prerequisites unavailable',
+            'xviii_swarm_version': 'legacy_fusion_withdrawn'}
+
     # Additional convenience methods for enhanced functionality
     
     async def bulk_analyze_with_validation(

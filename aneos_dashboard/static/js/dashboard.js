@@ -363,10 +363,9 @@ class ValidationDashboard {
                     x: {
                         title: {
                             display: true,
-                            text: 'Validation Score (1 - False Positive Probability)'
+                            text: 'Uncalibrated screening rank'
                         },
-                        min: 0,
-                        max: 1
+                        min: 0
                     },
                     y: {
                         title: {
@@ -754,12 +753,12 @@ class ValidationDashboard {
             },
             { 
                 label: 'FP Prevention Rate', 
-                value: ((data.false_positive_prevention_rate || 0) * 100).toFixed(1) + '%',
+                value: Number.isFinite(data.false_positive_prevention_rate) ? (data.false_positive_prevention_rate * 100).toFixed(1) + '%' : 'unavailable',
                 change: null
             },
             { 
                 label: 'Avg Confidence', 
-                value: ((data.average_confidence || 0) * 100).toFixed(1) + '%',
+                value: Number.isFinite(data.average_confidence) ? (data.average_confidence * 100).toFixed(1) + '%' : 'unavailable',
                 change: null
             },
             { 
@@ -916,7 +915,7 @@ class ValidationDashboard {
             },
             { 
                 label: 'Artificial Detections', 
-                value: data.artificial_detections || 0,
+                value: data.origin_detection_status === 'unavailable_no_origin_model' ? 'unavailable' : (data.artificial_detections || 0),
                 percentage: null
             }
         ];
@@ -1031,8 +1030,10 @@ class ValidationDashboard {
         if (!this.charts.validationScatter) return;
         
         const chart = this.charts.validationScatter;
-        const score = 1 - (data.false_positive_probability || 0);
-        const confidence = data.confidence || 0;
+        const score = data.screening_score;
+        const confidence = data.confidence;
+        // Unknown inference is not zero confidence or a perfect (1-FPR) score.
+        if (!Number.isFinite(score) || !Number.isFinite(confidence)) return;
         const recommendation = data.recommendation || 'expert_review';
         
         // Determine dataset index based on recommendation
@@ -1046,7 +1047,7 @@ class ValidationDashboard {
             y: confidence,
             object_designation: data.object_designation,
             processing_time_ms: data.processing_time_ms,
-            artificial_likelihood: data.artificial_likelihood || 0
+            artificial_likelihood: null
         });
         
         // Limit number of points displayed (keep last 200)

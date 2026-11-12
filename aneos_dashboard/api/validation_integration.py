@@ -181,7 +181,7 @@ class ValidationPipelineIntegration:
             
             self.logger.info(
                 f"Validation completed for {object_designation}: "
-                f"{validation_result.recommendation} (confidence: {validation_result.overall_confidence:.3f})"
+                f"{validation_result.recommendation} (confidence: {validation_result.overall_confidence if validation_result.overall_confidence is not None else 'unavailable'})"
             )
             
             return validation_result
@@ -208,130 +208,24 @@ class ValidationPipelineIntegration:
                                       session_id: str) -> ValidationResult:
         """Run validation with real-time stage monitoring."""
         
-        # Create a wrapper around the validator to monitor each stage
-        class MonitoredValidator:
-            def __init__(self, validator, integration, session_id):
-                self.validator = validator
-                self.integration = integration
-                self.session_id = session_id
-                self.current_stage = 0
-            
-            async def validate_analysis_result(self, neo_data, analysis_result):
-                # Use the original validator but with monitoring hooks
-                return await self._run_with_monitoring(neo_data, analysis_result)
-            
-            async def _run_with_monitoring(self, neo_data, analysis_result):
-                # Update active validation tracking
-                self.integration.active_validations[self.session_id]['current_stage'] = 1
-                
-                # Run each stage with monitoring
-                stage_results = []
-                
-                for stage_num in range(1, 6):
-                    self.current_stage = stage_num
-                    self.integration.active_validations[self.session_id]['current_stage'] = stage_num
-                    
-                    stage_start = datetime.now()
-                    
-                    # Broadcast stage start
-                    await self.integration.websocket_manager.broadcast_message('stage_started', {
-                        'session_id': self.session_id,
-                        'stage_number': stage_num,
-                        'timestamp': stage_start.isoformat()
-                    })
-                    
-                    # Run the actual stage
-                    try:
-                        if stage_num == 1:
-                            stage_result = await self.validator.stage1_data_quality_filter(neo_data)
-                        elif stage_num == 2:
-                            stage_result = await self.validator.stage2_known_object_crossmatch(neo_data, analysis_result)
-                        elif stage_num == 3:
-                            stage_result = await self.validator.stage3_physical_plausibility(neo_data, analysis_result)
-                        elif stage_num == 4:
-                            stage_result = await self.validator.stage4_statistical_significance(analysis_result)
-                        elif stage_num == 5:
-                            stage_result = await self.validator.stage5_expert_review_threshold(analysis_result)
-                        
-                        stage_results.append(stage_result)
-                        
-                        # Broadcast stage completion
-                        await self.integration.websocket_manager.broadcast_message('stage_completed', {
-                            'session_id': self.session_id,
-                            'stage_number': stage_num,
-                            'stage_name': stage_result.stage_name,
-                            'passed': stage_result.passed,
-                            'score': stage_result.score,
-                            'confidence': stage_result.confidence,
-                            'processing_time_ms': stage_result.processing_time_ms,
-                            'timestamp': datetime.now().isoformat()
-                        })
-                        
-                    except Exception as e:
-                        # Broadcast stage error
-                        await self.integration.websocket_manager.broadcast_message('stage_error', {
-                            'session_id': self.session_id,
-                            'stage_number': stage_num,
-                            'error': str(e),
-                            'timestamp': datetime.now().isoformat()
-                        })
-                        raise
-                
-                # Aggregate results using original validator logic
-                aggregated_result = self.validator._aggregate_validation_stages(stage_results)
-                
-                return aggregated_result
-        
-        # Create monitored validator and run validation
-        monitored_validator = MonitoredValidator(self.validator, self, session_id)
-        return await monitored_validator.validate_analysis_result(neo_data, analysis_result)
-    
-    async def _check_and_broadcast_alerts(self, validation_result: ValidationResult, session_id: str):
-        """Check for artificial object alerts and broadcast if needed."""
-        try:
-            # Criteria for artificial object alerts
-            artificial_indicators = []
-            max_artificial_prob = 0.0
-            
-            # Check various artificial object indicators
-            if validation_result.artificial_object_likelihood and validation_result.artificial_object_likelihood > 0.7:
-                artificial_indicators.append('delta_bic_analysis')
-                max_artificial_prob = max(max_artificial_prob, validation_result.artificial_object_likelihood)
-            
-            if validation_result.artificial_material_probability and validation_result.artificial_material_probability > 0.7:
-                artificial_indicators.append('spectral_analysis')
-                max_artificial_prob = max(max_artificial_prob, validation_result.artificial_material_probability)
-            
-            if validation_result.radar_artificial_probability and validation_result.radar_artificial_probability > 0.7:
-                artificial_indicators.append('radar_polarization')
-                max_artificial_prob = max(max_artificial_prob, validation_result.radar_artificial_probability)
-            
-            if validation_result.thermal_artificial_probability and validation_result.thermal_artificial_probability > 0.7:
-                artificial_indicators.append('thermal_ir_analysis')
-                max_artificial_prob = max(max_artificial_prob, validation_result.thermal_artificial_probability)
-            
-            if validation_result.gaia_artificial_probability and validation_result.gaia_artificial_probability > 0.7:
-                artificial_indicators.append('gaia_astrometry')
-                max_artificial_prob = max(max_artificial_prob, validation_result.gaia_artificial_probability)
-            
-            # Broadcast alert if criteria met
-            if artificial_indicators and max_artificial_prob > 0.7:
-                alert_data = {
-                    'session_id': session_id,
-                    'object_designation': getattr(validation_result, 'object_designation', 'unknown'),
-                    'artificial_probability': max_artificial_prob,
-                    'confidence': validation_result.overall_confidence,
-                    'detection_modules': artificial_indicators,
-                    'recommendation': validation_result.recommendation,
-                    'expert_review_priority': validation_result.expert_review_priority,
-                    'timestamp': datetime.now().isoformat()
-                }
-                
-                await self.websocket_manager.broadcast_artificial_object_alert(alert_data)
-                
-        except Exception as e:
-            self.logger.error(f"Failed to check/broadcast alerts: {e}")
-    
+        enhanced = await self.validator.validate_analysis_result(neo_data, analysis_result)
+        result = enhanced.validation_result
+        # Publish actual outcomes after the authoritative validator returns.
+        # Do not run a second orchestration or fabricate stage-start timing.
+        for stage in result.stage_results:
+            self.active_validations[session_id]['current_stage'] = stage.stage_number
+            await self.websocket_manager.broadcast_message('stage_completed', {
+                'session_id': session_id, 'stage_number': stage.stage_number,
+                'stage_name': stage.stage_name, 'passed': stage.passed,
+                'validation_status': stage.validation_status, 'score': stage.score,
+                'confidence': stage.confidence, 'processing_time_ms': stage.processing_time_ms,
+                'timestamp': datetime.now().isoformat(), 'timing_semantics': 'outcome_publication_not_stage_execution'})
+        return result
+
+    async def _check_and_broadcast_alerts(self, validation_result, session_id):
+        """No installed origin model: thresholds cannot create artificial alerts."""
+        return {'status': 'unavailable_no_origin_model'}
+
     def get_active_validations(self) -> Dict[str, Any]:
         """Get currently active validation sessions."""
         return {
