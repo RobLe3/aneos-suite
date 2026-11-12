@@ -18,8 +18,10 @@ original catalogue response or the preferred literature measurements.
 
 At inspection on 2026-11-12, local HEAD and GitHub main both resolved to
 `42cab0acd7a1e5e7781a26831f07b11a77f48ead`. Local engineering remediation was
-uncommitted. The archived source fixture is byte-for-byte from that revision,
-not from the modified detector. Its SHA-256 is recorded in the JSON and manifest.
+uncommitted. The source decoded from the JSON archive is byte-for-byte from that revision,
+not from the modified detector. JSON-escaped lines preserve original whitespace
+without adding whitespace errors to the patch. The decoded-source SHA-256 is in
+the baseline JSON; the manifest separately hashes the archive file.
 The original reported run's exact revision is not known; the matching main
 revision is the explicit reproduction candidate, not invented historical provenance.
 

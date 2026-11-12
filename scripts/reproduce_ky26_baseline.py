@@ -7,7 +7,7 @@ Never acquires data or modifies the baseline. --output refuses existing files.
 from pathlib import Path
 import argparse
 import hashlib
-import importlib.util
+import types
 import json
 import logging
 import platform
@@ -21,14 +21,15 @@ def reproduce(root=ROOT):
     fixture = root / 'tests/fixtures/ky26_baseline.json'
     baseline = json.loads(fixture.read_text())
     source = root / baseline['reproduction']['frozen_source']
-    actual = hashlib.sha256(source.read_bytes()).hexdigest()
+    source_text = ''.join(json.loads(source.read_text())['source_lines'])
+    actual = hashlib.sha256(source_text.encode('utf-8')).hexdigest()
     if actual != baseline['reproduction']['source_sha256']:
         raise ValueError('Frozen source fingerprint mismatch')
     name = '_aneos_ky26_legacy_' + actual
-    spec = importlib.util.spec_from_file_location(name, source)
-    module = importlib.util.module_from_spec(spec)
+    module = types.ModuleType(name)
+    module.__file__ = str(source)
     sys.modules[name] = module
-    spec.loader.exec_module(module)
+    exec(compile(source_text, str(source), 'exec'), module.__dict__)
     logger = logging.getLogger(name)
     previous_disabled = logger.disabled
     logger.disabled = True  # Historical toy-validation messages are not new detections.

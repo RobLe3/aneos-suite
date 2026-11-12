@@ -50,7 +50,7 @@
   },
   "reproduction": {
     "code_revision": "42cab0acd7a1e5e7781a26831f07b11a77f48ead",
-    "frozen_source": "tests/fixtures/ky26_legacy_detector.py",
+    "frozen_source": "tests/fixtures/ky26_legacy_detector.json",
     "source_sha256": "52be6e804a1eda29fa450f34a04c20f05eadf384e2ecabba393e548feee470fa",
     "rounded_input_expected": {
       "sigma_confidence": 4.141288008229254,
