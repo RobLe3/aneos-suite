@@ -285,3 +285,11 @@ at every display point.
 | Posterior calibration check | **NO** | No reliability diagram or Brier score |
 | External holdout set | **NONE** | All evaluation on development objects |
 | Temporal robustness | **UNTESTED** | No arc-replay study |
+
+### Provider coordination boundary (2026-11-12, ADR-073)
+
+Shared JPL GET coordination and persistent backoff are engineering safeguards,
+not independent scientific validation. Synthetic concurrency/outage/restart tests
+do not establish provider availability, impact probability, calibrated origin
+probability or five-sigma significance. See
+[the scoped transport report](../engineering/jpl-provider-transport.md).

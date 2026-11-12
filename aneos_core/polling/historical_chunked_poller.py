@@ -14,6 +14,7 @@ Key Features:
 - Integration with XVIII SWARM first-stage review
 """
 
+from aneos_core.data.provider_http import get as provider_get
 import asyncio
 import logging
 from datetime import datetime, timedelta
@@ -292,7 +293,7 @@ class HistoricalChunkedPoller:
                  'body': 'Earth', 'dist-max': '.05', 'diameter': 'true', 'fullname': 'true',
                  'limit': self.config.max_objects_per_chunk}
         def request():
-            response = requests.get('https://ssd-api.jpl.nasa.gov/cad.api', params=query,
+            response = provider_get('https://ssd-api.jpl.nasa.gov/cad.api', params=query,
                                     headers=_APPLICATION_HEADERS, timeout=30)
             response.raise_for_status()
             return response.json()

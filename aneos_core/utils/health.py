@@ -1,5 +1,6 @@
 """Preflight health-check utilities for aNEOS entry points."""
 
+from aneos_core.data import provider_http
 import os
 from pathlib import Path
 from typing import Dict, Any
@@ -39,7 +40,8 @@ def preflight_check() -> Dict[str, Dict[str, str]]:
 
     for name, url in api_targets.items():
         try:
-            resp = requests.head(url, timeout=3)
+            resp = (provider_http.get(url, timeout=3, _max_wait=3, _accepted_statuses=(200, 400))
+                    if provider_http.is_jpl_api(url) else requests.head(url, timeout=3))
             results[name] = {"status": "ok", "detail": f"HTTP {resp.status_code}"}
         except Exception as exc:
             results[name] = {"status": "error", "detail": str(exc)}

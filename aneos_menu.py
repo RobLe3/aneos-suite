@@ -6,6 +6,7 @@ Comprehensive menu system for all aNEOS operations including scientific analysis
 ML training, API services, monitoring, and system management.
 """
 
+from aneos_core.data.provider_http import get as provider_get
 import os
 import sys
 import subprocess
@@ -1422,7 +1423,7 @@ class ANEOSMenu(ANEOSMenuBase):
         """
         try:
             import requests
-            resp = requests.get(
+            resp = provider_get(
                 'https://ssd-api.jpl.nasa.gov/cad.api',
                 params={
                     'des': designation,
@@ -5745,7 +5746,7 @@ class ANEOSMenu(ANEOSMenuBase):
         try:
             import requests
             # Try to check if API server is running
-            response = requests.get("http://localhost:8000/health", timeout=5)
+            response = provider_get("http://localhost:8000/health", timeout=5)
             if response.status_code == 200:
                 self.show_info("✅ API server is running and healthy")
             else:
@@ -6129,7 +6130,7 @@ class ANEOSMenu(ANEOSMenuBase):
         # Test if API is running
         try:
             import requests
-            response = requests.get("http://localhost:8000/health", timeout=5)
+            response = provider_get("http://localhost:8000/health", timeout=5)
             
             if response.status_code == 200:
                 self.show_info("✅ API server is running!")
@@ -8383,7 +8384,7 @@ class ANEOSMenu(ANEOSMenuBase):
 
         for name, url, params in sources:
             try:
-                r = _req.get(url, params=params, timeout=5)
+                r = provider_get(url, params=params, timeout=5)
                 ok = r.status_code == 200
                 status = "[green]✅ Available[/green]" if ok else f"[red]✗ HTTP {r.status_code}[/red]"
                 status_plain = "Available" if ok else f"HTTP {r.status_code}"

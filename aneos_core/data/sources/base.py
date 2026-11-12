@@ -26,10 +26,12 @@ from ...utils.patterns import (
 from ...config.settings import APIConfig
 from ..models import OrbitalElements, NEOData
 from ..cache import CacheManager
+from .. import provider_http
+from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 
-_APPLICATION_HEADERS = {"User-Agent": "aNEOS/1.2.2 scientific-research (+https://github.com/RobLe3/aneos-suite/issues)"}
+_APPLICATION_HEADERS = provider_http.APPLICATION_HEADERS
 
 @dataclass
 class DataSourceStatus:
@@ -129,7 +131,7 @@ class DataSourceBase(ABC):
         if self._async_session is None:
             timeout = aiohttp.ClientTimeout(total=self.config.request_timeout)
             self._async_session = aiohttp.ClientSession(timeout=timeout)
-        
+
         return self._async_session
     
     @abstractmethod
@@ -195,17 +197,22 @@ class DataSourceBase(ABC):
         # Fetch from source
         start_time = datetime.now(UTC)
         
+        self._status.total_requests += 1
         try:
             result = await self.fetch_orbital_elements(designation)
             
-            # Record success
-            self._circuit_breaker.record_success()
-            self._status.total_requests += 1
-            
-            # Cache the result if successful
-            if result.success and result.data:
+            # Adapters return failed FetchResult objects for provider/schema errors.
+            # Completion of the coroutine is not successful data acquisition.
+            if result.success is True and result.data:
+                self._circuit_breaker.record_success()
+                self._status.error_message = None
                 await self._store_in_cache(designation, result.data)
-            
+            else:
+                result.success = False
+                self._circuit_breaker.record_failure()
+                self._status.failed_requests += 1
+                self._status.error_message = result.error_message or 'No usable source data'
+
             # Update response time
             response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
             result.response_time_ms = response_time
@@ -216,7 +223,6 @@ class DataSourceBase(ABC):
         except Exception as e:
             # Record failure
             self._circuit_breaker.record_failure()
-            self._status.total_requests += 1
             self._status.failed_requests += 1
             self._status.error_message = str(e)
             
@@ -276,15 +282,19 @@ class HTTPDataSource(DataSourceBase):
     async def health_check(self) -> bool:
         """Perform HTTP health check."""
         try:
-            timeout = aiohttp.ClientTimeout(total=5)
-            async with aiohttp.ClientSession(timeout=timeout, headers=_APPLICATION_HEADERS) as session:
-                async with session.get(self.base_url) as response:
-                    is_healthy = response.status in [200, 400]  # 400 expected for some APIs
-
-                    self._status.available = is_healthy
-                    self._status.last_check = datetime.now(UTC)
-                    self._status.error_message = None if is_healthy else f"HTTP {response.status}"
-                    return is_healthy
+            if provider_http.is_jpl_api(self.base_url):
+                response = await asyncio.to_thread(provider_http.get, self.base_url,
+                    timeout=5, _max_wait=5, _accepted_statuses=(200, 400))
+                is_healthy = response.status_code in (200, 400)
+            else:
+                timeout = aiohttp.ClientTimeout(total=5)
+                async with aiohttp.ClientSession(timeout=timeout, headers=_APPLICATION_HEADERS) as session:
+                    async with session.get(self.base_url) as response:
+                        is_healthy = response.status in (200, 400)
+            self._status.available = is_healthy
+            self._status.last_check = datetime.now(UTC)
+            self._status.error_message = None if is_healthy else 'HTTP health probe unsuccessful'
+            return is_healthy
 
         except Exception as e:
             self._status.available = False
@@ -295,10 +305,10 @@ class HTTPDataSource(DataSourceBase):
     
     def _build_url(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> str:
         """Build full URL with parameters."""
-        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+        url = f"{self.base_url}/{endpoint.lstrip('/')}" if endpoint else self.base_url
         
         if params:
-            param_str = "&".join([f"{k}={v}" for k, v in params.items() if v is not None])
+            param_str = urlencode({k: v for k, v in params.items() if v is not None})
             if param_str:
                 url += f"?{param_str}"
         
@@ -307,6 +317,8 @@ class HTTPDataSource(DataSourceBase):
     async def _http_get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Perform HTTP GET request with a per-request session to avoid event-loop reuse issues."""
         url = self._build_url(endpoint, params)
+        if provider_http.is_jpl_api(url):
+            return await asyncio.to_thread(provider_http.get_json, url, timeout=self.config.request_timeout)
         timeout = aiohttp.ClientTimeout(total=self.config.request_timeout)
         async with aiohttp.ClientSession(timeout=timeout, headers=_APPLICATION_HEADERS) as session:
             async with session.get(url) as response:

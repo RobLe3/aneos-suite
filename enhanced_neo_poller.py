@@ -9,6 +9,7 @@ Based on the original neos_o3high_v6.19.1.py approach with:
 - Performance optimizations
 """
 
+from aneos_core.data.provider_http import session_get as provider_session_get
 import os
 import sys
 import json
@@ -437,7 +438,7 @@ class EnhancedNEOPoller:
             
             # Test API endpoint
             try:
-                response = self.session.get(
+                response = provider_session_get(self.session,
                     config['url'], 
                     params=config['test_params'],
                     timeout=self.config['HEALTH_CHECK_TIMEOUT']
@@ -581,7 +582,7 @@ class EnhancedNEOPoller:
             }
             
             from aneos_core.data.sources.base import _APPLICATION_HEADERS
-            response = self.session.get('https://ssd-api.jpl.nasa.gov/cad.api', params=params,
+            response = provider_session_get(self.session, 'https://ssd-api.jpl.nasa.gov/cad.api', params=params,
                                         headers=_APPLICATION_HEADERS, timeout=self.config['CAD_TIMEOUT'])
             response.raise_for_status()
             
@@ -891,7 +892,7 @@ class EnhancedNEOPoller:
                 'sstr': designation
             }
             
-            response = self.session.get(self.data_sources['SBDB']['url'], params=params, timeout=self.config['REQUEST_TIMEOUT'])
+            response = provider_session_get(self.session, self.data_sources['SBDB']['url'], params=params, timeout=self.config['REQUEST_TIMEOUT'])
             response.raise_for_status()
             
             data = response.json()
@@ -1048,7 +1049,7 @@ class EnhancedNEOPoller:
                         'json': '1'  # Request JSON format
                     }
                     
-                    response = self.session.get(
+                    response = provider_session_get(self.session,
                         mpc_api_url, 
                         params=params, 
                         auth=mpc_auth,

@@ -313,23 +313,20 @@ def test_cli_displays_all_axes_and_epoch_caution(payload):
 @pytest.mark.asyncio
 async def test_provider_request_identifies_application_without_live_network(monkeypatch, payload):
     from unittest.mock import MagicMock
-    from aneos_core.data.sources import base
+    import requests
     response = MagicMock()
-    response.json = AsyncMock(return_value=payload)
-    response.raise_for_status = MagicMock()
-    request_context = AsyncMock()
-    request_context.__aenter__.return_value = response
-    session = MagicMock()
-    session.get.return_value = request_context
-    session_context = AsyncMock()
-    session_context.__aenter__.return_value = session
-    factory = MagicMock(return_value=session_context)
-    monkeypatch.setattr(base.aiohttp, 'ClientSession', factory)
+    response.status_code = 200
+    response.headers = {}
+    response.content = b'synthetic buffered response'
+    response.json.return_value = payload
+    request = MagicMock(return_value=response)
+    monkeypatch.setattr(requests, 'get', request)
     result = await SBDBSource(APIConfig()).fetch_orbital_elements('SYNTHETIC')
     assert result.success
-    agent = factory.call_args.kwargs['headers']['User-Agent']
+    agent = request.call_args.kwargs['headers']['User-Agent']
     assert 'aNEOS/' in agent
     assert 'https://github.com/RobLe3/aneos-suite/issues' in agent
+    assert response.close.called
 
 
 def test_raw_parameter_and_covariance_literals_cannot_diverge_after_replay(payload):

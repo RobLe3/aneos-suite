@@ -5,6 +5,7 @@ Coordinates data fetching from multiple sources with caching,
 error handling, and data quality assessment.
 """
 
+from aneos_core.data.provider_http import get as provider_get
 import logging
 import copy
 from dataclasses import fields
@@ -220,7 +221,7 @@ class DataFetcher:
         query = {'des': designation, 'date-min': date_min, 'dist-max': '0.2',
                  'body': 'Earth', 'limit': 10, 'fullname': 'true'}
         try:
-            response = requests.get('https://ssd-api.jpl.nasa.gov/cad.api', params=query,
+            response = provider_get('https://ssd-api.jpl.nasa.gov/cad.api', params=query,
                                     headers=_APPLICATION_HEADERS, timeout=15)
             response.raise_for_status()
             parsed = parse_cad_payload(response.json(), query=query, require_complete=False,
@@ -257,12 +258,8 @@ class DataFetcher:
             return value
 
         try:
-            # Health check — sources may be async; run coroutines if needed
-            healthy = _run(source.health_check())
-            if not healthy:
-                self.logger.warning(f"Source {source_name} health check failed")
-                return None
-
+            # The actual request is authoritative. A separate per-object health
+            # probe is redundant traffic and can veto an otherwise valid query.
             # Fetch orbital elements — result may be a FetchResult or a plain dict
             raw = _run(source.fetch_orbital_elements(designation))
             orbital_elements_data = None

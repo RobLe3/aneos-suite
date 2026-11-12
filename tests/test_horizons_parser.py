@@ -18,6 +18,9 @@ def test_parser_extracts_keplerian_elements():
     builder = GroundTruthDatasetBuilder.__new__(GroundTruthDatasetBuilder)
     builder.logger = logging.getLogger(__name__)
     mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.headers = {}
+    mock_resp.content = b"synthetic buffered response"
     mock_resp.json.return_value = {"result": _SAMPLE_RESULT}
     mock_resp.raise_for_status.return_value = None
     with patch("requests.get", return_value=mock_resp):
@@ -33,6 +36,9 @@ def test_parser_returns_none_on_empty_block():
     builder = GroundTruthDatasetBuilder.__new__(GroundTruthDatasetBuilder)
     builder.logger = logging.getLogger(__name__)
     mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.headers = {}
+    mock_resp.content = b"synthetic buffered response"
     mock_resp.json.return_value = {"result": "No ephemeris data available."}
     mock_resp.raise_for_status.return_value = None
     with patch("requests.get", return_value=mock_resp):
@@ -56,6 +62,9 @@ def test_parser_handles_negative_semi_major_axis():
     builder = GroundTruthDatasetBuilder.__new__(GroundTruthDatasetBuilder)
     builder.logger = logging.getLogger(__name__)
     mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.headers = {}
+    mock_resp.content = b"synthetic buffered response"
     mock_resp.json.return_value = {"result": _HYPERBOLIC_RESULT}
     mock_resp.raise_for_status.return_value = None
     with patch("requests.get", return_value=mock_resp):

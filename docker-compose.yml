@@ -10,6 +10,7 @@ services:
       - ANEOS_DATABASE_URL=postgresql://aneos:aneos@postgres:5432/aneos
       - ANEOS_REDIS_URL=redis://redis:6379/0
       - ANEOS_LOG_LEVEL=INFO
+      - ANEOS_PROVIDER_STATE_DIR=/app/data/provider-state
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs

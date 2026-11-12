@@ -9,6 +9,7 @@ Based on the original neos_o3high_v6.19.1.py approach but simplified
 and focused on the core mission of finding artificial NEOs.
 """
 
+from aneos_core.data.provider_http import session_get as provider_session_get
 import os
 import sys
 import json
@@ -194,7 +195,7 @@ class NEOPoller:
                 'limit': limit
             }
             
-            response = self.session.get(self.apis['NASA_CAD']['url'], params=params, timeout=30)
+            response = provider_session_get(self.session, self.apis['NASA_CAD']['url'], params=params, timeout=30)
             response.raise_for_status()
             
             data = response.json()
@@ -236,12 +237,12 @@ class NEOPoller:
                 'full-prec': 1  # Request full precision
             }
             
-            response = self.session.get(self.apis['NASA_SBDB']['url'], params=params, timeout=15)
+            response = provider_session_get(self.session, self.apis['NASA_SBDB']['url'], params=params, timeout=15)
             
             # If first attempt fails with 400, try encoded version
             if response.status_code == 400:
                 params['des'] = encoded_designation
-                response = self.session.get(self.apis['NASA_SBDB']['url'], params=params, timeout=15)
+                response = provider_session_get(self.session, self.apis['NASA_SBDB']['url'], params=params, timeout=15)
             
             response.raise_for_status()
             
@@ -335,7 +336,7 @@ class NEOPoller:
         try:
             # Use MPC's NEO confirmation page for recent discoveries
             mpc_url = "https://www.minorplanetcenter.net/iau/NEO/toconfirm_tabular.html"
-            response = self.session.get(mpc_url, timeout=15)
+            response = provider_session_get(self.session, mpc_url, timeout=15)
             response.raise_for_status()
             
             # Parse HTML for NEO designations (simplified approach)
@@ -381,7 +382,7 @@ class NEOPoller:
         try:
             # NEODyS risk list approach
             neodys_url = "https://newton.spacedys.com/neodys/index.php?pc=1.1.0"
-            response = self.session.get(neodys_url, timeout=15)
+            response = provider_session_get(self.session, neodys_url, timeout=15)
             response.raise_for_status()
             
             print("✅ Connected to NEODyS - analyzing risk list...")

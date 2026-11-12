@@ -2384,3 +2384,43 @@ positive candidates, native A3/covariance transport and unavailable impact input
 inventories. No new detector, scientific engine, bounded context or UI. No new
 observational fit, independent calibration/performance, durable case history or
 five-sigma permission. No prior tests or acceptance gates are weakened.
+
+### ADR-073: Shared JPL SSD transport coordination
+
+**Status:** Implemented and integrated on draft remediation branch; bounded offline
+regression evidence, not production certification. 2026-11-12. Issues #16/#17;
+impact-source dependency #32. Supersedes ADR-032's optional-aiohttp requirement
+only for PHA query transport, not unrelated clients or scientific algorithms.
+
+**Context:** SBDB, Horizons, CAD and SBDB Query used separate sessions and direct
+requests. Per-source limiters did not serialize the provider family. Session retries
+could hide additional wire attempts. Every DataFetcher object request began with
+a redundant health query. Returned source failures reset the circuit breaker.
+JPL's current [API policy](https://ssd-api.jpl.nasa.gov/) requires serialized
+requests, application identification and appropriate error backoff. It also calls
+for avoiding redundant traffic and checking output versions; this change does not
+complete those broader obligations across every source.
+
+**Decision:** Put a shared buffered-GET adapter in the existing Data Acquisition
+anti-corruption layer. Inventoried core/legacy/polling/research-tool JPL paths use
+explicit wrappers; other providers retain their transport. A private POSIX file
+lock spans the actual request, buffering and closure. All participating processes
+must share the same coordination directory. Persist cooldowns and an in-flight
+quiet-window marker; fail closed on invalid/unsafe state instead of forgetting an
+outage. Do not retry inside the adapter. Disable hidden requests-Session retries
+for JPL only. Preserve numeric/date Retry-After, including delays beyond the wait
+budget. Remove per-object health probes; keep explicit diagnostics guarded.
+
+Async clients offload the blocking transport. Cancelling the awaiter does not
+release a still-running thread's lease. Coordination waits have a separate bound;
+wire timeouts are inactivity limits, not hard end-to-end deadlines. A killed
+process releases the OS lock but leaves a conservative quiet window, not proof
+that JPL stopped processing. Corrupt state requires deliberate operator recovery.
+
+**Consequences/limits:** No new bounded context, schema authority, scientific
+model, distributed lock, job queue or result store. Same-host cooperative processes
+with working shared-filesystem flock are covered by tests. Separate coordination
+roots, other applications, multiple hosts and unusual filesystem semantics are
+not covered. Wider cache reuse, endpoint version enforcement, configuration
+isolation, pagination, overload control and durable jobs remain open. See
+`docs/engineering/jpl-provider-transport.md` for exact controls and operations.

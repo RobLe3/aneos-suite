@@ -1200,3 +1200,22 @@ impact/quality. **Not validated:** origin/impact models, provider health, indepe
 performance, complete environment reproduction, durable execution or case history.
 No new bounded context is introduced. This supersedes the standalone migration gap
 in ADR-071, not all remaining scientific/legacy-interface findings.
+
+## Provider transport correction — 2026-11-12 (ADR-073)
+
+Data Acquisition owns provider-family scheduling and response transport, not just
+individual-source rate limiters. Its shared JPL adapter coordinates buffered GETs,
+application identification, persistent backoff and safe failure. Source adapters
+still own identity/schema/version checks, units, provenance and evidence parsing.
+Scheduling metadata is neither observational data nor a provider-health verdict.
+An acquired lease cannot upgrade a response into scientific evidence.
+
+**Implemented/integrated:** inventoried SBDB/Horizons/CAD/PHA-query transport and
+legacy tools, explicit health diagnostics, per-object probe removal and returned-
+failure circuit accounting. **Regression-tested:** synthetic positive responses,
+threads, real child processes, process kill, cancellation, Retry-After and unsafe
+state. **Not established:** cross-host serialization, nonparticipating clients,
+full API-version/cache/pagination compliance, live provider performance, durable
+jobs/cases or scientific accuracy. No new bounded context is needed. The impact
+boundary still requires #32's authoritative-source and scientific-contract work;
+a transport adapter does not validate impact probability.

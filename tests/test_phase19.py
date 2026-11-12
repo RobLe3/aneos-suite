@@ -246,13 +246,17 @@ class TestOption15Exists:
 
 
 # ===========================================================================
-# Phase 21E — HAS_AIOHTTP raises ImportError (ADR-032)
+# Phase 21E dependency contract superseded for PHA transport (ADR-073)
 # ===========================================================================
 
-def test_fetch_phas_raises_importerror_when_no_aiohttp(monkeypatch):
-    """PHAMoidScanner.fetch_phas() must raise ImportError with install hint when aiohttp absent."""
+def test_fetch_phas_uses_guarded_transport_without_aiohttp(monkeypatch):
+    """Shared requests transport replaces the former optional aiohttp dependency."""
     import asyncio
+    from unittest.mock import Mock
     import aneos_core.pattern_analysis.rendezvous as rv
     monkeypatch.setattr(rv, '_HAS_AIOHTTP', False)
-    with pytest.raises(ImportError, match='aiohttp'):
-        asyncio.run(rv.PHAMoidScanner().fetch_phas())
+    request = Mock(return_value={'data': [['synthetic', '1', '.2', '10', '20', '30', None]]})
+    monkeypatch.setattr(rv, 'provider_get_json', request)
+    objects = asyncio.run(rv.PHAMoidScanner().fetch_phas())
+    assert len(objects) == 1 and objects[0].pdes == 'synthetic'
+    request.assert_called_once()

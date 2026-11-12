@@ -6,6 +6,7 @@ fetch high-precision osculating orbital elements, physical parameters,
 and ephemeris data for Near-Earth Objects.
 """
 
+from aneos_core.data.provider_http import get as provider_get
 import re
 import logging
 from typing import Dict, Any, Optional, List
@@ -84,7 +85,7 @@ class HorizonsSource(HTTPDataSource):
     def _fetch_orbital_elements_sync(self, designation: str) -> Optional[Dict[str, Any]]:
         """Fetch orbital elements from Horizons using OBJ_DATA mode."""
         try:
-            resp = requests.get(
+            resp = provider_get(
                 _HORIZONS_URL,
                 params={
                     "format":     "json",
@@ -125,7 +126,7 @@ class HorizonsSource(HTTPDataSource):
     def _fetch_as_smallbody(self, designation: str) -> Optional[Dict[str, Any]]:
         """Re-query using DES= prefix to force small-body (asteroid/comet) resolution."""
         try:
-            resp = requests.get(
+            resp = provider_get(
                 _HORIZONS_URL,
                 params={
                     "format":     "json",
@@ -237,7 +238,7 @@ class HorizonsSource(HTTPDataSource):
     ) -> Optional[List[Dict[str, Any]]]:
         """Fetch observer ephemeris from Horizons."""
         try:
-            resp = requests.get(
+            resp = provider_get(
                 _HORIZONS_URL,
                 params={
                     "format":     "json",
@@ -268,7 +269,7 @@ class HorizonsSource(HTTPDataSource):
         start = (today - timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
         stop = (today + timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
         try:
-            resp = requests.get(
+            resp = provider_get(
                 _HORIZONS_URL,
                 params={
                     "format": "json",

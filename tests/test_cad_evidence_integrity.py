@@ -213,6 +213,9 @@ async def test_direct_request_and_real_base_adapter_paths_use_same_parser(tmp_pa
     import requests
     p = poller(tmp_path)
     response = Mock()
+    response.status_code = 200
+    response.headers = {}
+    response.content = b"synthetic buffered response"
     response.json.return_value = payload
     request = Mock(return_value=response)
     monkeypatch.setattr(requests, 'get', request)
@@ -234,6 +237,9 @@ def test_data_fetcher_uses_labels_preserves_native_tdb_and_reports_query_coverag
     from aneos_core.data.models import CloseApproach
     payload['total'] = 20
     response = Mock()
+    response.status_code = 200
+    response.headers = {}
+    response.content = b"synthetic buffered response"
     response.json.return_value = payload
     monkeypatch.setattr(requests, 'get', Mock(return_value=response))
     fetcher = DataFetcher.__new__(DataFetcher)
