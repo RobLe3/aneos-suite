@@ -1269,3 +1269,22 @@ automatic/polling workers, REST persistence, authenticated principal mapping, do
 report validation or case lifecycle. **Not validated:** PostgreSQL execution, cross-host
 clock behavior, backups, hardware/power-loss recovery or scientific accuracy. No new
 queue service or bounded context is introduced. Current API jobs remain #6/#15 work.
+
+## Population evidence contract — 2026-11-13 (ADR-077)
+
+BC11 orchestrates immutable input snapshots and BC5 canonical per-object screening;
+it does not become an independent detection engine. Ordered screening requests and
+unique grouping identities have different semantics. Conflicting duplicate snapshots
+are invalid; a missing orbital angle is not zero. Exploratory neighbourhoods and
+computed encounter gaps are descriptors, not independent observations, calibrated
+significance, physical families or origin evidence. A scalar fitted A1/A2/A3 inventory
+preserves native units, estimation kind, uncertainty and within-orbit covariance;
+paired temporal correlation remains unavailable without the required observations.
+
+Reports carry version/configuration/policy/input/result IDs and replayable complete
+snapshots. Report verification and domain interpretation are separate from execution
+storage: future handlers must verify report and request/checkpoint identity before
+terminal commits. Current network REST/menu consume the report; legacy API job
+scheduling still uses process memory with no principal ownership. Durable activation,
+case histories, independent population calibration and observational model fits
+remain separate open work. No new bounded context is introduced.

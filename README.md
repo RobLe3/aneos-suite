@@ -217,11 +217,11 @@ All items below are implemented, tested (360 unit + integration tests pass / 0 f
 | Capability | Status | Notes |
 |---|---|---|
 | 200-year historical close-approach poll | Working | 40 x 5-year chunks via SBDB CAD API |
-| DBSCAN/HDBSCAN orbital clustering | Working (Phase 11) | PA-1; density sigma-gate, background estimation |
-| Synodic harmonic analysis | Working (Phase 11) | PA-3; Lomb-Scargle on binary time grid |
-| Non-gravitational correlation | Working (Phase 11) | PA-5; A2 Pearson r within clusters |
-| Network-level sigma combining | Working (Phase 11) | Fisher's method + Bonferroni correction; Stouffer weighted z-score optional |
-| `POST /analyze/network` REST endpoint | Working (Phase 11) | Async job with `GET .../status` polling |
+| Orbital catalogue grouping | Descriptive, not calibrated | Deterministic circular neighbourhoods; no missing-angle imputation/family claim |
+| Computed encounter gaps | Descriptive, native TDB dates | No synthetic daily observations or periodicity significance |
+| Non-gravitational correlation | Unavailable without paired time series | A1/A2/A3, uncertainty and covariance inventory retained |
+| Network significance | Not calibrated | Nullable sigma/p; legacy fusion restricted to explicit historical diagnostics |
+| Existing network REST/menu | Evidence-bound report transport | Process-memory jobs remain nondurable and not owner-isolated (#15) |
 
 ### Terminal UI
 
@@ -377,12 +377,12 @@ python aneos.py
 -> Choice: 8 (Population Pattern Analysis)
 -> Browse files -> select a multi-object list
 
-Output:
-  Network sigma  = 2.14   (PA-1 clustering + PA-3 harmonics + PA-5 correlation)
-  Clusters found : 3
-  Cluster Bonferroni p = 0.043
-  Synodic harmonic peak: 1.000 yr (F/yr=1.00)
-  Non-grav A2 correlation within clusters: r=0.41, p=0.12  (inconclusive)
+Output (illustrative counts, not an observation):
+  Objects analysed: 3
+  Descriptive groups: 1
+  Statistical significance: not calibrated. Origin: unresolved.
+  clustering: descriptive_only
+  harmonics: descriptive_only_no_calibrated_periodicity
 ```
 
 ### 9. REST API: programmatic access
@@ -869,7 +869,17 @@ assemble web/ML services or create a database. Schema setup is explicit; startin
 the full API confirms setup before services and cleans up on lifecycle failure.
 
 **Not yet integrated:** current network/automatic/polling API workers. They are not
-made durable merely by adding this component. Network queued numeric inference and
-uncalibrated feature-fusion claims still require #6/#15 remediation. Execution
+made durable merely by adding this component. ADR-077 corrects normal network
+reporting; registered recoverable worker and authenticated API integration remain #15. Execution
 completion does not mean scientific validation. See
 [the storage controls, setup and integration gates](docs/engineering/durable-job-store.md).
+
+
+### Population evidence reports (ADR-077, review branch)
+
+The normal BC11 session now freezes actual NEOData and uses canonical per-object
+screening. Descriptive groups, native-TDB computed encounter gaps, explicit module
+availability and full A1/A2/A3 inventory replace unsupported network significance.
+`verify_network_report` fully recomputes the report; `network_report_to_markdown`
+includes verified JSON for replay. No network acquisition occurs inside this session.
+See [the exact scope and remaining acceptance gates](docs/engineering/network-evidence-report.md).

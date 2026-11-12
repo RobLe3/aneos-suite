@@ -874,3 +874,30 @@ Importing database/job models now has no schema/service side effect. Use explici
 lifespan performs and confirms schema initialization before services. It does not
 validate every existing migration or optional backend. API users must not be told
 that a generic stored `completed` result is scientifically validated.
+
+
+## Population report correction — 2026-11-13 (ADR-077)
+
+Existing `POST /api/v1/analysis/analyze/network` returns a job ID and the registered
+`GET /api/v1/analysis/analyze/network/{job_id}/status` URL. Queued/completed inference
+is nullable: `network_sigma` and `combined_p_value` are null, `network_tier` is
+`UNAVAILABLE`, never routine-by-default. Complete transport includes the versioned
+`scientific_report` with frozen inputs, canonical per-object screening, module
+outcomes and report/configuration/policy/input IDs. `acquisition_outcomes` retains
+requested index/designation and available/unavailable/failed/identity-mismatch
+status. A complete execution with partial acquisition is explicitly partial in
+metadata; no available inputs produces error/NO_AVAILABLE_INPUTS, not success.
+
+`harmonics` currently requests descriptive computed-encounter gaps, not spectral
+inference; the requested `historical_years` window is recorded but not fetched or
+applied by the pure report session. Correlation requires unavailable paired time
+series; rendezvous is explicitly unimplemented in session. No selected-p fusion
+or origin probability is returned. Existing prototypes require an explicit
+historical-diagnostic opt-in and are not a scientific substitute.
+
+**Execution limitation:** these endpoints still use daemon/process-memory jobs.
+They are not durable, authenticated owner-isolated jobs or a production readiness
+claim. The SQL JobStore has not yet been wired to them. See
+[the report contract and next integration gates](../engineering/network-evidence-report.md).
+Older numeric network examples are superseded by this correction. The generated
+OpenAPI snapshot reflects the registered application, not a hand-edited schema.

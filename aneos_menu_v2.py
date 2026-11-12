@@ -517,14 +517,22 @@ class ANEOSMenuV2(ANEOSMenuBase):
         else:
             neo_map = fetcher.fetch_multiple(lines)
 
-        neo_objects = [v for v in neo_map.values() if v is not None]
+        from aneos_core.data.models import NEOData
+        accepted = {d for d in lines if isinstance(neo_map.get(d), NEOData) and neo_map[d].designation == d}
+        neo_objects = [neo_map[d] for d in lines if d in accepted]
+        unavailable = [d for d in lines if d not in accepted]
+        if unavailable:
+            self.show_info(f'Unavailable requested inputs ({len(unavailable)}): {unavailable}')
+        if not neo_objects:
+            self.show_error('No acquired population inputs; analysis not performed.')
+            return
         self.show_info(f"Running BC11 pattern analysis on {len(neo_objects)} objects…")
 
         try:
             cfg = PatternAnalysisConfig(clustering=True, harmonics=True, correlation=False)
             session = NetworkAnalysisSession(config=cfg, fetcher=fetcher)
             if self.console:
-                with self.console.status("[green]Running clustering + network sigma…", spinner="dots"):
+                with self.console.status("[green]Running screening + descriptive population patterns…", spinner="dots"):
                     result = session.run(neo_objects)
             else:
                 result = session.run(neo_objects)
@@ -1158,32 +1166,32 @@ class ANEOSMenuV2(ANEOSMenuBase):
     def _display_pattern_result(self, result: dict) -> None:
         n = result.get("designations_analyzed", 0)
         clusters = result.get("clusters", [])
-        network_sigma = result.get("network_sigma", None)
-        network_tier = result.get("network_tier", None)
-
         lines = [
             f"[bold]Objects analysed:[/bold]  {n}",
-            f"[bold]Clusters found:[/bold]    {len(clusters)}",
+            f"[bold]Descriptive groups:[/bold] {len(clusters)}",
+            "Statistical significance: not calibrated. Origin: unresolved.",
         ]
-        if network_sigma is not None:
-            lines.append(f"[bold]Network sigma:[/bold]     {network_sigma:.2f}σ")
-        if network_tier:
-            lines.append(f"[bold]Network tier:[/bold]      {network_tier}")
-
+        if result.get('schema_version') != 'network-evidence-report-v1':
+            lines.append('Unverified legacy/prototype output: no significance or origin claim accepted.')
+            clusters = []
+        else:
+            from aneos_core.pattern_analysis.session import verify_network_report
+            try:
+                verify_network_report(result)
+            except (ValueError, TypeError):
+                self.show_error('Population report failed reproducibility validation.')
+                return
+            for module, info in result.get('modules', {}).items():
+                lines.append(f"{module}: {info['status']}")
+            candidates = sum(item['assessment']['candidate'] for item in result['object_assessments'])
+            lines.append(f'Follow-up candidates (ranking, not origin): {candidates}')
+            if result['excluded_by_cap']:
+                lines.append(f"Excluded by configured cap: {len(result['excluded_by_cap'])}")
         if clusters:
-            rows = []
-            for c in clusters[:10]:
-                rows.append([
-                    str(c.get("cluster_id", "?")),
-                    str(c.get("n_members", "?")),
-                    f"{c.get('sigma', 0.0):.2f}",
-                    str(c.get("cluster_type", "?")),
-                ])
-            self.display_table(
-                headers=["Cluster ID", "Members", "σ", "Type"],
-                rows=rows,
-                title=f"Clusters (top {len(rows)} of {len(clusters)})",
-            )
+            rows = [[str(c['cluster_id']), str(c['n_members']), 'Catalogue neighbourhood']
+                    for c in clusters[:10]]
+            self.display_table(headers=['Group ID', 'Members', 'Basis'], rows=rows,
+                title=f'Descriptive groups (first {len(rows)} of {len(clusters)})')
         self.display_panel("\n".join(lines), title="Population Pattern Analysis", style="cyan")
 
     def _show_db_result_for(self, designation: str) -> None:

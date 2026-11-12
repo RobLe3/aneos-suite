@@ -2550,3 +2550,58 @@ recovery and cross-owner/restart/provider-outage positive/negative controls. Exi
 network numeric placeholders and uncalibrated feature fusion remain #6/#15, not fixed
 by this storage layer. See `docs/engineering/durable-job-store.md` for exact evidence,
 limits, operational setup and integration acceptance gates. No new bounded context.
+
+### ADR-077: Evidence-bound population reports, not heuristic network significance
+
+**Status:** Implemented/regression-tested normal session and menu/API transport;
+not calibrated population inference or durable worker integration. 2026-11-13;
+#6/#10/#12/#15/#17. Supersedes the scientific interpretation of ADR-042–048
+population prototypes, not their preserved historical diagnostic implementations.
+
+**Context:** The session selected objects using a mutable heuristic called sigma,
+selected minimum cluster/period p-values, and fused dependent selected streams as
+if calibrated. Missing orbital angles became zero; optional HDBSCAN installation
+changed grouping. Computed encounter epochs became invented daily zero/one samples
+and a normal-tail claim. A fitted scalar per object cannot support pairwise temporal
+correlation. These paths do not establish search-wide significance or origin.
+
+**Decision:** Existing BC11 remains the aggregate boundary. `NetworkAnalysisSession`
+freezes complete NEOData inputs, runs the same ScreeningAnalysisService/policy as
+single-object screening, retains ordered duplicate assessments and explicitly
+records cap exclusions. It never selects on stored dynamic scores or acquires data.
+`network-evidence-report-v1` binds snapshots, configuration/policy and complete
+results by hashes and full deterministic replay. JSON and a verified Markdown
+renderer retain evidence, native uncertainty/covariance and limitations. Hashes
+are not authentication, a complete environment lock or scientific calibration.
+
+Exploratory grouping uses one deterministic scaled circular connected-components
+algorithm with documented engineering scales/radius/minimum size, no clipping,
+missing-angle imputation, family identification, background population or p-value.
+Duplicate designations do not increase population membership; conflicting duplicate
+snapshots are rejected. Epoch/frame/uncertainty compatibility, angular degeneracy,
+survey bias and physical association are explicitly outside this descriptor.
+
+The harmonics request returns sorted unique Earth computed-encounter native TDB
+Julian dates/gaps, exclusions and unestablished coverage, not a spectral detection.
+There are no manufactured daily observations. Historical acquisition/window is
+explicitly not performed in this pure session. Correlation exposes all A1/A2/A3
+and covariance evidence but reports paired time series required; it does not turn
+undefined correlation into r=0/p=1. Rendezvous remains explicitly unimplemented in
+session. Disabled, requested-descriptive and unavailable are distinct states.
+
+Legacy public prototype run/combine methods require `legacy_diagnostic=True` for
+historical reproduction, otherwise controlled deprecation directs callers here.
+Old numerical tests are retained under that explicit diagnostic opt-in; they do not
+validate science. Legacy sigma filtering/fusion configuration is rejected, not
+silently ignored. An unrelated deserialization defect found by regression testing
+is corrected: angular zero must not fall back to a contradictory alias.
+
+Existing REST polling retains a complete report, nullable inference at queued and
+complete states, per-request acquisition outcomes and the correct status URL. It
+rejects mismatched returned identities and redacts public exception details.
+Menu display verifies replay, distinguishes ranking candidates and descriptive
+groups, and reports unavailable acquisitions. **Execution remains daemon/in-memory,
+not durable or owner-isolated**; ADR-076 is a storage foundation, not automatic
+integration. Next work must register a resumable authenticated worker and validate
+this report/request binding before JobStore.finish. No new bounded context, UI,
+physical solver, calibrated probability, fitted origin model or five-sigma claim.

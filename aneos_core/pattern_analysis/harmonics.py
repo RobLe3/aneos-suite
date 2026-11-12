@@ -1,3 +1,5 @@
+# ADR-077: LEGACY DIAGNOSTIC ONLY. Historical outputs are not calibrated
+# significance, population family evidence, temporal correlation or origin evidence.
 """Synodic Period Harmonic Analysis — PA-3 (ADR-044)."""
 from __future__ import annotations
 import logging
@@ -32,11 +34,17 @@ class SynodicHarmonicAnalyzer:
     Objects with < MIN_EPOCHS historical approaches are silently skipped.
     """
 
-    def __init__(self, fetcher=None, years_back: int = 30):
+    def __init__(self, fetcher=None, years_back: int = 30, *, legacy_diagnostic=False):
+        self.legacy_diagnostic = legacy_diagnostic
         self.fetcher = fetcher
         self.years_back = years_back
 
     def run(self, neo_objects: List["NEOData"]) -> List[HarmonicSignal]:
+        if self.legacy_diagnostic is not True:
+            raise NotImplementedError('Uncalibrated population prototype withdrawn from normal use; '
+                                      'use NetworkAnalysisSession for frozen evidence and screening. '
+                                      'legacy_diagnostic=True permits historical reproduction only, '
+                                      'not scientific inference.')
         signals = []
         for neo in neo_objects:
             try:

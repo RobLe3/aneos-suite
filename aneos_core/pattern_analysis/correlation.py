@@ -1,3 +1,5 @@
+# ADR-077: LEGACY DIAGNOSTIC ONLY. Historical outputs are not calibrated
+# significance, population family evidence, temporal correlation or origin evidence.
 """Cross-Object Non-Gravitational Correlation — PA-5 (ADR-446)."""
 from __future__ import annotations
 import logging
@@ -40,12 +42,20 @@ class NonGravCorrelator:
     R_THRESHOLD = 0.7
     P_THRESHOLD = 0.01
 
+    def __init__(self, *, legacy_diagnostic=False):
+        self.legacy_diagnostic = legacy_diagnostic
+
     def run(
         self,
         neo_objects: List["NEOData"],
         clusters_dicts: List[Dict],
     ) -> Optional[CorrelationMatrix]:
         """Return the most significant CorrelationMatrix across all clusters, or None."""
+        if self.legacy_diagnostic is not True:
+            raise NotImplementedError('Uncalibrated population prototype withdrawn from normal use; '
+                                      'use NetworkAnalysisSession for frozen evidence and screening. '
+                                      'legacy_diagnostic=True permits historical reproduction only, '
+                                      'not scientific inference.')
         neo_map = {neo.designation: neo for neo in neo_objects}
         best: Optional[CorrelationMatrix] = None
 

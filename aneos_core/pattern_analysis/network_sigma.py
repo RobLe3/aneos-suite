@@ -1,3 +1,5 @@
+# ADR-077: LEGACY DIAGNOSTIC ONLY. Historical outputs are not calibrated
+# significance, population family evidence, temporal correlation or origin evidence.
 """NetworkSigmaCombiner — Fisher's and Stouffer's methods across population sub-modules (ADR-047)."""
 from __future__ import annotations
 import logging
@@ -23,6 +25,9 @@ class NetworkSigmaCombiner:
     χ² = -2 Σ ln(p_i)   under H₀: χ²(2k) where k = number of valid p-values.
     """
 
+    def __init__(self, *, legacy_diagnostic=False):
+        self.legacy_diagnostic = legacy_diagnostic
+
     def combine(
         self,
         sub_module_p_values: Dict[str, Optional[float]],
@@ -44,6 +49,11 @@ class NetworkSigmaCombiner:
             method: 'fisher' (default) or 'stouffer'.
             weights: Optional per-key weights for Stouffer's method (defaults to 1.0).
         """
+        if self.legacy_diagnostic is not True:
+            raise NotImplementedError('Uncalibrated population prototype withdrawn from normal use; '
+                                      'use NetworkAnalysisSession for frozen evidence and screening. '
+                                      'legacy_diagnostic=True permits historical reproduction only, '
+                                      'not scientific inference.')
         if method not in ('fisher', 'stouffer'):
             raise ValueError(f"Unknown method '{method}'. Use 'fisher' or 'stouffer'.")
 
@@ -56,7 +66,8 @@ class NetworkSigmaCombiner:
                 corrected[key] = p
 
         _empty_base = {
-            "network_sigma": 0.0,
+            "calibration_status": "legacy_unvalidated_not_discovery_significance",
+                "network_sigma": 0.0,
             "network_tier": "NETWORK_ROUTINE",
             "combined_p_value": 1.0,
             "sub_module_p_values": corrected,
@@ -87,6 +98,7 @@ class NetworkSigmaCombiner:
                     tier = name
                     break
             return {
+                "calibration_status": "legacy_unvalidated_not_discovery_significance",
                 "network_sigma": round(sigma, 3),
                 "network_tier": tier,
                 "combined_p_value": combined_p,
@@ -118,7 +130,8 @@ class NetworkSigmaCombiner:
                 break
 
         return {
-            "network_sigma": round(sigma, 3),
+            "calibration_status": "legacy_unvalidated_not_discovery_significance",
+                "network_sigma": round(sigma, 3),
             "network_tier": tier,
             "combined_p_value": combined_p,
             "sub_module_p_values": corrected,

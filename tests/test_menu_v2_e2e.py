@@ -552,14 +552,16 @@ class TestOption7LivePipeline:
 # ===========================================================================
 
 class TestOption8PopulationPatternAnalysis:
-    """BC11 network sigma: file → concurrent fetch → NetworkAnalysisSession.run()."""
+    """BC11 canonical population report: file → concurrent fetch → NetworkAnalysisSession.run()."""
 
     def test_fetch_multiple_used_for_population(self, tmp_path):
         dfile = tmp_path / "population.txt"
         dfile.write_text("99942\n2020 SO\n433\n")
         menu = _make_menu()
 
-        neo_map = {d: make_fake_neo_data(d) for d in ["99942", "2020 SO", "433"]}
+        from aneos_core.data.models import NEOData, OrbitalElements
+        neo_map = {d: NEOData(designation=d, orbital_elements=OrbitalElements(semi_major_axis=1., eccentricity=.2, inclination=5.))
+                   for d in ["99942", "2020 SO", "433"]}
         pattern_result = {
             "designations_analyzed": 3,
             "clusters": [],
@@ -581,7 +583,8 @@ class TestOption8PopulationPatternAnalysis:
         dfile = tmp_path / "population.txt"
         dfile.write_text("99942\n")
         menu = _make_menu()
-        neo_data = make_fake_neo_data()
+        from aneos_core.data.models import NEOData, OrbitalElements
+        neo_data = NEOData(designation="99942", orbital_elements=OrbitalElements(semi_major_axis=1., eccentricity=.2, inclination=5.))
         pattern_result = {"designations_analyzed": 1, "clusters": []}
 
         with patch.object(menu, "_ask", return_value=str(dfile)), \

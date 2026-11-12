@@ -408,3 +408,23 @@ def test_reference_equinox_fit_quality_and_physical_sources_are_retained(payload
     assert ng.solution['fit_metadata']['rms'] == '.6'
     assert parsed['_evidence_metadata']['physical_measurements'] == payload['phys_par']
     assert ng.solution['canonical_response_sha256']
+
+
+def test_network_report_retains_native_fitted_a3_and_covariance_epochs(payload):
+    from aneos_core.pattern_analysis.session import (
+        NetworkAnalysisSession, PatternAnalysisConfig, verify_network_report)
+    ng, parsed = parsed_ng(payload)
+    neo = NEOData(designation='SYNTHETIC', nongrav=ng,
+                  evidence_metadata=parsed['_evidence_metadata'])
+    report = NetworkAnalysisSession(PatternAnalysisConfig(correlation=True)).run([neo])
+    assert verify_network_report(json.loads(json.dumps(report))) == report
+    evidence = report['modules']['correlation']['inventory'][0]['evidence']
+    assert evidence == ng.evidence_report()
+    assert evidence['components']['A3']['native']['sigma'] == 4e-12
+    assert evidence['components']['A3']['native']['kind'] == 'CON'
+    assert evidence['components']['A3']['native']['units'] == 'au/d^2'
+    assert evidence['covariance']['labels'] == ng.covariance.labels
+    assert evidence['covariance']['data'] == ng.covariance.data
+    assert evidence['covariance']['epoch_jd_tdb'] != evidence['solution']['epoch_jd_tdb']
+    assert report['correlation_matrix'] is None
+    assert report['input_snapshots'][0] == neo.to_dict()

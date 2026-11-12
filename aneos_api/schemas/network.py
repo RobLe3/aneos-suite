@@ -8,8 +8,10 @@ class OrbitalClusterResult(BaseModel):
     members: List[str]
     n_members: int
     centroid: Dict[str, float]
-    density_sigma: float
-    p_value: float
+    density_sigma: Optional[float] = None
+    p_value: Optional[float] = None
+    evidence_basis: Optional[str] = None
+    interpretation: Optional[str] = None
     known_family: Optional[str] = None
 
 
@@ -36,7 +38,7 @@ class NetworkRequest(BaseModel):
     )
     historical_years: int = Field(
         30, ge=1, le=100,
-        description="Years of historical close-approach data to fetch (1–100)"
+        description="Requested historical horizon (1–100); current descriptor session does not acquire or establish window coverage"
     )
     clustering: bool = True
     harmonics: bool = True
@@ -51,9 +53,11 @@ class NetworkStatusResponse(BaseModel):
     clusters: List[OrbitalClusterResult] = []
     harmonic_signals: List[HarmonicSignalResult] = []
     correlation_matrix: Optional[CorrelationMatrixResult] = None
-    network_sigma: float = 0.0
-    network_tier: str = "NETWORK_ROUTINE"
-    combined_p_value: float = 1.0
+    network_sigma: Optional[float] = None
+    network_tier: str = "UNAVAILABLE"
+    combined_p_value: Optional[float] = None
     sub_module_p_values: Dict[str, Optional[float]] = {}
     analysis_metadata: Dict[str, Any] = {}
+    scientific_report: Optional[Dict[str, Any]] = None
+    acquisition_outcomes: List[Dict[str, Any]] = Field(default_factory=list)
     error: Optional[str] = None

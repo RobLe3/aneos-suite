@@ -2061,7 +2061,7 @@
           },
           "historical_years": {
             "default": 30,
-            "description": "Years of historical close-approach data to fetch (1\u2013100)",
+            "description": "Requested historical horizon (1\u2013100); current descriptor session does not acquire or establish window coverage",
             "maximum": 100.0,
             "minimum": 1.0,
             "title": "Historical Years",
@@ -2081,6 +2081,14 @@
       },
       "NetworkStatusResponse": {
         "properties": {
+          "acquisition_outcomes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Acquisition Outcomes",
+            "type": "array"
+          },
           "analysis_metadata": {
             "additionalProperties": true,
             "default": {},
@@ -2096,9 +2104,15 @@
             "type": "array"
           },
           "combined_p_value": {
-            "default": 1.0,
-            "title": "Combined P Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Combined P Value"
           },
           "correlation_matrix": {
             "anyOf": [
@@ -2139,14 +2153,32 @@
             "type": "string"
           },
           "network_sigma": {
-            "default": 0.0,
-            "title": "Network Sigma",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network Sigma"
           },
           "network_tier": {
-            "default": "NETWORK_ROUTINE",
+            "default": "UNAVAILABLE",
             "title": "Network Tier",
             "type": "string"
+          },
+          "scientific_report": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scientific Report"
           },
           "status": {
             "title": "Status",
@@ -2189,8 +2221,37 @@
             "type": "string"
           },
           "density_sigma": {
-            "title": "Density Sigma",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Density Sigma"
+          },
+          "evidence_basis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Basis"
+          },
+          "interpretation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interpretation"
           },
           "known_family": {
             "anyOf": [
@@ -2215,17 +2276,22 @@
             "type": "integer"
           },
           "p_value": {
-            "title": "P Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
           }
         },
         "required": [
           "cluster_id",
           "members",
           "n_members",
-          "centroid",
-          "density_sigma",
-          "p_value"
+          "centroid"
         ],
         "title": "OrbitalClusterResult",
         "type": "object"

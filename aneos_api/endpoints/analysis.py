@@ -594,28 +594,51 @@ def _run_network_analysis(job_id: str, request: NetworkRequest) -> None:
         )
         fetcher = DataFetcher()
         designations = request.designations
-        neo_objects = []
-        for des in designations:
-            try:
-                neo_objects.append(fetcher.fetch_neo_data(des))
-            except Exception as e:
-                logger.debug(f"Network analysis: could not fetch {des}: {e}")
+        from aneos_core.data.models import NEOData
+        neo_objects, outcomes, acquired = [], [], {}
+        for index, des in enumerate(designations):
+            # Repeated request identity uses one frozen acquisition, not a fresh
+            # orbit solution or a larger population sample per occurrence.
+            if des not in acquired:
+                try:
+                    neo = fetcher.fetch_neo_data(des)
+                    status = ('identity_mismatch' if isinstance(neo, NEOData) and neo.designation != des
+                              else 'available' if isinstance(neo, NEOData) else 'unavailable')
+                    acquired[des] = (neo if status == 'available' else None, status)
+                except Exception:
+                    acquired[des] = (None, 'acquisition_failed')
+            neo, status = acquired[des]
+            outcome = {'input_index': index, 'designation': des, 'status': status}
+            if neo is not None:
+                neo_objects.append(neo)
+                outcome['canonical_designation'] = neo.designation
+            outcomes.append(outcome)
+        _network_store[job_id]['acquisition_outcomes'] = outcomes
 
         cfg = PatternAnalysisConfig(
             clustering=request.clustering,
             harmonics=request.harmonics,
             correlation=request.correlation,
-            rendezvous=False,   # deferred ADR-045
+            rendezvous=request.rendezvous,
             historical_years=request.historical_years,
         )
         session = NetworkAnalysisSession(config=cfg, fetcher=fetcher)
         result = session.run(neo_objects)
         _network_store[job_id].update(result)
-        _network_store[job_id]["status"] = "complete"
+        _network_store[job_id]["scientific_report"] = result
+        _network_store[job_id]["analysis_metadata"] = {
+            **result['analysis_metadata'],
+            'acquisition_status': 'available' if len(neo_objects)==len(designations)
+                else 'partial' if neo_objects else 'unavailable',
+            'execution_storage': 'legacy_process_memory_not_durable',
+        }
+        _network_store[job_id]["status"] = "complete" if neo_objects else "error"
+        if not neo_objects:
+            _network_store[job_id]['error'] = 'NO_AVAILABLE_INPUTS'
     except Exception as exc:
         logger.exception(f"Network analysis job {job_id} failed: {exc}")
         _network_store[job_id]["status"] = "error"
-        _network_store[job_id]["error"] = str(exc)
+        _network_store[job_id]["error"] = "NETWORK_ANALYSIS_FAILED"
 
 
 @router.post("/analyze/network", summary="Start population pattern analysis")
@@ -631,9 +654,9 @@ async def start_network_analysis(request: NetworkRequest):
         "clusters": [],
         "harmonic_signals": [],
         "correlation_matrix": None,
-        "network_sigma": 0.0,
-        "network_tier": "NETWORK_ROUTINE",
-        "combined_p_value": 1.0,
+        "network_sigma": None,
+        "network_tier": "UNAVAILABLE",
+        "combined_p_value": None,
         "sub_module_p_values": {},
         "analysis_metadata": {},
         "error": None,
@@ -645,7 +668,7 @@ async def start_network_analysis(request: NetworkRequest):
     return {
         "job_id": job_id,
         "status": "queued",
-        "status_url": f"/api/v1/analysis/network/{job_id}/status",
+        "status_url": f"/api/v1/analysis/analyze/network/{job_id}/status",
     }
 
 

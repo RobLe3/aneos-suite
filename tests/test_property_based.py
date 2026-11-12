@@ -139,7 +139,7 @@ def test_advanced_scoring_config_defaults_when_file_missing(tmp_path, monkeypatc
 def test_network_sigma_fisher_adds_method_key():
     """Fisher combine() result must contain 'method': 'fisher'."""
     from aneos_core.pattern_analysis.network_sigma import NetworkSigmaCombiner
-    result = NetworkSigmaCombiner().combine({'pa1': 0.05})
+    result = NetworkSigmaCombiner(legacy_diagnostic=True).combine({'pa1': 0.05})
     assert result.get('method') == 'fisher'
 
 

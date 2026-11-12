@@ -1,18 +1,15 @@
-"""
-Population Pattern Analysis — BC11.
+"""BC11: frozen population evidence and shared screening (ADR-077).
 
-Detects anomalies at the population level across a batch of NEOData objects.
-Sub-modules: OrbitalElementClusterer (PA-1), SynodicHarmonicAnalyzer (PA-3),
-NonGravCorrelator (PA-5), NetworkSigmaCombiner.
-Pairwise RendezvousDetector (PA-6) — Stage 1 (MOID-based, REBOUND-free) implemented;
-Stage 2 (REBOUND propagation) deferred per ADR-045.
+Normal entrypoint: NetworkAnalysisSession. Legacy clustering/harmonic/correlation
+and p-value fusion names remain exported for explicit historical diagnostics only.
+They are not validated physical-origin or significance procedures.
 """
 
 from .clustering import OrbitalElementClusterer, OrbitalCluster
 from .harmonics import SynodicHarmonicAnalyzer, HarmonicSignal
 from .correlation import NonGravCorrelator, CorrelationMatrix
 from .network_sigma import NetworkSigmaCombiner
-from .session import NetworkAnalysisSession, PatternAnalysisConfig
+from .session import NetworkAnalysisSession, PatternAnalysisConfig, verify_network_report, network_report_to_markdown
 from .rendezvous import PHAMoidScanner, RendezvousPair
 
 __all__ = [
@@ -20,6 +17,6 @@ __all__ = [
     "SynodicHarmonicAnalyzer", "HarmonicSignal",
     "NonGravCorrelator", "CorrelationMatrix",
     "NetworkSigmaCombiner",
-    "NetworkAnalysisSession", "PatternAnalysisConfig",
+    "NetworkAnalysisSession", "PatternAnalysisConfig", "verify_network_report", "network_report_to_markdown",
     "PHAMoidScanner", "RendezvousPair",
 ]
