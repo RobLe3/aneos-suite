@@ -58,6 +58,8 @@ Existing public facade/function names remain importable. The misleading name
 available as legacy data but cannot enable a validation claim by assignment.
 Archived wrappers are not registered as automatic fallbacks; failure is explicit.
 Public component adapters no longer expose heuristic p-values as significance.
+The old API `_sigma_tier`, `_build_interpretation` and `_spacecraft_veto` helpers
+also remain importable but explicitly reject their withdrawn inference contracts.
 
 Old tests that required Tesla to reach sigma5, forced natural-origin verdicts,
 or required toy F1>0.8 tested the withdrawn contract. They are replaced with
@@ -89,9 +91,9 @@ underflow bounds. Correct arithmetic is not validation of an astronomical null.
 ## Deliberately unfinished
 
 - Automatic multi-stage review still contains legacy validation logic; sharing
-  its screening helper is not proof that required validation cannot be bypassed.
+  its screening helper is not proof that required validation cannot be bypassed (#21).
 - Historical CAD polling still has placeholder orbit/score paths; no validated
-  evidence credit is given to those paths. Repair and outage tests remain open.
+  evidence credit is given to those paths. Repair and outage tests remain open (#22).
 - Network-pattern, ATLAS proxy, legacy front ends and scientific-help documents
   still need an end-to-end claim audit. This increment is not “all interfaces
   scientifically corrected.”

@@ -24,6 +24,17 @@ The issue bodies preserve acceptance checklists, dependencies, scientific safegu
 | 14 | P1: Enforce provider-safe acquisition and production configuration contracts | [#16](https://github.com/RobLe3/aneos-suite/issues/16) |
 | 15 | P1: Reconcile ADR/DDD/BC, CI gates and programme-wide verification | [#17](https://github.com/RobLe3/aneos-suite/issues/17) |
 
+### Confirmed pipeline-integrity follow-ups
+
+- [#21](https://github.com/RobLe3/aneos-suite/issues/21): required multi-stage
+  validation can be bypassed by ranking thresholds; probability complements are
+  fabricated. Sharing the screening helper does not resolve this gate.
+- [#22](https://github.com/RobLe3/aneos-suite/issues/22): historical CAD paths
+  fabricate orbital/default encounter values and use positional column guesses.
+  Replace those with labelled evidence, separately acquired orbits or abstention.
+
+Both are P0 and need positive controls as well as rejection/outage regressions.
+
 ## Delivery rules
 
 Freeze the historical baseline before dependent scientific changes. Ship small reviewable PRs in dependency order. No automatic merging. Keep the full programme intact when an individual step remains blocked by missing observations.
@@ -64,7 +75,7 @@ The baseline PR deliberately contains no production scoring, API, menu or planet
 - Draft PR #19 repairs typed non-gravitational ingestion, cache/provenance and
   descriptive reporting, with ADR-064. GitHub test and Docker checks passed.
   Covariance propagation and physical-model fitting are not implemented.
-- The screening-result-contract increment (ADR-065, stacked on #19) withdraws
+- Draft PR #20 (ADR-065, stacked on #19) withdraws
   unsupported inference and integrates a shared ranking service across the
   specified adapters. See `screening-result-contract.md` for its exact coverage,
   controlled test/contract migration and deliberately unfinished surfaces.
