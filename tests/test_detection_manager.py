@@ -21,5 +21,8 @@ def test_analyze_neo_returns_detection_result():
     mgr = DetectionManager(preferred_detector=DetectorType.AUTO)
     result = mgr.analyze_neo({"a": 1.0, "e": 0.1, "i": 5.0})
     assert isinstance(result, DetectionResult)
-    assert result.is_artificial in (True, False)  # covers Python bool and numpy.bool_
-    assert 0.0 <= result.confidence <= 1.0
+    assert result.is_artificial is None
+    assert result.confidence is None
+    assert result.artificial_probability is None
+    assert result.screening_score is not None
+    assert result.metadata["five_sigma_claim_permitted"] is False

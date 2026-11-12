@@ -2070,3 +2070,36 @@ contract test is network-marked and makes no collection-time requests.
 physical-origin inference or independent calibration is supplied by this ADR.
 Provider-wide multi-worker request serialization/backoff remains issue #16; an
 identifying application User-Agent does not establish full fair-use compliance.
+
+---
+
+## ADR-065: Separate screening rank from unavailable scientific inference
+
+**Date:** 2026-11-12
+**Status:** Implemented on review branch; independent calibration not available
+**Related:** ADR-064; issues #2, #6, #10, #11, #12, #15, #17
+
+**Context:** The old weighted effect-size rank, assumed posterior and constructor
+validation metrics were presented as scientific significance/origin evidence.
+Entry-point-specific decisions and silent fallback could change that contract.
+
+**Decision:** Centralize ranking in `ScreeningAnalysisService`. Keep the legacy
+rank for comparison, but represent unsupported significance, posterior, FDR and
+origin decisions as null with explicit statuses. Follow-up candidacy is not an
+origin verdict. Content-address ranking inputs and policy configuration. Carry
+typed non-gravitational evidence descriptively, without thrust inference.
+Unavailable probability must stop probability-based evaluation, not become zero.
+
+Keep existing facade names, with controlled deprecation of defective private
+fusion/toy-validation functions. Do not select archived models as fallback.
+Constructor examples cannot install a calibrated model. Stable tail arithmetic
+remains a mathematical utility, not permission to claim significance.
+
+**Consequences and evidence:** Existing menu, REST, batch and automatic screening
+helper share the service; positive/negative controls and actual adapter parity
+tests exercise it. Frozen KY26 replay remains separate. See
+`docs/engineering/screening-result-contract.md` for test-contract migration,
+limits and remaining legacy surfaces. No independent calibration, end-to-end
+validation gate, restart durability or origin inference is established by this
+decision. Existing coverage requirement remains 30%; scientific performance
+acceptance remains open rather than waived.

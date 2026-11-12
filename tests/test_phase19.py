@@ -59,29 +59,36 @@ class TestDetectionNoteConditional:
         from aneos_menu_v2 import ANEOSMenuV2
         return inspect.getsource(ANEOSMenuV2._display_detection_result)
 
+    def _render(self, inclination, threshold=5):
+        from aneos_core.analysis.screening import ScreeningAnalysisService, ScreeningPolicy
+        from aneos_menu_v2 import ANEOSMenuV2
+        from unittest.mock import Mock
+        menu = ANEOSMenuV2.__new__(ANEOSMenuV2)
+        menu.console = None
+        menu.display_panel = Mock()
+        result = ScreeningAnalysisService(ScreeningPolicy(candidate_threshold=threshold)).analyze_raw(
+            "marker", {"a": 1, "e": .2, "i": inclination}).to_detection_result()
+        menu._display_detection_result("marker", result)
+        return result, menu.display_panel.call_args.args[0]
+
     def test_note_inconclusive_for_sigma_below_2(self):
-        """Source must have a branch for sigma < 2.0 with 'INCONCLUSIVE' text."""
-        src = self._src()
-        assert "sigma < 2" in src or "sigma < 2.0" in src, (
-            "No sigma < 2 branch found in _display_detection_result"
-        )
-        assert "INCONCLUSIVE" in src, (
-            "INCONCLUSIVE text not found in _display_detection_result"
-        )
+        result, content = self._render(15)
+        assert not result.candidate
+        assert result.is_artificial is None
+        assert "unavailable" in content
 
     def test_note_interesting_for_sigma_2_to_5(self):
-        """Source must have a branch for sigma < 5 with 'statistically interesting'."""
-        src = self._src()
-        assert "statistically interesting" in src, (
-            "'statistically interesting' note not found for σ 2–5 range"
-        )
+        result, content = self._render(35)
+        assert result.screening_score is not None
+        assert "uncalibrated" in content
+        assert "statistically interesting" not in content
 
     def test_note_exceptional_for_sigma_5(self):
-        """Source must have a branch for sigma >= 5 mentioning the σ=5 threshold."""
-        src = self._src()
-        assert "σ=5 threshold" in src or "sigma=5 threshold" in src or "σ=5" in src, (
-            "No σ=5 threshold note found for the exceptional case"
-        )
+        result, content = self._render(80)
+        assert result.candidate
+        assert "FOLLOW_UP_CANDIDATE" in content
+        assert "unavailable" in content
+        assert "σ=5" not in content
 
 
 # ===========================================================================

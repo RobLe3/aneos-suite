@@ -55,3 +55,19 @@ Baseline commit/main match: `42cab0acd7a1e5e7781a26831f07b11a77f48ead`. Rounded 
 The first engineering tranche had 393 passing tests and 2 exclusions in a disposable copy. The subsequent uncommitted service-contract migration initially had 26 failures/367 passes; 16 new targeted shared-service tests passed. These runs are different snapshots and must not be pooled into a green release claim. No scientific validation has been completed.
 
 The baseline PR deliberately contains no production scoring, API, menu or planetary-defense changes. Existing broad WIP remains separate until tested and divided into reviewable increments.
+
+## Review increments — 2026-11-12
+
+- Draft PR #18 freezes the supplied KY26 historical output and rounded-input
+  replay. Original full-precision execution provenance remains missing; #3 is
+  not complete. GitHub test and Docker checks passed.
+- Draft PR #19 repairs typed non-gravitational ingestion, cache/provenance and
+  descriptive reporting, with ADR-064. GitHub test and Docker checks passed.
+  Covariance propagation and physical-model fitting are not implemented.
+- The screening-result-contract increment (ADR-065, stacked on #19) withdraws
+  unsupported inference and integrates a shared ranking service across the
+  specified adapters. See `screening-result-contract.md` for its exact coverage,
+  controlled test/contract migration and deliberately unfinished surfaces.
+
+All increments require review; none is merged or a scientific certification.
+Independent calibration and production-readiness acceptance remain unmet.

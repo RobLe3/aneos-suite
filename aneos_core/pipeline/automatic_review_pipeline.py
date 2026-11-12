@@ -481,64 +481,14 @@ class AutomaticReviewPipeline:
                     # Fallback to simple heuristics
                     score_result = self._simple_first_stage_scoring(neo_obj)
                 
-                # REAL ARTIFICIAL NEO DETECTION
                 artificial_analysis = await self._detect_artificial_neo(neo_obj)
-                
-                # Integrate SIGMA 5 artificial NEO analysis into scoring
-                if artificial_analysis and artificial_analysis.is_artificial:
-                    # SIGMA 5 DETECTION: Maximum scoring for 99.99994% certainty
-                    base_score = score_result.get('overall_score', 0.0)
-                    sigma_level = artificial_analysis.sigma_level or 0.0
-                    certainty = artificial_analysis.artificial_probability
+                # Screening eligibility is not an artificial-origin verdict.
+                score_result['screening_candidate'] = bool(artificial_analysis and artificial_analysis.candidate)
+                score_result['screening_score'] = getattr(artificial_analysis, 'screening_score', None)
+                score_result['artificial_neo_detected'] = None
+                score_result['artificial_confidence'] = None
+                score_result['artificial_analysis'] = getattr(artificial_analysis, 'analysis', {})
 
-                    # Sigma 5 gets maximum scoring priority
-                    if sigma_level >= 5.0:
-                        # Override score completely - sigma 5 is definitive
-                        score_result['overall_score'] = 0.99  # Near maximum score
-                        score_result['sigma_5_detection'] = True
-                        score_result['sigma_level'] = sigma_level
-                        score_result['statistical_certainty'] = certainty
-                        boost_factor = 1.0  # full boost applied
-                    else:
-                        # Lower sigma levels get proportional boost
-                        boost_factor = min(sigma_level / 5.0, 0.8)  # Scale to sigma 5
-                        score_result['overall_score'] = min(
-                            base_score + boost_factor,
-                            1.0
-                        )
-
-                    # Always include sigma analysis results
-                    score_result['artificial_neo_detected'] = True
-                    score_result['artificial_confidence'] = artificial_analysis.confidence
-                    score_result['sigma_level'] = sigma_level
-                    score_result['statistical_certainty'] = certainty
-                    score_result['false_positive_rate'] = artificial_analysis.metadata.get('false_positive_rate', 0.0)
-                    score_result['artificial_analysis'] = artificial_analysis.analysis
-                    score_result['boost_applied'] = boost_factor
-                    score_result['original_score'] = base_score
-
-                    # Get primary evidence from analysis
-                    components = [k for k in artificial_analysis.analysis.keys() if k != 'overall']
-                    primary_evidence = components[0] if components else 'orbital_analysis'
-
-                    # VALIDATION TRACKING
-                    score_result['detection_validation'] = {
-                        'threshold_alignment': 'FIXED',
-                        'boost_factor_improved': True,
-                        'detection_sensitivity_tuned': True,
-                        'validation_timestamp': datetime.now().isoformat()
-                    }
-
-                    self.logger.info(
-                        f"🚀 ARTIFICIAL NEO DETECTED: {neo_obj.get('designation', 'Unknown')} "
-                        f"- {primary_evidence} (confidence: {artificial_analysis.confidence:.3f}, "
-                        f"boost: +{boost_factor:.3f})"
-                    )
-                else:
-                    score_result['artificial_neo_detected'] = False
-                    score_result['artificial_confidence'] = 0.0
-                    score_result['artificial_analysis'] = {}
-                
                 # Add scoring to object
                 neo_obj['first_stage_score'] = score_result
                 neo_obj['first_stage_timestamp'] = datetime.now().isoformat()
@@ -546,7 +496,7 @@ class AutomaticReviewPipeline:
                 
                 # Check if candidate passes threshold
                 overall_score = score_result.get('overall_score', 0.0)
-                if overall_score >= self.config.first_stage.score_threshold:
+                if score_result['screening_candidate'] or overall_score >= self.config.first_stage.score_threshold:
                     candidates.append(neo_obj)
                     
             except Exception as e:
@@ -781,53 +731,23 @@ class AutomaticReviewPipeline:
             return {'overall_score': 0.0, 'error': 'scoring_failed'}
     
     async def _detect_artificial_neo(self, neo_obj: Dict):
-        """Detect if NEO is actually an artificial object using real orbital analysis."""
-        try:
-            # Extract orbital elements
-            orbital_elements = neo_obj.get('orbital_elements', {})
-            if not orbital_elements:
-                return None
+        """Use the same snapshot contract as API, menu and batch screening."""
+        from ..analysis.screening import ScreeningAnalysisService
+        from ..data.models import NEOData, PhysicalProperties
+        neo = neo_obj.get('neo_data')
+        if not isinstance(neo, NEOData):
+            neo = NEOData.from_dict(neo_obj)
+            # Only measured values are adapted; absent values are not zero.
+            if neo.physical_properties is None:
+                diameter_km = neo_obj.get('diameter_km')
+                magnitude = neo_obj.get('absolute_magnitude_h')
+                if diameter_km is not None or magnitude is not None:
+                    neo.physical_properties = PhysicalProperties(
+                        diameter_km=diameter_km, absolute_magnitude_h=magnitude)
+        assessment = ScreeningAnalysisService().analyze_neo(neo)
+        neo_obj['neo_data'] = neo
+        return assessment.to_detection_result()
 
-            # Skip sigma-5 detection on CAD placeholder orbital elements.
-            # e=0.1, i=10.0, a=1.0 are the hardcoded defaults injected when only
-            # close-approach data is available; running the detector on them
-            # triggers log(0) instability and spurious sigma≥5 results.
-            e = orbital_elements.get('eccentricity')
-            i = orbital_elements.get('inclination')
-            a = orbital_elements.get('semi_major_axis')
-            if e == 0.1 and i == 10.0 and a == 1.0:
-                return None
-            
-            # Extract physical data if available
-            physical_data = {
-                'diameter': neo_obj.get('diameter', neo_obj.get('estimated_diameter_km_max', 0) * 1000),
-                'absolute_magnitude': neo_obj.get('absolute_magnitude_h', 0)
-            }
-            
-            # Run multi-modal artificial NEO detection (no async needed)
-            from datetime import datetime
-            observation_date = None
-            if 'discovery_date' in neo_obj:
-                try:
-                    discovery_date_str = neo_obj['discovery_date']
-                    if isinstance(discovery_date_str, str):
-                        observation_date = datetime.fromisoformat(discovery_date_str)
-                    elif isinstance(discovery_date_str, datetime):
-                        observation_date = discovery_date_str
-                except:
-                    observation_date = None
-                    
-            result = self.artificial_neo_detector.analyze_neo(
-                orbital_elements, physical_data,
-                additional_data={"observation_date": observation_date}
-            )
-            
-            return result
-            
-        except Exception as e:
-            self.logger.warning(f"Artificial NEO detection failed for {neo_obj.get('designation', 'unknown')}: {e}")
-            return None
-    
     async def _stage_multi_validation(self, candidates: List[Dict]) -> StageResult:
         """Execute multi-stage validation with proper Sigma 5 artificial NEO detection."""
         start_time = time.time()

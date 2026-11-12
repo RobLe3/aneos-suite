@@ -92,9 +92,10 @@ class TestBonferoniCorrection:
         orbital = {"a": 1.325, "e": 0.256, "i": 1.077}
         # Force exactly one analyzed evidence source with a known p_value
         result = detector.analyze_neo_validated(orbital)
-        # n_evidence_tests should be >=1 (orbital dynamics always analyzed)
-        assert "n_evidence_tests" in result.analysis_metadata
-        assert result.analysis_metadata["n_evidence_tests"] >= 1
+        # Counting heuristic features does not create independent statistical tests.
+        assert result.combined_p_value is None
+        assert result.false_discovery_rate is None
+        assert result.analysis_metadata["five_sigma_claim_permitted"] is False
 
     def test_five_tests_bonferroni_inflates(self):
         """With 5 tests at p=0.01, Bonferroni-corrected p should be ~0.05."""

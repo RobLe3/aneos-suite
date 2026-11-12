@@ -197,7 +197,8 @@ def test_actual_source_adapter_to_cache_to_menu_detector_and_api_report(payload,
     assert detected.metadata['non_gravitational_evidence'] == report
     # Merely attaching a fitted coefficient must not activate a thrust heuristic.
     baseline = manager.analyze_neo({'a': 1.2, 'e': .2, 'i': 1.5})
-    assert detected.sigma_level == baseline.sigma_level
+    assert detected.screening_score == baseline.screening_score
+    assert detected.sigma_level is None
     assert detected.artificial_probability == baseline.artificial_probability
     response = DetectionResponse(designation='SYNTHETIC', is_artificial=False,
                                  artificial_probability=0, sigma_confidence=0,
@@ -219,18 +220,21 @@ async def test_actual_api_get_and_batch_preserve_a3_without_scalar_thrust(payloa
     monkeypatch.setattr('aneos_core.data.sources.horizons.HorizonsSource.fetch_orbital_history', lambda *a, **kw: [])
     monkeypatch.setattr(analysis, '_persist_detection_result', lambda *a: None)
     calls = []
-    original = ValidatedSigma5ArtificialNEODetector.analyze_neo_validated
-    def spy(self, *args, **kwargs):
-        calls.append(kwargs.get('observation_data'))
-        return original(self, *args, **kwargs)
-    monkeypatch.setattr(ValidatedSigma5ArtificialNEODetector, 'analyze_neo_validated', spy)
+    from aneos_core.analysis.screening import ScreeningAnalysisService
+    original = ScreeningAnalysisService.analyze_neo
+    def spy(self, evidence, *args, **kwargs):
+        calls.append(evidence.nongrav.to_dict())
+        return original(self, evidence, *args, **kwargs)
+    monkeypatch.setattr(ScreeningAnalysisService, 'analyze_neo', spy)
     get = await analysis.detect_neo('SYNTHETIC', False, None)
     monkeypatch.setitem(analysis._batch_store, 'ng-test', {'results': [], 'completed': 0, 'failed': 0})
     await analysis._run_batch_detection('ng-test', ['SYNTHETIC'])
     batch = analysis._batch_store['ng-test']['results'][0]
     assert get.non_gravitational_evidence['components']['A3']['native']['value'] == 1e-12
     assert batch['non_gravitational_evidence'] == get.non_gravitational_evidence
-    assert all(value is None for value in calls)
+    assert calls == [ng.to_dict(), ng.to_dict()]
+    assert get.sigma_confidence is None
+    assert get.evidence_snapshot["additional"]["non_gravitational_evidence"] == ng.evidence_report()
 
 
 @pytest.mark.parametrize('fastest', ['SBDB', 'secondary'])

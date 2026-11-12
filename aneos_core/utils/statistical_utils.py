@@ -10,6 +10,8 @@ import numpy as np
 from scipy import stats
 from typing import List, Union
 import logging
+import math
+from scipy.special import ndtri_exp, gammaln, logsumexp
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,9 @@ def sigma_to_p_value(sigma_level: float) -> float:
         >>> sigma_to_p_value(5.0)  # ~5.7e-7
         5.733031438470705e-07
     """
-    return 2 * (1 - stats.norm.cdf(abs(sigma_level)))
+    if not math.isfinite(sigma_level):
+        raise ValueError("sigma_level must be finite")
+    return float(2 * stats.norm.sf(abs(sigma_level)))
 
 def sigma_to_confidence_level(sigma_level: float) -> float:
     """
@@ -62,13 +66,54 @@ def p_value_to_sigma(p_value: float) -> float:
     Returns:
         Sigma level
     """
-    if p_value <= 0:
+    if not math.isfinite(p_value) or not 0 <= p_value <= 1:
+        raise ValueError("p_value must be finite and in [0, 1]")
+    if p_value == 0:
         return float('inf')
     if p_value >= 1:
         return 0.0
     
     # Convert two-sided p-value to sigma
-    return stats.norm.ppf(1 - p_value / 2)
+    return log_p_value_to_sigma(math.log(p_value))
+
+
+def log_p_value_to_sigma(log_p_value: float) -> float:
+    """Two-sided Gaussian equivalent without subtracting tiny tails from one.
+
+    This conversion does not validate the null model or establish artificial
+    origin. Retain the log probability when the ordinary probability underflows.
+    """
+    if math.isnan(log_p_value) or log_p_value > 0:
+        raise ValueError("log_p_value must be <= 0")
+    return float(-ndtri_exp(log_p_value - math.log(2.0)))
+
+
+def finite_probability(log_p_value: float) -> float:
+    """Serialize a tail, flooring underflow to the smallest positive float.
+
+    Callers must retain log_p_value and mark a floored value as a numerical
+    bound, not an exact measured probability.
+    """
+    if math.isnan(log_p_value) or log_p_value > 0:
+        raise ValueError("log_p_value must be <= 0")
+    return max(float(np.nextafter(0.0, 1.0)), math.exp(log_p_value))
+
+
+def fisher_log_p_value(p_values: List[float]) -> float:
+    """Fisher tail under its independence assumption, using a stable finite sum.
+
+    A zero input is interpreted as below floating-point resolution, never
+    discarded. Callers must disclose that endpoint as a numerical bound.
+    """
+    if not p_values:
+        return 0.0
+    if any(not math.isfinite(p) or not 0 <= p <= 1 for p in p_values):
+        raise ValueError("p-values must be finite and in [0, 1]")
+    half = -sum(math.log(max(p, float(np.nextafter(0.0, 1.0)))) for p in p_values)
+    if half == 0:
+        return 0.0
+    j = np.arange(len(p_values), dtype=float)
+    return min(0.0, float(-half + logsumexp(j * math.log(half) - gammaln(j + 1))))
 
 def apply_bonferroni_correction(p_values: List[float]) -> List[float]:
     """

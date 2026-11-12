@@ -83,7 +83,7 @@ def _persist_detection_result(designation: str, result: dict) -> None:
             service = AnalysisService(db)
             service.save_analysis_result({
                 'designation': designation,
-                'overall_score': result.get('artificial_probability', 0.0),
+                'overall_score': result.get('screening_score'),
                 'classification': result.get('classification', 'UNKNOWN'),
                 'confidence': result.get('confidence', 0.0),
                 'processing_time': 0.0,
@@ -95,40 +95,30 @@ def _persist_detection_result(designation: str, result: dict) -> None:
     except Exception as exc:
         logger.warning("Could not persist detection result for %s: %s", designation, exc)
 
-# Known spacecraft catalog for API-level pre-check
-_KNOWN_SPACECRAFT = {
-    "2018 a1": "Tesla Roadster (SpaceX Falcon Heavy, 2018-017A)",
-    "2020 so": "Centaur upper stage (Surveyor 2, 1966-084A)",
-    "j002e3":  "S-IVB upper stage (Apollo 12)",
-}
+def _sigma_tier(sigma):
+    """Deprecated: a heuristic rank does not define a significance tier."""
+    raise NotImplementedError("Uncalibrated sigma tiers withdrawn; use screening classification")
 
 
-def _sigma_tier(sigma: float) -> str:
-    if sigma >= 5.0: return "EXCEPTIONAL"
-    if sigma >= 4.0: return "ANOMALOUS"
-    if sigma >= 3.0: return "SIGNIFICANT"
-    if sigma >= 2.0: return "INTERESTING"
-    if sigma >= 1.0: return "NOTABLE"
-    return "ROUTINE"
+def _build_interpretation(*args, **kwargs):
+    """Deprecated: assumed Bayesian posteriors are not calibrated probabilities."""
+    raise NotImplementedError("Uncalibrated interpretation withdrawn; use assessment.to_payload()")
 
 
-def _build_interpretation(designation, sigma_confidence, tier, top_type, bayesian_prob):
-    pct = bayesian_prob * 100
-    return (
-        f"{designation} shows {tier} orbital/physical characteristics "
-        f"(sigma={sigma_confidence:.2f}, dominant evidence: {top_type}). "
-        f"artificial_probability={pct:.2f}% — incorporates 0.1% base-rate prior. "
-        f"Propulsion or course-correction evidence required to exceed 10%."
-    )
+def _spacecraft_veto(designation):
+    """Deprecated: designation lookup cannot establish sigma or source identity."""
+    raise NotImplementedError("Name-only spacecraft veto withdrawn; provenance-backed identity required")
 
 
-def _spacecraft_veto(designation: str):
-    """Return (is_vetoed, reason) tuple for known spacecraft catalog."""
-    key = designation.strip().lower()
-    label = _KNOWN_SPACECRAFT.get(key)
-    if label:
-        return True, f"Known spacecraft: {label}"
-    return False, None
+def _screening_payload(neo, service=None):
+    """Shared snapshot adapter; no per-endpoint scientific decision logic."""
+    from aneos_core.analysis.screening import ScreeningAnalysisService
+    assessment = (service or ScreeningAnalysisService()).analyze_neo(neo)
+    payload = assessment.to_payload()
+    payload['data_source'] = neo.sources_used[0] if neo.sources_used else None
+    payload['data_freshness'] = neo.fetched_at.isoformat() if neo.fetched_at else None
+    return payload
+
 
 async def get_analysis_pipeline() -> AnalysisPipeline:
     """Get the analysis pipeline from the application."""
@@ -206,7 +196,8 @@ async def analyze_neo(
     "/detect",
     response_model=DetectionResponse,
     responses={
-        404: {"model": ErrorResponse, "description": "No orbital data for designation"},
+        422: {"model": ErrorResponse, "description": "Invalid source measurements"},
+        503: {"model": ErrorResponse, "description": "Source data unavailable"},
         500: {"model": ErrorResponse, "description": "Detection pipeline failure"},
     },
 )
@@ -215,156 +206,25 @@ async def detect_neo(
     force_refresh: bool = Query(False, description="Bypass cache and re-fetch from source"),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
-    """
-    Run the canonical ValidatedSigma5 artificial-NEO detector on a named object.
-
-    Fetches orbital elements from the data pipeline and returns a typed
-    DetectionResponse with sigma_confidence and artificial_probability.
-    """
+    """Screen a named object; unavailable significance/origin remain null."""
+    import asyncio
+    from aneos_core.data.fetcher import DataFetcher
+    from aneos_core.utils.errors import DataSourceUnavailableError
     try:
-        vetoed, veto_reason = _spacecraft_veto(designation)
-        if vetoed:
-            return DetectionResponse(
-                designation=designation,
-                is_artificial=True,
-                artificial_probability=1.0,
-                sigma_confidence=5.0,
-                sigma_tier="EXCEPTIONAL",
-                classification="ARTIFICIAL",
-                confidence=1.0,
-                evidence_count=0,
-                spacecraft_veto=True,
-                veto_reason=veto_reason,
-                interpretation=(
-                    f"{designation} is a confirmed spacecraft ({veto_reason}). "
-                    "Statistical analysis skipped."
-                ),
-            )
-        from aneos_core.data.fetcher import DataFetcher
-        from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
-            ValidatedSigma5ArtificialNEODetector,
-        )
-        fetcher = DataFetcher()
-        neo = fetcher.fetch_neo_data(designation, force_refresh=force_refresh)
-        data_source = neo.sources_used[0] if neo.sources_used else None
-        data_freshness = neo.fetched_at.isoformat() if neo.fetched_at else datetime.now().isoformat()
-        oe = neo.orbital_elements
-        if oe is None:
-            raise HTTPException(status_code=404, detail=f"No orbital data for {designation}")
-
-        orbital_dict = {
-            "a": oe.semi_major_axis,
-            "e": oe.eccentricity,
-            "i": oe.inclination,
-        }
-        # Enrich detector with available physical + approach data
-        physical_data = None
-        if neo.physical_properties:
-            pp = neo.physical_properties
-            physical_data = {
-                "diameter": (pp.diameter_km * 1000) if pp.diameter_km else None,  # km → m
-                "albedo": pp.albedo,
-                "absolute_magnitude": pp.absolute_magnitude_h,
-            }
-        close_approach_history = None
-        if neo.close_approaches:
-            close_approach_history = [
-                {
-                    "date": ca.close_approach_date.isoformat() if ca.close_approach_date else None,
-                    "distance_au": ca.distance_au,
-                    "velocity_kms": ca.relative_velocity_km_s,
-                }
-                for ca in neo.close_approaches
-            ]
-        # Fetch orbital history from Horizons for course correction analysis
-        orbital_history = None
-        try:
-            from aneos_core.data.sources.horizons import HorizonsSource
-            _h = HorizonsSource()
-            _raw_hist = _h.fetch_orbital_history(designation, years=10)
-            if _raw_hist:
-                orbital_history = _raw_hist
-        except Exception as _hist_exc:
-            logger.debug(f"Horizons orbital history unavailable for {designation}: {_hist_exc}")
-
-        # Fitted A1/A2/A3 coefficients are retained as typed evidence, never
-        # passed to the legacy scalar thrust heuristic (which used wrong units).
-        nongrav_evidence = neo.nongrav.evidence_report() if neo.nongrav is not None else None
-        observation_data = None
-
-        detector = ValidatedSigma5ArtificialNEODetector()
-        result = detector.analyze_neo_validated(
-            orbital_dict,
-            physical_data=physical_data,
-            close_approach_history=close_approach_history,
-            orbital_history=orbital_history,
-            observation_data=observation_data or None,
-        )
-
-        classification = "ARTIFICIAL" if result.is_artificial else "NATURAL"
-        evidence_summaries = [
-            EvidenceSummary(
-                type=e.evidence_type.value,
-                anomaly_score=e.anomaly_score,
-                p_value=e.p_value,
-                quality_score=e.quality_score,
-                effect_size=e.effect_size,
-                confidence_interval=list(e.confidence_interval),
-                sample_size=e.sample_size,
-                analyzed=getattr(e, 'analyzed', True),
-                data_available=getattr(e, 'data_available', True),
-            )
-            for e in result.evidence_sources
-        ]
-        tier = _sigma_tier(result.sigma_confidence)
-        top_type = evidence_summaries[0].type if evidence_summaries else "orbital_dynamics"
-        detection_dict = {
-            'designation': designation,
-            'is_artificial': result.is_artificial,
-            'artificial_probability': result.bayesian_probability,
-            'sigma_confidence': result.sigma_confidence,
-            'sigma_tier': tier,
-            'classification': classification,
-            'confidence': min(result.sigma_confidence / 5.0, 1.0),
-            'evidence_count': len(result.evidence_sources),
-            'data_source': data_source,
-            'data_freshness': data_freshness,
-            'non_gravitational_evidence': nongrav_evidence,
-        }
-        _detection_cache[designation] = detection_dict
-        import threading
-        threading.Thread(
-            target=_persist_detection_result, args=(designation, detection_dict), daemon=True
-        ).start()
-        return DetectionResponse(
-            designation=designation,
-            is_artificial=result.is_artificial,
-            artificial_probability=result.bayesian_probability,
-            sigma_confidence=result.sigma_confidence,
-            sigma_tier=tier,
-            classification=classification,
-            confidence=min(result.sigma_confidence / 5.0, 1.0),
-            evidence_count=len(result.evidence_sources),
-            evidence_sources=evidence_summaries,
-            data_source=data_source,
-            data_freshness=data_freshness,
-            interpretation=_build_interpretation(
-                designation, result.sigma_confidence, tier, top_type, result.bayesian_probability
-            ),
-            combined_p_value=result.combined_p_value,
-            false_discovery_rate=result.false_discovery_rate,
-            analysis_metadata=result.analysis_metadata,
-            non_gravitational_evidence=nongrav_evidence,
-        )
+        neo = await asyncio.to_thread(DataFetcher().fetch_neo_data, designation, force_refresh=force_refresh)
+        payload = _screening_payload(neo)
+        _detection_cache[designation] = payload
+        await asyncio.to_thread(_persist_detection_result, designation, payload)
+        return DetectionResponse(**payload)
+    except DataSourceUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=f"Source data unavailable: {exc}")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Detection failed for {designation}: {e}")
-        from aneos_core.utils.errors import DataSourceUnavailableError
-        if isinstance(e, DataSourceUnavailableError):
-            raise HTTPException(status_code=404, detail=f"NEO not found: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Detection failed: {str(e)}")
-
+    except Exception as exc:
+        logger.exception("Screening failed for %s", designation)
+        raise HTTPException(status_code=500, detail="Screening failed") from exc
 
 @router.get(
     "/impact",
@@ -429,67 +289,29 @@ async def detect_neo_raw(
     request: OrbitalInput,
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
-    """
-    Run ValidatedSigma5 detector on caller-supplied orbital elements.
-    No data source lookup — use when you have elements from your own reduction.
-    """
+    """Screen supplied measurements; a name alone is not origin evidence."""
+    from aneos_core.analysis.screening import ScreeningAnalysisService
     try:
-        designation = request.designation or f"user_{request.a:.3f}_{request.e:.3f}"
-        if request.designation:
-            vetoed, veto_reason = _spacecraft_veto(request.designation)
-            if vetoed:
-                return DetectionResponse(
-                    designation=designation, is_artificial=True, artificial_probability=1.0,
-                    sigma_confidence=5.0, sigma_tier="EXCEPTIONAL", classification="ARTIFICIAL",
-                    confidence=1.0, spacecraft_veto=True, veto_reason=veto_reason,
-                    interpretation=f"{designation} is a confirmed spacecraft ({veto_reason}).",
-                )
-        from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
-            ValidatedSigma5ArtificialNEODetector,
+        designation = request.designation or 'USER_PROVIDED'
+        physical = {'diameter_km': request.diameter_km, 'albedo': request.albedo,
+                    'absolute_magnitude': request.absolute_magnitude,
+                    'spectral_type': request.spectral_type}
+        extra = dict(request.additional_data or {})
+        if request.orbital_history is not None:
+            if 'orbital_history' in extra and extra['orbital_history'] != request.orbital_history:
+                raise ValueError('Conflicting orbital history inputs')
+            extra['orbital_history'] = request.orbital_history
+        assessment = ScreeningAnalysisService().analyze_raw(
+            designation, {'a': request.a, 'e': request.e, 'i': request.i}, physical,
+            extra,
+            request.evidence_metadata,
         )
-        orbital_dict = {"a": request.a, "e": request.e, "i": request.i}
-        physical_data = None
-        if request.diameter_km is not None:
-            physical_data = {
-                "diameter": request.diameter_km * 1000,
-                "albedo": request.albedo,
-            }
-        detector = ValidatedSigma5ArtificialNEODetector()
-        result = detector.analyze_neo_validated(
-            orbital_dict,
-            physical_data=physical_data,
-            orbital_history=request.orbital_history,
-        )
-        classification = "ARTIFICIAL" if result.is_artificial else "NATURAL"
-        evidence_summaries = [
-            EvidenceSummary(
-                type=e.evidence_type.value, anomaly_score=e.anomaly_score,
-                p_value=e.p_value, quality_score=e.quality_score, effect_size=e.effect_size,
-                confidence_interval=list(e.confidence_interval), sample_size=e.sample_size,
-                analyzed=getattr(e, 'analyzed', True),
-                data_available=getattr(e, 'data_available', True),
-            )
-            for e in result.evidence_sources
-        ]
-        tier = _sigma_tier(result.sigma_confidence)
-        top_type = evidence_summaries[0].type if evidence_summaries else "orbital_dynamics"
-        return DetectionResponse(
-            designation=designation, is_artificial=result.is_artificial,
-            artificial_probability=result.bayesian_probability,
-            sigma_confidence=result.sigma_confidence, sigma_tier=tier,
-            classification=classification, confidence=min(result.sigma_confidence / 5.0, 1.0),
-            evidence_count=len(result.evidence_sources), evidence_sources=evidence_summaries,
-            data_source="user_provided", data_freshness=datetime.now().isoformat(),
-            interpretation=_build_interpretation(
-                designation, result.sigma_confidence, tier, top_type, result.bayesian_probability
-            ),
-            combined_p_value=result.combined_p_value,
-            false_discovery_rate=result.false_discovery_rate,
-            analysis_metadata=result.analysis_metadata,
-        )
-    except Exception as e:
-        logger.error(f"Raw detection failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Detection failed: {str(e)}")
+        return DetectionResponse(**assessment.to_payload(), data_source='user_provided')
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        logger.exception("Raw screening failed")
+        raise HTTPException(status_code=500, detail="Screening failed") from exc
 
 
 @router.get("/history", response_model=OrbitalHistoryResponse)
@@ -773,89 +595,26 @@ async def _log_analysis_completion(
     )
 
 async def _run_batch_detection(batch_id: str, designations: List[str]):
-    """Run ValidatedSigma5 detection concurrently; populate _batch_store."""
+    """Use the same snapshot service as single-object screening."""
     import asyncio
     from aneos_core.data.fetcher import DataFetcher
-    from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
-        ValidatedSigma5ArtificialNEODetector,
-    )
+    from aneos_core.analysis.screening import ScreeningAnalysisService
     store = _batch_store[batch_id]
     fetcher = DataFetcher()
-    detector = ValidatedSigma5ArtificialNEODetector()
-
-    # fetch_multiple is synchronous blocking I/O — run in a thread to avoid blocking
-    # the asyncio event loop (BackgroundTasks run in the same loop as request handlers)
-    loop = asyncio.get_event_loop()
-    neo_map = await loop.run_in_executor(None, fetcher.fetch_multiple, designations)
-
+    service = ScreeningAnalysisService()
     for designation in designations:
-        neo = neo_map.get(designation)
         try:
-            if neo is None or neo.orbital_elements is None:
-                raise ValueError("No orbital elements returned")
-            oe = neo.orbital_elements
-            orbital_dict = {"a": oe.semi_major_axis, "e": oe.eccentricity, "i": oe.inclination}
-            physical_data = None
-            if neo.physical_properties:
-                pp = neo.physical_properties
-                physical_data = {
-                    "diameter": (pp.diameter_km * 1000) if pp.diameter_km else None,
-                    "albedo": pp.albedo,
-                    "absolute_magnitude": pp.absolute_magnitude_h,
-                }
-            close_approach_history = None
-            if neo.close_approaches:
-                close_approach_history = [
-                    {
-                        "date": ca.close_approach_date.isoformat() if ca.close_approach_date else None,
-                        "distance_au": ca.distance_au,
-                        "velocity_kms": ca.relative_velocity_km_s,
-                    }
-                    for ca in neo.close_approaches
-                ]
-            nongrav_evidence = neo.nongrav.evidence_report() if neo.nongrav is not None else None
-            observation_data = None
-            result = detector.analyze_neo_validated(
-                orbital_dict,
-                physical_data=physical_data,
-                close_approach_history=close_approach_history,
-                observation_data=observation_data or None,
-            )
-            _tier = _sigma_tier(result.sigma_confidence)
-            _top = result.evidence_sources[0].evidence_type.value if result.evidence_sources else "orbital_dynamics"
-            store['results'].append({
-                'designation': designation,
-                'status': 'success',
-                'is_artificial': result.is_artificial,
-                'sigma_confidence': result.sigma_confidence,
-                'sigma_tier': _tier,
-                'artificial_probability': result.bayesian_probability,
-                'combined_p_value': result.combined_p_value,
-                'false_discovery_rate': result.false_discovery_rate,
-                'non_gravitational_evidence': nongrav_evidence,
-                'classification': 'ARTIFICIAL' if result.is_artificial else 'NATURAL',
-                'evidence_count': len(result.evidence_sources),
-                'evidence_sources': [
-                    {
-                        'type': e.evidence_type.value,
-                        'anomaly_score': e.anomaly_score,
-                        'p_value': e.p_value,
-                        'quality_score': e.quality_score,
-                        'effect_size': e.effect_size,
-                    }
-                    for e in result.evidence_sources
-                ],
-                'interpretation': _build_interpretation(
-                    designation, result.sigma_confidence, _tier, _top, result.bayesian_probability
-                ),
-            })
+            neo = await asyncio.to_thread(fetcher.fetch_neo_data, designation)
+            payload = _screening_payload(neo, service)
+            store['results'].append({**payload, 'status': 'success'})
+            _detection_cache[designation] = payload
+            await asyncio.to_thread(_persist_detection_result, designation, payload)
             store['completed'] += 1
-        except Exception as e:
+        except Exception as exc:
             store['failed'] += 1
-            store['results'].append({'designation': designation, 'status': 'failed', 'error': str(e)})
+            store['results'].append({'designation': designation, 'status': 'failed', 'error': str(exc)})
     store['status'] = 'completed'
     store['finished_at'] = datetime.now().isoformat()
-    logger.info(f"Batch detection {batch_id} completed")
 
 def _run_network_analysis(job_id: str, request: NetworkRequest) -> None:
     """Background worker for population pattern analysis."""

@@ -14,9 +14,10 @@ All developers, scientists, and stakeholders must use these terms consistently.
 | Term | Definition |
 |------|-----------|
 | **NEO** | Near Earth Object — any asteroid or comet with perihelion < 1.3 AU |
-| **Artificial NEO** | An NEO exhibiting multi-indicator anomalies consistent with external engineering at sigma >= 5 confidence |
+| **Artificial NEO** | An object whose technological origin is independently supported; a screening rank alone cannot establish this |
 | **Natural NEO** | An NEO whose orbital and physical properties are consistent with solar system formation and gravitational evolution |
-| **Sigma score** | Standard deviations from the mean of the reference natural NEO population for a given observable |
+| **Screening score** | Uncalibrated legacy ranking heuristic; not a Gaussian-equivalent significance |
+| **Gaussian-equivalent significance** | A calibrated null-tail probability expressed on a specified Gaussian convention; unavailable in the installed screening model |
 | **Clue** | A single measurable anomaly contributing to the composite sigma score |
 | **SWARM** | A named, specialized analytical agent responsible for one physical domain of evidence |
 | **ATLAS** | Advanced automated first-stage screening system (used in `advanced_scoring.py`) |
@@ -1040,3 +1041,26 @@ propagation. No new bounded context is needed for these changes (ADR-064).
 Implementation and offline path coverage do not mean that the legacy detector's
 sigma/probability output or a KY26 origin hypothesis has been validated. Those
 requirements remain open in the programme issues.
+
+
+## Screening contract correction — 2026-11-12 (ADR-065)
+
+Use the existing analysis/detection boundary, not a new bounded context.
+`ScreeningAnalysisService` owns deterministic ranking and follow-up status.
+Acquisition owns source evidence; scheduling and persistence remain separate.
+
+A `ScreeningAssessment` identifies its ranking-input snapshot and policy by
+content hashes. Its contributions are labeled heuristic proxies and dependency
+groups, not independent origin measurements. Typed orbit-fit coefficients retain
+the ADR-064 evidence contract and cannot become propulsion proof through adapter
+conversion. Unavailable inference is null, never zero or a natural-origin verdict.
+
+**Implemented/integrated:** canonical manager/facade, menu single/batch, REST
+fetched/raw/batch, and the automatic screening helper. **Regression-tested:**
+bounded rank controls, actual adapter parity, frozen KY26 comparison, replay,
+missing inputs and unavailable-probability rejection. **Not validated:**
+scientific discovery significance, origin probability, independent performance,
+full automatic review gates, network/legacy interfaces or restart durability.
+Earlier capability descriptions must be read with these limits; the correction
+does not certify their implementation. Detailed remaining scope and deprecated
+contracts: `docs/engineering/screening-result-contract.md`.

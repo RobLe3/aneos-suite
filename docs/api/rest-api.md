@@ -10,6 +10,22 @@ The aNEOS REST API provides programmatic access to all platform functionality in
 **Documentation**: `http://localhost:8000/docs` (Interactive Swagger UI)  
 **OpenAPI Spec**: `http://localhost:8000/openapi.json`
 
+## Screening contract correction — 2026-11-12
+
+Existing GET/POST `/analysis/detect` and `/analysis/detect/batch` return an
+uncalibrated `screening_score`, follow-up `candidate`, evidence/policy content IDs,
+ranking-input snapshots and explicit limitations. Sigma, p-value, FDR,
+artificial-origin probability, binary origin and confidence are nullable and are
+**unavailable** in the installed model. `NOT_FLAGGED` is not a natural-origin
+verdict. A designation-only spacecraft lookup cannot create significance.
+
+A1/A2/A3 fitted evidence, covariance and provenance remain descriptive; they do
+not imply propulsion. This change does not validate legacy `/analyze`, network,
+ATLAS or historical front ends. See
+[the screening contract](../engineering/screening-result-contract.md) for scope,
+controlled deprecations and outstanding acceptance requirements. Earlier examples
+that suggest calibrated inference are superseded for these detection routes.
+
 ## 🔐 Authentication
 
 ### API Key Authentication

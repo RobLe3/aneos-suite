@@ -6,7 +6,7 @@ Covers the full feature set of the legacy 121-option menu, organized into
 code with honest result labelling.
 
 GROUP A — Detection & Classification
-  1  Detect NEO (single)           — validated σ-5 artificial-NEO classifier
+  1  Detect NEO (single)           — uncalibrated candidate screening
   2  Multi-Evidence Analysis        — same detector + per-source evidence breakdown
   3  Batch Detection               — concurrent file-driven classification
   4  Orbital History Analysis      — course corrections / smoking-gun via Horizons
@@ -109,10 +109,10 @@ class ANEOSMenuV2(ANEOSMenuBase):
             "  [bold]aNEOS — Artificial NEO Analysis Platform[/bold]\n"
             "  [dim]Research tool — not an operational warning system[/dim]\n\n"
             "  [bold cyan]── Detection & Classification ──────────────────[/bold cyan]\n"
-            "  [cyan] 1[/cyan]  Detect NEO (single)          [σ-5 validated]\n"
+            "  [cyan] 1[/cyan]  Detect NEO (single)          [uncalibrated screening]\n"
             "  [cyan] 2[/cyan]  Multi-Evidence Analysis       [per-source breakdown]\n"
             "  [cyan] 3[/cyan]  Batch Detection               [concurrent, from file]\n"
-            "  [cyan] 4[/cyan]  Orbital History Analysis      [smoking gun / course corrections]\n\n"
+            "  [cyan] 4[/cyan]  Orbital History Analysis      [catalogue history, not manoeuvre proof]\n\n"
             "  [bold cyan]── Impact Assessment ───────────────────────────[/bold cyan]\n"
             "  [cyan] 5[/cyan]  Impact Probability            [planetary defence]\n"
             "  [cyan] 6[/cyan]  Close Approach History        [historical CAD data]\n\n"
@@ -143,7 +143,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
     # ==================================================================
 
     def _detect_single(self) -> None:
-        """Option 1: Run validated σ-5 detector on one designation (brief summary)."""
+        """Option 1: Screen one designation without calibrated origin inference."""
         designation = self._ask("NEO designation (e.g. '99942', '2020 SO', 'tesla')").strip()
         if not designation:
             self.show_error("No designation provided.")
@@ -207,9 +207,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
         self.show_info(f"Fetching {len(lines)} designations concurrently…")
         try:
             from aneos_core.data.fetcher import DataFetcher
-            from aneos_core.detection.detection_manager import DetectionManager, DetectorType
+            from aneos_core.analysis.screening import ScreeningAnalysisService
             fetcher = DataFetcher()
-            manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
+            manager = ScreeningAnalysisService()
         except Exception as exc:
             self.show_error(f"Failed to initialise detector: {exc}")
             return
@@ -241,14 +241,14 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 sigma = getattr(result, "sigma_level", 0.0)
                 prob = getattr(result, "artificial_probability", 0.0)
                 cls = getattr(result, "classification", "—")
-                rows.append([designation, f"{sigma:.2f}", f"{prob:.4f}", cls])
+                rows.append([designation, self._format_score(getattr(result, "screening_score", None)), self.format_probability(prob), cls])
                 self._persist_detection_result_async(designation, result)
             except Exception as exc:
                 self.show_error(f"{designation}: {exc}")
 
         if rows:
             self.display_table(
-                headers=["Designation", "σ", "P(artificial)", "Classification"],
+                headers=["Designation", "Legacy ranking score", "Origin probability", "Classification"],
                 rows=rows,
                 title=f"Batch Results — {len(rows)}/{len(lines)} processed",
             )
@@ -595,9 +595,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 sigma = getattr(result, "sigma_level", 0.0)
                 prob = getattr(result, "artificial_probability", 0.0)
                 cls = getattr(result, "classification", "—")
-                rows.append([str(i), desg, f"{sigma:.2f}", f"{prob:.4f}", cls])
+                rows.append([str(i), desg, self._format_score(getattr(result, "screening_score", None)), self.format_probability(prob), cls])
             self.display_table(
-                headers=["#", "Designation", "σ", "P(artificial)", "Classification"],
+                headers=["#", "Designation", "Legacy ranking score", "Origin probability", "Classification"],
                 rows=rows,
                 title=f"Detection Results — {len(det_items)} objects",
             )
@@ -661,6 +661,8 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 "designation": desg,
                 "type": "detection",
                 "sigma_level": getattr(result, "sigma_level", None),
+                "screening_score": getattr(result, "screening_score", None),
+                "evidence_id": (getattr(result, "metadata", {}) or {}).get("evidence_id"),
                 "artificial_probability": getattr(result, "artificial_probability", None),
                 "classification": getattr(result, "classification", None),
                 "evidence_count": (getattr(result, "metadata", {}) or {}).get("evidence_count"),
@@ -732,9 +734,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
         )
         self.display_panel(
             "[yellow]aNEOS is a research prototype.[/yellow]\n"
-            "σ < 2 → INCONCLUSIVE, not evidence of natural origin.\n"
-            "Bayesian posterior ceiling ≈ 3–5% from orbital+physical data alone.\n"
-            "F1=1.000 reported in validation is based on N=4 objects — NOT a generalisation estimate.\n"
+            "Screening ranks are heuristics, not discovery significance.\n"
+            "Artificial-origin probability and FDR are not reliably estimated.\n"
+            "No independently evaluated calibration is installed.\n"
             "Real discrimination from propulsion/manoeuvre data is deferred until such a corpus exists.",
             title="Scientific Caveats",
             style="yellow",
@@ -751,32 +753,13 @@ class ANEOSMenuV2(ANEOSMenuBase):
         manager=None,
         extra_additional: Optional[Dict] = None,
     ):
-        """Run the validated detector; return DetectionResult or None on error."""
-        oe = neo_data.orbital_elements
-        if oe is None:
-            self.show_error(f"No orbital elements available for {designation!r}.")
-            return None
-
-        orbital = {
-            "a": oe.semi_major_axis, "e": oe.eccentricity, "i": oe.inclination,
-            "om": oe.ra_of_ascending_node, "w": oe.arg_of_periapsis, "M": oe.mean_anomaly,
-        }
-        physical = self._build_physical_dict(neo_data)
-        additional = self._build_additional_dict(neo_data)
-        if extra_additional:
-            additional.update(extra_additional)
-
+        """Screen the complete snapshot through the shared application service."""
+        from aneos_core.analysis.screening import ScreeningAnalysisService
         try:
-            if manager is None:
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-            return manager.analyze_neo(
-                orbital_elements=orbital,
-                physical_data=physical,
-                additional_data=additional,
-            )
+            service = manager if isinstance(manager, ScreeningAnalysisService) else ScreeningAnalysisService()
+            return service.analyze_neo(neo_data, extra_additional).to_detection_result()
         except Exception as exc:
-            self.show_error(f"Detection failed for {designation!r}: {exc}")
+            self.show_error(f"Screening failed for {designation!r}: {exc}")
             return None
 
     def _ask(self, prompt: str) -> str:
@@ -864,8 +847,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 result_data = {
                     "designation": designation,
                     "classification": getattr(result, "classification", None),
-                    "overall_score": getattr(result, "artificial_probability", 0.0),
-                    "confidence": getattr(result, "artificial_probability", 0.0),
+                    "overall_score": getattr(result, "screening_score", None),
+                    "confidence": None,
+                    "anomaly_score_data": (getattr(result, "analysis", {}) or {}).get('assessment', {}),
                 }
                 db = SessionLocal()
                 try:
@@ -1040,61 +1024,29 @@ class ANEOSMenuV2(ANEOSMenuBase):
             )
 
     def _display_detection_result(self, designation: str, result, verbose: bool = False) -> None:
-        cls = getattr(result, "classification", "UNKNOWN")
-
-        # Pipeline candidates have rich ATLAS data — show it instead of the σ-5 panel
-        if cls.startswith("PIPELINE:"):
+        cls = getattr(result, 'classification', 'INCONCLUSIVE')
+        if cls.startswith('PIPELINE:'):
             self._display_pipeline_candidate_detail(designation, result)
             return
-
-        sigma = getattr(result, "sigma_level", 0.0)
-        prob = getattr(result, "artificial_probability", 0.0)
-        risk_factors = getattr(result, "risk_factors", [])
-        meta = getattr(result, "metadata", {}) or {}
-
+        payload = (getattr(result, 'analysis', {}) or {}).get('assessment', {})
         lines = [
-            f"[bold]Designation:[/bold]          {self.format_designation(designation)}",
-            f"[bold]Classification:[/bold]       {cls}",
-            f"[bold]σ confidence:[/bold]         {self.format_sigma(sigma)} ({sigma:.3f}σ)",
-            f"[bold]P(artificial):[/bold]        {self.format_probability(prob)}",
-            f"[bold]Evidence sources:[/bold]     {meta.get('evidence_count', len(risk_factors))}",
-            f"[bold]Combined p-value:[/bold]     {meta.get('combined_p_value', 'N/A')}",
-            f"[bold]False discovery rate:[/bold] {meta.get('false_discovery_rate', 'N/A')}",
+            f'Designation: {designation}', f'Classification: {cls}',
+            f'Screening score: {self._format_score(getattr(result, "screening_score", None))}',
+            'Statistical significance: unavailable (uncalibrated model)',
+            'Artificial-origin probability: unavailable',
+            'Human origin: not assessed',
+            f'Evidence ID: {payload.get("evidence_id", "unavailable")}',
+            'A follow-up candidate is not a confirmed artificial object.',
         ]
-
-        if risk_factors:
-            lines.append(f"[bold]Evidence types:[/bold]      {', '.join(risk_factors)}")
-
         if verbose:
-            analysis = getattr(result, "analysis", {}) or {}
-            evidence_detail = analysis.get("evidence_breakdown") or analysis.get("evidence_sources")
-            if evidence_detail:
-                lines.append("\n[bold]Per-source breakdown:[/bold]")
-                for ev in (evidence_detail if isinstance(evidence_detail, list) else []):
-                    etype = getattr(ev, "evidence_type", None) or ev.get("evidence_type", "?")
-                    pval = getattr(ev, "p_value", None) or ev.get("p_value", "?")
-                    eff = getattr(ev, "effect_size", None) or ev.get("effect_size", "?")
-                    qi = getattr(ev, "quality_score", None) or ev.get("quality_score", "?")
-                    lines.append(
-                        f"  {str(etype):<30}  p={pval!s:<10}  effect={eff!s:<8}  quality={qi!s}"
-                    )
+            for ev in payload.get('evidence_sources', []):
+                value = self._format_score(ev.get('effect_size')) if ev['analyzed'] else ev.get('unavailable_reason', 'unavailable')
+                lines.append(f"{ev['type']}: {value}")
+        self.display_panel('\n'.join(lines), title=f'Screening — {designation}', style='cyan')
 
-        if sigma < 2.0:
-            lines.append(
-                "\n[dim]NOTE: σ < 2 = INCONCLUSIVE (not evidence of natural origin). "
-                "Bayesian posterior ≈ 3–5% max from orbital+physical data alone.[/dim]"
-            )
-        elif sigma < 5.0:
-            lines.append(
-                f"\n[dim]NOTE: σ={sigma:.2f} is statistically interesting but below the σ=5 threshold "
-                "for confirmed artificial classification. Independent verification required.[/dim]"
-            )
-        else:
-            lines.append(
-                f"\n[bold red]NOTE: σ={sigma:.2f} exceeds the σ=5 threshold. "
-                "This is a high-confidence artificial NEO candidate requiring expert review.[/bold red]"
-            )
-        self.display_panel("\n".join(lines), title=f"Detection — {designation}", style="cyan")
+    @staticmethod
+    def _format_score(value):
+        return 'unavailable' if value is None else f'{value:.4f} (heuristic)'
 
     def _display_pipeline_candidate_detail(self, designation: str, result) -> None:
         """Detailed ATLAS breakdown for a pipeline candidate (stored proxy object)."""
@@ -1166,10 +1118,10 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 "anomaly signal. Dark comets are a known class of NEOs with non-gravitational "
                 "acceleration from sublimation without a visible coma or tail. 1998 KY26 is a "
                 "candidate dark comet. A Δ flag alone is insufficient to classify an object as "
-                "artificial; dedicated A2 measurement is required.[/dim]"
+                "artificial; measured A1/A2/A3 and comparative physical fits are required.[/dim]"
             )
         lines.append(
-            "\n[dim]σ-5 detection requires full orbital elements — use options 1–3.[/dim]"
+            "\n[dim]Options 1–3 provide screening ranks, not calibrated sigma significance.[/dim]"
         )
         self.display_panel("\n".join(lines), title=f"ATLAS Detail — {designation}", style="yellow")
 
@@ -1400,95 +1352,22 @@ class ANEOSMenuV2(ANEOSMenuBase):
             self.show_error(f"Failed to start API server: {exc}")
 
     def _detection_analytics(self) -> None:
-        """Option 13: Session detection statistics and JSON export."""
+        """Session candidate counts; never pool unavailable sigma as zero."""
         if not self._detection_results:
-            self.show_info("No detection results this session. Run options 1–3 first.")
+            self.show_info('No screening results this session.')
             return
-
-        tiers = {
-            "EXCEPTIONAL (σ≥5)": 0,
-            "ANOMALOUS (σ≥4)": 0,
-            "SIGNIFICANT (σ≥3)": 0,
-            "INTERESTING (σ≥2)": 0,
-            "INCONCLUSIVE (σ<2)": 0,
-        }
-        sigmas = []
-        suspicious_rows = []
-
-        for desg, result in self._detection_results.items():
-            sigma = getattr(result, "sigma_level", 0.0) or 0.0
-            sigmas.append(sigma)
-            label = self.format_sigma(sigma)
-            if label in tiers:
-                tiers[label] += 1
-            if sigma >= 3.0:
-                cls = getattr(result, "classification", "?")
-                suspicious_rows.append([desg, f"{sigma:.2f}", cls])
-
-        mean_sigma = sum(sigmas) / len(sigmas) if sigmas else 0.0
-        tier_rows = [[tier, str(count)] for tier, count in tiers.items() if count > 0]
-
-        self.display_table(
-            headers=["Tier", "Count"],
-            rows=tier_rows,
-            title=f"Session Statistics — {len(self._detection_results)} objects, mean σ={mean_sigma:.2f}",
-        )
-        if suspicious_rows:
-            self.display_table(
-                headers=["Designation", "σ", "Classification"],
-                rows=suspicious_rows,
-                title="Suspicious / Significant Objects (σ≥3)",
-            )
-
-        # ATLAS score tiers for pipeline candidates
-        atlas_rows = []
-        for desg, result in self._detection_results.items():
-            cls = getattr(result, "classification", "") or ""
-            if cls.startswith("PIPELINE:"):
-                analysis = getattr(result, "analysis", {}) or {}
-                score = analysis.get("overall_score", 0.0) or 0.0
-                if score > 0.3:
-                    tier = (
-                        "exceptional" if score > 0.7
-                        else "significant" if score > 0.5
-                        else "notable"
-                    )
-                    atlas_rows.append([desg, f"{score:.4f}", tier])
-
-        if atlas_rows:
-            atlas_rows.sort(key=lambda r: float(r[1]), reverse=True)
-            self.display_table(
-                headers=["Designation", "ATLAS Score", "Tier"],
-                rows=atlas_rows,
-                title="ATLAS Score Tiers — Pipeline Candidates (score > 0.3)",
-            )
-            self.show_info(
-                "ATLAS Score Tiers: > 0.3 = notable | > 0.5 = significant | > 0.7 = exceptional"
-            )
-
-        export_choice = self._ask("Export summary to JSON? [y/N]").strip().lower()
-        if export_choice == "y":
-            summary = {
-                "session_count": len(self._detection_results),
-                "mean_sigma": mean_sigma,
-                "tier_counts": tiers,
-                "suspicious_objects": [
-                    {"designation": r[0], "sigma": float(r[1]), "classification": r[2]}
-                    for r in suspicious_rows
-                ],
-                "atlas_notable": [
-                    {"designation": r[0], "score": float(r[1]), "tier": r[2]}
-                    for r in atlas_rows
-                ],
-            }
-            try:
-                from aneos_core.reporting.exporters import Exporter
-                path = Exporter().export_to_json([summary], output_file=None)
-                self.show_success(f"Summary exported to: {path}")
-            except Exception as exc:
-                fallback = Path("aneos_session_analytics.json")
-                fallback.write_text(json.dumps(summary, indent=2, default=str))
-                self.show_success(f"Summary written to: {fallback}")
+        rows = []
+        for designation, result in self._detection_results.items():
+            rows.append([designation, self._format_score(getattr(result, 'screening_score', None)),
+                         getattr(result, 'classification', 'INCONCLUSIVE')])
+        self.display_table(headers=['Designation', 'Screening score', 'Classification'], rows=rows,
+                           title='Session screening — significance unavailable')
+        fmt = self._ask('Export JSON? [y/N]').strip().lower()
+        if fmt == 'y':
+            from aneos_core.reporting.exporters import Exporter
+            records = [(getattr(r, 'analysis', {}) or {}).get('assessment', {})
+                       for r in self._detection_results.values()]
+            Exporter().export_to_json(records)
         else:
             self.show_info("Export skipped.")
 

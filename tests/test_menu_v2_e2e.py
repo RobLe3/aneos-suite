@@ -71,6 +71,8 @@ def make_fake_neo_data(designation="99942"):
 
 def make_fake_detection_result(sigma=3.7, prob=0.037, cls="⚠️ SUSPICIOUS (σ≥3)"):
     result = MagicMock()
+    result.screening_score = sigma
+    result.candidate = sigma >= 5
     result.sigma_level = sigma
     result.artificial_probability = prob
     result.classification = cls
@@ -796,8 +798,10 @@ class TestOption11SystemHealth:
 
         assert mock_panel.called
         panel_content = mock_panel.call_args[0][0]
-        # Must mention the posterior ceiling and F1 caveat
-        assert "3–5%" in panel_content or "INCONCLUSIVE" in panel_content
+        # Must not present assumed posteriors or constructor F1 as current validation.
+        assert "not reliably estimated" in panel_content
+        assert "No independently evaluated calibration" in panel_content
+        assert "3–5%" not in panel_content
 
     def test_api_down_shows_warning_not_exception(self):
         menu = _make_menu()
@@ -823,27 +827,25 @@ class TestRunDetectionAdditionalData:
         menu = _make_menu()
         neo_data = make_fake_neo_data()
 
-        with patch("aneos_core.detection.detection_manager.DetectionManager.analyze_neo",
-                   return_value=make_fake_detection_result()) as mock_analyze:
-            menu._run_detection("99942", neo_data)
-
-        call_kwargs = mock_analyze.call_args[1]
-        assert "physical_data" in call_kwargs
-        # diameter is now in metres (0.37 km × 1000 = 370 m) to match detector's population stats
-        assert call_kwargs["physical_data"].get("diameter") == pytest.approx(370.0)
-        assert call_kwargs["physical_data"].get("diameter_km") == pytest.approx(0.37)
+        from aneos_core.data.models import NEOData, OrbitalElements, PhysicalProperties
+        neo_data = NEOData("99942", orbital_elements=OrbitalElements(
+            semi_major_axis=.922, eccentricity=.191, inclination=3.331),
+            physical_properties=PhysicalProperties(diameter_km=.37, absolute_magnitude_h=19.7))
+        result = menu._run_detection("99942", neo_data)
+        assert result is not None
+        physical = result.analysis["assessment"]["evidence_snapshot"]["physical"]
+        assert physical["diameter"] == pytest.approx(370)
+        assert result.metadata["physical_data_available"] is True
 
     def test_orbital_history_reaches_detector(self):
         menu = _make_menu()
-        neo_data = make_fake_neo_data()
-        history = [{"epoch": "2024-01-01", "a": 0.921}]
-
-        with patch("aneos_core.detection.detection_manager.DetectionManager.analyze_neo",
-                   return_value=make_fake_detection_result()) as mock_analyze:
-            menu._run_detection("99942", neo_data, extra_additional={"orbital_history": history})
-
-        call_kwargs = mock_analyze.call_args[1]
-        assert call_kwargs["additional_data"].get("orbital_history") == history
+        from aneos_core.data.models import NEOData, OrbitalElements
+        neo_data = NEOData("99942", orbital_elements=OrbitalElements(
+            semi_major_axis=.922, eccentricity=.191, inclination=3.331))
+        history = [{"epoch": "2024-01-01", "a": .921}]
+        result = menu._run_detection("99942", neo_data, extra_additional={"orbital_history": history})
+        assert result is not None
+        assert result.analysis["assessment"]["evidence_snapshot"]["additional"]["orbital_history"] == history
 
 
 # ===========================================================================

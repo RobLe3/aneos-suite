@@ -600,75 +600,23 @@
       },
       "DetectionResponse": {
         "properties": {
-          "analysis_metadata": {
-            "additionalProperties": true,
-            "default": {},
-            "title": "Analysis Metadata",
-            "type": "object"
-          },
-          "artificial_probability": {
-            "title": "Artificial Probability",
-            "type": "number"
-          },
-          "classification": {
-            "title": "Classification",
-            "type": "string"
-          },
-          "combined_p_value": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Combined P Value"
-          },
-          "confidence": {
-            "title": "Confidence",
-            "type": "number"
-          },
-          "data_freshness": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Data Freshness"
-          },
-          "data_source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Data Source"
-          },
           "designation": {
             "title": "Designation",
             "type": "string"
           },
-          "evidence_count": {
-            "default": 0,
-            "title": "Evidence Count",
-            "type": "integer"
+          "is_artificial": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Is Artificial"
           },
-          "evidence_sources": {
-            "default": [],
-            "items": {
-              "$ref": "#/components/schemas/EvidenceSummary"
-            },
-            "title": "Evidence Sources",
-            "type": "array"
-          },
-          "false_discovery_rate": {
+          "artificial_probability": {
             "anyOf": [
               {
                 "type": "number"
@@ -677,16 +625,67 @@
                 "type": "null"
               }
             ],
-            "title": "False Discovery Rate"
+            "default": null,
+            "title": "Artificial Probability"
           },
-          "interpretation": {
-            "default": "",
-            "title": "Interpretation",
+          "sigma_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sigma Confidence"
+          },
+          "screening_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Screening Score"
+          },
+          "candidate": {
+            "default": false,
+            "title": "Candidate",
+            "type": "boolean"
+          },
+          "significance_status": {
+            "default": "unavailable_uncalibrated_model",
+            "title": "Significance Status",
             "type": "string"
           },
-          "is_artificial": {
-            "title": "Is Artificial",
-            "type": "boolean"
+          "origin_status": {
+            "default": "inconclusive",
+            "title": "Origin Status",
+            "type": "string"
+          },
+          "human_origin_status": {
+            "default": "not_assessed",
+            "title": "Human Origin Status",
+            "type": "string"
+          },
+          "evidence_id": {
+            "default": "",
+            "title": "Evidence Id",
+            "type": "string"
+          },
+          "policy_id": {
+            "default": "",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "evidence_snapshot": {
+            "additionalProperties": true,
+            "title": "Evidence Snapshot",
+            "type": "object"
           },
           "non_gravitational_evidence": {
             "anyOf": [
@@ -701,14 +700,56 @@
             "default": null,
             "title": "Non Gravitational Evidence"
           },
-          "sigma_confidence": {
-            "title": "Sigma Confidence",
-            "type": "number"
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "schema_version": {
+            "default": "screening-assessment-v1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "engine_version": {
+            "default": "catalogue-ranking-v1",
+            "title": "Engine Version",
+            "type": "string"
           },
           "sigma_tier": {
-            "default": "ROUTINE",
+            "default": "UNAVAILABLE",
             "title": "Sigma Tier",
             "type": "string"
+          },
+          "classification": {
+            "title": "Classification",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Confidence"
+          },
+          "evidence_count": {
+            "default": 0,
+            "title": "Evidence Count",
+            "type": "integer"
+          },
+          "evidence_sources": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/EvidenceSummary"
+            },
+            "title": "Evidence Sources",
+            "type": "array"
           },
           "spacecraft_veto": {
             "default": false,
@@ -724,16 +765,72 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Veto Reason"
+          },
+          "data_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Data Source"
+          },
+          "data_freshness": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Data Freshness"
+          },
+          "interpretation": {
+            "default": "",
+            "title": "Interpretation",
+            "type": "string"
+          },
+          "combined_p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Combined P Value"
+          },
+          "false_discovery_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "False Discovery Rate"
+          },
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Analysis Metadata",
+            "type": "object"
           }
         },
         "required": [
           "designation",
-          "is_artificial",
-          "artificial_probability",
-          "sigma_confidence",
-          "classification",
-          "confidence"
+          "classification"
         ],
         "title": "DetectionResponse",
         "type": "object"
@@ -776,14 +873,53 @@
       },
       "EvidenceSummary": {
         "properties": {
-          "analyzed": {
-            "default": true,
-            "title": "Analyzed",
-            "type": "boolean"
+          "type": {
+            "title": "Type",
+            "type": "string"
           },
           "anomaly_score": {
-            "title": "Anomaly Score",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anomaly Score"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "quality_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality Score"
+          },
+          "effect_size": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect Size"
           },
           "confidence_interval": {
             "default": [],
@@ -793,31 +929,54 @@
             "title": "Confidence Interval",
             "type": "array"
           },
-          "data_available": {
-            "default": true,
-            "title": "Data Available",
-            "type": "boolean"
-          },
-          "effect_size": {
-            "title": "Effect Size",
-            "type": "number"
-          },
-          "p_value": {
-            "title": "P Value",
-            "type": "number"
-          },
-          "quality_score": {
-            "title": "Quality Score",
-            "type": "number"
-          },
           "sample_size": {
             "default": 0,
             "title": "Sample Size",
             "type": "integer"
           },
-          "type": {
-            "title": "Type",
+          "analyzed": {
+            "default": true,
+            "title": "Analyzed",
+            "type": "boolean"
+          },
+          "data_available": {
+            "default": true,
+            "title": "Data Available",
+            "type": "boolean"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Unavailable Reason"
+          },
+          "score_semantics": {
+            "default": "uncalibrated_ranking_heuristic",
+            "title": "Score Semantics",
             "type": "string"
+          },
+          "evidence_basis": {
+            "default": "heuristic_proxy",
+            "title": "Evidence Basis",
+            "type": "string"
+          },
+          "dependency_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dependency Group"
           }
         },
         "required": [
@@ -1786,10 +1945,69 @@
       "OrbitalInput": {
         "properties": {
           "a": {
+            "description": "Semi-major axis (AU)",
+            "maximum": 1000.0,
+            "minimum": -1000.0,
             "title": "A",
             "type": "number"
           },
+          "e": {
+            "description": "Eccentricity (0\u20131 bound, up to 2 for hyperbolic)",
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "E",
+            "type": "number"
+          },
+          "i": {
+            "description": "Inclination (degrees)",
+            "maximum": 180.0,
+            "minimum": 0.0,
+            "title": "I",
+            "type": "number"
+          },
+          "designation": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Designation"
+          },
+          "diameter_km": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 10000.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Diameter Km"
+          },
           "albedo": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Albedo"
+          },
+          "absolute_magnitude": {
             "anyOf": [
               {
                 "type": "number"
@@ -1798,9 +2016,10 @@
                 "type": "null"
               }
             ],
-            "title": "Albedo"
+            "default": null,
+            "title": "Absolute Magnitude"
           },
-          "designation": {
+          "spectral_type": {
             "anyOf": [
               {
                 "type": "string"
@@ -1809,26 +2028,34 @@
                 "type": "null"
               }
             ],
-            "title": "Designation"
+            "default": null,
+            "title": "Spectral Type"
           },
-          "diameter_km": {
+          "additional_data": {
             "anyOf": [
               {
-                "type": "number"
+                "additionalProperties": true,
+                "type": "object"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Diameter Km"
+            "default": null,
+            "title": "Additional Data"
           },
-          "e": {
-            "title": "E",
-            "type": "number"
-          },
-          "i": {
-            "title": "I",
-            "type": "number"
+          "evidence_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Evidence Metadata"
           },
           "orbital_history": {
             "anyOf": [
@@ -1843,6 +2070,7 @@
                 "type": "null"
               }
             ],
+            "default": null,
             "title": "Orbital History"
           }
         },
@@ -3287,7 +3515,7 @@
     },
     "/api/v1/analysis/detect": {
       "get": {
-        "description": "Run the canonical ValidatedSigma5 artificial-NEO detector on a named object.\n\nFetches orbital elements from the data pipeline and returns a typed\nDetectionResponse with sigma_confidence and artificial_probability.",
+        "description": "Uncalibrated candidate screening; significance, FDR and origin probability remain unavailable. Ranking is not a confirmed-origin decision.",
         "operationId": "detect_neo_api_v1_analysis_detect_get",
         "parameters": [
           {
@@ -3370,7 +3598,7 @@
         ]
       },
       "post": {
-        "description": "Run ValidatedSigma5 detector on caller-supplied orbital elements.\nNo data source lookup \u2014 use when you have elements from your own reduction.",
+        "description": "Uncalibrated candidate screening; significance, FDR and origin probability remain unavailable. Ranking is not a confirmed-origin decision.",
         "operationId": "detect_neo_raw_api_v1_analysis_detect_post",
         "requestBody": {
           "content": {

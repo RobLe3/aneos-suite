@@ -114,7 +114,7 @@ def test_orbital_input_accepts_valid_values(OrbitalInput):
 
 def test_orbital_input_accepts_hyperbolic(OrbitalInput):
     """Eccentricity up to 2.0 is allowed (hyperbolic)."""
-    obj = OrbitalInput(a=10.0, e=1.5, i=90.0)
+    obj = OrbitalInput(a=-10.0, e=1.5, i=90.0)
     assert obj.e == 1.5
 
 
@@ -155,3 +155,9 @@ def test_batch_rejects_long_designation(BatchAnalysisRequest):
 def test_batch_strips_whitespace(BatchAnalysisRequest):
     req = BatchAnalysisRequest(designations=["  99942 Apophis  "])
     assert req.designations[0] == "99942 Apophis"
+
+
+@pytest.mark.parametrize("a,e", [(10, 1.5), (-10, .5), (0, .5)])
+def test_orbital_input_rejects_inconsistent_conic(OrbitalInput, a, e):
+    with pytest.raises(ValueError):
+        OrbitalInput(a=a, e=e, i=90)

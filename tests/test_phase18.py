@@ -110,16 +110,23 @@ class TestBatchPrintReplaced:
 class TestVerboseEvidenceBreakdown:
 
     def test_wrapper_adds_evidence_breakdown_to_analysis(self):
-        """ValidatedWrapper.analyze_neo must include 'evidence_breakdown' in analysis dict."""
-        import aneos_core.detection.detection_manager as dm
-        source = inspect.getsource(dm)
-        assert "evidence_breakdown" in source
+        from aneos_core.detection.detection_manager import DetectionManager
+        result = DetectionManager().analyze_neo({"a": 1, "e": .2, "i": 20})
+        assert result.analysis["evidence_breakdown"]
+        assert result.analysis["evidence_breakdown"] == result.analysis["assessment"]["evidence_sources"]
 
     def test_display_reads_evidence_breakdown_key(self):
-        """_display_detection_result must look for 'evidence_breakdown' key in analysis."""
-        import aneos_menu_v2
-        source = inspect.getsource(aneos_menu_v2.ANEOSMenuV2._display_detection_result)
-        assert "evidence_breakdown" in source
+        from aneos_core.detection.detection_manager import DetectionManager
+        from aneos_menu_v2 import ANEOSMenuV2
+        from unittest.mock import Mock
+        menu = ANEOSMenuV2.__new__(ANEOSMenuV2)
+        menu.console = None
+        menu.display_panel = Mock()
+        result = DetectionManager().analyze_neo({"a": 1, "e": .2, "i": 20})
+        menu._display_detection_result("marker", result, verbose=True)
+        content = menu.display_panel.call_args.args[0]
+        assert "orbital_dynamics" in content
+        assert "unavailable" in content
 
 
 # ===========================================================================
