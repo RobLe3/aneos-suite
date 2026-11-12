@@ -162,20 +162,25 @@ open; no five-sigma or whole-application reliability permission is granted.
 ## E. Reproducibility
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 ANEOS_DATABASE_URL=sqlite:////tmp/aneos-job-store-final10.db \
+PYTHONDONTWRITEBYTECODE=1 ANEOS_DATABASE_URL=sqlite:////tmp/aneos-job-store-final11.db \
 /Users/roble/.venvs/aneos-suite/bin/python -m pytest tests/ aneos_core/tests/ \
   -m 'not network' -q --tb=short --cov=aneos_core --cov-report=term-missing --cov-fail-under=30
 
-COVERAGE_FILE=/tmp/aneos-job-store-component8.coverage PYTHONDONTWRITEBYTECODE=1 \
-ANEOS_DATABASE_URL=sqlite:////tmp/aneos-job-store-component8.db \
+COVERAGE_FILE=/tmp/aneos-job-store-component9.coverage PYTHONDONTWRITEBYTECODE=1 \
+ANEOS_DATABASE_URL=sqlite:////tmp/aneos-job-store-component9.db \
 /Users/roble/.venvs/aneos-suite/bin/python -m pytest tests/test_durable_job_store.py \
   -q --tb=short --cov=aneos_api.job_store --cov-report=term-missing --cov-fail-under=85
 ```
 
-Final full suite: **902 passed, five network deselected, five warnings in 38.24s;
+Final full suite: **902 passed, five network deselected, five warnings in 40.23s;
 45.06% core coverage against the unchanged 30% gate**. New coverage: **39 storage
 controls plus six API bootstrap controls**. Targeted storage suite: **39 passed,
-92.51% job-store coverage against the added 85% gate** (2.92s). The final commit and
+92.51% job-store coverage against the added 85% gate** (2.50s). The final commit and
 remote CI are recorded separately with the PR. All
 new tests use disposable database files/synthetic scopes, not the root experimental
 database. Root working-tree research and original case artifacts are not overwritten.
+
+CI follow-up: the initial runner correctly rejected an expired 300 ms test lease.
+The two real process-termination tests now use a controlled shared lease clock,
+advanced only after termination; process kill, transaction rollback and independent
+process readback remain real. Production lease checks are unchanged.

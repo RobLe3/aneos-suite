@@ -262,7 +262,7 @@ def test_checkpoint_error_rolls_back_event_revision_and_admission_state(store):
 
 def test_real_process_kill_recovers_frozen_input_and_new_process_reads_completion(store,tmp_path):
     import os,subprocess,sys,time
-    s,_,engine=store;s.clock=time.time
+    s,_,engine=store;s.clock=lambda:1000.0
     job=submit(s);marker=tmp_path/'checkpointed'
     script='''
 import sys,time
@@ -270,7 +270,7 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from aneos_api.job_store import JobStore
-s=JobStore(sessionmaker(bind=create_engine(sys.argv[1])),capacity=3)
+s=JobStore(sessionmaker(bind=create_engine(sys.argv[1])),capacity=3,clock=lambda:1000.0)
 lease=s.claim('killed-worker',lease_seconds=.3)
 s.checkpoint(lease,'input:0',{'native':'frozen synthetic data','missing_measurement':None})
 Path(sys.argv[2]).write_text('committed')
@@ -284,7 +284,9 @@ time.sleep(60)
     finally:
         child.kill();child.wait(timeout=5)
     state=s.get('scope-A',job['job_id'])
-    time.sleep(max(0,state['lease_until']-time.time())+.02)
+    # Advance the lease clock only after the real process has been killed.
+    assert state['lease_until']==1000.3
+    s.clock=lambda:1001.0
     lease=s.claim('recovery-worker')
     assert lease.attempt==2
     assert s.checkpoints(lease)['input:0']['missing_measurement'] is None
@@ -307,7 +309,7 @@ print(json.dumps(s.get('scope-A',sys.argv[2])))
 
 def test_kill_inside_transaction_rolls_back_checkpoint_event_and_revision(store,tmp_path):
     import os,subprocess,sys,time
-    s,_,engine=store;s.clock=time.time
+    s,_,engine=store;s.clock=lambda:1000.0
     job=submit(s);marker=tmp_path/'uncommitted'
     script='''
 import sys,time
@@ -315,7 +317,7 @@ from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from aneos_api.job_store import JobStore
-s=JobStore(sessionmaker(bind=create_engine(sys.argv[1])),capacity=3)
+s=JobStore(sessionmaker(bind=create_engine(sys.argv[1])),capacity=3,clock=lambda:1000.0)
 lease=s.claim('crashing-worker',lease_seconds=.3)
 original=s._event
 def pause(session,*args,**kwargs):
@@ -336,7 +338,9 @@ s.checkpoint(lease,'must-rollback',{'uncommitted':True})
     state=s.get('scope-A',job['job_id'])
     assert state['revision']==2 and state['checkpoint_count']==0
     assert [e['event'] for e in s.history('scope-A',job['job_id'])]==['queued','claimed']
-    time.sleep(max(0,state['lease_until']-time.time())+.02)
+    # Advance the lease clock only after the real process has been killed.
+    assert state['lease_until']==1000.3
+    s.clock=lambda:1001.0
     lease=s.claim('recovery')
     assert s.checkpoints(lease)=={}
     s.finish(lease,{'execution':'recovered'})
