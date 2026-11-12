@@ -148,3 +148,15 @@ it is not a complete environment/dependency lock. Replay hashes detect content
 changes, not malicious authorship or cryptographic source authenticity. New source
 queries must create new dated records, not overwrite this or the original baseline.
 The root experimental worktree/database are not modified by this branch.
+
+### CI environment correction
+
+The first remote run had **823 passing tests and one OpenAPI snapshot failure**.
+Inspection of the completed job's exact schema diff showed only ten missing
+optional dashboard/streaming paths, not changed scientific/impact fields. The CI
+`requirements-core.txt` installed FastAPI but omitted Jinja2/SSE, while the published
+full API profile and local environment included them. Both packages were already
+in `requirements.txt`. They are now explicit in the core API/CI dependency set;
+the full snapshot assertion remains unchanged. No failure is skipped and no
+scientific or schema requirement is reduced. Minimal custom installations can
+still omit optional UI packages, but are not the documented full API test profile.

@@ -52,3 +52,8 @@ sqlalchemy>=2.0.0
 fastapi>=0.104.0
 httpx>=0.25.0  # FastAPI/Starlette test client
 python-jose[cryptography]>=3.3.0  # JWT auth (test_auth.py)
+# Complete API routing profile used by CI and docs/api/openapi.json.
+# These are also declared in requirements.txt; omitting them silently replaced
+# dashboard/SSE routers with fallback stubs during full-application tests.
+jinja2>=3.1.0
+sse-starlette>=1.6.0
