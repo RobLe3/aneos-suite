@@ -11,8 +11,8 @@ GROUP A — Detection & Classification
   3  Batch Detection               — concurrent file-driven classification
   4  Orbital History Analysis      — course corrections / smoking-gun via Horizons
 
-GROUP B — Impact Assessment
-  5  Impact Probability            — planetary-defence collision calculation
+GROUP B — Scoped Impact Evidence
+  5  Impact Evidence               — scoped external Earth-event model output
   6  Close Approach History        — historical Earth close-approaches (CAD API)
 
 GROUP C — Monitoring & Polling
@@ -37,7 +37,7 @@ Design principles
 - Every option calls real, tested backend code (no fake progress bars)
 - σ < 2 → INCONCLUSIVE (not "natural")
 - Data failures are hard errors shown to the user, not silent fallbacks
-- Results from options 1–5 are persisted to DB in background threads
+- Sentry impact reports are synchronously archived and verified; detection persistence remains separate
 - Inherits only stateless UI helpers from ANEOSMenuBase
 """
 
@@ -114,7 +114,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
             "  [cyan] 3[/cyan]  Batch Detection               [concurrent, from file]\n"
             "  [cyan] 4[/cyan]  Orbital History Analysis      [catalogue history, not manoeuvre proof]\n\n"
             "  [bold cyan]── Impact Assessment ───────────────────────────[/bold cyan]\n"
-            "  [cyan] 5[/cyan]  Impact Probability            [planetary defence]\n"
+            "  [cyan] 5[/cyan]  Impact Evidence               [scoped Sentry events]\n"
             "  [cyan] 6[/cyan]  Close Approach History        [historical CAD data]\n\n"
             "  [bold cyan]── Monitoring & Polling ─────────────────────────[/bold cyan]\n"
             "  [cyan] 7[/cyan]  Live Pipeline Dashboard       [200-year historical poll]\n"
@@ -327,69 +327,22 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 self._persist_detection_result_async(designation, result)
 
     # ==================================================================
-    # GROUP B — Impact Assessment
+    # GROUP B — Scoped Impact Evidence
     # ==================================================================
 
     def _impact_assessment(self) -> None:
-        """Option 5: Calculate impact probability for one NEO."""
-        designation = self._ask("NEO designation").strip()
+        """Option 5: scoped Sentry evidence, not a heuristic impact calculation."""
+        designation = self._ask("Primary asteroid number or provisional designation").strip()
         if not designation:
             self.show_error("No designation provided.")
             return
-
-        neo_data = self._fetch_neo_data(designation)
-        if neo_data is None:
-            return
-
-        oe = neo_data.orbital_elements
-        if oe is None:
-            self.show_error(f"No orbital elements for {designation!r}.")
-            return
-
-        close_approaches = getattr(neo_data, "close_approaches", None) or []
-        pp = getattr(neo_data, "physical_properties", None)
-
-        # Derive observation arc from actual SBDB first/last observation dates
-        from datetime import datetime as _dt
-        arc_days = 30.0  # default
-        first_obs = getattr(neo_data, "first_observation", None)
-        last_obs  = getattr(neo_data, "last_observation", None)
-        if isinstance(first_obs, _dt) and isinstance(last_obs, _dt):
-            arc_days = max(1.0, (last_obs - first_obs).days)
-        _dates_available = isinstance(first_obs, _dt) and isinstance(last_obs, _dt)
-        arc_note = (
-            f"Arc: {arc_days:.0f} days ({arc_days/365.25:.1f} yr)"
-            if _dates_available
-            else "Arc: 30-day default (observation dates unavailable)"
-        )
-
         try:
-            from aneos_core.analysis.impact_probability import ImpactProbabilityCalculator
-            calc = ImpactProbabilityCalculator()
-            if self.console:
-                with self.console.status("[green]Computing impact probability…", spinner="dots"):
-                    impact = calc.calculate_comprehensive_impact_probability(
-                        orbital_elements=oe,
-                        close_approaches=close_approaches or None,
-                        observation_arc_days=arc_days,
-                        physical_properties=pp,
-                    )
-            else:
-                impact = calc.calculate_comprehensive_impact_probability(
-                    orbital_elements=oe,
-                    close_approaches=close_approaches or None,
-                    observation_arc_days=arc_days,
-                    physical_properties=pp,
-                )
-            if self.console:
-                self.console.print(f"[dim]{arc_note}[/dim]")
-            else:
-                print(arc_note)
-        except Exception as exc:
-            self.show_error(f"Impact calculation failed: {exc}")
+            from aneos_core.analysis.impact_evidence import get_sentry_impact_service, require_sentry_report
+            impact = require_sentry_report(get_sentry_impact_service().assess(designation), designation)
+        except Exception:
+            self.show_error("Impact source unavailable, invalid or identity unresolved; no probability assessment.")
             return
-
-        self._impact_results[designation.upper()] = impact
+        self._impact_results[impact['designation'].upper()] = impact
         self._display_impact_result(designation, impact)
         self._persist_impact_result_async(designation, impact)
 
@@ -622,16 +575,16 @@ class ANEOSMenuV2(ANEOSMenuBase):
             imp_items = list(self._impact_results.items())
             rows = []
             for i, (desg, impact) in enumerate(imp_items, 1):
-                prob = getattr(impact, "collision_probability", 0.0)
-                energy = getattr(impact, "impact_energy_mt", None)
-                method = getattr(impact, "calculation_method", "—")
-                rows.append([
-                    str(i), desg, f"{prob:.2e}",
-                    f"{energy:.1f} MT" if energy is not None else "N/A",
-                    method,
-                ])
+                from aneos_core.analysis.impact_evidence import require_sentry_report
+                try:
+                    report = require_sentry_report(impact, desg)
+                    prob = report['collision_probability']
+                    rows.append([str(i), desg, f"{prob:.3e}" if prob is not None else "not available",
+                                 report['status'], report['source']['method'] or "not available"])
+                except ValueError:
+                    rows.append([str(i), desg, "not available", "invalid_or_legacy", "not available"])
             self.display_table(
-                headers=["#", "Designation", "P(impact)", "Energy", "Method"],
+                headers=["#", "Designation", "P(listed events)", "Source status", "Source method"],
                 rows=rows,
                 title=f"Impact Results — {len(imp_items)} objects",
             )
@@ -675,29 +628,28 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 "non_gravitational_evidence": (getattr(result, "metadata", {}) or {}).get("non_gravitational_evidence"),
             })
         for desg, impact in self._impact_results.items():
-            records.append({
-                "designation": desg,
-                "type": "impact",
-                "collision_probability": getattr(impact, "collision_probability", None),
-                "impact_energy_mt": getattr(impact, "impact_energy_mt", None),
-                "crater_diameter_km": getattr(impact, "crater_diameter_km", None),
-                "calculation_method": getattr(impact, "calculation_method", None),
-            })
+            from aneos_core.analysis.impact_evidence import require_sentry_report
+            try:
+                report = require_sentry_report(impact, desg)
+            except ValueError:
+                self.show_error(f"Export refused: invalid or legacy impact evidence for {desg}.")
+                return
+            records.append({'designation': desg, 'type': 'impact', 'evidence_basis':'authoritative_external_model_output',
+                            'impact_evidence': report,
+                            'impact_evidence_json': json.dumps(report, sort_keys=True, allow_nan=False)})
 
         try:
             from aneos_core.reporting.exporters import Exporter
             exporter = Exporter()
             if fmt == "1":
-                path = exporter.export_to_json(records, output_file=out_path or None)
+                path = exporter.export_to_json(records, output_file=out_path or None, exclusive=True)
             else:
-                path = exporter.export_to_csv(records, output_file=out_path or None)
+                path = exporter.export_to_csv(records, output_file=out_path or None, exclusive=True)
             self.show_success(f"Exported {len(records)} records to: {path}")
         except Exception as exc:
             self.show_error(f"Export failed: {exc}")
-            # Fallback: write manually
-            fallback = Path(out_path or "aneos_results_export.json")
-            fallback.write_text(json.dumps(records, indent=2, default=str))
-            self.show_success(f"Fallback JSON written to: {fallback}")
+            # No fallback write: it could overwrite historical evidence after an
+            # exclusive-create refusal or hide a partial export failure.
 
     # ==================================================================
     # GROUP E — System
@@ -867,30 +819,22 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
         threading.Thread(target=_write, daemon=True).start()
 
-    def _persist_impact_result_async(self, designation: str, impact) -> None:
-        """Write impact result to DB in a background thread."""
-        def _write():
-            try:
-                from aneos_api.database import SessionLocal, HAS_SQLALCHEMY
-                if not HAS_SQLALCHEMY:
-                    return
-                from aneos_api.database import AnalysisService
-                result_data = {
-                    "designation": designation,
-                    "classification": "impact_assessment",
-                    "overall_score": getattr(impact, "collision_probability", 0.0),
-                    "confidence": getattr(impact, "calculation_confidence", 0.0),
-                }
-                db = SessionLocal()
-                try:
-                    service = AnalysisService(db)
-                    service.save_analysis_result(result_data)
-                finally:
-                    db.close()
-            except Exception:
-                pass
+    def _persist_impact_result_async(self, designation: str, impact):
+        """Compatibility name; synchronous verified archive, never a daemon write.
 
-        threading.Thread(target=_write, daemon=True).start()
+        No origin-score DB column is used for an impact probability. Failures are
+        visible and in-session evidence remains available for a later explicit save.
+        """
+        try:
+            from aneos_core.analysis.impact_evidence import require_sentry_report
+            from aneos_core.reporting.evidence_archive import EvidenceArchive
+            report = require_sentry_report(impact, designation)
+            path = EvidenceArchive().put(report)
+            self.show_success(f"Evidence archived and verified: {path}")
+            return path
+        except Exception:
+            self.show_error("Evidence was NOT confirmed saved; the in-session report remains available.")
+            return None
 
     # ==================================================================
     # Display helpers
@@ -1131,44 +1075,14 @@ class ANEOSMenuV2(ANEOSMenuBase):
         self.display_panel("\n".join(lines), title=f"ATLAS Detail — {designation}", style="yellow")
 
     def _display_impact_result(self, designation: str, impact) -> None:
-        prob = getattr(impact, "collision_probability", 0.0)
-        annual = getattr(impact, "collision_probability_per_year", 0.0)
-        energy = getattr(impact, "impact_energy_mt", None)
-        crater = getattr(impact, "crater_diameter_km", None)
-        velocity = getattr(impact, "impact_velocity_km_s", None)
-        method = getattr(impact, "calculation_method", "—")
-        confidence = getattr(impact, "calculation_confidence", None)
-        uncertainty = getattr(impact, "probability_uncertainty", (None, None))
-        arc = getattr(impact, "data_arc_years", None)
-
-        lines = [
-            f"[bold]Designation:[/bold]           {self.format_designation(designation)}",
-            f"[bold]Method:[/bold]                {method}",
-            f"[bold]Collision probability:[/bold]  {prob:.3e}",
-            f"[bold]Annual rate:[/bold]           {annual:.3e} /yr",
-        ]
-        if arc is not None:
-            lines.append(f"[bold]Observation arc:[/bold]       {arc:.1f} yr")
-        if uncertainty and uncertainty[0] is not None:
-            lines.append(f"[bold]95% CI:[/bold]                [{uncertainty[0]:.3e}, {uncertainty[1]:.3e}]")
-        if confidence is not None:
-            lines.append(f"[bold]Calc confidence:[/bold]       {confidence:.2f}")
-        if energy is not None:
-            lines.append(f"[bold]Impact energy:[/bold]         {energy:.1f} MT TNT")
-        if velocity is not None:
-            lines.append(f"[bold]Impact velocity:[/bold]       {velocity:.1f} km/s")
-        if crater is not None:
-            lines.append(f"[bold]Crater diameter:[/bold]       {crater:.2f} km")
-
-        torino = self._rough_torino(prob, energy)
-        lines.append(f"[bold]Torino scale (est):[/bold]    {torino}")
-
-        lines.append(
-            "\n[dim]NOTE: Impact probability depends critically on observation arc and "
-            "orbital uncertainty. Short-arc objects have high uncertainty.[/dim]"
-        )
-        colour = "red" if prob > 1e-4 else "yellow" if prob > 1e-6 else "green"
-        self.display_panel("\n".join(lines), title=f"Impact Assessment — {designation}", style=colour)
+        from aneos_core.analysis.impact_evidence import require_sentry_report, render_sentry_markdown
+        try:
+            report = require_sentry_report(impact, designation)
+            text = render_sentry_markdown(report)
+        except ValueError:
+            self.show_error("Legacy, modified or unbound impact record: scientific evidence unavailable.")
+            return
+        self.display_panel(text, title=f"Scoped Sentry Evidence — {report['designation']}", style="cyan")
 
     def _display_pipeline_result(self, result: dict) -> None:
         status = result.get("status", "unknown")
@@ -1445,29 +1359,5 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     @staticmethod
     def _rough_torino(prob: float, energy_mt: Optional[float]) -> str:
-        """Very rough Torino Scale estimate (informational only — not authoritative)."""
-        if prob <= 0 or prob < 1e-6:
-            return "0 (no hazard)"
-        e = energy_mt or 0.0
-        if prob >= 0.99:
-            if e < 1:
-                return "8 (certain regional)"
-            if e < 100:
-                return "9 (certain regional)"
-            return "10 (certain global)"
-        if prob > 1e-4:
-            return "1–7 (elevated; detailed analysis required)"
-        return "1 (normal; merits monitoring)"
-
-
-# ---------------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------------
-
-def main():
-    menu = ANEOSMenuV2()
-    menu.run()
-
-
-if __name__ == "__main__":
-    main()
+        """Controlled deprecation: no local Torino class from heuristic inputs."""
+        raise NotImplementedError('Use a source-reported Torino value within its documented scope')

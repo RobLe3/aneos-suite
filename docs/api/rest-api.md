@@ -836,3 +836,26 @@ Per-process cache reuse is bounded to 128 objects and returns copies; expiry/ref
 creates new snapshots, not amendments to previously returned ones. It is not durable
 case history or cross-process cache deduplication. See the
 [scoped implementation report](../engineering/sentry-impact-contract.md).
+
+### Menu and impact-library contract (ADR-075)
+
+The V2 impact menu and enhanced-impact wrapper now consume the same scoped Sentry
+report as REST, not the old catalogue geometry/30-day-arc calculator. The wrapper
+preserves screening separately and reports source/invalid/failure/not-requested
+and archive-confirmation status without inferring origin or safe risk. No API route
+or response schema is added by this integration.
+
+`ImpactProbabilityCalculator.calculate_comprehensive_impact_probability` retains
+its name but raises a controlled-deprecation error. Use source evidence for reported
+impact probabilities, `calculate_conditional_impact_energy(mass_kg=..., velocity_km_s=...)`
+for explicit classical scenarios, or explicitly labelled legacy diagnostics for
+research replay. A supplied scenario arc is required for legacy replay; no diagnostic
+scalar or bound is a calibrated probability/confidence interval.
+
+V2 menu/enhanced reports are saved to a verified append-only local archive before
+save confirmation. The compatibility method named `_persist_impact_result_async`
+is now synchronous; no impact probability is written to an origin-score DB column.
+This archive does **not** provide durable API jobs/case lifecycle or automatically
+persist every REST response. Those remain #15/#13. Menu JSON/CSV exports retain
+complete replayable evidence and use exclusive creation without an overwrite fallback.
+See [implementation, restart controls and filesystem limits](../engineering/impact-entrypoint-contract.md).

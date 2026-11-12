@@ -52,12 +52,16 @@ class TestPersistenceCorrectness:
         source = inspect.getsource(aneos_menu_v2.ANEOSMenuV2._persist_detection_result_async)
         assert '"designation"' in source or "'designation'" in source
 
-    def test_impact_result_dict_has_designation(self):
-        """impact result_data must include 'designation' key."""
-        import aneos_menu_v2
-        source = inspect.getsource(aneos_menu_v2.ANEOSMenuV2._persist_impact_result_async)
-        assert '"designation"' in source or "'designation'" in source
-        assert "aneos_api.services" not in source
+    def test_impact_archive_keeps_designation_and_exact_source_report(self, tmp_path, monkeypatch):
+        from aneos_core.data.sources.sentry import parse_sentry_response
+        from aneos_core.reporting.evidence_archive import EvidenceArchive
+        import json
+        monkeypatch.setenv("ANEOS_EVIDENCE_ARCHIVE",str(tmp_path/"evidence"))
+        report = parse_sentry_response(b'{"signature":{"source":"NASA/JPL Sentry Data API","version":"2.0"},"error":"specified object not found"}', designation="99942",retrieved_at="2026-11-12T00:00:00Z")
+        menu = _make_menu()
+        path = menu._persist_impact_result_async("99942",report)
+        assert path and json.loads(path.read_text()) == report
+        assert EvidenceArchive(tmp_path/"evidence").get(report["report_sha256"])["designation"] == "99942"
 
 
 # ===========================================================================

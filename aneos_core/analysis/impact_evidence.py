@@ -79,3 +79,11 @@ def render_sentry_markdown(report):
         f"Raw response SHA-256: {report['source_snapshot']['sha256']}",
         f"Report SHA-256: {report['report_sha256']}"]
     return '\n'.join(lines) + '\n'
+
+
+def require_sentry_report(report, designation):
+    """Replay plus caller-identity binding; no legacy object-to-evidence coercion."""
+    from ..data.sources.sentry import verify_sentry_report, normalize_designation
+    if not verify_sentry_report(report) or report['designation'] != normalize_designation(designation):
+        raise ValueError('Invalid, unsupported or mismatched Sentry evidence')
+    return report

@@ -301,3 +301,14 @@ evidence with source snapshots, listed-event scope and documented uncertainty.
 Not listed/removed is not zero risk. This does not validate a local impact solver,
 the legacy menu/library/enhanced-impact paths, origin inference or discovery sigma.
 See [scope and regression evidence](../engineering/sentry-impact-contract.md).
+
+### Impact scenarios and entry points (2026-11-12, ADR-075)
+
+V2 menu/enhanced impact reports now use the scoped source contract, not origin/
+quality/arc/geometric proxies. The former local comprehensive-probability and
+estimated-Torino interfaces are controlled-deprecated. Explicit legacy diagnostics
+and conditional kinetic energy remain research/scenario utilities, not fitted
+probability, confidence, damage or origin evidence. Local snapshot write/restart
+controls do not establish scientific validity or a complete durable job system.
+The offline suite now fails unmarked network attempts rather than allowing source
+errors to hide them. [Exact scope and acceptance evidence](../engineering/impact-entrypoint-contract.md).

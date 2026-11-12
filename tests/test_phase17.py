@@ -5,7 +5,7 @@ Tests cover:
   - 17A: SBDB no longer sends nongrav=1 by default; health check uses Apophis
   - 17B: SBDB extracts first_obs / last_obs into orbital_data
   - 17C: DataFetcher wires observation dates into NEOData fields
-  - 17D: _impact_assessment derives arc from real dates, defaults to 30 days
+  - 17D: actual dated arc inventory; missing duration stays unavailable
   - 17E: ValidatedWrapper suppresses 'physical_properties' risk factor when
          physical_data has no real keys
 """
@@ -189,115 +189,26 @@ class TestFetcherObservationDateWiring:
 
 
 # ===========================================================================
-# 17D — _impact_assessment uses real arc when dates available
+# 17D — dated inventory is not a heuristic impact probability
 # ===========================================================================
 
 class TestImpactArcHandling:
-    """_impact_assessment must pass real arc_days when first/last_observation set."""
+    """Dated arc inventory is not an impact probability/quality proxy."""
+    def test_arc_derived_only_from_actual_dates(self):
+        from aneos_core.analysis.impact_enhanced_pipeline import ImpactEnhancedPipeline
+        from aneos_core.data.models import NEOData
+        from unittest.mock import Mock
+        first = datetime(1990,1,1,tzinfo=timezone.utc)
+        last = datetime(2024,3,15,tzinfo=timezone.utc)
+        neo = NEOData("99942",first_observation=first,last_observation=last)
+        assert ImpactEnhancedPipeline(Mock())._estimate_observation_arc_length(Mock(),neo) == (last-first).days
 
-    def _make_menu(self):
-        from aneos_menu_v2 import ANEOSMenuV2
-        menu = ANEOSMenuV2.__new__(ANEOSMenuV2)
-        menu.console = None
-        menu._detection_results = {}
-        menu._impact_results = {}
-        return menu
-
-    def _make_neo_data(self, first_obs=None, last_obs=None):
-        neo_data = MagicMock()
-        oe = MagicMock()
-        oe.semi_major_axis = 0.922
-        oe.eccentricity = 0.191
-        oe.inclination = 3.33
-        oe.is_complete = MagicMock(return_value=True)
-        neo_data.orbital_elements = oe
-        neo_data.close_approaches = []
-        neo_data.physical_properties = None
-        neo_data.first_observation = first_obs
-        neo_data.last_observation = last_obs
-        return neo_data
-
-    def test_arc_derived_from_dates_when_available(self):
-        """When first/last observation are set, arc_days must exceed 30-day default."""
-        menu = self._make_menu()
-
-        first = datetime(1990, 1, 1, tzinfo=timezone.utc)
-        last  = datetime(2024, 3, 15, tzinfo=timezone.utc)
-        neo_data = self._make_neo_data(first, last)
-
-        captured_arc = []
-
-        def fake_calc(**kwargs):
-            captured_arc.append(kwargs.get("observation_arc_days", -1))
-            result = MagicMock()
-            result.collision_probability = 1e-10
-            result.probability_uncertainty = (0.0, 0.0)
-            result.torino_scale = 0
-            result.palermo_scale_technical = -10
-            result.most_probable_impact_time = None
-            result.impact_energy_mt = None
-            result.crater_diameter_km = None
-            result.moon_impact_probability = {}
-            result.data_arc_years = 30.0
-            result.calculation_confidence = 0.9
-            result.risk_factors = []
-            result.assumptions = []
-            result.limitations = []
-            return result
-
-        with patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
-             patch.object(menu, "_ask", return_value="99942"), \
-             patch.object(menu, "_display_impact_result"), \
-             patch.object(menu, "_persist_impact_result_async"), \
-             patch("aneos_core.analysis.impact_probability.ImpactProbabilityCalculator"
-                   ".calculate_comprehensive_impact_probability",
-                   side_effect=fake_calc):
-            menu._impact_assessment()
-
-        assert captured_arc, "calculate_comprehensive_impact_probability never called"
-        expected_days = (last - first).days
-        assert captured_arc[0] == pytest.approx(expected_days, abs=1), (
-            f"Expected arc ~{expected_days} days, got {captured_arc[0]}"
-        )
-
-    def test_arc_defaults_to_30_when_dates_absent(self):
-        """When observation dates are None, arc_days defaults to 30.0."""
-        menu = self._make_menu()
-        neo_data = self._make_neo_data()  # no dates
-
-        captured_arc = []
-
-        def fake_calc(**kwargs):
-            captured_arc.append(kwargs.get("observation_arc_days", -1))
-            result = MagicMock()
-            result.collision_probability = 1e-10
-            result.probability_uncertainty = (0.0, 0.0)
-            result.torino_scale = 0
-            result.palermo_scale_technical = -10
-            result.most_probable_impact_time = None
-            result.impact_energy_mt = None
-            result.crater_diameter_km = None
-            result.moon_impact_probability = {}
-            result.data_arc_years = 30.0
-            result.calculation_confidence = 0.9
-            result.risk_factors = []
-            result.assumptions = []
-            result.limitations = []
-            return result
-
-        with patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
-             patch.object(menu, "_ask", return_value="TEST1"), \
-             patch.object(menu, "_display_impact_result"), \
-             patch.object(menu, "_persist_impact_result_async"), \
-             patch("aneos_core.analysis.impact_probability.ImpactProbabilityCalculator"
-                   ".calculate_comprehensive_impact_probability",
-                   side_effect=fake_calc):
-            menu._impact_assessment()
-
-        assert captured_arc, "calculate_comprehensive_impact_probability never called"
-        assert captured_arc[0] == pytest.approx(30.0, abs=0.1), (
-            f"Expected default 30.0, got {captured_arc[0]}"
-        )
+    def test_missing_dates_remain_unavailable_not_30_day_default(self):
+        from aneos_core.analysis.impact_enhanced_pipeline import ImpactEnhancedPipeline
+        from aneos_core.data.models import NEOData
+        from unittest.mock import Mock
+        pipeline = ImpactEnhancedPipeline(Mock())
+        assert pipeline._estimate_observation_arc_length(Mock(data_quality_score=.9),NEOData("99942")) is None
 
 
 # ===========================================================================

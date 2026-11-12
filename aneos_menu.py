@@ -3495,28 +3495,14 @@ class ANEOSMenu(ANEOSMenuBase):
         return categorized
     
     def _has_impact_risk_indicators(self, obj):
-        """Check if object has potential impact risk indicators."""
+        """A source-listed event flag, not a geometric/origin-based risk claim."""
+        from aneos_core.analysis.impact_evidence import require_sentry_report
         try:
-            orbital = obj.orbital_elements or {}
-            
-            # Check for Earth-crossing or potentially hazardous characteristics
-            perihelion = orbital.get('q', orbital.get('perihelion_distance', 1.0))
-            aphelion = orbital.get('Q', orbital.get('aphelion_distance', 1.0))
-            
-            # Earth-crossing orbit indicators
-            earth_crossing = perihelion < 1.0 and aphelion > 1.0
-            
-            # Close approach indicators (if available)
-            close_approaches = getattr(obj, 'close_approaches', [])
-            has_close_approach = any(
-                approach.get('distance', 999) < 0.05  # < 0.05 AU
-                for approach in (close_approaches or [])
-            )
-            
-            return earth_crossing or has_close_approach
-        except:
+            report = require_sentry_report(getattr(obj, 'impact_evidence', None), obj.designation)
+            return report['status'] == 'available' and report['collision_probability'] is not None and report['collision_probability'] > 0
+        except (AttributeError, ValueError):
             return False
-    
+
     def _create_category_summary(self, categorized):
         """Create summary statistics for categories."""
         total = sum(len(cat) for cat in categorized.values())
@@ -3591,21 +3577,9 @@ class ANEOSMenu(ANEOSMenuBase):
             return "Limited"
     
     def _assess_impact_risk(self, obj):
-        """Assess impact risk level for object."""
-        try:
-            if self._has_impact_risk_indicators(obj):
-                # Check artificial probability for enhanced risk
-                if obj.artificial_probability > 0.5:
-                    return "HIGH"
-                else:
-                    return "MED"
-            elif obj.artificial_probability > 0.7:
-                return "WATCH"
-            else:
-                return "LOW"
-        except:
-            return "UNK"
-    
+        """No origin score/geometric proxy is a fitted impact-risk assessment."""
+        return 'NOT_ASSESSED'
+
     def _get_data_sources_summary(self, obj):
         """Get summary of data sources used."""
         try:
@@ -3791,7 +3765,7 @@ class ANEOSMenu(ANEOSMenuBase):
         category_info = {
             'artificial': ('🛸 Artificial', 'CRITICAL', 'Sigma-5 confirmed artificial objects'),
             'suspicious': ('⚠️ Suspicious', 'HIGH', 'High probability artificial candidates'),
-            'impact_risk': ('💥 Impact Risk', 'HIGH', 'Potential Earth impact trajectory'),
+            'impact_risk': ('Source-listed event', 'NOT_ASSESSED', 'Inspect dated Sentry evidence; no local risk classification'),
             'edge_case': ('❓ Edge Case', 'MEDIUM', 'Uncertain classification requiring review'),
             'natural': ('🌍 Natural', 'LOW', 'Confirmed natural objects')
         }

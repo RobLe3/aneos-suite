@@ -2461,3 +2461,46 @@ Replay hashes are consistency checks, not source authentication. Names/aliases,
 cross-process cache reuse, durable source/case/job history, independent local fits
 and the remaining legacy menu/library/impact-pipeline claims remain open. No new
 bounded context, UI, scientific solver or five-sigma permission is created.
+
+### ADR-075: Impact entry-point separation and verified local evidence archive
+
+**Status:** Implemented/integrated on draft remediation branch; bounded offline
+engineering/scenario/restart controls. Not fitted impact/origin validation or a
+complete durable job/case system. 2026-11-12; issues #32/#6/#12/#13/#15/#17.
+
+**Context:** REST's Sentry correction did not repair V2 menu default arcs, null-to-zero
+browser/export paths, estimated Torino classes, daemon writes of impact probability
+into origin-score DB columns, or enhanced-impact quality/origin proxies. The direct
+calculator still described hand-set geometric/arc factors as scientific probability,
+confidence and confidence intervals. Empty domain records claimed negligible risk.
+
+**Decision:** Menu and enhanced-impact wrapper consume the same replay/identity-bound
+Sentry report as REST. Explicit requested lookups are not suppressed or promoted by
+origin scores, geometric overlap or quality-to-duration proxies. Source failure,
+invalid evidence, not-requested state and failed persistence remain separate.
+Screening results are preserved; source evidence is not fused into origin confidence.
+
+Keep the former probability entry-point name, but fail explicitly with a controlled
+deprecation. Retain private formulas and an explicitly named legacy diagnostic replay
+with supplied scenario arc and labelled nonprobability scalars. Preserve useful
+conditional kinetic-energy calculation with explicit supplied mass/speed, units,
+nonrelativistic assumptions and no guessed density, encounter, risk or damage model.
+Missing domain values become null/not-assessed, not zero/negligible. No local Torino
+estimate is produced from arbitrary probability/energy inputs.
+
+Synchronous local archive confirmation replaces V2 impact daemon DB writes. The
+existing Reporting boundary owns append-only content-addressed report snapshots:
+verify/replay, write/fsync a private staging file, atomic no-replace link, fsync the
+directory, then read/replay before confirmation. Existing files are never overwritten;
+corruption blocks rather than triggers destructive repair. Same-ID repeat is idempotent;
+new dates yield separate snapshots. Browser/JSON/CSV retain source/report identity and
+nulls; menu export uses exclusive creation and has no overwriting fallback.
+
+**Verification boundary:** whole selected offline suite now denies unmarked DNS/socket
+attempts and fails even when application code catches them. A child-pytest denial and
+explicit local-network positive control verify this gate. Old mock seams are migrated,
+not skipped. The API enqueue tests test enqueue/status transport only; real background
+network analysis and durable execution remain #6/#15, not certified by those tests.
+
+No new UI, solver or bounded context. See `docs/engineering/impact-entrypoint-contract.md`
+for archive filesystem/rollback limits, changed tests and exact scoped evidence.

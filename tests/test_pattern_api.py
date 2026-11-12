@@ -16,6 +16,16 @@ def client():
     return TestClient(create_app())
 
 
+@pytest.fixture(autouse=True)
+def enqueue_only_worker(monkeypatch):
+    """These tests cover submission/status shape, not live population execution."""
+    from unittest.mock import Mock
+    from aneos_api.endpoints import analysis
+    worker = Mock()
+    monkeypatch.setattr(analysis, '_run_network_analysis', worker)
+    return worker
+
+
 class TestNetworkEndpointValidation:
     def test_empty_designations_returns_422(self, client):
         r = client.post("/api/v1/analysis/analyze/network",

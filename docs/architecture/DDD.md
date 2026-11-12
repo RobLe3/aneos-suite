@@ -1237,3 +1237,18 @@ failure, actual application routing and frozen capture replay. **Not established
 local impact probability/calibration, legacy menu/core enhanced-impact correctness,
 full alias resolution, distributed cache, durable cases/jobs, or readiness for
 planetary-defense decisions. No new bounded context is introduced; #32 stays open.
+
+## Impact entry points and local evidence snapshots — 2026-11-12 (ADR-075)
+
+Impact Assessment is not authority to infer risk from origin scores, orbit geometry
+or data-quality duration proxies. Menu/enhanced entry points now use Data Acquisition's
+scoped Sentry evidence contract and preserve independent screening state. Source,
+validation and persistence statuses have separate meanings. Legacy numerical/scenario
+research is not a fitted impact solver; absent domain values remain unavailable.
+
+Reporting owns immutable local source-report snapshots and explicit save confirmation,
+not probability values written into origin-score database fields. File atomicity and
+local restart read-back are bounded engineering evidence, not durable job scheduling,
+full case lifecycle, backups, distributed storage or independently validated science.
+No new bounded context is required. Restored/get-by-ID evidence must replay against its
+source input; a complete case history/workflow and API-wide persistence remain open.

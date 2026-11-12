@@ -688,10 +688,10 @@ class PhysicalProperties:
 @dataclass
 class ImpactAssessment:
     """
-    Comprehensive Earth impact probability assessment for a NEO.
-    
-    This model encapsulates all impact-related calculations and provides
-    scientific rationale for impact risk evaluation.
+    Legacy impact record container, not evidence of a fitted scientific model.
+
+    Empty fields remain unavailable/not-assessed. Scoped source evidence uses the
+    replayable Sentry report contract, not this record's presence or defaults.
     """
     
     designation: str
@@ -699,14 +699,14 @@ class ImpactAssessment:
     last_updated: datetime = field(default_factory=_utcnow)
     
     # Core impact metrics
-    collision_probability: float = 0.0  # Overall probability of Earth impact
-    collision_probability_per_year: float = 0.0  # Annual impact rate
+    collision_probability: Optional[float] = None  # Overall probability of Earth impact
+    collision_probability_per_year: Optional[float] = None  # Annual impact rate
     time_to_impact_years: Optional[float] = None  # Most probable impact time
     
     # Uncertainty and confidence
-    probability_uncertainty: Tuple[float, float] = (0.0, 0.0)  # (lower, upper bounds)
-    calculation_confidence: float = 0.0  # 0-1, quality of calculation
-    data_arc_years: float = 0.0  # Observation arc length
+    probability_uncertainty: Optional[Tuple[float, float]] = None  # (lower, upper bounds)
+    calculation_confidence: Optional[float] = None  # 0-1, quality of calculation
+    data_arc_years: Optional[float] = None  # Observation arc length
     
     # Physical impact assessment
     impact_energy_mt: Optional[float] = None  # Megatons TNT equivalent
@@ -732,8 +732,8 @@ class ImpactAssessment:
     limitations: List[str] = field(default_factory=list)
     
     # Risk classification
-    risk_level: str = "negligible"  # negligible, very_low, low, moderate, high, extreme
-    comparative_risk: str = "Much lower than everyday risks"
+    risk_level: str = "not_assessed"  # negligible, very_low, low, moderate, high, extreme
+    comparative_risk: Optional[str] = None
     
     # Moon impact assessment
     moon_collision_probability: Optional[float] = None  # Probability of Moon impact
@@ -743,10 +743,10 @@ class ImpactAssessment:
     
     def __post_init__(self):
         """Validate impact assessment data."""
-        if not (0 <= self.collision_probability <= 1):
+        if self.collision_probability is not None and not (0 <= self.collision_probability <= 1):
             raise ValueError(f"Collision probability {self.collision_probability} must be in [0,1]")
         
-        if not (0 <= self.calculation_confidence <= 1):
+        if self.calculation_confidence is not None and not (0 <= self.calculation_confidence <= 1):
             raise ValueError(f"Calculation confidence {self.calculation_confidence} must be in [0,1]")
         
         # Ensure last_updated is UTC-aware
@@ -765,7 +765,7 @@ class ImpactAssessment:
             "time_to_impact_years": self.time_to_impact_years,
             
             # Uncertainty
-            "probability_uncertainty": list(self.probability_uncertainty),
+            "probability_uncertainty": list(self.probability_uncertainty) if self.probability_uncertainty is not None else None,
             "calculation_confidence": self.calculation_confidence,
             "data_arc_years": self.data_arc_years,
             
@@ -813,7 +813,7 @@ class ImpactAssessment:
             last_updated = _utcnow()
         
         # Handle tuple conversion
-        uncertainty = data.get("probability_uncertainty", [0.0, 0.0])
+        uncertainty = data.get("probability_uncertainty")
         if isinstance(uncertainty, list):
             uncertainty = tuple(uncertainty)
         
@@ -826,13 +826,13 @@ class ImpactAssessment:
             calculation_method=data.get("calculation_method", "unknown"),
             last_updated=last_updated,
             
-            collision_probability=data.get("collision_probability", 0.0),
-            collision_probability_per_year=data.get("collision_probability_per_year", 0.0),
+            collision_probability=data.get("collision_probability"),
+            collision_probability_per_year=data.get("collision_probability_per_year"),
             time_to_impact_years=data.get("time_to_impact_years"),
             
             probability_uncertainty=uncertainty,
-            calculation_confidence=data.get("calculation_confidence", 0.0),
-            data_arc_years=data.get("data_arc_years", 0.0),
+            calculation_confidence=data.get("calculation_confidence"),
+            data_arc_years=data.get("data_arc_years"),
             
             impact_energy_mt=data.get("impact_energy_mt"),
             impact_velocity_km_s=data.get("impact_velocity_km_s"),
@@ -851,8 +851,8 @@ class ImpactAssessment:
             calculation_assumptions=data.get("calculation_assumptions", []),
             limitations=data.get("limitations", []),
             
-            risk_level=data.get("risk_level", "negligible"),
-            comparative_risk=data.get("comparative_risk", "Much lower than everyday risks"),
+            risk_level=data.get("risk_level", "not_assessed"),
+            comparative_risk=data.get("comparative_risk"),
             
             moon_collision_probability=data.get("moon_collision_probability"),
             moon_impact_energy_mt=data.get("moon_impact_energy_mt"),

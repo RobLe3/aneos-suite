@@ -4,12 +4,19 @@
 
 **v1.2.2 | Research Platform | Phase 24: bug fixes, input validation, endpoint wiring | 2026-03-11**
 
-aNEOS is an open-source Python research platform with two independent missions:
+aNEOS is a Python research platform for:
 
-1. **Artificial NEO Detection** -- statistical screening of Near Earth Objects for signatures inconsistent with natural dynamics, using a Bayesian multi-modal framework calibrated against confirmed artificial heliocentric objects.
-2. **Planetary Defense Assessment** -- comprehensive Earth and Moon impact probability calculation with energy, crater, and risk-period estimation.
+1. **NEO candidate screening:** reproducible, uncalibrated anomaly ranking. It does
+   not establish natural, human-made or extraterrestrial origin.
+2. **Impact research support:** scoped external JPL Sentry evidence and explicitly
+   conditional physical scenarios, not a validated local Earth/Moon risk solver.
 
-> **Honest scope statement**: aNEOS is a research tool, not an operational space-surveillance system. All results require independent verification through peer review, telescope follow-up, or comparison with authoritative catalogues (JPL Scout, ESA NEOCC). See [Capabilities and Limitations](#capabilities-and-limitations) before citing results.
+> **Current contract:** this review branch does not provide independently calibrated
+> origin probabilities, FDR estimates or five-sigma discovery significance. Earlier
+> numerical examples and aspirational capability descriptions below are not current
+> scientific validation. Follow the scoped engineering reports and ADR-065–075;
+> remaining work is tracked in [programme #2](https://github.com/RobLe3/aneos-suite/issues/2).
+> This is not an operational warning or planetary-defense decision service.
 
 ---
 
@@ -19,22 +26,21 @@ The **Fermi Paradox** asks a deceptively simple question: given the age and scal
 
 Most proposed resolutions fall into two camps: either civilisations are rare or short-lived (the "rare Earth" and "great filter" families), or the universe is populated but we are not looking in the right places or with the right instruments (the "dark forest", "zoo", and "artefact" families).
 
-aNEOS is built on a specific, testable version of the second camp.
+This is a long-term research motivation, not an established capability of aNEOS.
+An anomalous catalogue entry may reflect natural physics, uncertain measurements,
+a fitting artifact or human technology. Screening alone cannot distinguish these
+explanations, much less establish extraterrestrial origin.
 
-**The core argument:**
+Even a properly calibrated five-sigma result would concern a specified statistical
+null model; it would not identify an object's origin. Hypotheses need comparable
+observations, physical fits, uncertainty and independent checks. A credible natural
+explanation or an unresolved result is a useful outcome. Results from a bounded
+screening population cannot settle the Fermi Paradox.
 
-The solar system's Near Earth Object catalogue contains tens of thousands of rocky bodies whose orbits have been measured with high precision. We know, with certainty, that at least four human-made spacecraft currently orbit the Sun disguised as asteroids -- they were classified as natural objects by automated surveys before their artificial origin was recognised through anomaly detection. If human technology from the 1960s and 2018 can produce heliocentric objects indistinguishable from asteroids, then any sufficiently advanced technology could do the same. And if it did, those objects would already be in our catalogues, waiting to be identified.
-
-The Fermi Paradox is partly an argument from silence: "we see no engineered objects, therefore none exist." But until aNEOS, no systematic, statistically rigorous tool existed to check whether the NEO catalogue already contains such objects. The silence has not been tested -- it has been assumed.
-
-**What falsification looks like:**
-
-- If aNEOS screens the entire known NEO population and every single object is consistent with natural dynamics at a credible confidence level, that is a genuine, quantified data point supporting the "rare Earth" resolutions.
-- If even one object survives the full validation pipeline (sigma >= 5, Bayesian posterior above threshold, all known natural explanations ruled out by follow-up observation), that is a direct counterexample to the observational premise of the Fermi Paradox -- and the first physical evidence of extraterrestrial technology.
-
-Neither outcome is assumed. The goal is to make the question answerable with existing data.
-
-aNEOS is the first open-source implementation of this programme. See `docs/scientific/theory.md` for the full scientific framing and `docs/scientific/VALIDATION_INTEGRITY.md` for an honest account of current limitations.
+The current reference investigation is hypothesis-neutral 1998 KY26 research. Its
+engineering/scientific requirements are tracked in programme #2 and the versioned
+case-study register; most observational fitting and independent evaluation remain
+unfinished. See `docs/scientific/VALIDATION_INTEGRITY.md`.
 
 ---
 
@@ -60,7 +66,7 @@ aNEOS is the first open-source implementation of this programme. See `docs/scien
 - [Classify a known artificial object](#2-classify-a-known-artificial-object)
 - [Multi-evidence verbose breakdown](#3-run-multi-evidence-analysis-with-verbose-breakdown)
 - [Batch-screen a list](#4-batch-screen-a-list-of-neos-with-progress-bar)
-- [Impact probability](#5-get-impact-probability-for-apophis)
+- [Scoped impact evidence](#5-inspect-scoped-impact-evidence)
 - [10-year orbital history](#6-view-10-year-orbital-history)
 - [200-year historical pipeline](#7-run-the-200-year-historical-pipeline)
 - [Population clustering and harmonics](#8-screen-a-population-for-clustering-and-harmonics)
@@ -92,57 +98,49 @@ aNEOS is the first open-source implementation of this programme. See `docs/scien
 
 ## Part 1: What is aNEOS?
 
-Space agencies and astronomers track tens of thousands of **Near Earth Objects (NEOs)**,
-asteroids and comets whose orbits bring them close to Earth. Most are natural rocks following
-paths governed entirely by gravity. A small number of confirmed objects are actually
-human-made spacecraft, such as the Tesla Roadster launched by SpaceX in 2018 or rocket
-upper stages left over from Apollo-era missions, that orbit the Sun just like asteroids do.
+**Near Earth Objects (NEOs)** include asteroids and comets with orbits near Earth's.
+Catalogue investigations can also encounter human-made objects. Origin needs
+object-specific evidence rather than a name match or anomaly threshold.
 
 aNEOS asks two questions about any object in those catalogues:
 
 **Question 1: Does this object behave like a natural rock?**
 
-The software downloads publicly available orbital data from NASA's JPL database, measures six
-different properties of the object's path around the Sun, and compares each against the
-known population of natural NEOs. If the object's orbit, size, brightness, or approach pattern
-is statistically unusual, it receives a higher "sigma score". The three confirmed artificial
-objects in our test set all score above sigma 5, the same threshold astronomers use to claim
-a scientific discovery. All natural asteroids tested score below sigma 3.
+The software acquires typed public-catalogue evidence and compares available
+features to produce an uncalibrated screening rank.
+A high rank can motivate follow-up; it is not Gaussian significance or an origin
+probability. Natural processes, source/measurement uncertainty and technological
+hypotheses require separate compatible observational models. Independent controls,
+calibration and held-out evaluation remain unfinished.
 
-This does **not** mean aNEOS can detect alien spacecraft. It means it can flag objects whose
-behaviour is inconsistent with what we expect from rocks shaped only by gravity. Human-made
-spacecraft are the only known cause of such anomalies, and even then the software assigns
-only a 3 to 4% probability of being artificial, the realistic ceiling given what orbital data
-alone can tell us. Confirming artificial origin requires telescope or radar follow-up.
+**Question 2: What impact evidence is available?**
 
-**Question 2: Could this object hit the Earth or Moon?**
+The existing REST impact route, V2 menu and impact-enhanced wrapper can retrieve
+scoped JPL Sentry object evidence: source method, listed virtual impactors, dates,
+probabilities and uncertainty limitations. Unlisted/removed/source-failed outcomes
+are distinct and do not mean zero risk. No lunar probability, confidence interval,
+local Torino class, damage or risk-period model is invented from catalogue elements.
 
-For any named object, aNEOS calculates the probability of a collision with Earth and with the
-Moon, estimates how much energy the impact would release (in megatons of TNT), how large a
-crater it would leave, and which decade carries the highest risk. It also identifies
-"gravitational keyholes" (narrow windows in space where a close approach could nudge an
-object onto a future impact trajectory).
+A separate explicit conditional energy function computes classical kinetic energy
+from caller-supplied mass and speed. That scenario is not a predicted collision,
+measured input or validated damage model. Legacy geometric/arc formula replay is
+retained only as labelled unvalidated diagnostics; its former scientific-probability
+entry point raises a controlled-deprecation error.
 
-**How deep does it go?**
+**Evidence and limits**
 
-- Data is fetched live from four NASA/ESA sources (JPL SBDB, JPL Horizons, NEODyS, MPC).
-- The detection framework has been validated against 4 confirmed artificial objects (2020 SO,
-  J002E3, WT1190F, Tesla Roadster-type) and 6+ natural NEOs.
-- A **Kardashev synthetic training corpus** generates 2 100+ labelled artificial signatures
-  across 14 scenarios from K0.5 (rocket stages, ion probes) to K2.0 (megastructure fragments),
-  training a RandomForest classifier that achieves AUC=1.000 on the ground-truth test set.
-- The primary discriminating feature is **density** (hollow vs rocky), followed by albedo
-  and non-gravitational acceleration magnitude.
-- A full REST API lets other software query aNEOS programmatically.
-- 360 automated tests verify the system works correctly end to end.
+Typed provider acquisition, shared screening/report transport and scoped Sentry
+source integration have regression controls. Those tests do not establish real-world
+origin-detection accuracy or a local impact model. Synthetic training/evaluation is
+not independent scientific validation. Current counts, commands and remaining gaps
+are recorded in the engineering reports rather than fixed historical test totals.
 
 ### What it is not
 
-aNEOS is a research platform built by an independent developer. It is not affiliated with
-NASA, ESA, or any space agency. It does not have access to classified data, telescope feeds,
-or radar measurements. Its impact probability numbers are research-grade estimates, useful
-for screening and prioritisation, but not a replacement for the authoritative calculations
-produced by JPL Sentry or ESA NEOCC.
+aNEOS is independent research software, not an agency service or an operational
+space-surveillance/impact-warning system. Catalogue/model outputs carry their source
+scope and limitations. It does not replace authoritative monitoring, observational
+follow-up or independent scientific review.
 
 [Back to top](#top)
 
@@ -205,17 +203,14 @@ All items below are implemented, tested (360 unit + integration tests pass / 0 f
 
 | Capability | Status | Notes |
 |---|---|---|
-| Earth collision probability | Working | Gravitational focusing, orbital integration |
-| Moon collision probability | Working | Lunar cross-section, Earth vs Moon ratio |
-| Impact energy (megatons TNT) | Working | Kinetic energy from velocity + mass |
-| Crater diameter (km) | Working | Pi-scaling relations |
-| Damage radius (km) | Working | Simplified energy-scaling |
-| Gravitational keyhole analysis | Working | Close-approach resonance detection |
-| Peak risk period (decade) | Working | Time-resolved probability evolution |
-| Probability uncertainty bounds | Working | `[lower, upper]` confidence interval |
-| Primary risk factors list | Working | Human-readable scientific rationale |
-| Real arc days from SBDB observation dates | Working (Phase 17) | `first_obs`/`last_obs` parsed from SBDB orbit block |
-| `GET /impact` REST endpoint | Working | 16-field `ImpactResponse` |
+| Scoped Earth-event model output | Integrated, source-dependent | JPL Sentry method/events/dates and material uncertainty; not a local fit |
+| Moon collision probability | Not implemented as a validated model | Null, not zero risk |
+| Conditional kinetic energy | Implemented, explicit supplied scenario | Mass kg, speed km/s; no probability/damage inference |
+| Legacy crater/damage/arc formulas | Unvalidated diagnostics only | No current scientific-risk claim |
+| Local keyhole/peak-risk/interval/confidence model | Not validated | Do not use prototype outputs as fitted probability/CI |
+| Observation arc inventory | Actual dated inputs only | No quality-score-to-days or 30-day missing-value default |
+| REST/V2 menu/enhanced impact wrapper | Shared scoped source | JSON/Markdown evidence; origin screening remains separate |
+| Menu/enhanced report archive | Local append-only snapshots | Verified writes, restart read-back; not a durable job queue/case workflow |
 
 ### Population and Polling (BC11)
 
@@ -325,26 +320,20 @@ Output (Rich progress bar):
   └─────────────────┴──────┴──────────────┴────────────────────────────┘
 ```
 
-### 5. Get impact probability for Apophis
+### 5. Inspect scoped impact evidence
 
-```
+```sh
 python aneos.py
--> Choice: 5 (Impact Probability)
--> Designation: 99942
-
-Output:
-  P(Earth impact)  = 2.31e-05
-  P(Moon impact)   = 1.84e-06
-  Impact energy    = 1,200 MT TNT
-  Crater diameter  = 4.2 km
-  Damage radius    = 38.0 km
-  Peak risk period : 2029-2036
-  Keyholes         : 2
-  Risk factors:
-    * High eccentricity increases velocity at perihelion
-    * 2029 close approach within 32,000 km (sub-lunar)
-    * Resonant return opportunity 2036
+# Choice: 5 (Impact Evidence)
+# Primary number/provisional designation: 1998 KY26
 ```
+
+The result identifies a source outcome and dated evidence, not a default probability.
+The frozen 2026-11-12 KY26 lookup was **not listed**, with null probability and
+not-assessed risk. A future query may differ. Inspect source method, event span and
+limits for an available result; not listed/removed is not zero risk. The V2 menu
+confirms a local archive only after writing and replay verification succeed.
+See [the dated record](docs/case-studies/1998-KY26/sentry/20261112T211912Z/README.md).
 
 ### 6. View 10-year orbital history
 
@@ -424,36 +413,22 @@ curl "http://localhost:8000/api/v1/health"
 
 ```python
 import asyncio
-from aneos_core.data.fetcher import DataFetcher
-from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-from aneos_core.config.settings import ANEOSConfig
+from aneos_core.analysis.pipeline import AnalysisPipeline
+from aneos_core.analysis.impact_evidence import get_sentry_impact_service, render_sentry_markdown
 
-config = ANEOSConfig()
-fetcher = DataFetcher(config)
-manager = DetectionManager(DetectorType.AUTO)
+async def inspect(designation):
+    result = await AnalysisPipeline().analyze_neo(designation)
+    print(result.to_dict())  # Structured screening or an explicit unavailable/error state.
+    report = await asyncio.to_thread(get_sentry_impact_service().assess, designation)
+    print(render_sentry_markdown(report))  # Source-scoped impact evidence, not origin inference.
 
-async def screen(designation: str):
-    neo_data = await asyncio.to_thread(fetcher.fetch_neo_data, designation)
-    result = manager.analyze_neo(
-        designation=designation,
-        orbital_elements=neo_data.orbital_elements.__dict__,
-        additional_data={"physical_data": neo_data.physical_properties.__dict__
-                         if neo_data.physical_properties else {}},
-    )
-    print(f"{designation}: sigma={result.sigma_confidence:.2f}  "
-          f"tier={result.sigma_tier}  P={result.artificial_probability:.4f}")
-
-asyncio.run(screen("99942"))
-# -> 99942: sigma=1.82  tier=INCONCLUSIVE  P=0.0010
-asyncio.run(screen("2020 SO"))
-# -> 2020 SO: sigma=6.97  tier=EXCEPTIONAL  P=0.0367  [spacecraft veto]
+asyncio.run(inspect("1998 KY26"))
 ```
 
-[Back to top](#top)
+Both acquisition paths can fail; callers must handle provider/input errors. Missing
+probability/significance is not zero. This example does not claim durable job
+execution, automatic API-wide report persistence or independent scientific validation.
 
----
-
-## Part 5: Use Cases by Profession
 
 ### Planetary Defense Scientists (NASA PDCO / ESA NEOCC)
 

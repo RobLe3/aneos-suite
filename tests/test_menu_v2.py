@@ -295,16 +295,14 @@ class TestANEOSMenuV2Helpers:
         assert result.get("absolute_magnitude") == pytest.approx(19.7)
 
     def test_rough_torino_low_probability(self):
-        """Very low probability → Torino 0."""
         from aneos_menu_v2 import ANEOSMenuV2
-        label = ANEOSMenuV2._rough_torino(1e-10, None)
-        assert "0" in label
+        with pytest.raises(NotImplementedError, match="source-reported"):
+            ANEOSMenuV2._rough_torino(1e-10, None)
 
     def test_rough_torino_elevated_probability(self):
-        """Elevated probability → non-zero Torino label."""
         from aneos_menu_v2 import ANEOSMenuV2
-        label = ANEOSMenuV2._rough_torino(1e-3, 100.0)
-        assert "0" not in label or "elevated" in label.lower() or "1" in label
+        with pytest.raises(NotImplementedError, match="source-reported"):
+            ANEOSMenuV2._rough_torino(1e-3, 100.)
 
     def test_results_browser_empty_session(self, capsys):
         """_results_browser with no results prints informational message."""
