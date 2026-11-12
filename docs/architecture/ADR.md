@@ -2337,3 +2337,50 @@ or bounded context; core planetary-defense modules are unchanged, not newly
 validated. Remaining standalone analyzer/prototype paths are #30 and the wider
 #6/#12 audit. No independent performance, physical fitting, durability or
 five-sigma permission is introduced.
+
+---
+
+## ADR-072: Withdraw standalone fabricated inputs and unify advanced analysis contracts
+
+**Date:** 2026-11-12
+**Status:** Implemented on review branch; no calibrated scientific/impact model installed
+**Related:** ADR-065–071; issues #2, #6, #12, #17, #30, #32
+
+**Context:** SimpleNEOAnalyzer selected prototype fallback detectors, generated
+hash/name-based orbits and fixed probabilities, synthesized impact inputs and
+reported assumed-prior calculations as calibrated. Advanced analysis misread the
+DataFetcher return contract, fabricated data on failure, used another heuristic
+score and turned origin scores into threat levels. Capability counts/imports
+claimed scientific maturity or statistical validation without supporting artifacts.
+
+**Decision:** Simple/advanced synchronous and asynchronous facades use actual typed
+core acquisition/shared screening and the same replayable report. Supplied raw
+inputs remain a separate caller-supplied mode: missing fields are not supplemented
+by fetched defaults, aliases/units/time conventions are checked, and the caller
+record is retained with its verification limits. Invalid/non-JSON/nonfinite inputs
+are rejected, not converted to zeros or hash-derived orbits. Unsupported per-call
+source filtering raises explicitly instead of claiming the requested selection.
+
+Keep public names, but controlled-deprecate scalar origin probabilities, mock
+input generation, fixed calibration and prototype enrichment/inference. Nullable
+unified-result fields preserve unavailable probability, confidence, quality and
+significance. Return structured screening, not a best-detector cascade. A running
+async event loop must use the async method rather than a nested sync fallback.
+
+Impact bridges inventory actual orbit/covariance/dated-arc inputs and identify
+missing observational/propagation/encounter-model prerequisites. They do not call
+unfitted probability heuristics, assign negligible risk or infer maneuvers from
+origin rank. Core impact/scenario calculators remain available and unchanged;
+remaining REST/menu impact claims are explicitly #32, not certified by this change.
+
+Capabilities distinguish implemented candidate screening/acquisition from provider
+health and scientific validation. Import counts cannot produce maturity, coverage
+or validation probabilities. Existing script command shapes delegate to the shared
+CLI, with no implicit `test` designation. Source failures are nonzero outcomes.
+
+**Evidence/limits:** `docs/engineering/standalone-analysis-contract.md` records
+network-denied library and actual-process controls, source/epoch/missing cases,
+positive candidates, native A3/covariance transport and unavailable impact input
+inventories. No new detector, scientific engine, bounded context or UI. No new
+observational fit, independent calibration/performance, durable case history or
+five-sigma permission. No prior tests or acceptance gates are weakened.

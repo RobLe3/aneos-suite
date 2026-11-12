@@ -1,18 +1,7 @@
-"""
-Unified aNEOS Analysis Interface - Goal-Aligned Naming Convention
+"""Compatibility analysis contracts with nullable scientific inference.
 
-This interface provides standardized, goal-aligned method names and ensures
-the most advanced aNEOS capabilities are used across all components.
-
-Naming Convention:
-- analyze_neo_*: Core analysis functions
-- detect_artificial_*: Detection-specific functions  
-- assess_*: Assessment and validation functions
-- fetch_neo_*: Data fetching functions
-- enrich_neo_*: Data enrichment functions
-- validate_*: Validation functions
-- calculate_*: Mathematical calculations
-- generate_*: Report/result generation
+Historical method names describe interfaces, not installed physical/null models.
+Implementation inventory is separate from provider health and scientific validity.
 """
 
 from abc import ABC, abstractmethod
@@ -31,6 +20,7 @@ from .detection import DetectionResult, ArtificialNEODetector
 
 class AnalysisCapability(Enum):
     """aNEOS analysis capabilities."""
+    CANDIDATE_SCREENING = "candidate_screening"
     ARTIFICIAL_DETECTION = "artificial_detection"
     ORBITAL_ANALYSIS = "orbital_analysis"
     PHYSICAL_ANALYSIS = "physical_analysis"
@@ -47,11 +37,11 @@ class aNEOSAnalysisResult:
     
     # Core identification (required fields first)
     designation: str
-    is_artificial: bool
-    artificial_probability: float
-    confidence_level: float
-    classification: str  # natural, suspicious, highly_suspicious, artificial
-    risk_assessment: str  # low, moderate, high, critical
+    is_artificial: Optional[bool]
+    artificial_probability: Optional[float]
+    confidence_level: Optional[float]
+    classification: str  # follow-up screening status, not origin
+    risk_assessment: str  # not_assessed without a scoped impact model
     
     # Optional fields with defaults
     analysis_timestamp: Optional[datetime] = None
@@ -69,8 +59,8 @@ class aNEOSAnalysisResult:
     anomaly_indicators: List[str] = None
     
     # Quality metrics
-    data_completeness: float = 0.0
-    analysis_quality: float = 0.0
+    data_completeness: Optional[float] = None
+    analysis_quality: Optional[float] = None
     validation_status: str = "pending"
     
     # Source information
@@ -80,11 +70,29 @@ class aNEOSAnalysisResult:
     
     # Metadata
     processing_time_ms: float = 0.0
-    cache_status: str = "miss"
+    cache_status: str = "not_reported"
     metadata: Dict[str, Any] = None
     
+    screening_assessment: Optional[Dict[str, Any]] = None
+    neo_data: Any = None
+    status: str = 'inconclusive'
+    errors: Optional[List[str]] = None
+    impact_assessment: Optional[Dict[str, Any]] = None
+    data_quality: Optional[Dict[str, Any]] = None
+
+    @property
+    def screening_score(self):
+        return (self.screening_assessment or {}).get('screening_score')
+
+    @property
+    def analysis_metadata(self):
+        return {**(self.screening_assessment or {}).get('analysis_metadata', {}),
+                **(self.metadata or {})}
+
     def __post_init__(self):
         """Post-initialization setup."""
+        if self.errors is None:
+            self.errors = []
         if self.risk_factors is None:
             self.risk_factors = []
         if self.evidence_sources is None:
@@ -103,8 +111,8 @@ class aNEOSAnalysisInterface(ABC):
     """
     Unified aNEOS Analysis Interface - Goal-Aligned Design
     
-    This interface ensures all aNEOS components use consistent, goal-aligned
-    naming conventions and provide access to the most advanced capabilities.
+    This interface standardizes transport; historical method names do not
+    imply that physical/null models or independent validation are installed.
     """
     
     @abstractmethod
@@ -114,7 +122,7 @@ class aNEOSAnalysisInterface(ABC):
                                  physical_data: Optional[Dict[str, Any]] = None,
                                  enrichment_sources: Optional[List[str]] = None) -> aNEOSAnalysisResult:
         """
-        Perform comprehensive NEO analysis using most advanced aNEOS capabilities.
+        Perform structured candidate screening with explicit unavailable inference.
         
         Args:
             designation: NEO designation
@@ -132,10 +140,9 @@ class aNEOSAnalysisInterface(ABC):
                                    orbital_elements: Dict[str, Any],
                                    physical_data: Optional[Dict[str, Any]] = None) -> DetectionResult:
         """
-        Detect artificial signatures using most advanced detection algorithms.
-        
-        Uses MultiModal Sigma5 detection when available, falls back to production
-        or corrected detectors as needed.
+        Screen supplied evidence without interpreting ranking as origin probability.
+
+        An unavailable source/model cannot select a prototype fallback detector.
         """
         pass
     
@@ -144,7 +151,7 @@ class aNEOSAnalysisInterface(ABC):
         """
         Assess threat level based on comprehensive analysis.
         
-        Returns: "low", "moderate", "high", "critical"
+        Returns "not_assessed" without an appropriate scoped impact model.
         """
         pass
     
@@ -154,7 +161,7 @@ class aNEOSAnalysisInterface(ABC):
         """
         Fetch NEO data from multiple authoritative sources.
         
-        Uses NASA CAD, SBDB, MPC, NEODyS with intelligent fallback.
+        Use typed acquisition; unsupported per-call selection must not be silently ignored.
         """
         pass
     
@@ -173,7 +180,7 @@ class aNEOSAnalysisInterface(ABC):
         pass
     
     @abstractmethod
-    def calculate_anomaly_score_advanced(self, neo_data: Dict[str, Any]) -> float:
+    def calculate_anomaly_score_advanced(self, neo_data: Dict[str, Any]) -> Optional[float]:
         """
         Calculate advanced anomaly score using sophisticated algorithms.
         """
@@ -188,103 +195,62 @@ class aNEOSAnalysisInterface(ABC):
 
 
 class AdvancedaNEOSCapabilities:
-    """
-    Advanced aNEOS Capabilities Manager
-    
-    Ensures the most sophisticated aNEOS features are available and properly
-    configured for maximum detection and analysis capability.
-    """
-    
+    """Implementation inventory, explicitly not provider health/model validation."""
     def __init__(self):
-        self.capabilities = {}
+        self.capabilities = {cap:False for cap in AnalysisCapability}
+        self.component_inventory = {}
         self._initialize_advanced_capabilities()
-    
+
     def _initialize_advanced_capabilities(self):
-        """Initialize all advanced aNEOS capabilities."""
-        capabilities = [
-            self._initialize_multimodal_detection,
-            self._initialize_historical_analysis,
-            self._initialize_validation_framework,
-            self._initialize_multi_source_enrichment,
-            self._initialize_real_time_monitoring,
-            self._initialize_statistical_analysis
-        ]
-        
-        for capability_init in capabilities:
-            try:
-                capability_init()
-            except Exception as e:
-                # Log but don't fail - graceful degradation
-                pass
-    
+        try:
+            from ..analysis.screening import ScreeningAnalysisService
+            ScreeningAnalysisService()
+            self.capabilities[AnalysisCapability.CANDIDATE_SCREENING] = True
+            self.component_inventory['candidate_screening'] = 'initialized_uncalibrated'
+        except ImportError:
+            self.component_inventory['candidate_screening'] = 'unavailable'
+        self._initialize_multimodal_detection()
+        self._initialize_historical_analysis()
+        self._initialize_validation_framework()
+        self._initialize_multi_source_enrichment()
+        self._initialize_real_time_monitoring()
+        self._initialize_statistical_analysis()
+
     def _initialize_multimodal_detection(self):
-        """Initialize MultiModal Sigma5 detection capabilities."""
-        try:
-            from ..detection.detection_manager import get_detection_manager, DetectorType
-            self.detection_manager = get_detection_manager(DetectorType.MULTIMODAL)
-            self.capabilities[AnalysisCapability.ARTIFICIAL_DETECTION] = True
-        except ImportError:
-            self.capabilities[AnalysisCapability.ARTIFICIAL_DETECTION] = False
-    
+        self.capabilities[AnalysisCapability.ARTIFICIAL_DETECTION] = False
+        self.component_inventory['origin_model'] = 'not_installed'
+
     def _initialize_historical_analysis(self):
-        """Initialize historical analysis capabilities."""
-        try:
-            from ..polling.historical_chunked_poller import HistoricalChunkedPoller
-            self.capabilities[AnalysisCapability.HISTORICAL_ANALYSIS] = True
-        except ImportError:
-            self.capabilities[AnalysisCapability.HISTORICAL_ANALYSIS] = False
-    
+        self.component_inventory['historical_scientific_validation'] = 'not_established'
+
     def _initialize_validation_framework(self):
-        """Initialize comprehensive validation framework."""
-        try:
-            from ..validation import monte_carlo_false_positive_validation
-            self.capabilities[AnalysisCapability.STATISTICAL_VALIDATION] = True
-        except ImportError:
-            self.capabilities[AnalysisCapability.STATISTICAL_VALIDATION] = False
-    
+        self.capabilities[AnalysisCapability.STATISTICAL_VALIDATION] = False
+        self.component_inventory['required_review'] = 'inventory_not_scientific_validation'
+
     def _initialize_multi_source_enrichment(self):
-        """Initialize multi-source data enrichment."""
         try:
             from ..data.fetcher import DataFetcher
-            self.data_fetcher = DataFetcher()
             self.capabilities[AnalysisCapability.MULTI_SOURCE_ENRICHMENT] = True
+            self.component_inventory['typed_acquisition'] = 'importable_provider_health_not_tested'
         except ImportError:
-            self.capabilities[AnalysisCapability.MULTI_SOURCE_ENRICHMENT] = False
-    
+            self.component_inventory['typed_acquisition'] = 'unavailable'
+
     def _initialize_real_time_monitoring(self):
-        """Initialize real-time monitoring capabilities."""
-        try:
-            # Check for dashboard capabilities
-            self.capabilities[AnalysisCapability.REAL_TIME_MONITORING] = True
-        except ImportError:
-            self.capabilities[AnalysisCapability.REAL_TIME_MONITORING] = False
-    
+        self.component_inventory['monitoring'] = 'not_verified_by_this_inventory'
+
     def _initialize_statistical_analysis(self):
-        """Initialize advanced statistical analysis."""
-        try:
-            # Check for statistical analysis modules
-            self.capabilities[AnalysisCapability.STATISTICAL_VALIDATION] = True
-        except ImportError:
-            self.capabilities[AnalysisCapability.STATISTICAL_VALIDATION] = False
-    
-    def get_available_capabilities(self) -> List[AnalysisCapability]:
-        """Get list of available advanced capabilities."""
-        return [cap for cap, available in self.capabilities.items() if available]
-    
-    def is_capability_available(self, capability: AnalysisCapability) -> bool:
-        """Check if specific capability is available."""
+        self.capabilities[AnalysisCapability.STATISTICAL_VALIDATION] = False
+        self.component_inventory['calibration_artifact'] = 'not_installed'
+
+    def get_available_capabilities(self):
+        return [cap for cap,available in self.capabilities.items() if available]
+
+    def is_capability_available(self, capability):
         return self.capabilities.get(capability, False)
-    
-    def get_recommended_analysis_method(self, neo_data: Dict[str, Any]) -> str:
-        """Recommend best analysis method based on available capabilities and data."""
-        if self.is_capability_available(AnalysisCapability.ARTIFICIAL_DETECTION):
-            if (self.is_capability_available(AnalysisCapability.MULTI_SOURCE_ENRICHMENT) and
-                self.is_capability_available(AnalysisCapability.STATISTICAL_VALIDATION)):
-                return "comprehensive_multimodal"
-            else:
-                return "advanced_detection"
-        else:
-            return "basic_analysis"
+
+    def get_recommended_analysis_method(self, neo_data):
+        return 'canonical_candidate_screening' if self.is_capability_available(
+            AnalysisCapability.CANDIDATE_SCREENING) else 'unavailable'
 
 
 # Global advanced capabilities manager
@@ -298,45 +264,18 @@ def get_advanced_capabilities() -> AdvancedaNEOSCapabilities:
     return _advanced_capabilities
 
 
-def assess_aneos_system_maturity() -> Dict[str, Any]:
-    """
-    Assess the maturity and capability level of the current aNEOS installation.
-    
-    Returns comprehensive system capability assessment.
-    """
+def assess_aneos_system_maturity():
     capabilities = get_advanced_capabilities()
-    available_caps = capabilities.get_available_capabilities()
-    
-    maturity_level = "basic"
-    if len(available_caps) >= 5:
-        maturity_level = "advanced"
-    elif len(available_caps) >= 3:
-        maturity_level = "intermediate"
-    
-    return {
-        "maturity_level": maturity_level,
-        "available_capabilities": [cap.value for cap in available_caps],
-        "total_capabilities": len(available_caps),
-        "max_capabilities": len(AnalysisCapability),
-        "capability_coverage": len(available_caps) / len(AnalysisCapability),
-        "recommended_upgrades": _get_upgrade_recommendations(available_caps)
-    }
+    return {'maturity_level':'research_unvalidated',
+        'available_capabilities':[cap.value for cap in capabilities.get_available_capabilities()],
+        'total_capabilities':len(capabilities.get_available_capabilities()),
+        'max_capabilities':len(AnalysisCapability), 'capability_coverage':None,
+        'availability_semantics':'implemented_components_not_provider_health_or_scientific_validation',
+        'component_inventory':dict(capabilities.component_inventory),
+        'scientific_validation_status':'unavailable', 'five_sigma_claim_permitted':False,
+        'recommended_upgrades':['Independent observational fits, calibration and scientific review required']}
 
 
 def _get_upgrade_recommendations(available_caps: List[AnalysisCapability]) -> List[str]:
     """Get recommendations for capability upgrades."""
-    recommendations = []
-    
-    if AnalysisCapability.ARTIFICIAL_DETECTION not in available_caps:
-        recommendations.append("Install detection framework components")
-    
-    if AnalysisCapability.MULTI_SOURCE_ENRICHMENT not in available_caps:
-        recommendations.append("Configure multi-source data fetching")
-    
-    if AnalysisCapability.STATISTICAL_VALIDATION not in available_caps:
-        recommendations.append("Enable statistical validation modules")
-    
-    if AnalysisCapability.HISTORICAL_ANALYSIS not in available_caps:
-        recommendations.append("Install historical analysis capabilities")
-    
-    return recommendations
+    return ['Independent observational fits, calibration and scientific review are required; installation alone is not validation']

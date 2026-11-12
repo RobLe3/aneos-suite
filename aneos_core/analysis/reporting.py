@@ -28,7 +28,9 @@ def _software_metadata():
         except PackageNotFoundError:
             packages[name] = None
     modules = ['aneos_core/analysis/pipeline.py', 'aneos_core/analysis/screening.py',
-        'aneos_core/analysis/reporting.py', 'aneos_core/data/models.py',
+        'aneos_core/analysis/reporting.py', 'simple_neo_analyzer.py',
+        'aneos_core/analysis/advanced_aneos_analyzer.py', 'aneos_core/analysis/impact_evidence.py',
+        'aneos_core/interfaces/unified_analysis.py', 'aneos_core/data/models.py',
         'aneos_core/data/orbit_evidence.py', 'aneos_core/data/fetcher.py',
         'aneos_core/data/sources/sbdb.py', 'aneos_core/data/sources/horizons.py',
         'aneos_core/detection/validated_sigma5_artificial_neo_detector.py']
@@ -41,7 +43,7 @@ def _software_metadata():
         'limitations':'Source-file hashes describe files at report time, not loaded bytecode, authentication or a complete environment lock. Dirty code must be preserved separately to reproduce it.'}
 
 
-def build_screening_report(result, additional_evidence=None):
+def build_screening_report(result, additional_evidence=None, impact_assessment=None):
     payload = getattr(result, 'screening_assessment', None)
     if payload is None:
         analysis = getattr(result, 'analysis', {}) or {}
@@ -67,6 +69,13 @@ def build_screening_report(result, additional_evidence=None):
     report = {'schema_version':'scientific-screening-report-v1',
         'designation': assessment['designation'] if assessment else getattr(result, 'designation', 'Unknown'),
         'status':status, 'errors':errors, 'screening_assessment':assessment,
+        'classification':assessment['classification'] if assessment else 'INCONCLUSIVE',
+        'is_artificial':None, 'artificial_probability':None, 'confidence_level':None,
+        'confidence':None, 'sigma_statistical_level':None,
+        'risk_assessment':'not_assessed', 'threat_level':'not_assessed',
+        'analysis_method':'canonical_candidate_screening', 'detection_method':'canonical_candidate_screening',
+        'validation_status':'unavailable_uncalibrated',
+        'impact_assessment':copy.deepcopy(impact_assessment),
         'neo_data':neo.to_dict() if neo is not None else None,
         'analysis_metadata':copy.deepcopy(getattr(result, 'analysis_metadata', {}) or {}),
         'data_quality':copy.deepcopy(getattr(result, 'data_quality', {}) or {}),
@@ -94,6 +103,9 @@ def _report_hash(report):
 def verify_screening_report(report):
     if report.get('schema_version') != 'scientific-screening-report-v1' or report.get('report_id') != _report_hash(report):
         raise ValueError('Report fingerprint/schema mismatch')
+    for key in ('is_artificial', 'artificial_probability', 'confidence_level', 'confidence', 'sigma_statistical_level'):
+        if key in report and report[key] is not None:
+            raise ValueError('Unsupported standalone scientific claim in screening report')
     assessment = report.get('screening_assessment')
     if assessment is not None:
         service = ScreeningAnalysisService()
@@ -164,6 +176,12 @@ def render_screening_markdown(report):
     lines += ['- ' + _cell(v) for v in assessment.get('limitations', [])]
     lines += ['- Physical hypothesis fitting and independent scientific validation are not installed.']
     lines += ['- ' + _cell(e) for e in report.get('errors', [])]
+    if report.get('impact_assessment'):
+        impact = report['impact_assessment']
+        lines += ['', '## Impact assessment', '',
+            f"Status: {_cell(impact.get('status'))}",
+            'Collision probability: unavailable; no fitted impact model was run.',
+            'Unavailable is not zero or negligible risk. Origin screening is not an impact assessment.']
     if report.get('additional_evidence'):
         lines += ['', '## Additional evidence', '',
             'Computed ephemerides are not observations or independent origin evidence.', '',

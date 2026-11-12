@@ -1,3 +1,10 @@
+> **ADR-072 review-branch update (2026-11-12):** simple/advanced standalone
+> facades now use actual core screening, nullable inference and no fabricated
+> name/hash/failure fallbacks. Their impact bridge inventories prerequisites,
+> not a fitted probability. Capability counts do not establish maturity.
+> The separate legacy `/impact` REST/menu/core claim surface remains #32.
+> No calibrated significance, independent performance or origin finding follows.
+
 > **ADR-071 review-branch update (2026-11-12):** primary legacy menu and
 > launcher analysis now share actual screening and replayable JSON/Markdown
 > reports. Name-based demos, null-to-natural display and fabricated workflow

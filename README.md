@@ -858,3 +858,29 @@ any dirty source separately. See [the exact scope and limitations](docs/engineer
 The standalone `simple_neo_analyzer.py` and remaining prototype paths are still
 under review in [issue #30](https://github.com/RobLe3/aneos-suite/issues/30); the
 launcher migration does not validate those library APIs or claim five-sigma readiness.
+
+### Standalone facade correction (ADR-072 review branch)
+
+This supersedes the standalone-analyzer warning in the preceding review-branch
+section. `SimpleNEOAnalyzer` and `AdvancedaNEOSAnalyzer` now use actual typed
+acquisition/shared screening, not name/hash-based inputs or a detector fallback.
+The existing standalone commands delegate to the shared CLI:
+
+```sh
+python simple_neo_analyzer.py single "1998 KY26" --json
+python simple_neo_analyzer.py analyze "1998 KY26" --force-refresh
+python simple_neo_analyzer.py status
+```
+
+A designation is required for analysis; there is no implicit demo named `test`.
+Scalar `calculate_artificial_probability` and fabricated/private calibration/input
+contracts raise explicit controlled-deprecation errors; structured reports retain
+probability/confidence/significance as null. Use `await analyzer.analyze_neo_async(...)`
+inside an active event loop. Importable components and capability counts are not
+scientific readiness or provider-health checks.
+
+Impact bridges report actual input/prerequisite availability, not a probability or
+safe verdict. The separate public impact REST/menu/core heuristic contract remains
+[issue #32](https://github.com/RobLe3/aneos-suite/issues/32); core scenario/research
+functions remain available but are not validated by this facade correction.
+[Exact scope, tests and reproduction](docs/engineering/standalone-analysis-contract.md).

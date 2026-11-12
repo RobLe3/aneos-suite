@@ -773,3 +773,20 @@ ranking/full-review/report IDs and scoped runtime metadata. Its checksum detects
 accidental change, not malicious authorship. Current-policy replay verifies the
 assessment, not scientific calibration. Computed ephemeris sidecars are not
 astrometric observations or independent origin evidence.
+
+### Standalone/advanced library contract (ADR-072)
+
+The standalone library/script now uses the same typed acquisition and assessment
+as primary CLI/core REST. Report compatibility fields include explicit null
+`confidence`, `confidence_level`, artificial probability, sigma and unassessed
+threat/risk, so missing inference cannot become a caller's default zero. Scalar
+probability/mock-input contracts are controlled-deprecated. Advanced raw inputs
+are not silently supplemented from providers; epochs require an explicit
+timezone-aware datetime, not an unlabelled Julian date. Unsupported per-call source
+selection raises instead of claiming success. Async methods are available rather
+than nesting an event loop. No new REST endpoint is implied.
+
+**Remaining limitation:** the separate `/impact` route still calls the legacy
+heuristic calculator rather than a verified observational impact solution (#32).
+Do not interpret the standalone prerequisite guard as certification of that REST
+route. New facade impact output is unavailable/not-assessed, not zero risk.

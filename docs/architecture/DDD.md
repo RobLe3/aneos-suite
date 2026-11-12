@@ -1176,3 +1176,27 @@ legacy/standalone/impact/report coverage, calibrated inference, independent
 performance, complete environment reproduction or restart-safe case history.
 Retained names for prototype inference raise explicit controlled deprecation
 rather than silently produce numbers; core scientific libraries remain available.
+
+## Standalone and advanced facade correction — 2026-11-12 (ADR-072)
+
+Simple/advanced names are adapters to the existing analysis boundary, not authority
+to manufacture observations or select an unvalidated fallback model. Their
+structured reports carry actual normalized NEO data, canonical screening and
+nullable scientific inference. Raw caller inputs are explicit, not silently mixed
+with a catalogue fetch. Unsupported filtering/conversions fail explicitly.
+
+An impact-prerequisite inventory belongs to the existing impact/risk boundary; it
+is not an impact-probability engine. Catalogue covariance presence is not propagated
+impact uncertainty. Dated arc length is not a quality score. Screening cannot
+supply impact, strategic-threat or maneuver probabilities. Core impact research/
+scenario modules remain available; public heuristic claims require #32 remediation.
+
+**Implemented/integrated:** simple/advanced library aliases, async paths, standalone
+CLI command delegation, native evidence/report transport and implementation-only
+capability inventory. **Regression-tested:** synthetic candidate controls, actual
+network-denied CLI processes, missing/failed sources/core, no name/hash fallback,
+raw unit/epoch validation, input preservation, A3/covariance and explicit unavailable
+impact/quality. **Not validated:** origin/impact models, provider health, independent
+performance, complete environment reproduction, durable execution or case history.
+No new bounded context is introduced. This supersedes the standalone migration gap
+in ADR-071, not all remaining scientific/legacy-interface findings.
