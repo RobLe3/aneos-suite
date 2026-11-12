@@ -1064,3 +1064,20 @@ full automatic review gates, network/legacy interfaces or restart durability.
 Earlier capability descriptions must be read with these limits; the correction
 does not certify their implementation. Detailed remaining scope and deprecated
 contracts: `docs/engineering/screening-result-contract.md`.
+
+## Required review-gate correction — 2026-11-12 (ADR-066)
+
+The existing validation boundary owns required review prerequisites. A screening
+rank is neither a prerequisite outcome nor a validation probability. A review
+report identifies its evidence, ranking policy, validation configuration and
+required-stage contract. The automatic orchestrator and expert queue enforce
+that contract; a missing, failed, inconclusive, stale or incomplete report cannot
+advance as validated. Capacity deferral is not scientific rejection.
+
+The canonical installed validator can inventory actual inputs but cannot yet
+validate observational physical hypotheses or calibrated discovery significance.
+Its aggregate is inconclusive. Five stage records are prerequisites, not five
+independent evidence streams. A gate-positive synthetic fixture is engineering
+control evidence only. Legacy helper/direct-call science remains unverified and
+requires #23. Normal JSON report history protection is implemented; transactional
+jobs/restart recovery remain designed work under #15.

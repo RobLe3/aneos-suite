@@ -9,8 +9,8 @@ processes candidates through progressive refinement stages.
 Pipeline Flow:
 1. Chunked Historical Polling → Variable raw objects (dataset dependent)
 2. ATLAS First-Stage Review → Dynamic candidates (up to 50,000)  
-3. Enhanced Multi-Stage Validation → Sigma 5 validated candidates (up to 500)
-4. Expert Review Queue → Final artificial NEO candidates (up to 50)
+3. Required Multi-Stage Validation → explicit pass/fail/inconclusive outcomes
+4. Expert Review Queue → Gate-eligible research candidates (up to 50)
 
 Key Features:
 - Integrated with chunked historical poller
@@ -284,7 +284,7 @@ class AutomaticReviewPipeline:
                         # Stage 4: Expert Review Queue
                         stage4_task = progress.add_task("stage4", total=100, stage="👨‍🔬 Expert Review Queue", status="Preparing...")
                         expert_review_result = await self._stage_expert_review_prep_with_progress(
-                            multi_stage_result.candidates if multi_stage_result.success else [],
+                            multi_stage_result.candidates,
                             progress, stage4_task
                         )
                         stage_results[ProcessingStage.EXPERT_REVIEW_QUEUE] = expert_review_result
@@ -321,7 +321,7 @@ class AutomaticReviewPipeline:
                     self.logger.warning(f"Multi-stage validation had issues: {multi_stage_result.error_message}")
                 
                 expert_review_result = await self._stage_expert_review_prep(
-                    multi_stage_result.candidates if multi_stage_result.success else []
+                    multi_stage_result.candidates
                 )
                 stage_results[ProcessingStage.EXPERT_REVIEW_QUEUE] = expert_review_result
             
@@ -748,114 +748,132 @@ class AutomaticReviewPipeline:
         neo_obj['neo_data'] = neo
         return assessment.to_detection_result()
 
+    def _required_validation_policy_id(self):
+        from hashlib import sha256
+        config = getattr(self.multi_stage_validator, 'config', {})
+        encoded = json.dumps({'contract_version': 'required-review-v1',
+            'required_stages': [1, 2, 3, 4, 5], 'validator_config': config},
+            sort_keys=True, separators=(',', ':'), allow_nan=False)
+        return sha256(encoded.encode()).hexdigest()
+
     async def _stage_multi_validation(self, candidates: List[Dict]) -> StageResult:
-        """Execute multi-stage validation with proper Sigma 5 artificial NEO detection."""
-        start_time = time.time()
-        config = self.config.multi_stage
-        
-        try:
-            self.logger.info(f"Starting multi-stage validation of {len(candidates)} candidates with Sigma 5 analysis")
-            
-            validated_candidates = []
-            processed_count = 0
-            
-            # Process candidates with proper Sigma 5 validation
-            for candidate in candidates[:config.max_candidates]:  # Limit processing
-                processed_count += 1
+        """Run the required validator; no rank/sigma threshold can replace it.
+
+        A passed gate is eligibility for expert review, never origin confirmation.
+        The installed uncalibrated validator reports inconclusive prerequisites.
+        """
+        start = time.time()
+        accepted, outcomes = [], []
+        errors = 0
+        validator = self.multi_stage_validator
+        limit = self.config.multi_stage.max_candidates
+        timeout = self.config.multi_stage.processing_timeout_seconds
+        import math
+        if isinstance(timeout, bool) or not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError('Validation timeout must be finite and positive')
+        if type(limit) is not int or limit < 0:
+            raise ValueError('Validation capacity must be a non-negative integer')
+        for index, candidate in enumerate(candidates):
+            designation = candidate.get('designation', 'unknown')
+            # Always replace stale state on retry, failure or capacity deferral.
+            state = {
+                'contract_version': 'required-review-v1', 'validation_status': 'unavailable',
+                'validation_score': None, 'confidence': None, 'fp_probability': None,
+                'origin_status': 'inconclusive', 'recommendation': 'do_not_advance',
+                'evidence_id': None, 'policy_id': None, 'validation_policy_id': None,
+                'validation_evidence_id': None, 'validation_evidence_snapshot': None, 'stage_results': [],
+                'validation_method': 'required_five_stage_validator',
+                'validation_timestamp': datetime.now().isoformat(),
+            }
+            candidate['multi_stage_validation'] = state
+            if index >= limit:
+                state.update(validation_status='not_processed_capacity', reason='Validation capacity reached')
+            elif validator is None:
+                errors += 1
+                state['reason'] = 'Required multi-stage validator unavailable'
+            else:
                 try:
-                    # Get first stage results
-                    first_stage_score = candidate.get('first_stage_score', {}).get('overall_score', 0.0)
-                    has_sigma_detection = candidate.get('first_stage_score', {}).get('artificial_neo_detected', False)
-                    sigma_level = candidate.get('first_stage_score', {}).get('sigma_level', 0.0)
-                    
-                    # MULTI-STAGE VALIDATION: Re-run Sigma 5 analysis for verification
-                    artificial_analysis = await self._detect_artificial_neo(candidate)
-                    
-                    validation_score = first_stage_score
-                    validation_method = 'standard'
-                    
-                    if artificial_analysis and artificial_analysis.is_artificial:
-                        # SIGMA 5 VALIDATION: Apply rigorous statistical standards
-                        sigma_level = artificial_analysis.sigma_level or 0.0
-                        certainty = artificial_analysis.artificial_probability
-                        confidence = artificial_analysis.confidence
-                        
-                        if sigma_level >= 5.0:
-                            # Sigma 5: 99.99994% statistical certainty - automatic validation
-                            validation_score = 0.95
-                            validation_method = 'sigma_5_validated'
-                            
-                        elif sigma_level >= 4.0:
-                            # Sigma 4: 99.99% statistical certainty - strong validation
-                            validation_score = max(first_stage_score, 0.75)
-                            validation_method = 'sigma_4_validated'
-                            
-                        elif sigma_level >= 3.0:
-                            # Sigma 3: 99.7% statistical certainty - moderate validation
-                            validation_score = max(first_stage_score, 0.60)
-                            validation_method = 'sigma_3_validated'
-                            
-                        else:
-                            # Lower sigma: Apply conservative scoring
-                            boost = min(sigma_level / 5.0 * 0.3, 0.3)  # Up to 30% boost
-                            validation_score = min(first_stage_score + boost, 0.85)
-                            validation_method = 'sigma_boosted'
-                            
-                        self.logger.info(f"Multi-stage Sigma analysis for {candidate.get('designation', 'Unknown')}: "
-                                       f"σ={sigma_level:.2f}, confidence={confidence:.3f}, validation_score={validation_score:.3f}")
-                    else:
-                        # No artificial detection - apply conservative validation
-                        validation_score = first_stage_score * 0.8  # Reduce score without artificial evidence
-                        validation_method = 'natural_object_standard'
-                    
-                    # Apply validation threshold
-                    if validation_score >= config.score_threshold:
-                        candidate['multi_stage_validation'] = {
-                            'validation_score': validation_score,
-                            'sigma_level': sigma_level if artificial_analysis else 0.0,
-                            'statistical_certainty': artificial_analysis.artificial_probability if artificial_analysis else 0.0,
-                            'artificial_confidence': artificial_analysis.confidence if artificial_analysis else 0.0,
-                            'fp_probability': 1.0 - validation_score,
-                            'confidence': validation_score,
-                            'recommendation': 'accept' if validation_score > 0.8 else 'expert_review',
-                            'validation_method': validation_method,
-                            'artificial_detected': bool(artificial_analysis and artificial_analysis.is_artificial),
-                            'validation_timestamp': datetime.now().isoformat()
-                        }
-                        validated_candidates.append(candidate)
-                        
-                except Exception as e:
-                    self.logger.warning(f"Multi-stage validation failed for {candidate.get('designation')}: {e}")
-                    continue
-            
-            processing_time = time.time() - start_time
-            
-            self.logger.info(f"Multi-stage validation complete: {len(validated_candidates)} validated candidates")
-            
-            return StageResult(
-                stage=ProcessingStage.MULTI_STAGE_VALIDATION,
-                input_count=len(candidates),
-                output_count=len(validated_candidates),
-                processing_time_seconds=processing_time,
-                success=True,
-                candidates=validated_candidates,
-                stage_metrics={
-                    'validation_rate': len(validated_candidates) / len(candidates) if candidates else 0,
-                    'threshold_used': config.score_threshold
-                }
-            )
-            
-        except Exception as e:
-            self.logger.error(f"Multi-stage validation failed: {e}")
-            return StageResult(
-                stage=ProcessingStage.MULTI_STAGE_VALIDATION,
-                input_count=len(candidates),
-                output_count=0,
-                processing_time_seconds=time.time() - start_time,
-                success=False,
-                error_message=str(e)
-            )
-    
+                    # Never trust cached/artificial_analysis or caller-supplied legacy scores.
+                    analysis = await self._detect_artificial_neo(candidate)
+                    if candidate['neo_data'].designation != designation:
+                        raise ValueError('Candidate/NEO identity mismatch')
+                    payload = analysis.analysis['assessment']
+                    candidate['required_validation_assessment'] = payload
+                    from ..validation.review_evidence import freeze_review_inputs
+                    review_snapshot, review_id = freeze_review_inputs(candidate['neo_data'])
+                    state.update(validation_evidence_id=review_id, validation_evidence_snapshot=review_snapshot,
+                                 evidence_id=payload['evidence_id'], policy_id=payload['policy_id'],
+                                 validation_policy_id=self._required_validation_policy_id())
+                    enhanced = await asyncio.wait_for(
+                        validator.validate_analysis_result(candidate['neo_data'], analysis),
+                        timeout=timeout)
+                    if state['validation_policy_id'] != self._required_validation_policy_id():
+                        raise ValueError('Validation policy changed during execution')
+                    if freeze_review_inputs(candidate['neo_data'])[1] != review_id:
+                        raise ValueError('Validation evidence changed during execution')
+                    state.update(self._checked_validation_report(enhanced.validation_result,
+                        {**payload, 'validation_evidence_id': review_id}))
+                    if state['validation_status'] == 'passed':
+                        accepted.append(candidate)
+                except Exception as exc:
+                    errors += 1
+                    state.update(validation_status='unavailable', reason=f'{type(exc).__name__}: {exc}',
+                                 recommendation='do_not_advance')
+                    self.logger.warning('Validation unavailable for %s: %s', designation, exc)
+            outcomes.append({'designation': designation, 'status': state['validation_status'],
+                             'reason': state.get('reason')})
+        return StageResult(
+            stage=ProcessingStage.MULTI_STAGE_VALIDATION, input_count=len(candidates),
+            output_count=len(accepted), processing_time_seconds=time.time() - start,
+            success=errors == 0, candidates=accepted,
+            error_message=f'Validation unavailable for {errors} candidates' if errors else None,
+            stage_metrics={'outcomes': outcomes, 'validation_records': json.loads(json.dumps([
+                {'designation': c.get('designation', 'unknown'), **c['multi_stage_validation']}
+                for c in candidates], allow_nan=False)), 'validation_errors': errors,
+                           'validation_status': 'unavailable' if validator is None else 'executed',
+                           'gate_basis': 'required_stage_outcomes_not_score_threshold',
+                           'legacy_score_threshold_ignored': self.config.multi_stage.score_threshold,
+                           'not_processed_capacity': sum(o['status'] == 'not_processed_capacity' for o in outcomes)},
+        )
+
+    @staticmethod
+    def _checked_validation_report(result, payload):
+        """Validate the executable gate contract, not a scientific model's accuracy."""
+        from dataclasses import asdict, is_dataclass
+        if result.contract_version != 'required-review-v1':
+            raise ValueError('Unsupported validation contract')
+        if result.evidence_id != payload['evidence_id'] or result.policy_id != payload['policy_id']:
+            raise ValueError('Validation evidence/policy mismatch')
+        if result.validation_evidence_id != payload['validation_evidence_id']:
+            raise ValueError('Validation input evidence mismatch')
+        stages = list(result.stage_results)
+        if (len(stages) != 5 or any(type(s.stage_number) is not int for s in stages)
+                or {s.stage_number for s in stages} != set(range(1, 6))):
+            raise ValueError('Required five-stage validation incomplete or duplicated')
+        allowed = {'passed', 'failed', 'inconclusive', 'unavailable'}
+        if type(result.overall_validation_passed) is not bool or result.validation_status not in allowed:
+            raise ValueError('Invalid aggregate validation status')
+        for stage in stages:
+            if type(stage.passed) is not bool or stage.validation_status not in allowed:
+                raise ValueError('Invalid stage validation status')
+            if stage.passed != (stage.validation_status == 'passed'):
+                raise ValueError('Contradictory stage status')
+            if not isinstance(stage.details, dict):
+                raise ValueError('Missing validation stage details')
+            if stage.details.get('error') or stage.details.get('error_message'):
+                raise ValueError('Validation stage contains an execution error')
+        complete_pass = all(stage.passed for stage in stages)
+        if (result.overall_validation_passed != complete_pass or
+                (result.validation_status == 'passed') != complete_pass):
+            raise ValueError('Aggregate does not match required stage outcomes')
+        # Snapshot without aliases; reject non-finite/non-JSON diagnostic evidence.
+        serialized = json.loads(json.dumps(
+            [asdict(s) if is_dataclass(s) else vars(s) for s in stages], allow_nan=False))
+        return {'validation_status': result.validation_status, 'stage_results': serialized,
+                'recommendation': 'expert_review' if complete_pass else 'additional_evidence_required'
+                                  if result.validation_status == 'inconclusive' else 'do_not_advance',
+                'reason': None if complete_pass else 'Required scientific prerequisites did not all pass'}
+
     async def _stage_expert_review_prep(self, validated_candidates: List[Dict]) -> StageResult:
         """Prepare expert review queue."""
         start_time = time.time()
@@ -864,14 +882,48 @@ class AutomaticReviewPipeline:
         try:
             self.logger.info(f"Preparing expert review queue from {len(validated_candidates)} candidates")
             
-            # Sort candidates by score (highest first)
+            if type(config.max_candidates) is not int or config.max_candidates < 0:
+                raise ValueError('Expert-review capacity must be a non-negative integer')
+            eligible, excluded = [], []
+            for candidate in validated_candidates:
+                record = candidate.get('multi_stage_validation', {})
+                payload = (getattr(candidate.get('artificial_analysis'), 'analysis', {}) or {}).get('assessment', {})
+                # The gate stores its canonical assessment separately from legacy scores.
+                payload = candidate.get('required_validation_assessment', payload)
+                try:
+                    from types import SimpleNamespace
+                    gate = SimpleNamespace(
+                        contract_version=record.get('contract_version'), evidence_id=record.get('evidence_id'),
+                        policy_id=record.get('policy_id'), validation_evidence_id=record.get('validation_evidence_id'),
+                        overall_validation_passed=record.get('validation_status') == 'passed',
+                        validation_status=record.get('validation_status'),
+                        stage_results=[SimpleNamespace(**s) for s in record.get('stage_results', [])])
+                    checked = self._checked_validation_report(gate,
+                        {**payload, 'validation_evidence_id': record.get('validation_evidence_id')})
+                    if checked['validation_status'] != 'passed':
+                        raise ValueError('Required validation not passed')
+                    # A changed snapshot is not covered by an earlier successful gate.
+                    from ..analysis.screening import ScreeningAnalysisService
+                    current = ScreeningAnalysisService().analyze_neo(candidate['neo_data'])
+                    if current.evidence_id != gate.evidence_id or current.policy_id != gate.policy_id:
+                        raise ValueError('Candidate evidence changed after validation')
+                    from ..validation.review_evidence import freeze_review_inputs, review_evidence_fingerprint
+                    if (freeze_review_inputs(candidate['neo_data'])[1] != gate.validation_evidence_id or
+                            review_evidence_fingerprint(record['validation_evidence_snapshot']) != gate.validation_evidence_id):
+                        raise ValueError('Full validation inputs changed after gate')
+                    if record.get('validation_policy_id') != self._required_validation_policy_id():
+                        raise ValueError('Validation policy changed after gate')
+                    candidate['required_validation_assessment'] = current.to_payload()
+                    eligible.append(candidate)
+                except (KeyError, TypeError, ValueError, AttributeError):
+                    excluded.append(candidate.get('designation', 'unknown'))
+
+            # Triage rank orders eligible records; it is not a confidence/probability.
             def get_candidate_score(candidate):
-                # Try multiple score sources
-                first_stage = candidate.get('first_stage_score', {}).get('overall_score', 0.0)
-                multi_stage = candidate.get('multi_stage_validation', {}).get('validation_score', first_stage)
-                return multi_stage
+                return candidate['required_validation_assessment'].get('screening_score')
             
-            sorted_candidates = sorted(validated_candidates, key=get_candidate_score, reverse=True)
+            sorted_candidates = sorted(eligible, key=lambda c: (get_candidate_score(c) is not None,
+                get_candidate_score(c) if get_candidate_score(c) is not None else 0), reverse=True)
             
             # Take top candidates for expert review
             expert_review_candidates = sorted_candidates[:config.max_candidates]
@@ -897,6 +949,8 @@ class AutomaticReviewPipeline:
                 success=True,
                 candidates=expert_review_candidates,
                 stage_metrics={
+                    'excluded_unvalidated': excluded,
+                    'deferred_capacity': [c.get('designation', 'unknown') for c in sorted_candidates[config.max_candidates:]],
                     'queue_rate': len(expert_review_candidates) / len(validated_candidates) if validated_candidates else 0,
                     'high_priority_count': sum(1 for c in expert_review_candidates if c.get('expert_review', {}).get('priority') == 'high')
                 }
@@ -942,8 +996,9 @@ class AutomaticReviewPipeline:
     def _save_pipeline_results(self, result: PipelineResult):
         """Save complete pipeline results including validated candidates."""
         try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"pipeline_result_{timestamp}.json"
+            from uuid import uuid4
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            filename = f"pipeline_result_{timestamp}_{uuid4().hex[:8]}.json"
             filepath = self.results_dir / filename
             
             # Convert to JSON-serializable format
@@ -958,11 +1013,13 @@ class AutomaticReviewPipeline:
                         'input_count': stage_result.input_count,
                         'output_count': stage_result.output_count,
                         'success': stage_result.success,
-                        'processing_time_seconds': stage_result.processing_time_seconds
+                        'processing_time_seconds': stage_result.processing_time_seconds,
+                        'error_message': stage_result.error_message,
+                        'stage_metrics': stage_result.stage_metrics
                     }
                     for stage, stage_result in result.stage_results.items()
                 },
-                # Include validated candidates with Sigma 5 analysis results
+                # Include gate-eligible research candidates, not confirmed origins
                 'validated_candidates': result.validated_candidates[:100] if result.validated_candidates else [],  # Limit to first 100 for file size
                 'candidate_count': len(result.validated_candidates) if result.validated_candidates else 0
             }
@@ -975,7 +1032,7 @@ class AutomaticReviewPipeline:
                 except Exception:
                     return None
 
-            with open(filepath, 'w') as f:
+            with open(filepath, 'x') as f:
                 json.dump(data, f, indent=2, default=_default)
                 
             self.logger.info(f"Pipeline results saved to: {filepath}")

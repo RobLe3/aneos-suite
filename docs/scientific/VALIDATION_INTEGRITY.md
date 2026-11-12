@@ -1,3 +1,10 @@
+> **2026-11-12 review-branch correction:** ADR-065 withdraws constructor toy
+> performance/sigma/posterior claims on canonical screening. ADR-066 requires
+> evidence-bound validation outcomes but installs no calibrated physical/null
+> model: canonical scientific validation remains inconclusive. Legacy/direct
+> helper defects remain issue #23. The historical audit below explains the old
+> limitations; it is not evidence of current independent validation.
+
 # aNEOS Validation Integrity Audit
 
 **Date:** 2026-03-08

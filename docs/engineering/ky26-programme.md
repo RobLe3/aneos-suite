@@ -35,6 +35,10 @@ The issue bodies preserve acceptance checklists, dependencies, scientific safegu
 
 Both are P0 and need positive controls as well as rejection/outage regressions.
 
+- [#23](https://github.com/RobLe3/aneos-suite/issues/23): legacy/direct validator
+  callers still use fabricated quality/orbit/uncertainty and pass-on-error
+  contracts. Canonical-gate containment does not repair those callers.
+
 ## Delivery rules
 
 Freeze the historical baseline before dependent scientific changes. Ship small reviewable PRs in dependency order. No automatic merging. Keep the full programme intact when an individual step remains blocked by missing observations.
@@ -82,3 +86,11 @@ The baseline PR deliberately contains no production scoring, API, menu or planet
 
 All increments require review; none is merged or a scientific certification.
 Independent calibration and production-readiness acceptance remain unmet.
+
+
+The required-validation-gate increment (ADR-066, stacked on #20) implements
+required invocation, evidence/configuration-bound outcomes, expert-queue checks,
+explicit partial/outage/capacity results and canonical inconclusive science.
+It does not install calibrated or observation-fit models. See
+`required-validation-gate.md` for engineering positive-control scope and the
+legacy/direct-call limitations tracked in #23.

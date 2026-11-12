@@ -106,3 +106,11 @@ underflow bounds. Correct arithmetic is not validation of an astronomical null.
 No origin model is evaluated here. “Not flagged” does not mean natural.
 No new endpoint, bounded context, external inference service or production
 deployment is introduced.
+
+
+### Subsequent review increment
+
+ADR-066 / `required-validation-gate.md` supersedes the automatic-gate limitation
+above on its review branch: required invocation and evidence/configuration-bound
+queue checks are implemented there. Canonical science remains inconclusive;
+legacy/direct validator placeholders remain #23, and CAD evidence integrity #22.

@@ -113,18 +113,20 @@ class EnhancedAnalysisPipeline:
                     recommendation = enhanced_result.validation_result.recommendation
                     self.logger.info(
                         f"Validation complete for {designation}: "
-                        f"FP probability: {fp_prob:.3f}, Recommendation: {recommendation}"
+                        f"FP probability: {fp_prob if fp_prob is not None else 'unavailable'}, Recommendation: {recommendation}"
                     )
                     
                     return enhanced_result
                     
                 except Exception as e:
                     self.logger.warning(f"Enhanced validation failed for {designation}: {e}")
-                    self.logger.warning("Returning original result without enhancement")
-                    # Graceful degradation - return original result on validation failure
-                    return original_result
+                    self.logger.warning("Returning explicit unavailable validation with original result preserved")
+                    # Preserve explicit unavailability; absence is never a successful gate.
+                    return self._create_basic_enhanced_result(original_result)
             else:
-                # Return original result if enhancement not requested or unavailable
+                # Explicitly disabled/unrequested enhancement preserves original behavior.
+                if enhanced and self.enable_validation:
+                    return self._create_basic_enhanced_result(original_result)
                 return original_result
                 
         except Exception as e:
@@ -188,6 +190,8 @@ class EnhancedAnalysisPipeline:
         return {
             'validation_enabled': self.enable_validation,
             'validation_available': self.validation_available,
+            'availability_semantics': 'component_initialized_not_scientific_validation',
+            'scientific_validation_status': 'unavailable_uncalibrated',
             'components': {
                 'multi_stage_validator': hasattr(self, 'validator') and self.validator is not None,
                 'statistical_testing': hasattr(self, 'statistical_testing') and self.statistical_testing is not None,
@@ -207,14 +211,15 @@ class EnhancedAnalysisPipeline:
         
         # Create minimal validation result
         minimal_validation = ValidationResult(
-            overall_validation_passed=True,  # Assume passed if we can't validate
-            overall_false_positive_probability=0.5,  # Neutral probability
-            overall_confidence=0.0,  # No confidence without validation
+            overall_validation_passed=False,  # Unavailable validation cannot grant a pass
+            overall_false_positive_probability=None,  # Not estimated
+            overall_confidence=None,  # Not estimated
             stage_results=[],
             space_debris_matches=[],
-            synthetic_population_percentile=50.0,
-            statistical_significance_summary=MultipleTestingResult([], [], [], "unavailable", 1.0, 1.0),
-            recommendation='unknown',
+            synthetic_population_percentile=None,
+            statistical_significance_summary=None,
+            recommendation='additional_evidence_required',
+            contract_version='required-review-v1', validation_status='unavailable',
             expert_review_priority='medium',
             total_processing_time_ms=0.0,
             validation_timestamp=datetime.now()
@@ -418,7 +423,8 @@ class EnhancedAnalysisPipeline:
                     fp_prob = result.validation_result.overall_false_positive_probability
                     recommendation = result.validation_result.recommendation
                     
-                    fp_probabilities.append(fp_prob)
+                    if fp_prob is not None:
+                        fp_probabilities.append(fp_prob)
                     recommendations[recommendation] = recommendations.get(recommendation, 0) + 1
                     
                     if hasattr(result, 'overall_score'):
@@ -428,8 +434,10 @@ class EnhancedAnalysisPipeline:
             summary = {
                 'total_analyses': len(enhanced_results),
                 'false_positive_statistics': {
-                    'mean_probability': sum(fp_probabilities) / len(fp_probabilities) if fp_probabilities else 0.0,
-                    'median_probability': sorted(fp_probabilities)[len(fp_probabilities)//2] if fp_probabilities else 0.0,
+                    'available_count': len(fp_probabilities),
+                    'unavailable_count': len(enhanced_results) - len(fp_probabilities),
+                    'mean_probability': sum(fp_probabilities) / len(fp_probabilities) if fp_probabilities else None,
+                    'median_probability': sorted(fp_probabilities)[len(fp_probabilities)//2] if fp_probabilities else None,
                     'high_fp_risk_count': sum(1 for fp in fp_probabilities if fp > 0.5),
                     'low_fp_risk_count': sum(1 for fp in fp_probabilities if fp < 0.1)
                 },

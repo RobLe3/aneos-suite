@@ -2103,3 +2103,36 @@ limits and remaining legacy surfaces. No independent calibration, end-to-end
 validation gate, restart durability or origin inference is established by this
 decision. Existing coverage requirement remains 30%; scientific performance
 acceptance remains open rather than waived.
+
+---
+
+## ADR-066: Required evidence-bound review gate, never rank-based validation
+
+**Date:** 2026-11-12
+**Status:** Implemented on review branch; scientific validation unavailable
+**Related:** ADR-065; issues #2, #21, #22, #23, #15, #17
+
+**Context:** Automatic review bypassed its injected validator, used ranking
+thresholds as validation and fabricated a probability complement. Enhanced
+fallback assumed a pass when validation was unavailable.
+
+**Decision:** Invoke required validation for each eligible canonical assessment.
+Require an evidence/policy-matched, explicit five-stage contract with consistent
+boolean/status outcomes; no score override, missing-stage pass or silent fallback.
+Fingerprint validator configuration and full review inputs (not just ranking
+inputs), reject mid-run changes, and recheck evidence
+and policy at expert-queue admission. Retain each object's status/reason and
+capacity deferral. Partial execution failures cannot erase another verified
+positive control, nor be hidden as complete successful validation.
+
+The installed canonical validator records unavailable/inconclusive scientific
+prerequisites without running legacy placeholder helpers. Passing a synthetic
+contract fixture demonstrates usable control flow, not scientific accuracy.
+Legacy helper/noncanonical remediation remains #23. No scientific pass is
+installed by this decision; origin remains inconclusive and FP probability null.
+
+**Consequences:** Existing validation/analysis boundaries remain; no new bounded
+context. Enhanced unavailable fallback no longer assumes success. JSON reports
+retain non-advancing outcomes; exclusive unique filenames preserve prior normal
+writes, but durable/crash-safe execution remains #15. Rich presentation accepts
+null inference. Tests and exact limits: `docs/engineering/required-validation-gate.md`.

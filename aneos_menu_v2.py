@@ -1072,9 +1072,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
             lines.append(f"[bold]Rel. velocity:[/bold]    {vel:.2f} km/s")
 
         # Validation scores
-        v_score = ms.get("validation_score", 0.0)
         v_method = ms.get("validation_method", "—")
-        lines.append(f"[bold]Validation score:[/bold] {v_score:.4f}  ({v_method})")
+        lines.append(f"[bold]Required validation:[/bold] {ms.get('validation_status', 'legacy_unverified')}  ({v_method})")
+        lines.append(f"[bold]Validation probability:[/bold] unavailable")
 
         # Category breakdown
         if cat_scores:
@@ -1198,7 +1198,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 desg = c.get("designation", "?")
                 ms = c.get("multi_stage_validation", {})
                 fs = c.get("first_stage_score", {})
-                score = f"{ms.get('validation_score', 0.0):.3f}"
+                score = self._format_score(c.get("required_validation_assessment", {}).get("screening_score"))
                 method = ms.get("validation_method", "—")
                 flags = fs.get("flag_string", "—")
                 dist = c.get("miss_distance_au")
@@ -1221,9 +1221,10 @@ class ANEOSMenuV2(ANEOSMenuBase):
             desg = c.get("designation", "UNKNOWN")
             ms = c.get("multi_stage_validation", {})
             proxy = types.SimpleNamespace(
-                sigma_level=ms.get("sigma_level", 0.0),
-                artificial_probability=ms.get("statistical_certainty", 0.0),
-                confidence=ms.get("confidence", 0.0),
+                sigma_level=None,
+                artificial_probability=None,
+                screening_score=c.get("required_validation_assessment", {}).get("screening_score"),
+                confidence=ms.get("confidence"),
                 classification=f"PIPELINE:{ms.get('validation_method', '?')}",
                 analysis=c.get("first_stage_score", {}),
                 # Extra fields for rich detail view

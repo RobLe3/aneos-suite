@@ -37,11 +37,12 @@ class ValidationStageResult:
     stage_number: int
     stage_name: str
     passed: bool
-    score: float
-    confidence: float
-    false_positive_reduction: float
+    score: Optional[float]
+    confidence: Optional[float]
+    false_positive_reduction: Optional[float]
     details: Dict[str, Any]
     processing_time_ms: float
+    validation_status: Optional[str] = None
     
 @dataclass
 class EnhancedAnalysisResult:
@@ -71,16 +72,16 @@ class EnhancedAnalysisResult:
 class ValidationResult:
     """Comprehensive validation result from all stages."""
     overall_validation_passed: bool
-    overall_false_positive_probability: float
-    overall_confidence: float
+    overall_false_positive_probability: Optional[float]
+    overall_confidence: Optional[float]
     
     # Individual stage results
     stage_results: List[ValidationStageResult]
     
     # Aggregated results
     space_debris_matches: List[SpaceDebrisMatch]
-    synthetic_population_percentile: float
-    statistical_significance_summary: MultipleTestingResult
+    synthetic_population_percentile: Optional[float]
+    statistical_significance_summary: Optional[MultipleTestingResult]
     
     # Enhanced ΔBIC orbital dynamics analysis (Stage 3 enhancement)
     delta_bic_analysis: Optional[Dict[str, Any]] = None
@@ -141,6 +142,11 @@ class ValidationResult:
     # Processing metadata
     total_processing_time_ms: float = 0.0
     validation_timestamp: datetime = None
+    contract_version: Optional[str] = None
+    validation_status: Optional[str] = None
+    evidence_id: Optional[str] = None
+    policy_id: Optional[str] = None
+    validation_evidence_id: Optional[str] = None
 
 class MultiStageValidator:
     """
@@ -405,8 +411,12 @@ class MultiStageValidator:
         Returns:
             EnhancedAnalysisResult with original result + validation data
         """
+        payload = (getattr(analysis_result, 'analysis', {}) or {}).get('assessment')
+        if isinstance(payload, dict) and payload.get('schema_version') == 'screening-assessment-v1':
+            return self._validate_uncalibrated_screening(neo_data, analysis_result, payload)
+
         start_time = datetime.now()
-        
+
         try:
             self.logger.info(f"Starting multi-stage validation for {getattr(neo_data, 'designation', 'unknown')}")
             
@@ -482,6 +492,68 @@ class MultiStageValidator:
                 enhancement_timestamp=datetime.now()
             )
     
+    def _validate_uncalibrated_screening(self, neo_data, analysis_result, payload):
+        """Required review checks without invoking legacy placeholder science.
+
+        No independently validated physical/null/origin model is installed. This
+        path preserves real available inputs and explicitly cannot grant a pass.
+        Its five outcomes are review prerequisites, not five independent tests.
+        """
+        from ..analysis.screening import ScreeningAnalysisService
+        service = ScreeningAnalysisService()
+        replay = service.replay(payload['evidence_snapshot'], payload['evidence_id'])
+        if replay.policy_id != payload['policy_id']:
+            raise ValueError('Screening policy mismatch in required validation')
+        if neo_data.designation != replay.designation:
+            raise ValueError('Object identity mismatch in required validation')
+        from .review_evidence import freeze_review_inputs
+        _, review_id = freeze_review_inputs(neo_data)
+        start, end = neo_data.first_observation, neo_data.last_observation
+        span = (end - start).total_seconds() / 86400 if start and end and end >= start else None
+        orbit = payload['evidence_snapshot']['orbital']
+        nongrav = payload.get('non_gravitational_evidence')
+        rows = [
+            (1, 'Data quality fitness', 'inconclusive', {
+                'available_ranking_orbit_fields': sorted(orbit),
+                'source_labels': list(neo_data.sources_used),
+                'observation_span_days': span,
+                'orbital_covariance_available': bool(neo_data.nongrav and neo_data.nongrav.covariance),
+                'source_reliability': None,
+                'reason': 'Available fields do not establish validated observational fitness or source reliability'}),
+            (2, 'Known-object identity', 'unavailable', {
+                'reason': 'No verified cross-catalogue trajectory identification supplied; name lookup is insufficient'}),
+            (3, 'Comparative physical fit', 'unavailable', {
+                'non_gravitational_evidence': nongrav,
+                'reason': 'Compatible observation residual fits and physical hypothesis comparison are unavailable'}),
+            (4, 'Calibrated statistical significance', 'unavailable', {
+                'p_value': None, 'gaussian_equivalent_sigma': None,
+                'reason': 'No calibrated null or search-wide error procedure is installed'}),
+            (5, 'Scientific review eligibility', 'inconclusive', {
+                'screening_candidate': payload['candidate'],
+                'reason': 'Follow-up candidacy does not satisfy the preceding scientific prerequisites'}),
+        ]
+        stages = [ValidationStageResult(
+            stage_number=number, stage_name=name, passed=False, score=None,
+            confidence=None, false_positive_reduction=None,
+            details={**details, 'evidence_basis': 'available_input_inventory_not_scientific_validation'},
+            processing_time_ms=0., validation_status=status,
+        ) for number, name, status, details in rows]
+        validation = ValidationResult(
+            overall_validation_passed=False, overall_false_positive_probability=None,
+            overall_confidence=None, stage_results=stages, space_debris_matches=[],
+            synthetic_population_percentile=None, statistical_significance_summary=None,
+            non_gravitational_evidence=nongrav, recommendation='additional_evidence_required',
+            validation_timestamp=datetime.now(), contract_version='required-review-v1',
+            validation_status='inconclusive', evidence_id=replay.evidence_id, policy_id=replay.policy_id,
+            validation_evidence_id=review_id,
+        )
+        return EnhancedAnalysisResult(
+            original_result=analysis_result, validation_result=validation,
+            statistical_tests={}, uncertainty_analysis={
+                'status': 'unavailable', 'overall_uncertainty': None,
+                'reason': 'No observational covariance propagation or calibrated uncertainty model'},
+            enhancement_timestamp=datetime.now(), enhancement_version='required-review-v1')
+
     async def stage1_data_quality_filter(self, neo_data: Any) -> ValidationStageResult:
         """
         Stage 1: Data Quality Filter
