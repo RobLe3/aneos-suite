@@ -73,6 +73,9 @@ jobs:
       - name: Verify source freshness inspection and explicit shared refresh
         run: python -m pytest tests/test_source_freshness.py -q --tb=short --cov=aneos_core --cov=aneos_api --cov-config=tests/coverage-source-freshness.ini --cov-report=term-missing --cov-fail-under=90
 
+      - name: Verify polling source retention through the actual workflow and SQLite ledger
+        run: python -m pytest tests/test_polling_source_retention.py -q --tb=short
+
       - name: Verify canonical polling dashboard and browser behavior
         run: python -m pytest tests/test_polling_dashboard_screening.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-polling-dashboard.ini --cov-report=term-missing --cov-fail-under=90
 

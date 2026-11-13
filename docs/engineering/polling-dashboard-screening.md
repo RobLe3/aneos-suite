@@ -1,6 +1,7 @@
 # Candidate screening dashboard and results browser
 
-**Application:** 2.2.0.dev0, unreleased draft stack. **Issue:** #72. **Decision:** ADR-090.
+**Application:** 2.2.0b1 engineering beta; source-retention follow-up targets main.
+**Issues:** #72 (dashboard), #71 (retention). **Decisions:** ADR-090, ADR-091.
 
 The dashboard now answers “Which supplied records meet the follow-up ranking policy?”
 It no longer treats a legacy probability field as evidence that an object is artificial,
@@ -153,3 +154,28 @@ visually inspected at the advertised widths. These are engineering checks, not a
 independent scientific review or a certification of every application menu. Exact
 published-head CI/Docker and archived live-input replay receipts are recorded in the
 PR; they are not inferred from the local run.
+
+### Source payload retention (#71)
+
+The legacy workflow now sends **all returned records** to the existing transactional
+ledger before presentation. Previously, two sources for one designation could leave
+only the first payload plus both source names. The ledger now receives both native
+payloads; exact repeats are handled by its existing session-aware idempotency.
+Conflicts and differing epochs remain in history. Rendering still does not promote
+unverified legacy fields into scientific measurements.
+
+The workflow reports returned records separately from distinct exact designation
+labels. The dashboard may contain multiple records for one label; these are not
+independent observations or additional evidence streams. Database views retain the
+existing per-object projections and source history. A failed/unacknowledged commit
+stops before dashboard publication. Returned, empty and unavailable sources are
+separate outcomes, not a claim that polling achieved 100% completeness. Chunked
+collection without per-source receipts remains explicitly unverified.
+
+The beta's root polling quarantine remains in place (#73). These regression tests
+exercise synthetic provider boundaries with the actual workflow and a disposable
+file-SQLite ledger; they do not establish restored live bulk polling. Run:
+
+```sh
+python -m pytest tests/test_polling_source_retention.py -q
+```

@@ -3103,3 +3103,30 @@ no confidence or empty-success replacement is emitted. Native retrieval and the 
 per-object service remain available. This quarantine is not completion of discovery
 polling or source-retention#71. Restoring those capabilities needs shared-adapter,
 identity/unit/provenance and actual-path regression evidence. The full goal remains.
+
+## ADR-091: Preserve polling assertions before object-level presentation
+
+**Date:** 2026-11-13. **Status:** Implemented; verification recorded in the linked PR for #71.
+
+The legacy workflow deduplicated by designation before calling the existing
+transactional enrichment service. It retained the first payload and appended other
+source names, dropping complementary or conflicting measurements. A source-name
+union is not retained multi-source evidence.
+
+Pass every returned payload, unchanged, to the existing assertion ledger in one
+transaction. The ledger owns exact-repeat idempotency, retained source/session
+history and reproducible object projections. The workflow must verify the commit
+acknowledgement before publishing a dashboard or starting receipt review. A failed
+transaction cannot yield a success dashboard.
+
+The dashboard receives the original records, not a synthetic merged measurement.
+Its existing distinct-label count is separate from record count. These labels are
+not an alias registry, independent observations or a completeness claim. Source
+outcomes distinguish returned, empty and unavailable; chunked outcomes remain
+unverified when the existing chunked boundary supplies no per-source receipt.
+Neither returned rows nor a configured source name prove live retrieval/freshness.
+
+No new storage engine, bounded context, API or inference path is needed. This fixes
+the workflow's lossy handoff, not the quarantined root provider implementation
+(#73), persistent discovery-attempt receipts, automatic selective backfill or full
+source completeness. Old results and source payloads are not rewritten.

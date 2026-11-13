@@ -2651,6 +2651,8 @@ class ANEOSMenu(ANEOSMenuBase):
                 else:
                     print(f"\n🔄 Phase 1: Polling {api} for {period}")
             
+            source_outcomes = {}
+
             # Check if we should use chunked polling
             period_years = self._extract_years_from_period(period)
             use_chunked_polling = max_results is None and period_years and period_years > 10
@@ -2665,6 +2667,8 @@ class ANEOSMenu(ANEOSMenuBase):
                 
                 # Use chunked historical poller
                 all_results = await self._run_chunked_polling(period_years, api_sources)
+                source_outcomes = {source: {"status": "not_verified", "returned_records": None}
+                                   for source in api_sources}
             else:
                 # Run standard polling for all sources
                 all_results = []
@@ -2678,22 +2682,27 @@ class ANEOSMenu(ANEOSMenuBase):
                     
                     try:
                         source_results = poller.poll_and_analyze(source, period, max_results or 1000)
+                        source_outcomes[source] = {
+                            "status": "returned" if source_results else "empty",
+                            "returned_records": len(source_results) if source_results else 0,
+                        }
                         if source_results:
                             all_results.extend(source_results)
                             
-                            # Analyze data freshness
-                            data_type = self._analyze_data_freshness(source, source_results)
+                            # A returned row does not prove live retrieval or freshness.
+                            data_type = "(returned records; source provenance not verified here)"
                             
                             if self.console:
-                                self.console.print(f"    ✅ [green]{len(source_results)} objects from {source}[/green] {data_type}")
+                                self.console.print(f"    ✅ [green]{len(source_results)} records from {source}[/green] {data_type}")
                             else:
-                                print(f"    ✅ {len(source_results)} objects from {source} {data_type}")
+                                print(f"    ✅ {len(source_results)} records from {source} {data_type}")
                         else:
                             if self.console:
                                 self.console.print(f"    ⚠️ [yellow]No results from {source}[/yellow]")
                             else:
                                 print(f"    ⚠️ No results from {source}")
                     except Exception as e:
+                        source_outcomes[source] = {"status": "unavailable", "returned_records": 0}
                         if self.console:
                             self.console.print(f"    ❌ [red]Error polling {source}: {e}[/red]")
                         else:
@@ -2704,37 +2713,31 @@ class ANEOSMenu(ANEOSMenuBase):
                     self.console.print("❌ [red]No polling results obtained from any source[/red]")
                 else:
                     print("❌ No polling results obtained from any source")
-                return
-            
-            # Remove duplicates based on designation
-            unique_results = {}
-            for result in all_results:
-                designation = result.get('designation', 'Unknown')
-                if designation not in unique_results:
-                    unique_results[designation] = result
-                else:
-                    # Merge data sources
-                    existing = unique_results[designation]
-                    existing_sources = existing.get('data_sources', [existing.get('data_source', 'Unknown')])
-                    new_source = result.get('data_source', 'Unknown')
-                    if new_source not in existing_sources:
-                        existing_sources.append(new_source)
-                    existing['data_sources'] = existing_sources
-            
-            results = list(unique_results.values())
-            
+                return {"status": "no_results", "source_outcomes": source_outcomes,
+                        "returned_records": 0, "distinct_designation_labels": 0, "enrichment": None}
+
+            # Preserve every returned payload before any object-level presentation.
+            # The existing ledger owns exact-repeat idempotency and conflicts/history;
+            # source-name unions cannot substitute for the underlying assertions.
+            results = all_results
+            designations = {r.get('designation') for r in results
+                            if isinstance(r, dict) and isinstance(r.get('designation'), str)}
+            summary = (f"Polling returned {len(results)} records across "
+                       f"{len(designations)} distinct exact designation labels; "
+                       "neither count establishes independent observations or completeness.")
             if self.console:
-                self.console.print(f"✅ [green]Multi-source polling complete: {len(results)} unique objects found[/green]")
-                self.console.print(f"📊 [dim]Total raw results: {len(all_results)}, Unique after deduplication: {len(results)}[/dim]")
-                self.console.print(f"\n💾 [bold yellow]Phase 2: Database Enrichment[/bold yellow]")
+                self.console.print(summary)
+                self.console.print("\nPhase 2: Database enrichment")
             else:
-                print(f"✅ Multi-source polling complete: {len(results)} unique objects found")
-                print(f"📊 Total raw results: {len(all_results)}, Unique after deduplication: {len(results)}")
-                print(f"\n💾 Phase 2: Database Enrichment")
-            
+                print(summary)
+                print("\nPhase 2: Database enrichment")
+
             # Database enrichment phase
             enrichment_stats = await self._enrich_database_with_polling_results(results, api_sources, period)
             
+            if enrichment_stats.get("commit_status") != "committed":
+                enrichment_stats.setdefault("error", "ENRICHMENT_COMMIT_NOT_VERIFIED")
+
             # Check for outdated database entries and suggest re-polling
             if not enrichment_stats.get('error'):
                 outdated_check = await self._check_outdated_database_entries(api_sources, period)
@@ -2755,6 +2758,9 @@ class ANEOSMenu(ANEOSMenuBase):
                     self.console.print(f"⚠️ [yellow]Database enrichment failed: {enrichment_stats['error']}[/yellow]")
                 else:
                     print(f"⚠️ Database enrichment failed: {enrichment_stats['error']}")
+                return {"status": "not_committed", "source_outcomes": source_outcomes,
+                        "returned_records": len(results), "distinct_designation_labels": len(designations),
+                        "enrichment": enrichment_stats}
             else:
                 if self.console:
                     self.console.print(f"✅ [green]Database enrichment complete[/green]")
@@ -2768,9 +2774,9 @@ class ANEOSMenu(ANEOSMenuBase):
                     print(f"  🌟 Enriched NEOs: {enrichment_stats.get('enriched_neos', 0)}")
             
             if self.console:
-                self.console.print(f"\n🔬 [bold yellow]Phase 3: Analyzing for artificial signatures[/bold yellow]")
+                self.console.print(f"\n🔬 [bold yellow]Phase 3: Evidence-aware screening (origin not established)[/bold yellow]")
             else:
-                print(f"\n🔬 Phase 3: Analyzing for artificial signatures")
+                print(f"\n🔬 Phase 3: Evidence-aware screening (origin not established)")
             
             # Create and display dashboard
             dashboard = await create_dashboard_from_polling(
@@ -2793,6 +2799,10 @@ class ANEOSMenu(ANEOSMenuBase):
                 
                 # Interactive options menu
                 self._dashboard_interactive_menu(dashboard)
+
+            return {"status": "partial" if any(o["status"] != "returned" for o in source_outcomes.values()) else "recorded",
+                    "source_outcomes": source_outcomes, "returned_records": len(results),
+                    "distinct_designation_labels": len(designations), "enrichment": enrichment_stats}
             
         except Exception as e:
             if self.console:
