@@ -1,0 +1,9 @@
+aNEOS 2.2.0.dev0 | Synthetic fixture — legacy_unverified — page 1/1; 1 records; sort: Raw rank
+Follow-up candidate: 0 | Not flagged: 0 | Inconclusive: 1 (record counts, not confirmed origins or impact risk)
+                                      Screening records — ranking units, not sigma                                      
+┏━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ID    ┃ Object                     ┃ Screening outcome           ┃ Raw rank           ┃ Catalogue presence           ┃
+┡━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1     │ SYNTHETIC_LEGACY           │ Inconclusive                │ Unavailable        │ Not assessed                 │
+└───────┴────────────────────────────┴─────────────────────────────┴────────────────────┴──────────────────────────────┘
+ID detail | P previous | N next | HOME/END | G<number> page | F filter | S sort | C counts | E export page | Q return

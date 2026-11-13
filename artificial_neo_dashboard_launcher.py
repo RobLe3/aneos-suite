@@ -13,6 +13,7 @@ import json
 import argparse
 from pathlib import Path
 from typing import List, Dict, Any
+from aneos_version import APPLICATION_VERSION
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent
@@ -26,14 +27,9 @@ async def launch_dashboard_from_file(file_path: str):
         with open(file_path, 'r') as f:
             data = json.load(f)
         
-        # Extract polling results from file
-        if 'results' in data:
-            polling_results = data['results']
-        elif isinstance(data, list):
-            polling_results = data
-        else:
-            polling_results = [data]
-        
+        from aneos_core.analysis.artificial_neo_dashboard import records_from_file
+        polling_results = records_from_file(data)
+
         print(f"📂 Loading results from: {file_path}")
         print(f"📊 Found {len(polling_results)} objects to analyze")
         
@@ -102,6 +98,8 @@ def find_recent_polling_results(results_dir: str = ".") -> List[str]:
     for pattern in patterns:
         files.extend(results_path.glob(pattern))
     
+    files.extend(p for p in (results_path/'dashboard_results').glob('screening_dashboard_*/report.json') if (p.parent/'complete.json').is_file())
+
     # Sort by modification time (newest first)
     files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
     
@@ -120,7 +118,7 @@ async def interactive_dashboard_launcher():
         
         # Title
         title = Panel(
-            "🛸 ARTIFICIAL NEO ANALYSIS DASHBOARD LAUNCHER",
+            "aNEOS CANDIDATE SCREENING DASHBOARD",
             style="bold cyan",
             padding=(1, 2)
         )
@@ -241,7 +239,7 @@ Enhanced TAS scoring, Sigma-5 detection, Multi-modal analysis
 
 async def text_interactive_launcher():
     """Text-only interactive launcher."""
-    print("\n🛸 ARTIFICIAL NEO ANALYSIS DASHBOARD LAUNCHER")
+    print("\naNEOS CANDIDATE SCREENING DASHBOARD")
     print("=" * 60)
     
     while True:
@@ -291,7 +289,7 @@ async def text_interactive_launcher():
 async def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Artificial NEO Analysis Dashboard Launcher",
+        description=f"aNEOS {APPLICATION_VERSION} candidate screening dashboard — origin unresolved",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

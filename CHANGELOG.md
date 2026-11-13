@@ -145,3 +145,11 @@ tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is creat
   acquisition/repository path and verifies a new commit before reporting recorded
   data; partial/empty/deferred/failed outcomes stay distinct. ADR089 documents
   operational cooldown, cache, completeness and remaining backfill limits (#66/#40).
+
+- Polling dashboard/browser origin thresholds, invented confidence/completeness and
+  null-score crashes are replaced with shared canonical screening and object-review
+  views. Legacy raw assertions remain unverified; not flagged is not natural.
+  Filters, sorts, details, standalone file loading and versioned JSON/Markdown exports
+  use the same contract and preserve frozen per-record policies. Controlled helper
+  deprecations, source-listed impact checks and actual-width QA are documented in
+  ADR090. Root legacy polling/source-retention defects remain #73/#71.

@@ -1,0 +1,94 @@
+SYNTHETIC_FOLLOW_UP — Follow-up candidate
+Input basis: Typed source snapshot — consistency checked, source not authenticated
+Source-format consistency/replay is not provider authentication or independent validation.
+╭──────────────────────────────────────────────────────────── Object review — SYNTHETIC_FOLLOW_UP ─────────────────────────────────────────────────────────────╮
+│                                                                                                                                                              │
+│ Screening classification                                                                                                                                     │
+│ FOLLOW_UP_CANDIDATE                                                                                                                                          │
+│                                                                                                                                                              │
+│ Interpretation                                                                                                                                               │
+│ Uncalibrated rank 20.328302287762757 meets policy threshold 5.0 ranking units. This selects follow-up; it is not a physical-origin finding.                  │
+│                                                                                                                                                              │
+│ Scientific status                                                                                                                                            │
+│ not independently validated; significance and origin probability unavailable                                                                                 │
+│                                                                                                                                                              │
+│ Evidence binding                                                                                                                                             │
+│ Review ID: 268e5019aef50a4fb8da81b67c1ed3539b1dcd56872f121bfcdf912d1708c850                                                                                  │
+│ Evidence ID: 55c7e354f515ad020f199be14e1e0bf1462c02886f54c074b1984b3593f17e6e                                                                                │
+│ Policy ID: 7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37                                                                                  │
+│                                                                                                                                                              │
+│ Data coverage                                                                                                                                                │
+│ Basic catalogue field presence: 7/15 (declared 15-field profile only).                                                                                       │
+│ Screening orbital fields present: 3/3; domain eligibility is separate.                                                                                       │
+│ Overall data completeness: not established. Eligible source coverage: not established.                                                                       │
+│                                                                                                                                                              │
+│                                                                   Recorded catalogue data                                                                    │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Field                ┃ Recorded value / display conversion                               ┃ Units / status                                                ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis      │ 2.5                                                               │ AU; present                                                   │ │
+│ │ Eccentricity         │ 0.9                                                               │ dimensionless; present                                        │ │
+│ │ Inclination          │ 170                                                               │ degrees; present                                              │ │
+│ │ Ascending node       │ not available                                                     │ degrees; not_available                                        │ │
+│ │ Periapsis argument   │ not available                                                     │ degrees; not_available                                        │ │
+│ │ Mean anomaly         │ not available                                                     │ degrees; not_available                                        │ │
+│ │ Orbit epoch          │ not available                                                     │ model timestamp; native solution retained; not_available      │ │
+│ │ Diameter             │ 0.011 (~11 m)                                                     │ km; present                                                   │ │
+│ │ Absolute magnitude H │ 25.9                                                              │ mag; present                                                  │ │
+│ │ Albedo               │ 0.52                                                              │ dimensionless; present                                        │ │
+│ │ Spectral label       │ not available                                                     │ catalogue label; not_available                                │ │
+│ │ Rotation period      │ not available                                                     │ h; not_available                                              │ │
+│ │ First observation    │ not available                                                     │ catalogue timestamp; source precision retained; not_available │ │
+│ │ Last observation     │ not available                                                     │ catalogue timestamp; source precision retained; not_available │ │
+│ │ Retrieved at         │ 2026-11-13T08:00:00+00:00; offset recorded not time scale         │ retrieval timestamp; present                                  │ │
+│ │                      │ conversion                                                        │                                                               │ │
+│ └──────────────────────┴───────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────┘ │
+│                                                                                                                                                              │
+│                                                      Squared-ranking decomposition — not probabilities                                                       │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Proxy channel                 ┃ Effect / weight                       ┃ Weighted square / share                                                          ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ orbital_dynamics              │ 20.0770077 / 1                        │ 403.086237; 97.5% of squared rank ━━━━━━━━━━━━━━━━━━━━                           │ │
+│ │ physical_properties           │ 3.90262166 / 0.666666667              │ 10.1536372; 2.46% of squared rank                                                │ │
+│ └───────────────────────────────┴───────────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                                                                              │
+│ Evidence-grounded explanation                                                                                                                                │
+│ The rank uses fixed global prototype reference parameters, not a size/survey-conditioned population or calibrated null. Its proxy channels are not           │
+│ independent observations.                                                                                                                                    │
+│                                                                                                                                                              │
+│ The supplied diameter 11.0 m is smaller than the legacy reference centre 800.0 m. The physical proxy compares diameter in log space; this prototype          │
+│ comparison is not origin evidence.                                                                                                                           │
+│                                                                                                                                                              │
+│ Diameter, absolute magnitude and albedo have physical dependencies. Their availability is not three independent pieces of origin evidence; albedo is not     │
+│ independently scored by the current physical proxy.                                                                                                          │
+│                                                                                                                                                              │
+│ The largest squared-ranking term is orbital_dynamics. This is a decomposition of the heuristic, not the strongest physical evidence or a probability.        │
+│                                                                                                                                                              │
+│ The displayed profile counts recorded fields, not complete knowledge or verified source coverage. Missing physical uncertainties, observations and           │
+│ unresolved sources still limit scientific use.                                                                                                               │
+│                                                                                                                                                              │
+│ Follow-up and limits                                                                                                                                         │
+│ • Verify source identity, dated measurements, required uncertainty and compatible solutions.                                                                 │
+│ • Use fitted natural/human-technology/artifact comparisons and withheld observations before physical-origin inference.                                       │
+│ • Independent population calibration and search-wide error control are required before significance claims.                                                  │
+│ • Binding/replay verifies consistency, not source authenticity or measurement accuracy.                                                                      │
+│ • No natural/artificial origin, calibrated probability or five-sigma result is supplied.                                                                     │
+│ • Complete local enrichment and scientific operation readiness remain separate requirements.                                                                 │
+│                                                                                                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭────────────────────────────────────────────────────────── Object chronology — distinct date roles ───────────────────────────────────────────────────────────╮
+│ Discovery day: not available; not inferred from observations or local intake.                                                                                │
+│ No verified ledger receipt history supplied in this view; source timestamps are not a substitute.                                                            │
+│ UTC receipts may display Z instead of +00:00; original literals and complete meanings remain in JSON.                                                        │
+│ Source labels, local receipts and dynamical epochs are different roles; no common UTC time axis is inferred.                                                 │
+│ Consistency/replay does not authenticate sources, verify clock synchronization or establish scientific readiness.                                            │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Role / source                  ┃ Recorded value / scale                      ┃ Meaning                                                                   ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Adapter receipt                │ 2026-11-13                                  │ Adapter read time; not an observation.                                    │ │
+│ │ SBDB                           │ 08:00:00Z                                   │                                                                           │ │
+│ │                                │ UTC                                         │                                                                           │ │
+│ └────────────────────────────────┴─────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────┘ │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+Rank is an uncalibrated follow-up heuristic, not Gaussian significance or an origin probability. Not flagged does not mean natural. Impact risk is not assessed 
+here. Legacy unverified rows are retained, not promoted to measured evidence.

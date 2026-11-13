@@ -2785,11 +2785,11 @@ class ANEOSMenu(ANEOSMenuBase):
                 # Show threshold violations
                 violations = self._check_threshold_violations(dashboard.classifications)
                 if violations:
-                    self.console.print(f"\n⚠️ [bold red]{len(violations)} objects exceed orbital mechanics thresholds[/bold red]")
+                    self.console.print(f"\n⚠️ [bold red]{len(violations)} records meet follow-up ranking policy (not physical-law violations)[/bold red]")
                     
                     from rich.prompt import Confirm
                     if Confirm.ask("🗂️ Open Norton Commander-style browser for threshold violations?"):
-                        self._norton_style_browser(violations, "Threshold Violations")
+                        self._norton_style_browser(violations, "Follow-up ranking candidates")
                 
                 # Interactive options menu
                 self._dashboard_interactive_menu(dashboard)
@@ -3038,44 +3038,9 @@ class ANEOSMenu(ANEOSMenuBase):
             return []
 
     def _dashboard_interactive_menu(self, dashboard):
-        """Interactive menu for dashboard operations."""
-        from rich.prompt import Prompt
-        
-        while True:
-            options_table = Table(show_header=False, box=None, padding=(0, 2))
-            options_table.add_column("Option", style="bold cyan")
-            options_table.add_column("Description", style="white")
-            
-            options_table.add_row("1", "🗂️ Browse all results (Norton Commander style)")
-            options_table.add_row("2", "⚠️ View threshold violations only")
-            options_table.add_row("3", "🛸 View artificial objects only")
-            options_table.add_row("4", "❓ View suspicious objects only")
-            options_table.add_row("5", "📊 Re-display dashboard summary")
-            options_table.add_row("6", "💾 Browse enriched NEO database")
-            options_table.add_row("0", "🚪 Return to menu")
-            
-            panel = Panel(options_table, title="[bold]🎯 Dashboard Options[/bold]", border_style="cyan")
-            self.console.print(panel)
-            
-            choice = Prompt.ask("Select option", choices=["0", "1", "2", "3", "4", "5", "6"])
-            
-            if choice == "0":
-                break
-            elif choice == "1":
-                self._norton_style_browser(dashboard.classifications, "All Results")
-            elif choice == "2":
-                violations = self._check_threshold_violations(dashboard.classifications)
-                self._norton_style_browser(violations, "Threshold Violations")
-            elif choice == "3":
-                artificial = [c for c in dashboard.classifications if c.category == 'artificial']
-                self._norton_style_browser(artificial, "Artificial Objects")
-            elif choice == "4":
-                suspicious = [c for c in dashboard.classifications if c.category == 'suspicious']
-                self._norton_style_browser(suspicious, "Suspicious Objects")
-            elif choice == "5":
-                dashboard.display_dashboard(save_results=False)
-            elif choice == "6":
-                self._browse_enriched_database()
+        'Interactive menu for dashboard operations.'
+        from aneos_core.analysis.dashboard_browser import interactive
+        return interactive(self, dashboard)
 
     def results_browser(self):
         """Norton Commander-style results browser."""
@@ -3102,6 +3067,8 @@ class ANEOSMenu(ANEOSMenuBase):
                     results_files.extend(Path(".").glob(pattern))
                     results_files.extend(Path("dashboard_results").glob(pattern) if Path("dashboard_results").exists() else [])
                 
+                results_files.extend(p for p in Path('dashboard_results').glob('screening_dashboard_*/report.json') if (p.parent/'complete.json').is_file())
+
                 # Sort by modification time
                 results_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
                 
@@ -3150,290 +3117,40 @@ class ANEOSMenu(ANEOSMenuBase):
             self.console.print("❌ Please enter a valid number")
 
     def _load_and_browse_results(self, file_path):
-        """Load results and launch Norton Commander-style browser."""
+        'Load results and launch Norton Commander-style browser.'
+        import json
+        from aneos_core.analysis.artificial_neo_dashboard import records_from_file
+        from aneos_core.analysis.dashboard_view import message
         try:
-            import json
-            
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-            
-            # Extract classifications
-            classifications = []
-            if 'classifications' in data:
-                # Dashboard format
-                from aneos_core.analysis.artificial_neo_dashboard import NEOClassification
-                from datetime import datetime
-                
-                for c_data in data['classifications']:
-                    # Convert back to NEOClassification objects
-                    c_data['analysis_timestamp'] = datetime.fromisoformat(c_data['analysis_timestamp'])
-                    classifications.append(NEOClassification(**c_data))
-            elif 'results' in data:
-                # Polling format - convert to classifications
-                classifications = self._convert_polling_to_classifications(data['results'])
-            elif isinstance(data, list):
-                # Direct list format
-                classifications = self._convert_polling_to_classifications(data)
-            
-            if classifications:
-                self._norton_style_browser(classifications, f"Results from {file_path.name}")
-            else:
-                self.console.print("❌ [red]No valid classifications found in file[/red]")
-                
-        except Exception as e:
-            self.console.print(f"❌ [red]Error loading results: {e}[/red]")
+            if file_path.stat().st_size > 64 * 1024 * 1024:
+                raise ValueError('Result file exceeds 64 MiB inspection bound')
+            with open(file_path) as handle:
+                records = records_from_file(json.load(handle))
+            classifications = self._convert_polling_to_classifications(records)
+            return self._norton_style_browser(classifications, 'Screening records from '+file_path.name)
+        except Exception:
+            message('Results unavailable: invalid, changed or unsupported file. Original file was not modified.', self.console)
 
     def _convert_polling_to_classifications(self, polling_results):
-        """Convert polling results to classification format."""
-        from aneos_core.analysis.artificial_neo_dashboard import NEOClassification
-        from datetime import datetime
-        
-        classifications = []
-        for result in polling_results:
-            artificial_prob = result.get('artificial_probability', result.get('artificial_score', 0.0))
-            
-            # Determine category
-            if artificial_prob >= 0.8:
-                category = 'artificial'
-            elif artificial_prob >= 0.5:
-                category = 'suspicious'
-            elif artificial_prob >= 0.3:
-                category = 'edge_case'
-            else:
-                category = 'natural'
-            
-            classification = NEOClassification(
-                designation=result.get('designation', 'Unknown'),
-                category=category,
-                confidence=0.8,  # Default confidence
-                artificial_probability=artificial_prob,
-                risk_factors=result.get('risk_factors', result.get('indicators', [])),
-                analysis_details={},
-                data_sources=[result.get('data_source', 'Unknown')],
-                analysis_timestamp=datetime.now(),
-                orbital_elements=result.get('orbital_elements', {})
-            )
-            classifications.append(classification)
-        
-        return classifications
+        'Convert polling results to classification format.'
+        from aneos_core.analysis.artificial_neo_dashboard import ArtificialNEODashboard
+        return ArtificialNEODashboard().classify_records(polling_results)
 
     def _check_threshold_violations(self, classifications):
-        """Check which objects violate orbital mechanics thresholds."""
-        violations = []
-        
-        for obj in classifications:
-            orbital = obj.orbital_elements
-            if not orbital:
-                continue
-            
-            violation_reasons = []
-            
-            # Eccentricity threshold
-            eccentricity = orbital.get('e', orbital.get('eccentricity', 0.0))
-            if eccentricity >= 0.3:
-                violation_reasons.append(f"High eccentricity: {eccentricity:.3f}")
-            
-            # Inclination threshold
-            inclination = orbital.get('i', orbital.get('inclination', 0.0))
-            if inclination >= 30:
-                violation_reasons.append(f"High inclination: {inclination:.1f}°")
-            
-            # Semi-major axis threshold
-            semi_major_axis = orbital.get('a', orbital.get('semi_major_axis', 1.0))
-            if semi_major_axis < 1.2 or semi_major_axis > 2.0:
-                violation_reasons.append(f"Unusual orbit size: {semi_major_axis:.3f} AU")
-            
-            # Artificial probability threshold
-            if obj.artificial_probability >= 0.3:
-                violation_reasons.append(f"High artificial probability: {obj.artificial_probability:.3f}")
-            
-            if violation_reasons:
-                # Add violation reasons to risk factors
-                obj.risk_factors.extend(violation_reasons)
-                violations.append(obj)
-        
-        return violations
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        # Historical helper name: selects canonical follow-up, not physical-law violations.
+        return [c for obj in classifications if (c := safe_classification(obj)).category == 'follow_up_candidate']
 
     def _norton_style_browser(self, objects, title="Objects"):
-        """Enhanced Norton Commander-style browser with enriched NEO data display."""
-        if not objects:
-            self.console.print("📭 [yellow]No objects to display[/yellow]")
-            return
-        
-        current_page = 0
-        page_size = 12  # Reduced for more detailed display
-        total_pages = (len(objects) - 1) // page_size + 1
-        current_sort = "probability"  # Track current sort
-        
-        # Categorize objects for summary boxes
-        categorized = self._categorize_objects_enhanced(objects)
-        
-        while True:
-            self.console.clear()
-            self.display_header()
-            
-            # Enhanced header with categorization summary
-            summary_stats = self._create_category_summary(categorized)
-            header_content = (
-                f"🗂️ {title} - Enhanced Results Browser with Enriched Data\n"
-                f"Page {current_page + 1}/{total_pages} | {len(objects)} total objects | "
-                f"Sort: {current_sort}\n{summary_stats}"
-            )
-            header_panel = Panel(header_content, style="bold green", border_style="green")
-            self.console.print(header_panel)
-            
-            # Category Summary Boxes (like status dashboard)
-            self._display_category_boxes(categorized)
-            
-            # Enhanced object list with enriched data
-            start_idx = current_page * page_size
-            end_idx = min(start_idx + page_size, len(objects))
-            page_objects = objects[start_idx:end_idx]
-            
-            # Enhanced table with more enriched data columns
-            neo_table = Table(show_header=True, title=f"NEO Objects (Page {current_page + 1}/{total_pages})")
-            neo_table.add_column("ID", style="bold", width=3)
-            neo_table.add_column("Designation", style="cyan", width=12)
-            neo_table.add_column("Cat", style="yellow", width=4)
-            neo_table.add_column("σ-Prob", style="red bold", width=6)
-            neo_table.add_column("Risk", style="orange", width=6)
-            neo_table.add_column("Sources", style="dim", width=8)
-            neo_table.add_column("Quality", style="green", width=7)
-            neo_table.add_column("Enriched Data", style="blue", width=20)
-            
-            for i, obj in enumerate(page_objects):
-                obj_id = start_idx + i + 1
-                category_icon = {
-                    "artificial": "🛸", "suspicious": "⚠️", "edge_case": "❓", 
-                    "natural": "🌍", "impact_risk": "💥"
-                }.get(obj.category, "❓")
-                
-                # Get enriched data info
-                enriched_info = self._get_enriched_data_summary(obj)
-                risk_level = self._assess_impact_risk(obj)
-                data_sources = self._get_data_sources_summary(obj)
-                quality_score = self._get_data_quality_score(obj)
-                
-                neo_table.add_row(
-                    str(obj_id),
-                    obj.designation[:11],
-                    category_icon,
-                    f"{obj.artificial_probability:.3f}",
-                    risk_level,
-                    data_sources,
-                    quality_score,
-                    enriched_info
-                )
-            
-            self.console.print(neo_table)
-            
-            # Enhanced controls with more navigation options
-            controls_table = Table(show_header=False, box=None)
-            controls_table.add_column("Key", style="bold cyan", width=12)
-            controls_table.add_column("Action", style="white")
-            
-            controls_table.add_row("1-99", "Select object ID for detailed enriched view")
-            controls_table.add_row("←/→ or P/N", "Previous/Next page")
-            controls_table.add_row("Home/End", "Jump to first/last page")
-            controls_table.add_row("G + number", "Go to specific page")
-            controls_table.add_row("F", "Filter by category (Artificial/Suspicious/Impact)")
-            controls_table.add_row("S", "Sort menu (Probability/Risk/Quality/Date)")
-            controls_table.add_row("C", "Show category breakdown")
-            controls_table.add_row("E", "Export current view to file")
-            controls_table.add_row("Q", "Quit browser")
-            
-            controls_panel = Panel(controls_table, title="[bold]🎮 Enhanced Controls[/bold]", border_style="blue")
-            self.console.print(controls_panel)
-            
-            # Get user input with enhanced navigation
-            from rich.prompt import Prompt
-            choice = Prompt.ask("Command").strip().upper()
-            
-            if choice in ['Q', 'QUIT', 'EXIT']:
-                break
-            elif choice in ['P', 'PREV', '←', 'LEFT']:
-                current_page = max(0, current_page - 1)
-            elif choice in ['N', 'NEXT', '→', 'RIGHT']:
-                current_page = min(total_pages - 1, current_page + 1)
-            elif choice in ['HOME', 'FIRST']:
-                current_page = 0
-            elif choice in ['END', 'LAST']:
-                current_page = total_pages - 1
-            elif choice.startswith('G') and len(choice) > 1:
-                # Go to specific page
-                try:
-                    page_num = int(choice[1:]) - 1
-                    if 0 <= page_num < total_pages:
-                        current_page = page_num
-                    else:
-                        self.console.print(f"❌ Page {page_num + 1} out of range (1-{total_pages})")
-                        self.wait_for_input()
-                except ValueError:
-                    self.console.print("❌ Invalid page number format. Use G followed by number (e.g., G5)")
-                    self.wait_for_input()
-            elif choice == 'F':
-                # Enhanced filter by category
-                filtered = self._enhanced_filter_menu(objects)
-                if filtered:
-                    self._norton_style_browser(filtered, f"{title} (Filtered)")
-            elif choice == 'S':
-                # Enhanced sort menu
-                sorted_objects, sort_type = self._enhanced_sort_menu(objects)
-                if sorted_objects:
-                    current_sort = sort_type
-                    self._norton_style_browser(sorted_objects, f"{title} (Sorted by {sort_type})")
-            elif choice == 'C':
-                # Show detailed category breakdown
-                self._show_category_breakdown(categorized)
-            elif choice == 'E':
-                # Export current view
-                self._export_current_view(page_objects, f"page_{current_page + 1}")
-            elif choice.isdigit():
-                # Select object by ID for detailed view
-                try:
-                    selected_id = int(choice) - 1
-                    if 0 <= selected_id < len(objects):
-                        self._show_detailed_neo_view(objects[selected_id])
-                    else:
-                        self.console.print(f"❌ Object ID {choice} out of range (1-{len(objects)})")
-                        self.wait_for_input()
-                except ValueError:
-                    self.console.print("❌ Please enter a valid object ID number")
-                    self.wait_for_input()
-            else:
-                self.console.print(f"❌ Unknown command: {choice}")
-                self.wait_for_input()
+        'Enhanced Norton Commander-style browser with enriched NEO data display.'
+        from aneos_core.analysis.dashboard_browser import browse
+        return browse(self, objects, title)
 
     def _categorize_objects_enhanced(self, objects):
-        """Categorize objects with enhanced sigma-5 quality assessment."""
-        categorized = {
-            'artificial': [],
-            'suspicious': [],
-            'edge_case': [],
-            'natural': [],
-            'impact_risk': []
-        }
-        
-        for obj in objects:
-            # Enhanced categorization using sigma-5 quality thresholds
-            prob = obj.artificial_probability
-            
-            # Check for impact risk indicators
-            has_impact_risk = self._has_impact_risk_indicators(obj)
-            
-            if prob >= 0.95:  # Sigma-5 artificial confidence
-                categorized['artificial'].append(obj)
-            elif prob >= 0.7:  # High suspicion threshold
-                categorized['suspicious'].append(obj)
-            elif prob >= 0.3 or has_impact_risk:  # Edge cases or impact risks
-                if has_impact_risk:
-                    categorized['impact_risk'].append(obj)
-                else:
-                    categorized['edge_case'].append(obj)
-            else:
-                categorized['natural'].append(obj)
-        
-        return categorized
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        from aneos_core.analysis.dashboard_browser import categorized
+        return categorized(objects)
     
     def _has_impact_risk_indicators(self, obj):
         """A source-listed event flag, not a geometric/origin-based risk claim."""
@@ -3445,399 +3162,83 @@ class ANEOSMenu(ANEOSMenuBase):
             return False
 
     def _create_category_summary(self, categorized):
-        """Create summary statistics for categories."""
-        total = sum(len(cat) for cat in categorized.values())
-        if total == 0:
-            return "No objects to categorize"
-        
-        summary_parts = []
-        for category, objects in categorized.items():
-            if objects:
-                percentage = (len(objects) / total) * 100
-                icon = {
-                    'artificial': '🛸', 'suspicious': '⚠️', 'edge_case': '❓',
-                    'natural': '🌍', 'impact_risk': '💥'
-                }[category]
-                summary_parts.append(f"{icon} {len(objects)} ({percentage:.1f}%)")
-        
-        return " | ".join(summary_parts)
+        'Create summary statistics for categories.'
+        from aneos_core.analysis.dashboard_browser import summary
+        return summary(categorized)
     
     def _display_category_boxes(self, categorized):
-        """Display category summary boxes like a dashboard."""
-        from rich.columns import Columns
-        
-        boxes = []
-        colors = {
-            'artificial': 'red', 'suspicious': 'yellow', 'edge_case': 'blue',
-            'natural': 'green', 'impact_risk': 'magenta'
-        }
-        
-        for category, objects in categorized.items():
-            if objects:  # Only show categories with objects
-                icon = {
-                    'artificial': '🛸', 'suspicious': '⚠️', 'edge_case': '❓',
-                    'natural': '🌍', 'impact_risk': '💥'
-                }[category]
-                
-                box_content = f"{icon} {category.upper()}\n{len(objects)} objects"
-                box = Panel(box_content, border_style=colors[category], width=15)
-                boxes.append(box)
-        
-        if boxes:
-            columns = Columns(boxes, equal=True, expand=True)
-            self.console.print(columns)
+        'Display category summary boxes like a dashboard.'
+        from aneos_core.analysis.dashboard_browser import show_groups
+        return show_groups(self, categorized)
     
     def _get_enriched_data_summary(self, obj):
-        """Get summary of enriched data available for object."""
-        try:
-            data_points = []
-            
-            # Check for orbital elements
-            if hasattr(obj, 'orbital_elements') and obj.orbital_elements:
-                orbital = obj.orbital_elements
-                elements_count = len([k for k, v in orbital.items() if v is not None])
-                data_points.append(f"Orbital({elements_count})")
-            
-            # Check for physical properties
-            if hasattr(obj, 'physical_properties') and obj.physical_properties:
-                physical = obj.physical_properties
-                props_count = len([k for k, v in physical.items() if v is not None])
-                data_points.append(f"Physical({props_count})")
-            
-            # Check for close approaches
-            if hasattr(obj, 'close_approaches') and obj.close_approaches:
-                approaches_count = len(obj.close_approaches)
-                data_points.append(f"Approaches({approaches_count})")
-            
-            # Check for discovery data
-            if hasattr(obj, 'discovery_data') and obj.discovery_data:
-                data_points.append("Discovery")
-            
-            return " | ".join(data_points) if data_points else "Basic"
-        except:
-            return "Limited"
+        'Get summary of enriched data available for object.'
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        from aneos_core.analysis.dashboard_view import presence_text
+        return presence_text(safe_classification(obj))
     
     def _assess_impact_risk(self, obj):
         """No origin score/geometric proxy is a fitted impact-risk assessment."""
         return 'NOT_ASSESSED'
 
     def _get_data_sources_summary(self, obj):
-        """Get summary of data sources used."""
-        try:
-            sources = getattr(obj, 'data_sources', [])
-            if sources:
-                # Abbreviate source names
-                abbrev = {'NASA_CAD': 'CAD', 'NASA_SBDB': 'SBDB', 'NEODyS': 'NEO', 'MPC': 'MPC'}
-                short_sources = [abbrev.get(src, src[:3].upper()) for src in sources[:3]]
-                return "+".join(short_sources)
-            else:
-                return "Single"
-        except:
-            return "UNK"
+        'Get summary of data sources used.'
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        return ', '.join(safe_classification(obj).data_sources) or 'Not verified'
     
     def _get_data_quality_score(self, obj):
-        """Get data quality score as formatted string."""
-        try:
-            # Try to get quality score from enriched data
-            quality = getattr(obj, 'data_quality_score', None)
-            if quality is not None:
-                return f"{quality:.2f}"
-            
-            # Fallback: assess based on available data
-            score = 0.0
-            if hasattr(obj, 'orbital_elements') and obj.orbital_elements:
-                score += 0.4
-            if hasattr(obj, 'physical_properties') and obj.physical_properties:
-                score += 0.3
-            if hasattr(obj, 'data_sources') and obj.data_sources and len(obj.data_sources) > 1:
-                score += 0.3
-            
-            return f"{score:.2f}"
-        except:
-            return "N/A"
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        # Confidence/source count is not a calibrated data-quality score.
+        return 'Not assessed'
     
     def _enhanced_filter_menu(self, objects):
-        """Enhanced filter menu with multiple criteria."""
-        from rich.prompt import Prompt, Confirm
-        
-        self.console.print("\n🔍 [bold]Enhanced Filter Options[/bold]")
-        
-        filter_table = Table(show_header=False, box=None)
-        filter_table.add_column("Option", style="bold cyan")
-        filter_table.add_column("Description", style="white")
-        
-        filter_table.add_row("1", "🛸 Artificial candidates only (σ ≥ 0.95)")
-        filter_table.add_row("2", "⚠️ Suspicious objects (σ ≥ 0.7)")
-        filter_table.add_row("3", "💥 Impact risk objects")
-        filter_table.add_row("4", "❓ Edge cases (0.3 ≤ σ < 0.7)")
-        filter_table.add_row("5", "🌍 Natural objects (σ < 0.3)")
-        filter_table.add_row("6", "🎯 High quality data only")
-        filter_table.add_row("7", "📊 Multi-source objects only")
-        filter_table.add_row("8", "🔬 Validated Detector: Sigma ≥ 5.0 (Discovery threshold)")
-        filter_table.add_row("9", "🔍 Validated Detector: Sigma ≥ 2.0 (Detection threshold)")
-        filter_table.add_row("0", "Cancel filter")
-        
-        self.console.print(filter_table)
-        
-        choice = Prompt.ask("Select filter", choices=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
-        
-        if choice == "0":
-            return None
-        elif choice == "1":
-            return [obj for obj in objects if obj.artificial_probability >= 0.95]
-        elif choice == "2":
-            return [obj for obj in objects if obj.artificial_probability >= 0.7]
-        elif choice == "3":
-            return [obj for obj in objects if self._has_impact_risk_indicators(obj)]
-        elif choice == "4":
-            return [obj for obj in objects if 0.3 <= obj.artificial_probability < 0.7]
-        elif choice == "5":
-            return [obj for obj in objects if obj.artificial_probability < 0.3]
-        elif choice == "6":
-            return [obj for obj in objects if float(self._get_data_quality_score(obj).replace('N/A', '0')) >= 0.7]
-        elif choice == "7":
-            return [obj for obj in objects if len(getattr(obj, 'data_sources', [])) > 1]
-        elif choice == "8":
-            return self._filter_by_validated_detector_sigma(objects, 5.0)
-        elif choice == "9":
-            return self._filter_by_validated_detector_sigma(objects, 2.0)
-        
-        return None
+        'Enhanced filter menu with multiple criteria.'
+        from aneos_core.analysis.dashboard_browser import filter_menu
+        return filter_menu(self, objects)
     
     def _filter_by_validated_detector_sigma(self, objects, sigma_threshold):
         """Controlled deprecation: no calibrated significance/filter model is installed."""
         raise NotImplementedError('Uncalibrated rank/probability cannot supply a sigma conversion or sigma filter')
     
     def _extract_orbital_elements_from_object(self, obj):
-        """Extract orbital elements from a classification object."""
-        # Handle different object types
-        if hasattr(obj, 'orbital_elements') and obj.orbital_elements:
-            return obj.orbital_elements
-        elif hasattr(obj, 'designation'):
-            # Use designation to determine if it's Tesla (known artificial) or generic NEO
-            if obj.designation and 'tesla' in obj.designation.lower():
-                return {'a': 1.325, 'e': 0.256, 'i': 1.077}
-            else:
-                return {'a': 1.8, 'e': 0.15, 'i': 8.5}
-        else:
-            # Default NEO parameters
-            return {'a': 1.8, 'e': 0.15, 'i': 8.5}
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        return safe_classification(obj).orbital_elements
     
     def _extract_physical_data_from_object(self, obj):
-        """Extract physical data from a classification object."""
-        physical_data = {}
-        
-        # Try to extract available physical properties
-        if hasattr(obj, 'diameter') and obj.diameter:
-            physical_data['estimated_diameter'] = obj.diameter
-        elif hasattr(obj, 'estimated_diameter') and obj.estimated_diameter:
-            physical_data['estimated_diameter'] = obj.estimated_diameter
-        
-        if hasattr(obj, 'absolute_magnitude') and obj.absolute_magnitude:
-            physical_data['absolute_magnitude'] = obj.absolute_magnitude
-        
-        if hasattr(obj, 'mass') and obj.mass:
-            physical_data['mass_estimate'] = obj.mass
-            
-        # Use defaults if no data available
-        if not physical_data:
-            # Check if this might be Tesla (artificial object)
-            if hasattr(obj, 'designation') and obj.designation and 'tesla' in obj.designation.lower():
-                physical_data = {'mass_estimate': 1350, 'diameter': 12}
-            else:
-                physical_data = {'estimated_diameter': 500, 'absolute_magnitude': 18.5}
-        
-        return physical_data
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        return safe_classification(obj).physical_properties
     
     def _enhanced_sort_menu(self, objects):
-        """Enhanced sort menu with multiple criteria."""
-        from rich.prompt import Prompt
-        
-        self.console.print("\n📊 [bold]Enhanced Sort Options[/bold]")
-        
-        sort_table = Table(show_header=False, box=None)
-        sort_table.add_column("Option", style="bold cyan")
-        sort_table.add_column("Description", style="white")
-        
-        sort_table.add_row("1", "🎯 Artificial Probability (High to Low)")
-        sort_table.add_row("2", "💥 Impact Risk Level")
-        sort_table.add_row("3", "🏆 Data Quality Score")
-        sort_table.add_row("4", "📅 Discovery Date (Recent first)")
-        sort_table.add_row("5", "🔤 Designation (Alphabetical)")
-        sort_table.add_row("6", "📊 Data Completeness")
-        sort_table.add_row("0", "Cancel sort")
-        
-        self.console.print(sort_table)
-        
-        choice = Prompt.ask("Select sort", choices=["0", "1", "2", "3", "4", "5", "6"])
-        
-        if choice == "0":
-            return None, ""
-        elif choice == "1":
-            return sorted(objects, key=lambda x: x.artificial_probability, reverse=True), "Artificial Probability"
-        elif choice == "2":
-            risk_order = {"HIGH": 4, "MED": 3, "WATCH": 2, "LOW": 1, "UNK": 0}
-            return sorted(objects, key=lambda x: risk_order.get(self._assess_impact_risk(x), 0), reverse=True), "Impact Risk"
-        elif choice == "3":
-            return sorted(objects, key=lambda x: float(self._get_data_quality_score(x).replace('N/A', '0')), reverse=True), "Data Quality"
-        elif choice == "4":
-            return sorted(objects, key=lambda x: getattr(x, 'analysis_timestamp', datetime.min), reverse=True), "Discovery Date"
-        elif choice == "5":
-            return sorted(objects, key=lambda x: x.designation), "Designation"
-        elif choice == "6":
-            return sorted(objects, key=lambda x: len(self._get_enriched_data_summary(x)), reverse=True), "Data Completeness"
-        
-        return None, ""
+        'Enhanced sort menu with multiple criteria.'
+        from aneos_core.analysis.dashboard_browser import sort_menu
+        return sort_menu(self, objects)
     
     def _show_category_breakdown(self, categorized):
-        """Show detailed category breakdown."""
-        self.console.clear()
-        self.display_header()
-        
-        breakdown_table = Table(show_header=True, title="📊 Category Breakdown Analysis")
-        breakdown_table.add_column("Category", style="bold")
-        breakdown_table.add_column("Count", style="cyan")
-        breakdown_table.add_column("Percentage", style="yellow")
-        breakdown_table.add_column("Risk Level", style="red")
-        breakdown_table.add_column("Description", style="dim")
-        
-        total = sum(len(cat) for cat in categorized.values())
-        
-        category_info = {
-            'artificial': ('🛸 Artificial', 'CRITICAL', 'Sigma-5 confirmed artificial objects'),
-            'suspicious': ('⚠️ Suspicious', 'HIGH', 'High probability artificial candidates'),
-            'impact_risk': ('Source-listed event', 'NOT_ASSESSED', 'Inspect dated Sentry evidence; no local risk classification'),
-            'edge_case': ('❓ Edge Case', 'MEDIUM', 'Uncertain classification requiring review'),
-            'natural': ('🌍 Natural', 'LOW', 'Confirmed natural objects')
-        }
-        
-        for category, objects in categorized.items():
-            if objects:
-                icon_name, risk, description = category_info[category]
-                count = len(objects)
-                percentage = (count / total * 100) if total > 0 else 0
-                
-                breakdown_table.add_row(
-                    icon_name,
-                    str(count),
-                    f"{percentage:.1f}%",
-                    risk,
-                    description
-                )
-        
-        self.console.print(breakdown_table)
+        'Show detailed category breakdown.'
+        from aneos_core.analysis.dashboard_browser import show_groups
+        show_groups(self, categorized)
         self.wait_for_input()
     
     def _export_current_view(self, objects, filename_suffix):
-        """Export current view to file."""
+        'Export current view to file.'
+        from aneos_core.analysis.artificial_neo_dashboard import ArtificialNEODashboard, safe_classification
+        from aneos_core.analysis.dashboard_view import message
         try:
-            from datetime import datetime
-            import json
-            
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"neo_browser_export_{filename_suffix}_{timestamp}.json"
-            
-            export_data = {
-                'export_timestamp': datetime.now().isoformat(),
-                'total_objects': len(objects),
-                'objects': []
-            }
-            
-            for obj in objects:
-                obj_data = {
-                    'designation': obj.designation,
-                    'category': obj.category,
-                    'artificial_probability': obj.artificial_probability,
-                    'risk_level': self._assess_impact_risk(obj),
-                    'data_quality': self._get_data_quality_score(obj),
-                    'enriched_data': self._get_enriched_data_summary(obj),
-                    'data_sources': getattr(obj, 'data_sources', [])
-                }
-                export_data['objects'].append(obj_data)
-            
-            with open(filename, 'w') as f:
-                json.dump(export_data, f, indent=2)
-            
-            self.console.print(f"✅ [green]Exported {len(objects)} objects to {filename}[/green]")
-            
-        except Exception as e:
-            self.console.print(f"❌ [red]Export failed: {e}[/red]")
-        
-        self.wait_for_input()
+            dashboard = ArtificialNEODashboard(console=self.console)
+            dashboard.console = self.console
+            dashboard.classifications = [safe_classification(obj) for obj in objects]
+            return dashboard._save_dashboard_results('dashboard_results')
+        except Exception:
+            message('Export failed; no completed export has been verified. Existing reports were not overwritten.', self.console)
+        finally:
+            self.wait_for_input()
     
     def _show_detailed_neo_view(self, obj):
-        """Show comprehensive detailed view of a NEO with all enriched data."""
-        self.console.clear()
-        self.display_header()
-        
-        # Main object information panel
-        main_info = Table(show_header=False, box=None, title=f"🔍 {obj.designation} - Comprehensive Analysis")
-        main_info.add_column("Property", style="bold cyan", width=20)
-        main_info.add_column("Value", style="white")
-        
-        main_info.add_row("Designation", obj.designation)
-        main_info.add_row("Category", f"{obj.category.upper()} ({'🛸' if obj.category == 'artificial' else '⚠️' if obj.category == 'suspicious' else '💥' if obj.category == 'impact_risk' else '❓' if obj.category == 'edge_case' else '🌍'})")
-        main_info.add_row("Artificial Probability", f"{obj.artificial_probability:.4f} (σ-level: {self._calculate_sigma_level(obj.artificial_probability):.2f})")
-        main_info.add_row("Risk Assessment", self._assess_impact_risk(obj))
-        main_info.add_row("Data Quality Score", self._get_data_quality_score(obj))
-        main_info.add_row("Data Sources", self._get_data_sources_summary(obj))
-        main_info.add_row("Analysis Timestamp", getattr(obj, 'analysis_timestamp', 'Not available').strftime('%Y-%m-%d %H:%M:%S') if hasattr(getattr(obj, 'analysis_timestamp', None), 'strftime') else 'Not available')
-        
-        self.console.print(main_info)
-        
-        # Orbital Elements (if available)
-        if hasattr(obj, 'orbital_elements') and obj.orbital_elements:
-            orbital_table = Table(show_header=True, title="🌌 Orbital Elements")
-            orbital_table.add_column("Element", style="bold cyan")
-            orbital_table.add_column("Value", style="white")
-            orbital_table.add_column("Unit", style="dim")
-            orbital_table.add_column("Significance", style="yellow")
-            
-            orbital = obj.orbital_elements
-            elements_info = {
-                'a': ('Semi-major axis', 'AU', 'Orbit size'),
-                'e': ('Eccentricity', '', 'Orbit shape (0=circle, 1=parabola)'),
-                'i': ('Inclination', 'degrees', 'Orbit tilt vs ecliptic'),
-                'q': ('Perihelion distance', 'AU', 'Closest approach to Sun'),
-                'Q': ('Aphelion distance', 'AU', 'Farthest distance from Sun'),
-                'omega': ('Argument of perihelion', 'degrees', 'Orbit orientation'),
-                'Omega': ('Longitude of ascending node', 'degrees', 'Orbit plane orientation'),
-                'M': ('Mean anomaly', 'degrees', 'Position in orbit'),
-                'epoch': ('Epoch', 'JD', 'Reference time for elements')
-            }
-            
-            for key, (name, unit, significance) in elements_info.items():
-                value = orbital.get(key)
-                if value is not None:
-                    orbital_table.add_row(name, f"{value:.6f}" if isinstance(value, float) else str(value), unit, significance)
-            
-            self.console.print(orbital_table)
-        
-        # Risk Factors and Analysis Details
-        if hasattr(obj, 'risk_factors') and obj.risk_factors:
-            risk_table = Table(show_header=True, title="⚠️ Risk Factors")
-            risk_table.add_column("Factor", style="red bold")
-            
-            for factor in obj.risk_factors:
-                risk_table.add_row(factor)
-            
-            self.console.print(risk_table)
-        
-        # Physical Properties (if available)
-        if hasattr(obj, 'physical_properties') and obj.physical_properties:
-            physical_table = Table(show_header=True, title="📐 Physical Properties")
-            physical_table.add_column("Property", style="bold cyan")
-            physical_table.add_column("Value", style="white")
-            physical_table.add_column("Unit", style="dim")
-            
-            physical = obj.physical_properties
-            for key, value in physical.items():
-                if value is not None:
-                    unit = self._get_physical_property_unit(key)
-                    physical_table.add_row(key.replace('_', ' ').title(), str(value), unit)
-            
-            self.console.print(physical_table)
-        
+        'Show comprehensive detailed view of a NEO with all enriched data.'
+        from aneos_core.analysis.dashboard_view import render_detail
+        render_detail(obj, self.console)
         self.wait_for_input()
     
     def _calculate_sigma_level(self, probability):
@@ -3845,96 +3246,17 @@ class ANEOSMenu(ANEOSMenuBase):
         raise NotImplementedError('Uncalibrated rank/probability cannot supply a sigma conversion or sigma filter')
     
     def _get_physical_property_unit(self, property_name):
-        """Get appropriate unit for physical property."""
-        units = {
-            'diameter': 'm', 'mass': 'kg', 'density': 'kg/m³',
-            'albedo': '', 'rotation_period': 'hours',
-            'absolute_magnitude': 'mag', 'magnitude': 'mag'
-        }
-        return units.get(property_name.lower(), '')
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        return {'diameter_km':'km','rotation_period_hours':'h','albedo':'dimensionless',
+                'absolute_magnitude_h':'mag'}.get(property_name, 'not declared')
 
     def _filter_by_category(self, objects):
-        """Filter objects by category."""
-        from rich.prompt import Prompt
-        
-        categories = list(set(obj.category for obj in objects))
-        if not categories:
-            return objects
-        
-        category = Prompt.ask("Filter by category", choices=categories + ["all"])
-        
-        if category == "all":
-            return objects
-        else:
-            return [obj for obj in objects if obj.category == category]
+        'Filter objects by category.'
+        return self._enhanced_filter_menu(objects)
 
     def _show_object_details(self, obj):
-        """Show detailed information about a specific object."""
-        self.console.clear()
-        self.display_header()
-        
-        # Main details
-        details_table = Table(show_header=False, box=None, title=f"🔍 {obj.designation} - Detailed Analysis")
-        details_table.add_column("Property", style="bold cyan")
-        details_table.add_column("Value", style="white")
-        
-        details_table.add_row("Designation", obj.designation)
-        details_table.add_row("Category", f"{obj.category.upper()} ({'🛸' if obj.category == 'artificial' else '⚠️' if obj.category == 'suspicious' else '❓' if obj.category == 'edge_case' else '🌍'})")
-        details_table.add_row("Artificial Probability", f"{obj.artificial_probability:.3f}")
-        details_table.add_row("Confidence", f"{obj.confidence:.3f}")
-        details_table.add_row("Data Sources", ", ".join(obj.data_sources))
-        details_table.add_row("Analysis Time", obj.analysis_timestamp.strftime("%Y-%m-%d %H:%M:%S"))
-        
-        self.console.print(details_table)
-        
-        # Risk factors
-        if obj.risk_factors:
-            risk_table = Table(show_header=True, title="⚠️ Risk Factors")
-            risk_table.add_column("Factor", style="yellow")
-            
-            for factor in obj.risk_factors:
-                risk_table.add_row(factor)
-            
-            self.console.print(risk_table)
-        
-        # Orbital elements
-        if obj.orbital_elements:
-            orbital_table = Table(show_header=True, title="🌌 Orbital Elements")
-            orbital_table.add_column("Element", style="bold")
-            orbital_table.add_column("Value", style="yellow")
-            orbital_table.add_column("Description", style="dim")
-            
-            element_descriptions = {
-                'e': 'Eccentricity (0=circular, 1=parabolic)',
-                'i': 'Inclination (degrees)',
-                'a': 'Semi-major axis (AU)',
-                'q': 'Perihelion distance (AU)',
-                'Q': 'Aphelion distance (AU)',
-                'eccentricity': 'Eccentricity (0=circular, 1=parabolic)',
-                'inclination': 'Inclination (degrees)',
-                'semi_major_axis': 'Semi-major axis (AU)',
-                'perihelion_distance': 'Perihelion distance (AU)',
-                'aphelion_distance': 'Aphelion distance (AU)'
-            }
-            
-            for key, value in obj.orbital_elements.items():
-                desc = element_descriptions.get(key, "")
-                if isinstance(value, (int, float)):
-                    value_str = f"{value:.6f}"
-                else:
-                    value_str = str(value)
-                orbital_table.add_row(key, value_str, desc)
-            
-            self.console.print(orbital_table)
-        
-        # Analysis details
-        if obj.analysis_details:
-            from rich.json import JSON
-            self.console.print("\n🔬 [bold cyan]Analysis Details:[/bold cyan]")
-            details_json = JSON.from_data(obj.analysis_details)
-            self.console.print(details_json)
-        
-        self.console.input("\nPress Enter to return to browser...")
+        'Show detailed information about a specific object.'
+        return self._show_detailed_neo_view(obj)
 
     def _browse_enriched_database(self):
         """Browse the enriched NEO database."""

@@ -987,3 +987,13 @@ partial, empty, deferred and failed outcomes. A committed adapter query is not p
 of new observations or scientific completeness. See the [receipt review guide](docs/engineering/source-freshness.md)
 for menu behavior, limits and reproducible examples. Automatic selective backfill
 and exhaustive source/menu QA remain open.
+
+### Candidate screening dashboard and browser (2.2.0.dev0)
+
+Polling dashboards and the legacy results browser now use the canonical screening
+service and replayable object reviews. Follow-up, not flagged and inconclusive are
+separate from origin claims; legacy probabilities remain archived and unverified.
+Details retain source evidence, field-presence limits, chronology and explanations.
+JSON/Markdown exports preserve frozen policies and are written to new directories.
+See the [dashboard guide](docs/engineering/polling-dashboard-screening.md) for file
+loading, controls, compatibility changes, examples and remaining upstream defects.

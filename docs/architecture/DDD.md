@@ -1491,3 +1491,27 @@ recent/stale/unknown/deferred/partial labels and safe rendering. Existing menu e
 points delegate here instead of the legacy SBDB-only re-poll. No additional bounded
 context or database is needed. All-source backfill, eligibility/health discovery and
 a durable scheduling lifecycle remain pending; this is not scientific completeness.
+
+## Polling dashboard and browser — 2026-11-13 / ADR-090
+
+Acquisition owns source identity, units and typed snapshots; a renderer must not
+invent those from a legacy score or object name. The canonical analysis service owns
+the ranking decision and nullable scientific inference. The existing object-review
+read model owns the replayed calculation trace, fixed field-presence profile, source
+chronology and evidence-grounded explanations. A polling-screening record binds its
+original finite JSON input to that review and records a local screening receipt.
+Legacy or invalid input stays distinct from typed/replayed evidence.
+
+Presentation owns dashboard counts, navigation, safe labels and the graph of record
+outcomes. Counts are not origin probabilities; repeated designation labels are not
+independent observations. Sorting by local screening receipt is not sorting discovery.
+Field presence is not calibrated quality or scientific completeness. The existing
+Sentry boundary alone supplies source-listed impact evidence and identity checks.
+
+Versioned dashboard exports retain per-record frozen policy descriptors and verify
+replay on import. JSON/Markdown are new derived artifacts, not edits to source files
+or historical assessments. Source-file hashes are reproducibility metadata, not
+provider authentication. Unsupported older probability/heuristic helpers have explicit
+controlled deprecations. No additional bounded context or persistence engine is needed.
+Root candidate/source polling remains #71/#73, and independent model fitting,
+calibration, search-wide error control and all-feature QA remain separate obligations.

@@ -3051,3 +3051,47 @@ ADR-089 QA clarification (#69): requested width is not measured width. The share
 capture helper now supplies both dimensions and verifies the Rich console width;
 a TERM=dumb regression checks actual SVG geometry. Historical bundles are retained
 with a public limitation note, not silently re-captured or reclassified.
+
+## ADR-090 — Replace dashboard origin thresholds with replayable screening views
+
+**Date:** 2026-11-13. **Status:** implemented in the draft stack; engineering tests
+and exact-head CI are required. Scientific calibration remains unavailable. See
+[polling dashboard contracts and examples](../engineering/polling-dashboard-screening.md).
+
+The root polling dashboard and its legacy browser accepted arbitrary probability
+fields, invented confidence/completeness and converted absent scores into natural
+origin. Explicit null scores crashed. The browser independently categorized, sorted
+and formatted these values, including unsupported sigma filters. This contradicted
+the deployed screening contract even after earlier core/REST corrections.
+
+Replace that second origin engine with adapters to ScreeningAnalysisService and the
+existing verified object-review read model. Accept complete serialized NEO snapshots,
+replayable canonical assessments and frozen reviews. Preserve additional evidence,
+identity, units, policy versions and source assertions. Do not promote unschematized
+legacy fields into measurements; retain them as unverified input. Explicit synthetic
+provenance must not become an observational assessment through a different container.
+
+Use follow-up candidate, not flagged and inconclusive outcomes. All origin confidence,
+Gaussian significance, p-values and FDR remain unavailable. Not flagged is not natural.
+Separate record counts, distinct exact designation labels and typed field-inventory
+availability; do not invent an aggregate scientific quality/completeness score.
+
+Keep existing entry points and navigation. Replace faulty categorization, sorting,
+details and exports with shared adapters/views. Document controlled deprecation of
+origin-threshold, name-based default, temporal-origin and unitless physical-origin
+helpers; sigma filter options explain their unavailability rather than crashing.
+Source-listed impact filtering still requires the existing replayable Sentry contract
+and object identity. It does not convert screening into a local impact-risk model.
+
+Versioned record/dashboard exports retain finite raw input, source snapshots, policy
+identities and reproducibility metadata. Re-import verifies content and preserves each
+frozen policy, including heterogeneous historical policies; it does not re-rank all
+records under the current default. New export directories are exclusive, with JSON,
+Markdown and a completion/hash marker. Historical files are not rewritten.
+
+These responsibilities fit the existing acquisition, analysis and presentation
+boundaries; no new engine, database, REST route or bounded context is introduced.
+Rendering does not query providers. Root legacy source polling and its first-payload
+loss remain separate confirmed defects (#73/#71). Add a 90% dashboard/browser
+component gate and actual 80/120/160 captures, retaining every existing gate. Neither
+these tests nor source replay establish independent scientific readiness.
