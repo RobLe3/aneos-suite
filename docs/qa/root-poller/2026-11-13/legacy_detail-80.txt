@@ -1,0 +1,16 @@
+SYNTHETIC_LEGACY — Inconclusive
+Input basis: Legacy assertions — unverified; not used as measurements
+Source-format consistency/replay is not provider authentication or independent 
+validation.
+Screening unavailable: no replayable typed evidence or canonical assessment. 
+Legacy input is retained for review.
+Legacy or invalid input below is archived, not adopted as measurements or an 
+origin conclusion.
+{
+  "artificial_probability": null,
+  "designation": "SYNTHETIC_LEGACY"
+}
+Rank is an uncalibrated follow-up heuristic, not Gaussian significance or an 
+origin probability. Not flagged does not mean natural. Impact risk is not 
+assessed here. Legacy unverified rows are retained, not promoted to measured 
+evidence.

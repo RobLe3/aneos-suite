@@ -410,7 +410,8 @@ class ArtificialNEODashboard:
     def classify_records(self, records):
         if not isinstance(records, list) or len(records) > 10000:
             raise ValueError("Dashboard requires at most 10000 explicit records")
-        return [classify_record(r, self.service) for r in records]
+        return [safe_classification(r) if isinstance(r, NEOClassification)
+                else classify_record(r, self.service) for r in records]
 
     async def _classify_neo(self, result):
         return classify_record(result, self.service)
@@ -473,7 +474,7 @@ class ArtificialNEODashboard:
 
         message(LIMITS, self.console)
 
-    def _save_dashboard_results(self, output_dir):
+    def _save_dashboard_results(self, output_dir, *, invocation_context=None):
         """Exclusive run directory, verified JSON and Markdown; never overwrite history."""
         from .dashboard_view import dashboard_markdown, message
         from .reporting import _software_metadata
@@ -486,6 +487,10 @@ class ArtificialNEODashboard:
             "policies": record_policies(records),
             "limits": LIMITS,
         }
+        if invocation_context is not None:
+            if not isinstance(invocation_context, dict):
+                raise ValueError("Invocation context must be a finite JSON object")
+            report["invocation_context"] = clone(invocation_context)
         report["report_id"] = fingerprint(report)
         path = Path(output_dir)
         path.mkdir(parents=True, exist_ok=True)
@@ -499,7 +504,12 @@ class ArtificialNEODashboard:
         (run / "report.json").write_text(
             json.dumps(report, indent=2, allow_nan=False) + "\n"
         )
-        (run / "report.md").write_text(dashboard_markdown(self.classifications))
+        markdown = dashboard_markdown(self.classifications)
+        if invocation_context is not None:
+            context_json = json.dumps(report["invocation_context"], indent=2, ensure_ascii=True)
+            context_json = context_json.replace("`", "\\u0060").replace("<", "\\u003c").replace(">", "\\u003e")
+            markdown += "\n## Requested invocation context (not verified coverage)\n\n```json\n" + context_json + "\n```\n"
+        (run / "report.md").write_text(markdown)
         from hashlib import sha256
 
         complete = {

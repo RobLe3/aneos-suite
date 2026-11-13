@@ -1527,3 +1527,10 @@ measurement fusion or scientific identity resolution. A dashboard is published
 only after an acknowledged commit; it displays original records rather than
 manufacturing a cross-source measurement. Discovery failures without an object key
 and chunk-level per-source receipts still need the source-restoration work (#73).
+
+Root-poller presentation follow-up (#81): the root module is a caller of the
+existing screening views, not a domain model. A small adapter supplies the shared
+browser callbacks, replay-bound source-listed impact filter and explicit export.
+Request context belongs to the export receipt, not measurement provenance or a
+claim of date/source coverage. Acquisition restoration remains #73; these read-only
+views do not fetch or repair missing observations.

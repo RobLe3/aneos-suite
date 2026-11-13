@@ -3130,3 +3130,20 @@ No new storage engine, bounded context, API or inference path is needed. This fi
 the workflow's lossy handoff, not the quarantined root provider implementation
 (#73), persistent discovery-attempt receipts, automatic selective backfill or full
 source completeness. Old results and source payloads are not rewritten.
+
+ADR-090 root-entrypoint follow-up — 2026-11-13 / #81: the root `NEOPoller`
+summary, explorer and detail helpers now delegate through a thin presentation
+adapter to the existing screening read models/browser. They do not maintain origin
+categories, probability thresholds or confidence formatting. Display/navigation do
+not poll or persist. Export is an explicit action using the existing exclusive
+JSON/Markdown writer; unavailable/empty results remain representable. A failed
+export has no success acknowledgement, and direct CLI export failure returns a
+nonzero status. Root acquisition remains quarantined under #73.
+
+An optional finite-JSON `invocation_context` records requested source/period or
+page context in the existing dashboard export. It is covered by the report hash,
+cloned from caller state and labeled as requested context, not verified scientific
+coverage. Markdown escapes executable delimiters. Existing exports without this
+field keep their original format/hash; historical files are not rewritten. This is
+an additive presentation/provenance extension, not a new scoring engine or bounded
+context. File import preserves the original file but is not a migration or backup.

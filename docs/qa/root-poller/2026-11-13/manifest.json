@@ -1,0 +1,116 @@
+{
+  "schema_version": "root-poller-presentation-qa-v1",
+  "application_version": "2.2.0b2",
+  "scope": "Post-beta2 root presentation follow-up; not a change to the beta2 tag.",
+  "widths": {
+    "summary-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "summary-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "summary-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "browser-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "browser-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "browser-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "typed_detail-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "typed_detail-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "typed_detail-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "legacy_detail-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 79,
+      "svg_viewbox_width": 994.0
+    },
+    "legacy_detail-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 119,
+      "svg_viewbox_width": 1482.0
+    },
+    "legacy_detail-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    }
+  },
+  "source_files_sha256": {
+    "neo_poller.py": "2ab6af05548c7514ad8bc11d62239f1212803135fc7bfad608fc183991020f72",
+    "aneos_core/analysis/poller_presentation.py": "65f99d6e285a2082b24dab4c39d334ea4ab963cb9aecefcef7884cd19a3d73e1",
+    "aneos_core/analysis/artificial_neo_dashboard.py": "d5eb420bffb28b89f9eae808fe247667fbf90373325eb54cb059ae6f9a9feb5d",
+    "aneos_core/analysis/dashboard_view.py": "567281eefeb43346f822bc5f739726d4d6a80483ee56f4f1924aa6de5978c1e9",
+    "aneos_core/analysis/dashboard_browser.py": "dd30f4381bc14e1e2c28b84484a328120c49bfea34a9190e33f09a4ddc7b23ac",
+    "scripts/qa_menu_entry.py": "cfdb36e3ed6dc8352c5b98af9410c2fc5d3b6cb5f3b3b810edc5485b83fb19f9",
+    "scripts/qa_root_poller.py": "5d4349ca3a10e1bd3d2908c90b6d0d72e67c96c8b8659691cd9fc38f68f50416"
+  },
+  "artifact_sha256": {
+    "browser-160.html": "cf5626a8838c465a7163743dfdb9dabcb64a5244e7416bc1f24e5173469d3d7c",
+    "typed_detail-160.svg": "6604f9e5d71edff331a01fe801190e0b4b95cbd3ce02dc23dd0cfcd1a454de07",
+    "typed_detail-160.html": "c0d4f23459f235848e06cbaf9dae637de51950c6905e1ebc75d9183db2b11676",
+    "summary-120.txt": "d1dac28106f8264ecacc8158d12ad0577878583862fd4999ce38dfb97b31a183",
+    "legacy_detail-160.svg": "635489e962329c6831d623105404850cf8c5e0d387356db6af081e22f6798668",
+    "legacy_detail-120.html": "5c414b65bbfcd523afd9f6331839da85e293580bccab0b68beea918ad4c99e9b",
+    "legacy_detail-160.txt": "ad417d23f679a3fd525f2724a5535fd254a88d4313995721b767e41662eaf9a6",
+    "legacy_detail-160.html": "f70fdddfcd67fa2282e9b048bd9a57b4d29b6994cee893bcfdda17fc121cd704",
+    "browser-80.html": "8d0a1ead2e9bf3b834948b6b53223097a68a887aaefe8090aa713bcb07c441fe",
+    "browser-120.html": "8b920ee77e0b7c7ce414ce60945db77d915c1c805017bf5b6b5b659a1d133d7a",
+    "typed_detail-120.html": "af8a15531504cb030671782f71fdd5fe7b05c57376ff91003b4aa84b06c0ad09",
+    "summary-120.svg": "f841038a09d6ab57df8b44da5262347431997efe9172e69494c7d4239a6ef12b",
+    "typed_detail-160.txt": "90e35b55ef571b345581be5c7f9a43305e7fea0b1d0c4d0c8ab922e3ccb125a8",
+    "typed_detail-80.html": "ed1ace5f0f03df0f1032cc882312ab02877a4df73cf12d7dfda9ea06ae8e5085",
+    "legacy_detail-80.svg": "a3147c1e00bb527d3291d85948265c34c00e1f118fcbdfe9de66690b330cf89f",
+    "browser-160.txt": "fcadb1bfb02d1a66ad0741111b8b3237f1c25e1d6ccbc3768a3d731f307aa0f1",
+    "summary-160.html": "c29a4587b27ffba55c2157f5ad2b425b3f47b5db351834b28aa5697ff35da688",
+    "legacy_detail-80.html": "3fea1b1ddf0145f57e375394a19a5220514d5023e44513f712f64552c0a157ee",
+    "browser-160.svg": "85d5914811f913315c63a871c1020d3a45d742f77e19875534fdcfb2ad801508",
+    "legacy_detail-80.txt": "6bcbca20af81d63ff1f75a33c19e36fbdf50e6d81062975ba85bc11a42021a80",
+    "summary-120.html": "129e9a53cab6c92f8fb93e4c9ae65c54301ce399bc4b4b0fac91a80ebeb474a2",
+    "summary-80.txt": "45f373e0328f7161ee7ba360034615d11cab2707a166005133644c3679ab6bab",
+    "legacy_detail-120.svg": "1c0223d0d21fedd9f8356872d84c2061b020c41de9af0daa7a6234d9ae026f90",
+    "summary-160.txt": "38b9023e7830bed9a63d09c514f5edf91358f6a223935e5f04ab099824f2a3d8",
+    "typed_detail-120.svg": "f037463f7f5e358937425f3ecfd937e34c7dfaee334cb83202473b32df091f7a",
+    "inputs.json": "bf41aa99ebcdd19467e5148a5653ca26858fded173356222277ef873f95c7774",
+    "typed_detail-120.txt": "663aa8c6fbe6aa4bd817f9333e4c9f21c29bddb41b02cfab665b79da93d3127c",
+    "summary-160.svg": "eefb0c7711022df728f1e79da5722c0fd1edf3d4b946bf7468a226fb0c7167f3",
+    "summary-80.svg": "8ac21d658707d4635365747b5ea4795367159a78b72d47ff826723971c0c7c97",
+    "legacy_detail-120.txt": "4183349bd8d6402a78badb23ae8e6504d9a7946925786d96215451a64f57dd4e",
+    "browser-120.txt": "80687ecb02bd68886763f5fcb780796e96ba196784a6775bee930e98abebf00d",
+    "browser-80.svg": "92259eca16a08db3f06d1eae5fddfeaf8dbba43f59e07602832e75727cf33b32",
+    "typed_detail-80.txt": "59fd5257b798095cb1ca6674af5c0f170dd557a96ffcad5fe63c6426a0120714",
+    "typed_detail-80.svg": "07037afbd77d37fb306ddf942c73f5454a7246d9e989ecb132778ebc4eb48396",
+    "browser-80.txt": "f3af95f0d5adff8f84ff10b2aa74b55189f2c8389657c1b16d5ff2ae993074ac",
+    "summary-80.html": "0edb95cd2fa2ba05e575ec36710df5497e2b8b609528cb66815a24f28d223285",
+    "browser-120.svg": "694ca0a2934e223823b9ad52236330212d9444bdabbda09087910afc7bf612d1"
+  },
+  "limits": "Actual rendering over synthetic computational/legacy controls, no providers. Local screening receipt is not observation/discovery time. Not all-menu QA, source authentication, calibration, physical fits or restoration of bulk polling."
+}

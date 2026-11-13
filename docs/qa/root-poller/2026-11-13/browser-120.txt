@@ -1,0 +1,11 @@
+aNEOS 2.2.0b2 | Root poller screening records — page 1/1; 2 records; sort: Raw rank
+Follow-up candidate: 1 | Not flagged: 0 | Inconclusive: 1 (record counts, not confirmed origins or impact risk)
+                                      Screening records — ranking units, not sigma                                      
+┏━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ID   ┃ Object                        ┃ Screening outcome            ┃ Raw rank          ┃ Catalogue presence         ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1    │ SYNTHETIC_FOLLOW_UP           │ Follow-up candidate          │ 20.077            │ 4/15 fields                │
+├──────┼───────────────────────────────┼──────────────────────────────┼───────────────────┼────────────────────────────┤
+│ 2    │ SYNTHETIC_LEGACY              │ Inconclusive                 │ Unavailable       │ Not assessed               │
+└──────┴───────────────────────────────┴──────────────────────────────┴───────────────────┴────────────────────────────┘
+ID detail | P previous | N next | HOME/END | G<number> page | F filter | S sort | C counts | E export page | Q return

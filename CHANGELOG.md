@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - After 2.2.0b2
+
+- Root poller summary/browser/detail now use shared nullable screening views (#81).
+- Root exports use exclusive JSON/Markdown bundles and preserve requested invocation
+  context without treating it as verified coverage. Display/navigation are read-only.
+- Failed exports remain explicit; direct CLI export failure returns a nonzero status.
+  Root bulk source restoration remains #73.
+
 ## [2.2.0b2] - 2026-11-13
 
 Engineering beta follow-up; no new calibrated scientific claims. See
