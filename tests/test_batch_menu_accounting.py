@@ -326,8 +326,9 @@ def test_analytics_export_never_overwrites_existing_file(monkeypatch,tmp_path,ca
 
 
 @pytest.mark.parametrize('width',[None,80,120,160])
-def test_batch_request_details_use_existing_bound_measurement_insights(monkeypatch,tmp_path,capsys,width):
-    path=tmp_path/'objects.txt';path.write_text('candidate\nmissing\n')
+@pytest.mark.parametrize('name',['candidate','notflagged'])
+def test_batch_request_details_use_existing_bound_measurement_insights(monkeypatch,tmp_path,capsys,width,name):
+    path=tmp_path/'objects.txt';path.write_text(name+'\nmissing\n')
     p=pipeline();menu=menu_for_file(monkeypatch,path,p,width)
     menu._detect_batch();count=p.data_fetcher.fetch_neo_data.call_count
     menu._ask=Mock(side_effect=['','1'])
@@ -336,7 +337,11 @@ def test_batch_request_details_use_existing_bound_measurement_insights(monkeypat
     if width:
         assert max(map(len,text.splitlines()))<=width
     normalized=' '.join(' '.join(line.strip(' │╭╮╰╯').split()) for line in text.splitlines())
-    assert '800' in normalized and 'hand-set inclination' in normalized
-    assert 'not a physical-origin finding' in normalized
+    assert '800' in normalized and 'fixed global prototype reference' in normalized
+    if name=='candidate':
+        assert 'not a physical-origin finding' in normalized
+    else:
+        assert 'hand-set inclination' in normalized
+        assert 'does not establish a natural origin' in normalized
     assert 'Review ID' in normalized and 'Policy ID' in normalized
     assert p.data_fetcher.fetch_neo_data.call_count==count

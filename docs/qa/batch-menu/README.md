@@ -60,3 +60,9 @@ Developer-local capture directory for this review:
 comments link the regenerated artifact location and test/CI evidence. These synthetic
 artifacts are not archived research measurements. Source hashes, not directory names,
 identify exactly which code produced them.
+
+Per-request detail review also uses the existing evidence-bound object explanation,
+not just a generic score summary. Candidate and not-flagged controls are inspected
+at all three Rich widths and in plain text. A first assertion incorrectly expected
+the low-inclination enhancement for the 180-degree candidate fixture; the expanded
+controls now check the actual policy conditions separately, without changing scores.
