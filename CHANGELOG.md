@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - After 2.2.0b1
+
+- Preserve every source payload through the legacy polling workflow before
+  object-level presentation (#71). Exact-repeat handling remains in the existing
+  ledger; failed/unacknowledged commits cannot publish a success dashboard.
+- Separate returned records, exact designation labels and source outcomes; returned
+  rows no longer imply live retrieval. Root source restoration remains #73.
+
 ## [2.2.0b1] - 2026-11-13
 
 Engineering beta for testing, integrating the incremental reliability review stack.

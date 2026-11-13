@@ -1515,3 +1515,15 @@ provider authentication. Unsupported older probability/heuristic helpers have ex
 controlled deprecations. No additional bounded context or persistence engine is needed.
 Root candidate/source polling remains #71/#73, and independent model fitting,
 calibration, search-wide error control and all-feature QA remain separate obligations.
+
+## Polling acquisition handoff — 2026-11-13 / ADR-091
+
+The legacy workflow orchestrates collection but must not collapse source assertions
+into a first-payload/source-name union. Acquisition hands all returned payloads to
+the existing transactional enrichment boundary. That boundary owns repeat
+idempotency, immutable source/session history, conflict retention and materialized
+object projections. Presentation may count distinct exact labels but does not own
+measurement fusion or scientific identity resolution. A dashboard is published
+only after an acknowledged commit; it displays original records rather than
+manufacturing a cross-source measurement. Discovery failures without an object key
+and chunk-level per-source receipts still need the source-restoration work (#73).
