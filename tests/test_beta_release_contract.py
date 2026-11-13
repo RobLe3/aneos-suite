@@ -52,7 +52,7 @@ def test_real_launcher_executes_versioned_menu_help_and_exit(tmp_path):
     run=subprocess.run([sys.executable,'aneos.py'],cwd=root,input='14\n\n0\n',capture_output=True,text=True,
         env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1','ANEOS_DATABASE_URL':'sqlite:///'+str(tmp_path/'menu.sqlite')},timeout=30)
     assert run.returncode==0,run.stderr
-    assert '2.2.0b1' in run.stdout and 'NOT_FLAGGED' in run.stdout
+    assert '2.2.0b2' in run.stdout and 'NOT_FLAGGED' in run.stdout
     assert 'Scientific guide' in run.stdout
 
 

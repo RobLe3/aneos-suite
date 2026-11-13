@@ -2,13 +2,13 @@
 
 # aNEOS: Advanced Near Earth Object Suite
 
-**v2.2.0b1 | Beta preview | Engineering test release — not scientific validation | 2026-11-13**
+**v2.2.0b2 | Beta preview | Engineering test release — not scientific validation | 2026-11-13**
 
-**Start here:** [2.2.0b1 installation, test workflows and known limitations](docs/releases/2.2.0b1.md).
+**Start here:** [2.2.0b2 installation, test workflows and known limitations](docs/releases/2.2.0b2.md).
 Use a new checkout and a separate database; do not overwrite an existing research
 installation or its uncommitted work. This preview supports testing the unified
 per-object screening/reporting path. Known-bad root legacy candidate polling/inference is temporarily unavailable
-while #71/#73 are repaired; it cannot return synthetic scores in this preview.
+while source restoration #73 is completed; it cannot return synthetic scores in this preview.
 
 aNEOS is a Python research platform for:
 
@@ -20,7 +20,7 @@ aNEOS is a Python research platform for:
 > **Current contract:** this beta does not provide independently calibrated
 > origin probabilities, FDR estimates or five-sigma discovery significance. Earlier
 > numerical examples and aspirational capability descriptions below are not current
-> scientific validation. Follow the scoped engineering reports and ADR-065–090;
+> scientific validation. Follow the scoped engineering reports and ADR-065–091;
 > remaining work is tracked in [programme #2](https://github.com/RobLe3/aneos-suite/issues/2).
 > This is not an operational warning or planetary-defense decision service.
 

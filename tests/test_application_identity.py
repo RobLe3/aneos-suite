@@ -16,7 +16,7 @@ def test_application_version_bumps_known_tags_without_changing_contracts():
     from packaging.version import Version
     assert Version(APPLICATION_VERSION)>Version('2.1.6')
     assert Version(APPLICATION_VERSION).is_prerelease
-    assert Version(APPLICATION_VERSION).pre==('b',1)
+    assert Version(APPLICATION_VERSION).pre==('b',2)
     assert not Version(APPLICATION_VERSION).is_devrelease
     assert API_CONTRACT_VERSION=='2.0.0'
     assert BUILD_CHANNEL=='beta'

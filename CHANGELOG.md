@@ -2,7 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - After 2.2.0b1
+## [2.2.0b2] - 2026-11-13
+
+Engineering beta follow-up; no new calibrated scientific claims. See
+[installation and known limitations](docs/releases/2.2.0b2.md).
 
 - Preserve every source payload through the legacy polling workflow before
   object-level presentation (#71). Exact-repeat handling remains in the existing
