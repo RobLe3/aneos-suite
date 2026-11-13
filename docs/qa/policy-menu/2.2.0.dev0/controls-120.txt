@@ -1,0 +1,10 @@
+Synthetic screening controls — not observations or independent scientific validation
+     Synthetic positive / ordinary / missing checks      
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━┓
+┃ Control  ┃ Screening result    ┃ Raw rank    ┃ Check  ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━┩
+│ positive │ FOLLOW_UP_CANDIDATE │ 8.47949     │ passed │
+│ ordinary │ NOT_FLAGGED         │ 1.44888     │ passed │
+│ missing  │ INCONCLUSIVE        │ unavailable │ passed │
+└──────────┴─────────────────────┴─────────────┴────────┘
+Synthetic screening controls: passed. Not independent scientific validation. Scientific validation remains unavailable.

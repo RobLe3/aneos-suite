@@ -139,6 +139,19 @@ class ScreeningAnalysisService:
             detector = ValidatedSigma5ArtificialNEODetector()
         self.detector = detector
 
+    def describe_policy(self):
+        """Return the actual ranking policy/parameters and their existing identity.
+
+        This read-only description does not load configuration, fit a model or
+        establish source validity. JSON copying owns the returned mutable values.
+        """
+        description = json.loads(_canonical({
+            'policy': asdict(self.policy), 'engine_version': ENGINE_VERSION,
+            'reference_parameters': self.detector.neo_population_stats,
+        }))
+        description['policy_id'] = sha256(_canonical(description).encode()).hexdigest()
+        return description
+
     def analyze_neo(self, neo: NEOData, additional_data=None):
         from aneos_core.data.physical_evidence import verify_neo_physical
         verify_neo_physical(neo)
@@ -210,8 +223,7 @@ class ScreeningAnalysisService:
                     'provenance': provenance or {}}
         snapshot = json.loads(_canonical(snapshot))  # own an immutable-by-alias replay copy
         evidence_id = sha256(_canonical(snapshot).encode()).hexdigest()
-        policy_id = sha256(_canonical({'policy': asdict(self.policy), 'engine_version': ENGINE_VERSION,
-                                      'reference_parameters': self.detector.neo_population_stats}).encode()).hexdigest()
+        policy_id = self.describe_policy()['policy_id']
         limitations = ['No calibrated null or artificial-origin model is installed.',
                        'No search-wide significance claim is available.',
                        'Human origin has not been excluded.',

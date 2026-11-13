@@ -1,0 +1,48 @@
+<svg class="rich-terminal" viewBox="0 0 994 98.8" xmlns="http://www.w3.org/2000/svg">
+    <!-- Generated with Rich https://www.textualize.io -->
+    <style>
+
+    
+    
+
+    .terminal-2859022411-matrix {
+        font-family: monospace;
+        font-size: 20px;
+        line-height: 24.4px;
+        font-variant-east-asian: full-width;
+    }
+
+    .terminal-2859022411-title {
+        font-size: 18px;
+        font-weight: bold;
+        font-family: arial;
+    }
+
+    .terminal-2859022411-r1 { fill: #c5c8c6 }
+    </style>
+
+    <defs>
+    <clipPath id="terminal-2859022411-clip-terminal">
+      <rect x="0" y="0" width="975.0" height="47.8" />
+    </clipPath>
+    <clipPath id="terminal-2859022411-line-0">
+    <rect x="0" y="1.5" width="976" height="24.65"/>
+            </clipPath>
+    </defs>
+
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="992" height="96.8" rx="8"/><text class="terminal-2859022411-title" fill="#c5c8c6" text-anchor="middle" x="496" y="27">Actual&#160;Rich&#160;menu&#160;render</text>
+            <g transform="translate(26,22)">
+            <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
+            <circle cx="22" cy="0" r="7" fill="#febc2e"/>
+            <circle cx="44" cy="0" r="7" fill="#28c840"/>
+            </g>
+        
+    <g transform="translate(9, 41)" clip-path="url(#terminal-2859022411-clip-terminal)">
+    
+    <g class="terminal-2859022411-matrix">
+    <text class="terminal-2859022411-r1" x="0" y="20" textLength="939.4" clip-path="url(#terminal-2859022411-line-0)">Policy&#160;inspection&#160;unavailable.&#160;No&#160;settings&#160;changed;&#160;no&#160;scientific&#160;assessment&#160;</text><text class="terminal-2859022411-r1" x="976" y="20" textLength="12.2" clip-path="url(#terminal-2859022411-line-0)">
+</text><text class="terminal-2859022411-r1" x="0" y="44.4" textLength="109.8" clip-path="url(#terminal-2859022411-line-1)">produced.</text><text class="terminal-2859022411-r1" x="976" y="44.4" textLength="12.2" clip-path="url(#terminal-2859022411-line-1)">
+</text>
+    </g>
+    </g>
+</svg>

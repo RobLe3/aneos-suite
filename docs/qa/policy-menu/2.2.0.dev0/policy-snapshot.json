@@ -1,0 +1,79 @@
+{
+  "schema_version": "screening-policy-inspection-v1",
+  "application_version": "2.2.0.dev0",
+  "created_at": "2026-11-13T03:21:17.064696+00:00",
+  "policy_description": {
+    "engine_version": "catalogue-ranking-v1",
+    "policy": {
+      "candidate_threshold": 5.0,
+      "version": "follow-up-ranking-v1"
+    },
+    "reference_parameters": {
+      "orbital_elements": {
+        "eccentricity": {
+          "confidence_interval_95": [
+            0.4285,
+            0.437
+          ],
+          "mean": 0.4329,
+          "n_samples": 9998,
+          "source": "Granvik et al. 2018, observational survey",
+          "std": 0.2266
+        },
+        "inclination": {
+          "confidence_interval_95": [
+            14.8526,
+            15.1699
+          ],
+          "mean": 15.0114,
+          "n_samples": 9998,
+          "source": "Granvik et al. 2018, observational survey",
+          "std": 7.7786
+        },
+        "semi_major_axis": {
+          "confidence_interval_95": [
+            1.6335,
+            1.6577
+          ],
+          "mean": 1.6451,
+          "n_samples": 9998,
+          "source": "Granvik et al. 2018, observational survey",
+          "std": 0.6317
+        }
+      },
+      "physical_properties": {
+        "absolute_magnitude": {
+          "mean": 21.5,
+          "n_samples": 158000,
+          "source": "WISE/NEOWISE survey data",
+          "std": 2.8
+        },
+        "albedo": {
+          "mean": 0.14,
+          "n_samples": 25000,
+          "source": "WISE albedo measurements",
+          "std": 0.12
+        },
+        "diameter": {
+          "mean": 800.0,
+          "n_samples": 50000,
+          "source": "WISE diameter measurements",
+          "std": 1.2
+        }
+      }
+    },
+    "policy_id": "7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37"
+  },
+  "capabilities": {
+    "screening_score": "uncalibrated_follow_up_ranking",
+    "gaussian_significance": "unavailable",
+    "artificial_origin_probability": "unavailable",
+    "false_discovery_rate": "not_reliably_estimated",
+    "natural_origin_verdict": "not_supported",
+    "physical_model_comparison": "not_validated_in_this_screening_service",
+    "configuration_mutation": "not_supported_by_this_menu",
+    "required_validation": "separate_required_review_contract_not_exercised_by_this_view"
+  },
+  "purpose": "read_only_inspection_not_importable_runtime_configuration",
+  "snapshot_id": "81ff1007f8290b33ded270dcd2449381f94d15b670bdc52bccd7f7b05554de51"
+}

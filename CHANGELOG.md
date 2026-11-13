@@ -28,6 +28,12 @@ tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is creat
   correlated projections, legacy history and verified detail/export (ADR084, #54).
   Ordinary all-source query persistence and source coverage remain pending (#40).
 
+- Analysis Policy now inspects the actual default ranking contract, runs explicitly
+  synthetic controls and exports/verifies read-only snapshots without pretending to
+  apply scientific settings. Explicit configuration-file errors fail closed; rejected
+  ConfigManager updates/reloads retain prior state (ADR085, #56/#57). No calibration
+  claim or hidden global policy store is introduced.
+
 ## [v1.2.2] - 2026-03-11 (Phase 24)
 ### Fixed
 - `DetectionResult.__init__`: falsy-zero bug — `artificial_probability=0.0` was replaced

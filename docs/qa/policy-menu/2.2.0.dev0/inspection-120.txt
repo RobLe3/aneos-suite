@@ -1,0 +1,33 @@
+Analysis policy and diagnostics — read-only
+                         Active default canonical screening policy                          
+┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Setting               ┃ Current contract                                                 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Application           │ 2.2.0.dev0                                                       │
+│ Inspected at          │ 2026-11-13 03:21:17.064696 UTC                                   │
+│ Ranking engine        │ catalogue-ranking-v1                                             │
+│ Policy version        │ follow-up-ranking-v1                                             │
+│ Follow-up threshold   │ 5 raw ranking units                                              │
+│ Policy ID             │ 7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37 │
+│ Significance / origin │ Not calibrated / not assessed                                    │
+│ Scientific FDR        │ Not reliably estimated                                           │
+│ Required review       │ Separate required-review-v1 contract; not run by this view       │
+└───────────────────────┴──────────────────────────────────────────────────────────────────┘
+The score is an uncalibrated follow-up ranking, not Gaussian sigma. A candidate is not confirmed artificial; NOT_FLAGGED
+does not establish natural origin. The fixed reference population and dependent features still require scientific 
+calibration.
+This menu inspects the default canonical policy. Explicit custom service policies and running jobs may have different 
+recorded policy IDs. It does not audit every running process. Alpha, legacy BIC and threshold mutation are unavailable 
+here; no settings are applied. Snapshot verification never imports a runtime policy or changes required validation.
+                                    Policy inspection actions                                    
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Option ┃ Action                    ┃ Scope                                                    ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1      │ Significance controls     │ Read why alpha mutation is unavailable                   │
+│ 2      │ Physical model comparison │ Read legacy BIC limitations; no toggle                   │
+│ 3      │ Follow-up threshold       │ Inspect actual policy; no mutation                       │
+│ 4      │ Run synthetic controls    │ Positive / ordinary / missing; not scientific validation │
+│ 5      │ Export policy snapshot    │ New JSON file only; no overwrite                         │
+│ 6      │ Verify policy snapshot    │ Read / compare only; never apply                         │
+│ 0      │ Return                    │ No changes                                               │
+└────────┴───────────────────────────┴──────────────────────────────────────────────────────────┘

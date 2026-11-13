@@ -29,6 +29,16 @@ example](docs/engineering/durable-enrichment-ledger.md) before enabling writes t
 research database. This is not yet automatic persistence of every source query, complete
 source coverage or scientific validation.
 
+## Analysis policy and configuration
+
+The legacy Analysis Policy view shows the actual default ranking policy and explicitly
+synthetic diagnostics. It exports read-only snapshots and verifies archives without
+applying them; alpha/BIC/threshold mutation is not supported by that menu. Explicit
+configuration-file errors now fail rather than silently activate defaults, and rejected
+manager updates/reloads preserve the prior object. See the [policy guide and executed
+example](docs/engineering/truthful-policy-menu.md) and [configuration reference](docs/reference/configuration-reference.md)
+for scope and remaining limits. Neither feature establishes scientific calibration.
+
 ## Long-Term Goal: Addressing the Fermi Paradox Empirically
 
 The **Fermi Paradox** asks a deceptively simple question: given the age and scale of the galaxy, where is everybody? If intelligent civilisations arise at even a modest rate across billions of stars over billions of years, our solar system should statistically have been visited, observed, or contacted by now. The absence of any confirmed evidence is the paradox.

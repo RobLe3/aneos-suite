@@ -263,7 +263,7 @@ class ANEOSMenu(ANEOSMenuBase):
                     ("6", "🎯 Automated Polling Dashboard", "Poll APIs → Analyze → Interactive Dashboard"),
                     ("7", "📋 Mission Reports", "View detection results and findings"),
                     ("8", "🗂️ Results Browser", "Norton Commander-style candidate browser"),
-                    ("9", "🎛️ Mission Parameters", "Configure detection sensitivity and criteria"),
+                    ("9", "🎛️ Analysis Policy", "Read-only policy, diagnostics and snapshots"),
                     ("A", "📊 Detection Analytics", "Statistical analysis of discovery patterns"),
                     ("", "", ""),
                     ("0", "← Back to Mission Control", "Return to main mission control")
@@ -289,7 +289,7 @@ class ANEOSMenu(ANEOSMenuBase):
                 print("6. Automated Polling Dashboard")
                 print("7. Mission Reports")
                 print("8. Results Browser")
-                print("9. Mission Parameters")
+                print("9. Analysis Policy (read-only)")
                 print("A. Detection Analytics")
                 print("0. Back to Main Menu")
                 choice = input("Select option (0-9, A): ")
@@ -4149,218 +4149,206 @@ class ANEOSMenu(ANEOSMenuBase):
             self.console.print(Text('Stored evidence could not be verified; no scientific assessment displayed.'))
             self.console.input('Press Enter to continue...')
 
-    def configure_analysis(self):
-        """Configure analysis parameters and enhanced validation settings with validated detector integration."""
+    def _policy_message(self, message):
+        """Literal output in Rich and plain terminals."""
         if self.console:
-            self.console.print("🔧 [bold blue]Analysis Configuration[/bold blue]")
-            self.console.print("Configure enhanced validation pipeline and validated detector settings\n")
-            
-            try:
-                from aneos_core.validation import MultiStageValidator
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                
-                # Display current configuration
-                validator = MultiStageValidator()
-                config = validator.config
-                
-                self.console.print("📋 [bold]Current Enhanced Validation Configuration:[/bold]")
-                self.console.print(f"   Alpha Level (significance): {config.get('alpha_level', 0.05)}")
-                self.console.print(f"   ΔBIC Analysis: {'Enabled' if config.get('enable_delta_bic', True) else 'Disabled'}")
-                self.console.print(f"   Spectral Analysis: {'Enabled' if config.get('enable_spectral_analysis', True) else 'Disabled'}")
-                self.console.print(f"   Radar Analysis: {'Enabled' if config.get('enable_radar_analysis', True) else 'Disabled'}")
-                self.console.print(f"   Thermal-IR Analysis: {'Enabled' if config.get('enable_thermal_ir_analysis', True) else 'Disabled'}")
-                self.console.print(f"   Gaia Astrometry: {'Enabled' if config.get('enable_gaia_astrometry', True) else 'Disabled'}")
-                
-                self.console.print(f"\n🎯 [bold]Validation Thresholds:[/bold]")
-                stage3_config = config.get('stage3_thresholds', {})
-                self.console.print(f"   Plausibility Threshold: {stage3_config.get('plausibility_threshold', 0.6)}")
-                self.console.print(f"   ΔBIC Threshold: {stage3_config.get('delta_bic_threshold', 10.0)}")
-                self.console.print(f"   Artificial Likelihood Threshold: {stage3_config.get('artificial_likelihood_threshold', 0.7)}")
-                
-                # Display validated detector configuration
-                self.console.print(f"\n🔬 [bold]Validated Detector Configuration:[/bold]")
-                detection_manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                
-                # Display detector status and thresholds
-                self.console.print(f"   Preferred Detector: Validated Sigma 5 (99.99994% confidence)")
-                self.console.print(f"   Discovery Threshold: σ ≥ 5.0 (artificial classification)")
-                self.console.print(f"   Detection Threshold: σ ≥ 2.0 (suspicious classification)")
-                self.console.print(f"   Background Threshold: σ < 2.0 (natural classification)")
-                
-                # Test detector status
-                try:
-                    test_result = detection_manager.analyze_neo(
-                        orbital_elements={'a': 1.0, 'e': 0.1, 'i': 0.1},
-                        physical_data={'mass_estimate': 1000, 'diameter': 10}
-                    )
-                    detector_status = "✅ Operational"
-                    sigma_test = f"σ = {test_result.sigma_level:.2f}"
-                except Exception as e:
-                    detector_status = f"⚠️ Error: {str(e)[:50]}"
-                    sigma_test = "N/A"
-                
-                self.console.print(f"   Detector Status: {detector_status}")
-                self.console.print(f"   Test Analysis: {sigma_test}")
-                
-                self.console.print(f"\n🎛️ [bold]Configuration Options:[/bold]")
-                from rich.table import Table
-                config_table = Table(show_header=True, header_style="bold magenta")
-                config_table.add_column("Option", style="cyan")
-                config_table.add_column("Description", style="white")
-                config_table.add_column("Current Value", style="green")
-                
-                config_table.add_row("1", "Modify Alpha Level", f"{config.get('alpha_level', 0.05)}")
-                config_table.add_row("2", "Toggle ΔBIC Analysis", f"{'Enabled' if config.get('enable_delta_bic', True) else 'Disabled'}")
-                config_table.add_row("3", "Configure Detection Thresholds", "σ ≥ 5.0 (discovery), σ ≥ 2.0 (detection)")
-                config_table.add_row("4", "Test Validated Detector", "Run diagnostic test")
-                config_table.add_row("5", "Export Configuration", "Save current settings")
-                config_table.add_row("6", "Import Configuration", "Load saved settings")
-                
-                self.console.print(config_table)
-                
-                from rich.prompt import Confirm, Prompt
-                if Confirm.ask("\nWould you like to modify these settings?"):
-                    choice = Prompt.ask("\nSelect configuration option", choices=["1", "2", "3", "4", "5", "6", "0"], default="0")
-                    
-                    if choice == "1":
-                        self._configure_alpha_level(config)
-                    elif choice == "2":
-                        self._toggle_delta_bic(config)
-                    elif choice == "3":
-                        self._configure_detection_thresholds()
-                    elif choice == "4":
-                        self._test_validated_detector()
-                    elif choice == "5":
-                        self._export_configuration(config)
-                    elif choice == "6":
-                        self._import_configuration()
-                    elif choice == "0":
-                        self.console.print("Configuration unchanged.")
-                    
-            except ImportError as e:
-                self.show_error(f"Enhanced validation configuration not available: {e}")
-        else:
-            print("Analysis configuration requires enhanced terminal support")
-            
-        self.wait_for_input()
-
-    def _configure_alpha_level(self, config):
-        """Configure statistical significance alpha level."""
-        from rich.prompt import FloatPrompt
-        current_alpha = config.get('alpha_level', 0.05)
-        
-        self.console.print(f"\nCurrent alpha level: {current_alpha}")
-        self.console.print("Alpha level controls statistical significance (lower = more stringent)")
-        self.console.print("Common values: 0.05 (95% confidence), 0.01 (99% confidence), 0.001 (99.9% confidence)")
-        
-        new_alpha = FloatPrompt.ask("Enter new alpha level", default=current_alpha)
-        if 0.0001 <= new_alpha <= 0.1:
-            config['alpha_level'] = new_alpha
-            self.console.print(f"✅ Alpha level updated to {new_alpha}")
-        else:
-            self.console.print("❌ Alpha level must be between 0.0001 and 0.1")
-
-    def _toggle_delta_bic(self, config):
-        """Toggle ΔBIC analysis on/off."""
-        from rich.prompt import Confirm
-        current_state = config.get('enable_delta_bic', True)
-        
-        self.console.print(f"\nΔBIC Analysis is currently: {'Enabled' if current_state else 'Disabled'}")
-        self.console.print("ΔBIC helps distinguish between artificial and natural object models")
-        
-        new_state = not current_state
-        if Confirm.ask(f"{'Disable' if current_state else 'Enable'} ΔBIC analysis?"):
-            config['enable_delta_bic'] = new_state
-            self.console.print(f"✅ ΔBIC analysis {'enabled' if new_state else 'disabled'}")
-
-    def _configure_detection_thresholds(self):
-        """Configure validated detector sigma thresholds."""
-        from rich.prompt import FloatPrompt, Confirm
-        
-        self.console.print("\n🔬 [bold]Validated Detector Threshold Configuration[/bold]")
-        self.console.print("Current thresholds:")
-        self.console.print("   Discovery (artificial): σ ≥ 5.0 (99.99994% confidence)")
-        self.console.print("   Detection (suspicious): σ ≥ 2.0 (95.4% confidence)")
-        self.console.print("   Background (natural): σ < 2.0")
-        
-        if Confirm.ask("\nThese are optimized thresholds. Modify anyway?"):
-            discovery_threshold = FloatPrompt.ask("Discovery threshold (current: 5.0)", default=5.0)
-            detection_threshold = FloatPrompt.ask("Detection threshold (current: 2.0)", default=2.0)
-            
-            if discovery_threshold >= detection_threshold >= 0:
-                self.console.print(f"✅ Thresholds updated:")
-                self.console.print(f"   Discovery: σ ≥ {discovery_threshold}")
-                self.console.print(f"   Detection: σ ≥ {detection_threshold}")
-                self.console.print("⚠️ Note: Custom thresholds may affect detection accuracy")
-            else:
-                self.console.print("❌ Invalid thresholds: discovery must be ≥ detection ≥ 0")
-
-    def _test_validated_detector(self):
-        """Run explicitly synthetic rank controls, never advertise discovery performance."""
-        from aneos_core.analysis.screening import ScreeningAnalysisService
-        service = ScreeningAnalysisService()
-        positive = service.analyze_raw('synthetic-positive', {'a':1., 'e':.2, 'i':80.})
-        ordinary = service.analyze_raw('synthetic-ordinary', {'a':1., 'e':.2, 'i':15.})
-        missing = service.analyze_raw('synthetic-missing', {})
-        passed = positive.candidate and not ordinary.candidate and missing.screening_score is None
-        message = f'Synthetic screening controls: {"passed" if passed else "failed"}. Not independent scientific validation.'
-        if self.console:
-            self.console.print(message)
+            from rich.text import Text
+            self.console.print(Text(str(message)))
         else:
             print(message)
-        return {'control_passed':bool(passed), 'scientific_validation_status':'unavailable',
-            'five_sigma_claim_permitted':False, 'policy_id':positive.policy_id}
 
-    def _export_configuration(self, config):
-        """Export current configuration to file."""
-        import json
-        from pathlib import Path
-        from datetime import datetime
-        
-        config_data = {
-            'exported': datetime.now().isoformat(),
-            'validation_config': config,
-            'detector_config': {
-                'discovery_threshold': 5.0,
-                'detection_threshold': 2.0,
-                'preferred_detector': 'VALIDATED'
+    def _render_policy_inspection(self, snapshot):
+        """Show actual canonical policy; no configuration or scientific validation."""
+        description = snapshot['policy_description']
+        policy = description['policy']
+        rows = [
+            ('Application', snapshot['application_version']),
+            ('Inspected at', snapshot['created_at'].replace('T', ' ').replace('+00:00', ' UTC')),
+            ('Ranking engine', description['engine_version']),
+            ('Policy version', policy['version']),
+            ('Follow-up threshold', f"{policy['candidate_threshold']:g} raw ranking units"),
+            ('Policy ID', description['policy_id']),
+            ('Significance / origin', 'Not calibrated / not assessed'),
+            ('Scientific FDR', 'Not reliably estimated'),
+            ('Required review', 'Separate required-review-v1 contract; not run by this view'),
+        ]
+        self._policy_message('Analysis policy and diagnostics — read-only')
+        if self.console:
+            from rich.table import Table
+            from rich.text import Text
+            table = Table(show_header=True, title='Active default canonical screening policy')
+            table.add_column('Setting', style='cyan', no_wrap=True)
+            table.add_column('Current contract', overflow='fold')
+            for key, value in rows:
+                table.add_row(Text(key), Text(str(value)))
+            self.console.print(table)
+        else:
+            for key, value in rows:
+                print(f'{key}: {value}')
+        self._policy_message(
+            'The score is an uncalibrated follow-up ranking, not Gaussian sigma. '
+            'A candidate is not confirmed artificial; NOT_FLAGGED does not establish natural origin. '
+            'The fixed reference population and dependent features still require scientific calibration.'
+        )
+        self._policy_message(
+            'This menu inspects the default canonical policy. Explicit custom service policies and '
+            'running jobs may have different recorded policy IDs. It does not audit every running process. '
+            'Alpha, legacy BIC and threshold mutation are unavailable here; no settings are applied. '
+            'Snapshot verification never imports a runtime policy or changes required validation.'
+        )
+
+    def configure_analysis(self):
+        """Compatibility entry: inspect policy, diagnostics and immutable snapshots."""
+        try:
+            from aneos_core.analysis.policy_inspection import build_policy_snapshot
+            snapshot = build_policy_snapshot()
+            self._render_policy_inspection(snapshot)
+            options = [
+                ('1', 'Significance controls', 'Read why alpha mutation is unavailable'),
+                ('2', 'Physical model comparison', 'Read legacy BIC limitations; no toggle'),
+                ('3', 'Follow-up threshold', 'Inspect actual policy; no mutation'),
+                ('4', 'Run synthetic controls', 'Positive / ordinary / missing; not scientific validation'),
+                ('5', 'Export policy snapshot', 'New JSON file only; no overwrite'),
+                ('6', 'Verify policy snapshot', 'Read / compare only; never apply'),
+                ('0', 'Return', 'No changes'),
+            ]
+            if self.console:
+                from rich.prompt import Prompt
+                from rich.table import Table
+                from rich.text import Text
+                table = Table(title='Policy inspection actions')
+                for column in ('Option', 'Action', 'Scope'):
+                    table.add_column(column, overflow='fold')
+                for row in options:
+                    table.add_row(*(Text(part) for part in row))
+                self.console.print(table)
+                choice = Prompt.ask('Select policy inspection action', choices=[r[0] for r in options], default='0')
+            else:
+                for row in options:
+                    print(f'{row[0]}. {row[1]} — {row[2]}')
+                choice = input('Select action [0]: ').strip() or '0'
+            actions = {
+                '1': lambda: self._configure_alpha_level(None),
+                '2': lambda: self._toggle_delta_bic(None),
+                '3': self._configure_detection_thresholds,
+                '4': self._test_validated_detector,
+                '5': lambda: self._export_configuration(None),
+                '6': self._import_configuration,
             }
-        }
-        
-        config_file = Path("aneos_configuration.json")
-        try:
-            with open(config_file, 'w') as f:
-                json.dump(config_data, f, indent=2)
-            self.console.print(f"✅ Configuration exported to {config_file}")
-        except Exception as e:
-            self.console.print(f"❌ Export failed: {e}")
+            if choice in actions:
+                return actions[choice]()
+            if choice == '0':
+                return {'status': 'unchanged'}
+            self._policy_message('Unknown action; nothing changed.')
+            return {'status': 'invalid_action'}
+        except Exception:
+            self._policy_message('Policy inspection unavailable. No settings changed; no scientific assessment produced.')
+            return {'status': 'unavailable'}
+        finally:
+            self.wait_for_input()
 
-    def _import_configuration(self):
-        """Import configuration from file."""
-        import json
-        from pathlib import Path
-        from rich.prompt import Confirm
-        
-        config_file = Path("aneos_configuration.json")
-        if not config_file.exists():
-            self.console.print("❌ Configuration file not found")
-            return
-        
+    def _configure_alpha_level(self, config):
+        """Controlled deprecation: a throwaway alpha is not an active model setting."""
+        self._policy_message(
+            'Alpha changes are not applied. No calibrated null model or search-wide '
+            'error-control procedure is installed. Changing an alpha value cannot '
+            'create discovery significance. The supplied legacy configuration is unchanged.'
+        )
+        return {'status': 'unsupported_not_applied', 'runtime_configuration_changed': False}
+
+    def _toggle_delta_bic(self, config):
+        """Controlled deprecation: no unsupported physical-fit switch."""
+        self._policy_message(
+            'BIC toggles are not applied. The legacy orbital-prior comparison is a '
+            'heuristic, not an observational physical-origin fit. Valid comparison '
+            'requires compatible observations, fitted likelihoods, covariance and '
+            'parameter counts. Required validation is unchanged.'
+        )
+        return {'status': 'unsupported_not_applied', 'runtime_configuration_changed': False}
+
+    def _configure_detection_thresholds(self):
+        """Inspect the real default follow-up policy without pretending to edit it."""
+        from aneos_core.analysis.policy_inspection import build_policy_snapshot
+        snapshot = build_policy_snapshot()
+        self._render_policy_inspection(snapshot)
+        self._policy_message('Threshold changes are not applied. No discovery or natural-origin threshold is configured by this menu.')
+        return {'status': 'read_only_not_applied', 'policy_id': snapshot['policy_description']['policy_id'],
+                'runtime_configuration_changed': False}
+
+    def _test_validated_detector(self):
+        """Compatibility name: actual synthetic rank controls, not scientific validation."""
+        from aneos_core.analysis.policy_inspection import synthetic_controls
         try:
-            with open(config_file, 'r') as f:
-                config_data = json.load(f)
-            
-            exported_date = config_data.get('exported', 'Unknown')
-            self.console.print(f"Configuration exported: {exported_date}")
-            
-            if Confirm.ask("Import this configuration?"):
-                # In a real implementation, would update the validator config
-                self.console.print("✅ Configuration imported (demonstration)")
-                self.console.print("Note: Configuration changes require restart in full implementation")
-            
-        except Exception as e:
-            self.console.print(f"❌ Import failed: {e}")
-        
+            result = synthetic_controls()
+        except Exception:
+            self._policy_message('Synthetic controls unavailable; no validation status established.')
+            return {'control_passed': False, 'status': 'unavailable', 'scientific_validation_status': 'unavailable',
+                    'five_sigma_claim_permitted': False}
+        self._policy_message('Synthetic screening controls — not observations or independent scientific validation')
+        if self.console:
+            from rich.table import Table
+            from rich.text import Text
+            table = Table(title='Synthetic positive / ordinary / missing checks')
+            for name in ('Control', 'Screening result', 'Raw rank', 'Check'):
+                table.add_column(name, overflow='fold')
+            for row in result['controls']:
+                score = 'unavailable' if row['score'] is None else f"{row['score']:.6g}"
+                table.add_row(Text(row['control']), Text(row['classification']), Text(score), Text('passed' if row['passed'] else 'failed'))
+            self.console.print(table)
+        else:
+            for row in result['controls']:
+                score = 'unavailable' if row['score'] is None else f"{row['score']:.6g}"
+                self._policy_message(f"{row['control']}: {row['classification']}; raw score {score}; control {'passed' if row['passed'] else 'failed'}")
+        self._policy_message(f"Synthetic screening controls: {'passed' if result['control_passed'] else 'failed'}. Not independent scientific validation. Scientific validation remains unavailable.")
+        return result
+
+    def _export_configuration(self, config=None, *, path=None):
+        """Compatibility name: exclusive export of actual read-only policy, not config."""
+        import json, os
+        from pathlib import Path
+        from aneos_core.analysis.policy_inspection import build_policy_snapshot
+        try:
+            if path is None:
+                path = self.get_input('New policy snapshot path (blank cancels)').strip()
+            if not str(path).strip():
+                self._policy_message('Export cancelled; no file written.')
+                return {'status': 'cancelled'}
+            snapshot = build_policy_snapshot()
+            document = json.dumps(snapshot, sort_keys=True, indent=2, allow_nan=False)
+            with Path(path).open('x', encoding='utf-8') as stream:
+                stream.write(document + '\n')
+                stream.flush()
+                os.fsync(stream.fileno())
+            from aneos_core.analysis.object_review import literal
+            self._policy_message(f'Policy snapshot exported.\nFile: {literal(Path(path).name)}\nLocation: {literal(path)}\nRead-only record; no runtime settings changed.')
+            return {'status': 'exported', 'path': str(path), 'snapshot_id': snapshot['snapshot_id'],
+                    'runtime_configuration_changed': False}
+        except Exception:
+            self._policy_message('Snapshot export not completed. Existing files are not overwritten. Check the path and any partial new file; no settings changed.')
+            return {'status': 'not_exported', 'runtime_configuration_changed': False}
+
+    def _import_configuration(self, *, path=None):
+        """Controlled deprecation: verify an archive, never pretend to apply config."""
+        from pathlib import Path
+        from aneos_core.analysis.policy_inspection import parse_snapshot_json, MAX_BYTES
+        try:
+            if path is None:
+                path = self.get_input('Policy snapshot to verify (blank cancels)').strip()
+            if not str(path).strip():
+                self._policy_message('Verification cancelled; no settings changed.')
+                return {'status': 'cancelled'}
+            with Path(path).open('rb') as stream:
+                data = stream.read(MAX_BYTES + 1)
+            if len(data) > MAX_BYTES:
+                raise ValueError('Snapshot too large')
+            _, result = parse_snapshot_json(data.decode('utf-8'))
+            self._policy_message(f"Policy snapshot verified: {result['comparison']}. Not imported or applied. Checksum consistency is not source authenticity.")
+            self._policy_message(f"Recorded policy: {result['recorded_policy_id']}\nActive default policy: {result['active_policy_id']}")
+            return result
+        except Exception:
+            self._policy_message('Snapshot verification failed. Missing, invalid or legacy configuration is not applied; runtime policy and required validation are unchanged.')
+            return {'status': 'not_verified', 'runtime_configuration_changed': False}
+
     def generate_reports(self):
         """Generate comprehensive statistical analysis reports with validated detector integration."""
         if self.console:
@@ -6532,7 +6520,7 @@ class ANEOSMenu(ANEOSMenuBase):
                     ("", "", ""),
                     ("A", "🚀 ATLAS Advanced Scoring", "Multi-indicator anomaly scoring"),
                     ("B", "📦 Batch Processing", "Process multiple targets"),
-                    ("C", "⚙️ Advanced Configuration", "System parameters"),
+                    ("C", "⚙️ Analysis Policy", "Read-only policy and diagnostics"),
                     ("", "", ""),
                     ("0", "← Back to Scientific Tools", "Return to previous menu")
                 ]
@@ -6559,7 +6547,7 @@ class ANEOSMenu(ANEOSMenuBase):
                 print("6. Custom Analysis Workflows")
                 print("A. ATLAS Advanced Scoring")
                 print("B. Batch Processing")
-                print("C. Advanced Configuration")
+                print("C. Analysis Policy (read-only)")
                 print("0. Back to Scientific Tools")
                 choice = input("Select option: ").upper()
                 
@@ -7391,7 +7379,7 @@ class ANEOSMenu(ANEOSMenuBase):
         else:
             print("\n--- Custom Analysis Workflows ---")
             print("This functionality requires rich terminal support.")
-            print("Use configure_analysis() for basic configuration.")
+            print("Use configure_analysis() for read-only policy inspection; it does not apply settings.")
     
     def _display_workflow_menu(self):
         """Display the workflow selection menu."""

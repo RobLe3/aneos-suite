@@ -24,7 +24,7 @@ def main():
         print("Current directory should contain 'aneos_core' folder")
         sys.exit(1)
     
-    # --legacy-menu flag anywhere → use the original 121-option menu
+    # --legacy-menu selects the original grouped menu (full feature QA pending)
     if "--legacy-menu" in sys.argv:
         sys.argv.remove("--legacy-menu")
         print(f"Starting aNEOS {APPLICATION_VERSION} legacy grouped menu…")
@@ -130,9 +130,9 @@ def print_help():
 Usage: python aneos.py [command] [options]
 
 Commands:
-  (no command)    Start aNEOS menu (v2 — 15-option interactive interface)
+  (no command)    Start aNEOS menu (v2 — screening, evidence, results, system)
   menu, m         Start aNEOS menu (v2)
-  --legacy-menu   Start original 121-option menu (append to any command)
+  --legacy-menu   Start legacy grouped menu (feature QA remains pending)
   
   install, setup  Install/setup aNEOS system
     --full        Full installation with all components

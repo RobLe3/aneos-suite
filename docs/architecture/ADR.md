@@ -2877,3 +2877,43 @@ existing responsibilities.
 Compatibility note: DatabaseManager retains existing initialization for other backends,
 excluding the new ledger tables. That preserves the old startup path; it is not a new
 PostgreSQL runtime validation. Enrichment remains explicitly unavailable there.
+
+### ADR-085: Honest policy inspection and validated configuration publication
+
+**Status**: Implemented for the existing legacy analysis-policy menu and the bounded
+ConfigManager loading/update contracts. Whole-menu, all-field/consumer and operational
+readiness remain pending (#41/#16/#17).
+**Date**: 2026-11-13
+
+The configuration menu advertised Gaussian discovery confidence and natural/artificial
+origin thresholds that the canonical service does not provide. Its alpha/BIC settings
+were temporary display objects, its threshold action did not apply changes, and import
+was a demonstration. Remove these false success paths, not scientific quality gates.
+
+Keep existing helper names as controlled compatibility entries. Alpha/BIC/threshold
+mutation explicitly reports unsupported/not applied. The menu inspects the actual default
+ScreeningAnalysisService policy, reference parameters and unchanged policy fingerprint;
+explicit custom service instances and running jobs can have different recorded IDs.
+Do not introduce hidden mutable global policy files or tune the KY26 score. A candidate
+is a follow-up priority, not origin proof; a noncandidate is not confirmed natural.
+Required-review-v1 remains separate and is not exercised/certified by this view.
+
+Add finite, bounded, versioned read-only inspection snapshots. Exclusive-create export
+cannot overwrite an existing file. The old import helper now verifies checksum/structure
+and compares an archive against the current default; it never installs configuration.
+Duplicate JSON keys, invalid capability claims, invalid policy domains and legacy files
+are rejected. Consistent checksums are not authenticity or independent validation.
+Three actual positive/ordinary/missing synthetic controls are explicitly diagnostic.
+Actual Rich/plain and 80/120/160-column output is tested/captured.
+
+The same review reproduced explicit-file parse fallback to defaults and rejected updates
+leaving invalid manager state (#57). Explicit missing/malformed/unknown-key files now
+fail rather than silently activate defaults. Existing file-first versus environment-only
+loading remains; there is no environment-over-file merge. Updates/reloads validate a
+candidate copy before publishing it; unknown update fields fail. Existing checked
+threshold/API/worker fields reject bool/string/nonfinite/domain-invalid values. This
+is bounded instance-level state preservation, not validation of every execution field,
+thread/process synchronization, persistent hot-reload or protection against direct mutation
+of returned config objects. Existing Config.save still overwrites its explicit target;
+the new menu export is a different, exclusive-create operation. No new bounded context
+or independently calibrated scientific model is introduced.

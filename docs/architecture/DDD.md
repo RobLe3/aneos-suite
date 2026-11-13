@@ -1409,3 +1409,20 @@ rebuildable view; unsupported origin/quality values are not current scientific o
 The legacy polling enrichment path now uses this contract. Ordinary DataFetcher query
 persistence, all-source eligibility, identity ambiguity and complete research-case lifecycle
 remain pending in #40/#13. No additional bounded context or detection engine is introduced.
+
+## Policy inspection and configuration safety — 2026-11-13 / ADR-085
+
+The canonical screening service owns its policy/reference description and fingerprint;
+inspection reuses that identity rather than inventing UI thresholds or running another
+engine. Presentation describes the default service, diagnostics and unsupported actions.
+A read-only archive is not an active configuration, source authentication, a physical fit
+or a validator receipt. Snapshot verification compares records without modifying runtime
+policy or required review. Custom service/job policy IDs remain authoritative for their
+own results; this menu does not audit every live process.
+
+The existing configuration boundary owns explicit file/environment selection and
+candidate validation before manager-instance publication. This preserves prior state on
+rejected updates/reloads but does not persist settings, synchronize workers or validate
+all consumer behavior. Direct accessors still expose mutable objects. Acquisition source
+eligibility and polling, observational fitting/calibration and whole-menu readiness remain
+separate requirements. Existing boundaries suffice; no new context or global policy store.
