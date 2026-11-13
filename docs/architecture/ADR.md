@@ -2671,7 +2671,10 @@ JWTs from existing `/auth/token?audience=network-jobs-v1`. Reject placeholders, 
 mock tokens, mixed/duplicate credentials and ambiguous active-key assignments. Scoped
 JWT verification pins algorithm/issuer/audience/required time claims and rechecks
 active principal, credential and current role on every request. No cached mock map or
-role claim grants access. Subject/credential binding keeps key revocation effective;
+role claim grants access. Administrative authority, including credential provisioning,
+uses the same fresh principal so a legacy mock administrator cannot mint a bypass.
+Provisioning/listing use the same runtime database; user IDs are UUID based.
+Subject/credential binding keeps key revocation effective;
 key rotation retains stable ownership. Configured role keys represent shared service
 principals, not individual human accounts. General legacy auth remains #17 work.
 

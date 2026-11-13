@@ -21,9 +21,13 @@ Scoped signed tokens are explicitly requested from the existing token route with
 `audience=network-jobs-v1`. They require configured signing support and a verified
 current API key. Algorithm HS256, issuer/audience, expiration/issued-at/subject and
 credential binding are checked; current SQL/config role and active key are rechecked.
-A revoked key also revokes its scoped token. Legacy unscoped tokens and development
-mocks do not authorize network jobs. General authentication/legacy token exchange on
-other routes remains unremediated scope under #17; no suite-wide security claim.
+A revoked key also revokes its scoped token. Administrative routes use this same
+fresh verification to close the credential-provisioning bypass: legacy development
+admin grants cannot mint persistent identities. Provision/list uses the runtime
+database, not a potentially different global test/deployment session, and UUID
+identifiers avoid same-second provisioning collisions. Legacy unscoped tokens and development
+mocks do not authorize network jobs. General authentication/legacy token exchange and success-only user lifecycle
+implementations remain unremediated scope under #47/#17; no suite-wide security claim.
 Primary implementation reference: [python-jose JWT implementation](https://github.com/mpdavis/python-jose/blob/master/jose/jwt.py).
 
 Owners are derived from verified principals. No arbitrary owner body field or admin
@@ -113,7 +117,7 @@ ANEOS_DATABASE_URL=sqlite:////tmp/aneos-network-api-component2.db \
   --cov-report=term-missing --cov-fail-under=85
 ```
 
-Final full suite: **1,025 passed, five network deselected, five warnings in57.16s;
+Prior integration run: **1,025 passed, five network deselected, five warnings in57.16s;
 45.41% core coverage against unchanged30% gate**. Targeted API/lifecycle suite:
 **53 passed, 92.27% combined access/routes/runtime coverage against new85% gate**,
 14.22s. Existing storage85/report90/worker90 gates remain unchanged. New API test
@@ -124,3 +128,33 @@ Initial red run had11 missing-runtime errors; a subsequent helper import path er
 was corrected. Full OpenAPI is regenerated from actual application registration,
 not its test relaxed. Earlier exploratory runs are superseded by these receipts.
 Root experimental research/database and frozen KY26 artifacts remain untouched.
+
+Follow-up inspection found the legacy administrator could provision SQL identities.
+The same verified-admin boundary now guards administration, and actual authorized
+provisioning plus mock-grant denial and cross-owner controls test this dependency.
+The initial positive fixture lacked the required password field; it was corrected
+to a valid synthetic request, not the API validator relaxed. No claim is made that
+legacy password/lifecycle implementation is complete; see #47. Updated final
+verification receipts below supersede the prior integration counts above.
+
+Final provisioning-boundary follow-up (supersedes preceding counts):
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 ANEOS_DATABASE_URL=sqlite:////tmp/aneos-network-api-final5.db \
+/Users/roble/.venvs/aneos-suite/bin/python -m pytest tests/ aneos_core/tests/ \
+  -m 'not network' -q --tb=short --cov=aneos_core --cov-report=term-missing --cov-fail-under=30
+
+COVERAGE_FILE=/tmp/aneos-network-api-component3.coverage PYTHONDONTWRITEBYTECODE=1 \
+ANEOS_DATABASE_URL=sqlite:////tmp/aneos-network-api-component3.db \
+/Users/roble/.venvs/aneos-suite/bin/python -m pytest tests/test_durable_network_api.py \
+  tests/test_pattern_api.py tests/test_api_bootstrap_contract.py -q --tb=short \
+  --cov=aneos_api --cov-config=tests/coverage-network-api.ini \
+  --cov-report=term-missing --cov-fail-under=85
+```
+
+**1,027 passed, five network deselected, five warnings in58.76s; core45.41%/gate30.**
+**55 targeted passed, access/routes/runtime92.38%/newgate85**, 13.74s. This branch
+adds38 cases overall:35 new API tests plus three compatibility-helper controls.
+The old direct FakeDB provisioning test was migrated to actual verified HTTP/SQL,
+checking persisted user/key and legacy-map registration, not disabled. Historical
+phase tests retain their distinct scope; library auth defaults are not certified.

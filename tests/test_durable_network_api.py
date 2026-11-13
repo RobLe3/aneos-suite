@@ -396,3 +396,26 @@ def test_read_only_runtime_mode_does_not_pretend_to_have_a_worker(api):
 def test_boolean_horizon_not_coerced_into_scientific_configuration(api):
     client,*_=api
     assert client.post(URL,json={'designations':['A'],'historical_years':True},headers=headers()).status_code==422
+
+
+def test_legacy_admin_cannot_provision_credentials_to_bypass_network_ownership(api):
+    client,_,sessions,*_=api
+    from aneos_api.database import User
+    body={'username':'synthetic-new','email':'synthetic@example.invalid','role':'analyst','password':'synthetic-test-password-only'}
+    for credential in ({'Authorization':'Bearer mock_admin_token'},{'X-API-Key':'admin-key-not-configured'}):
+        assert client.post('/api/v1/admin/users',json=body,headers=credential).status_code==401
+    with sessions() as s:assert s.query(User).filter_by(username='synthetic-new').count()==0
+
+
+def test_verified_admin_provisions_in_same_database_but_cannot_read_another_owner_job(api,monkeypatch):
+    client,_,sessions,*_=api
+    key='synthetic-configured-admin-'+'z'*40;monkeypatch.setenv('ANEOS_ADMIN_API_KEY',key)
+    assert client.get('/api/v1/admin/users',headers=headers(KEY_A)).status_code==403
+    result=client.post('/api/v1/admin/users',json={'username':'synthetic-new','email':'synthetic@example.invalid','role':'analyst','password':'synthetic-test-password-only'},headers=headers(key))
+    assert result.status_code==200,result.text
+    from aneos_api.database import User
+    with sessions() as s:
+        u=s.query(User).filter_by(username='synthetic-new').one();created_key=u.api_keys[0]
+    job=client.post(URL,json={'designations':['A'],'harmonics':False},headers=headers(created_key))
+    assert job.status_code==200 and wait(client,job.json(),created_key)['execution_status']=='completed'
+    assert client.get(job.json()['status_url'],headers=headers(key)).status_code==404

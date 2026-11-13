@@ -10,7 +10,7 @@ import math
 import os
 import secrets
 import time
-from fastapi import HTTPException,Request,Security
+from fastapi import HTTPException,Request,Security,Depends
 from fastapi.security import APIKeyHeader,HTTPBearer
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -120,3 +120,9 @@ def require_network_principal(request:Request,api_key=Security(key_header),beare
 
 def require_writer(principal):
     if principal.role not in ('admin','analyst'):raise HTTPException(403,'Analyst or admin role required')
+
+
+def require_persistent_admin(principal=Depends(require_network_principal)):
+    """Protect credential-provisioning/admin authority with the same fresh principal."""
+    if principal.role!='admin':raise HTTPException(403,'Verified administrator required')
+    return {'user_id':principal.subject,'username':principal.subject,'role':'admin','is_active':True}

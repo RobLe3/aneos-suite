@@ -47,3 +47,8 @@ Publish whole counts and per-condition results, not just pooled totals. Subjecti
 readability/design review and independent scientific/user evaluation remain distinct
 from self-review and computational test success. Preserve prior datasets/results,
 source bytes where permitted, versions and contradictions rather than rewriting them.
+
+A dependency discovered during ownership review is separately tracked in
+[#47](https://github.com/RobLe3/aneos-suite/issues/47): remaining legacy credential
+grants and success-only/password-incomplete user lifecycle. The persistent job and
+admin authority boundary is strengthened, not a claim that all auth is corrected.

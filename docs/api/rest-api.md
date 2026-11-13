@@ -943,3 +943,9 @@ worker lifecycle starts with the app; disabling it permits owned reads/cancellat
 not new submission. See [scope, actual tests and limits](../engineering/durable-network-api.md).
 Other routes retain heterogeneous legacy authentication; this is not a suite-wide
 security certification or evidence of scientifically calibrated results.
+
+Administrator authority, especially SQL credential provisioning, now uses the same
+fresh verified principal (admin role required); development mock/placeholder grants
+cannot mint a bypass. Provisioning/listing are bound to the runtime database. This
+does not certify incomplete legacy user update/delete/password behavior; #47 tracks
+that work. Do not infer a working password-login flow from the required request field.

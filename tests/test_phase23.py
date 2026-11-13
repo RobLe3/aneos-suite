@@ -126,52 +126,28 @@ def test_authenticate_bearer_db_fallback():
     assert result["username"] == "dbonly23"
 
 
+from tests.test_durable_network_api import api
+
+
 @pytest.mark.asyncio
-async def test_create_user_api_endpoint_registers_api_key():
-    """Admin create_user generates an API key and registers it in API_KEY_MAP."""
+async def test_create_user_api_endpoint_registers_api_key(api,monkeypatch):
+    """Verified HTTP admin persists in the same DB and registers the actual key."""
     import aneos_api.auth as auth_mod
-    from aneos_api.endpoints.admin import create_user
-    from aneos_api.models import CreateUserRequest
-
-    # Build a mock DB that simulates commit/refresh
-    class FakeDB:
-        def __init__(self):
-            self._added = None
-
-        def add(self, obj):
-            # Simulate DB assigning user_id and created_at
-            if not obj.user_id:
-                obj.user_id = "new_usr_23"
-            obj.created_at = datetime.now()
-            self._added = obj
-
-        def commit(self):
-            pass
-
-        def refresh(self, obj):
-            pass
-
-        def close(self):
-            pass
-
-    request = CreateUserRequest(
-        username="newuser23b",
-        email="new23b@aneos.local",
-        password="securepassword123",
-        role="viewer",
-    )
-    current_user = {"username": "admin", "role": "admin", "user_id": "admin_001"}
-
-    initial_keys = set(auth_mod.API_KEY_MAP.keys())
-
-    with patch("aneos_api.database.SessionLocal", FakeDB), \
-         patch("aneos_api.endpoints.admin.HAS_SQLALCHEMY", True), \
-         patch("aneos_api.database.HAS_SQLALCHEMY", True):
-        await create_user(request, current_user)
-
-    new_keys = set(auth_mod.API_KEY_MAP.keys()) - initial_keys
-    assert len(new_keys) == 1, f"Expected 1 new API key, got: {new_keys}"
-    assert list(new_keys)[0].startswith("aneos_")
+    from aneos_api.database import User
+    client,_,sessions,*_=api
+    key='synthetic-phase23-admin-'+'p'*40
+    monkeypatch.setenv('ANEOS_ADMIN_API_KEY',key)
+    before=set(auth_mod.API_KEY_MAP)
+    response=client.post('/api/v1/admin/users',headers={'X-API-Key':key},json={
+        'username':'newuser23b','email':'new23b@example.invalid',
+        'password':'synthetic-test-password-only','role':'viewer'})
+    assert response.status_code==200,response.text
+    with sessions() as db:
+        user=db.query(User).filter_by(username='newuser23b').one()
+        generated=user.api_keys[0]
+        assert generated.startswith('aneos_') and generated not in before
+        assert auth_mod.API_KEY_MAP[generated]['user_id']==user.user_id==response.json()['user_id']
+    assert set(auth_mod.API_KEY_MAP)-before=={generated}
 
 
 # ---------------------------------------------------------------------------

@@ -1323,3 +1323,9 @@ other API job families and legacy authentication are not upgraded by this integr
 Object-wide assertion/enrichment/conflict history, explanations, graphical/menu QA,
 scientific suitability and documentation/version consistency are tracked #40–#46;
 review existing boundaries before adding any material new context.
+
+Credential-provisioning/admin authority is inside this verified boundary as well: a
+legacy development administrator must not mint SQL users to bypass persistent job
+ownership. Provisioning/listing use the same runtime database and verified admin
+role. This does not certify all legacy user-management implementations; #47 tracks
+remaining lifecycle/default-grant defects.

@@ -16,7 +16,7 @@ except ImportError:
     UTC = _tz.utc
 
 try:
-    from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+    from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Request
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
@@ -37,7 +37,8 @@ from ..models import (
 )
 # Import moved to avoid circular imports
 # from ..app import get_aneos_app
-from ..auth import get_current_user, require_admin
+from ..auth import get_current_user
+from ..network_access import require_persistent_admin as require_admin, get_runtime
 from ..database import User as DBUser, get_database, HAS_SQLALCHEMY
 
 CONFIG_FILE = Path("aneos_config_override.json")
@@ -264,16 +265,18 @@ async def cancel_training_session(
 @router.post("/users", response_model=UserResponse)
 async def create_user(
     request: CreateUserRequest,
+    http_request: Request,
     current_user: Dict = Depends(require_admin)
 ):
     """Create a new user account."""
     try:
-        user_id = f"user_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
+        import uuid
+        user_id = "user_" + uuid.uuid4().hex
         if HAS_SQLALCHEMY:
             import secrets as _secrets
             from ..database import SessionLocal
             from ..auth import API_KEY_MAP
-            db = SessionLocal()
+            db = get_runtime(http_request).store.sessions()
             try:
                 api_key = f"aneos_{_secrets.token_urlsafe(32)}"
                 db_user = DBUser(
@@ -317,12 +320,13 @@ async def create_user(
 
 @router.get("/users", response_model=List[UserResponse])
 async def list_users(
+    http_request: Request,
     current_user: Dict = Depends(require_admin)
 ):
     """List all user accounts."""
     if HAS_SQLALCHEMY:
         from ..database import SessionLocal
-        db = SessionLocal()
+        db = get_runtime(http_request).store.sessions()
         try:
             users = db.query(DBUser).all()
             return [
