@@ -53,16 +53,16 @@ jobs:
         run: python -m pytest tests/test_api_evidence_parity.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-api-evidence.ini --cov-report=term-missing --cov-fail-under=95
 
       - name: Verify durable enrichment ledger and SQL-backed detail
-        run: python -m pytest tests/test_durable_enrichment.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-enrichment-ledger.ini --cov-report=term-missing --cov-fail-under=90
+        run: python -m pytest tests/test_durable_enrichment.py tests/test_acquisition_readonly.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-enrichment-ledger.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify truthful policy inspection and actual configuration-menu QA
         run: python -m pytest tests/test_policy_configuration_menu.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-policy-inspection.ini --cov-report=term-missing --cov-fail-under=95
 
       - name: Verify fixed-profile acquisition and presentation coverage
-        run: python -m pytest tests/test_object_acquisition_ledger.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-acquisition.ini --cov-report=term-missing --cov-fail-under=90
+        run: python -m pytest tests/test_object_acquisition_ledger.py tests/test_acquisition_readonly.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-acquisition.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify atomic acquisition repository coverage
-        run: python -m pytest tests/test_object_acquisition_ledger.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-acquisition-repository.ini --cov-report=term-missing --cov-fail-under=90
+        run: python -m pytest tests/test_object_acquisition_ledger.py tests/test_acquisition_readonly.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-acquisition-repository.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify native NEODyS identity, field accounting and photometry
         run: python -m pytest tests/test_neodys_evidence.py tests/test_phase24.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-neodys-evidence.ini --cov-report=term-missing --cov-fail-under=90
@@ -77,7 +77,7 @@ jobs:
         run: python -m pytest tests/test_polling_source_retention.py -q --tb=short
 
       - name: Verify bounded CAD candidate acquisition and atomic query receipts
-        run: python -m pytest tests/test_candidate_discovery.py -q --tb=short --cov=aneos_core --cov=aneos_api --cov-config=tests/coverage-candidate-discovery.ini --cov-report=term-missing --cov-fail-under=95
+        run: python -m pytest tests/test_candidate_discovery.py tests/test_acquisition_readonly.py -q --tb=short --cov=aneos_core --cov=aneos_api --cov-config=tests/coverage-candidate-discovery.ini --cov-report=term-missing --cov-fail-under=95
 
       - name: Verify root poller presentation adapters and actual entrypoints
         run: python -m pytest tests/test_root_poller_presentation.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-root-poller-presentation.ini --cov-report=term-missing --cov-fail-under=95

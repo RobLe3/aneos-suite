@@ -9,7 +9,7 @@ from hashlib import sha256
 from sqlalchemy import Column, Integer, String, Text, LargeBinary, inspect, select
 from sqlalchemy.orm import sessionmaker
 from .database import Base
-from .enrichment_store import SourceAssertion, ObjectProjection, initialize_schema, schema_ready, enrich, _record
+from .enrichment_store import SourceAssertion, ObjectProjection, initialize_schema, schema_ready, enrich, _record, require_writable_acquisition_uri
 from aneos_core.data.candidate_discovery import replay_receipt
 from aneos_core.data.enrichment import dumps, fingerprint, project_assertions
 from aneos_core.utils.errors import EvidencePersistenceError
@@ -72,6 +72,7 @@ class CandidateQueryRepository:
 
     def prepare(self):
         try:
+            require_writable_acquisition_uri(self.engine)
             if schema_ready(self.engine) and _ready(self.engine):
                 with self.engine.connect() as connection:
                     names = {r[0] for r in connection.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='trigger'")}
