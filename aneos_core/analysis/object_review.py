@@ -186,7 +186,7 @@ def _assemble(payload,source_snapshot,policy,*,recorded_application_version=APPL
         insight('diameter',f'The supplied diameter {diameter!r} m is {direction} the legacy reference centre {centre!r} m. The physical proxy compares diameter in log space; this prototype comparison is not origin evidence.',
                 'heuristic_proxy',['/assessment/evidence_snapshot/physical/diameter','/ranking_trace/reference_parameters/physical_properties/diameter'])
     if 'absolute_magnitude' in physical or 'diameter' in physical or 'albedo' in physical:
-        insight('dependencies','Diameter, absolute magnitude and albedo have physical dependencies. Their availability is not three independent pieces of origin evidence; recorded albedo is not independently scored by the current physical proxy.',
+        insight('dependencies','Diameter, absolute magnitude and albedo have physical dependencies. Their availability is not three independent pieces of origin evidence; albedo is not independently scored by the current physical proxy.',
                 'heuristic_proxy',['/assessment/evidence_snapshot/physical','/assessment/evidence_sources'])
     if trace['terms'] and score is not None:
         index=max(range(len(trace['terms'])),key=lambda i:trace['terms'][i]['weighted_square'])
@@ -374,16 +374,26 @@ def _physical_inventory_text(inventory):
     lines=[]
     for registration in inventory.get('physical_measurement_evidence',[]):
         evidence=registration['evidence']
+        if not evidence['records']:
+            source='NEODyS' if evidence.get('adapter')=='neodys-oef2-photometry-v1' else 'SBDB'
+            lines.append(source+' photometry: not available; no physical parameter records supplied in this source snapshot.')
         for index,record in enumerate(evidence['records']):
             native=record['native'];n=record['normalized']
-            text=f"{literal(native['name'])}: "
+            is_neodys=record['adapter']=='neodys-oef2-photometry-v1'
+            label='H (OEF MAG)' if is_neodys else native['name']
+            text=f"{literal(record['source'])} {literal(label)}: "
             if n:
-                text+=f"{number(n['value'])} ± {number(n['sigma'])} {literal(n['units'])}; {n['uncertainty_kind']}"
+                if is_neodys:
+                    text+=f"{number(n['value'])} {literal(n['units'])}; uncertainty not available"
+                else:
+                    text+=f"{number(n['value'])} ± {number(n['sigma'])} {literal(n['units'])}; {n['uncertainty_kind']}"
             else:text+='not normalized; '+', '.join(record['issues'])
             text+=f"; ref: {literal(native.get('ref') or 'not available')}"
             duplicate=evidence['duplicate_records'].get(str(index))
             if duplicate is not None:text+=f'; duplicate of record {duplicate}, not additional evidence'
             lines.append(text)
+            if is_neodys:
+                lines.append('Native H/G record: '+literal(native['line'].strip())+'. G remains native; no typed phase-law fit or independent H/G evidence is implied.')
         for field,choice in evidence['selection'].items():
             if choice['status']!='selected':lines.append(f"{field}: {choice['status']} — no scalar selection from this source.")
     if lines:lines.append('Catalogue assertions, not independently verified measurements. Physical measurement epoch: not available; retrieval/container orbit dates are not measurement dates.')

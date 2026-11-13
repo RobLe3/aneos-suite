@@ -196,7 +196,7 @@ def test_neodys_mjd_tdt_is_retained_not_mislabeled_tdb_or_utc():
 
     src = NEODySSource.__new__(NEODySSource)
     data = src._parse_eq0(
-        "format = OEF2.0\nEND_OF_HEADER\nSYNTHETIC\n EQU 1.2 .1 .1 .01 .01 20\n MJD 51544.500000000001 TDT\n MAG 20 .15\n",
+        "format = OEF2.0\nrectype = ML\nrefsys = ECLM J2000\nEND_OF_HEADER\n123\n EQU 1.2 .1 .1 .01 .01 20\n MJD 51544.500000000001 TDT\n MAG 20 .15\n",
         123,
     )
     assert data["native_epoch"]["format"] == "MJD"

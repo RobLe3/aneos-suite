@@ -961,3 +961,8 @@ of complete scientific evidence. See the [acquisition guide and reproducible
 80/120/160-column QA](docs/engineering/object-acquisition-ledger.md) for usage,
 cache/persistence behavior and remaining limits. This is unreleased draft work;
 independent five-sigma/origin calibration is not claimed.
+
+NEODyS-specific source identity, H/G photometry, native matrix retention and
+reproducible object-review examples are described in the
+[NEODyS evidence guide](docs/engineering/neodys-evidence.md). Typed H enrichment
+does not imply a fitted phase law, transformed covariance or complete scientific data.

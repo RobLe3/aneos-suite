@@ -1442,3 +1442,18 @@ alias resolution is still required. A cached query retains its original receipt
 and evidence dates; partial-cache backfill, all observation/history roles and a
 full research-case lifecycle remain open. No new bounded context is necessary for
 this increment. File-SQLite is validated; other backend transactions are not.
+
+## Source-native NEODyS normalization — 2026-11-13 / ADR-087
+
+The acquisition adapter owns safe file identifiers, optional bounded alias resolution
+and explicit HTTP/source outcomes. The pure normalizer owns native OEF identity,
+frame/state admission, coordinate conversion and data-record accounting. The existing
+physical-evidence boundary owns a source-specific replayable MAG/H assertion, not
+an imitation SBDB packet. G and matrix/model records remain native with explicit
+limits; no independent measurement or transformed covariance is inferred.
+
+The existing repository commits the resulting source assertion and query history;
+presentation displays the source/uncertainty/alternatives. A normalization revision
+changes new cache contexts, not historical records. These responsibilities fit
+existing boundaries. A global canonical alias registry and scientific fit/covariance
+models remain separate pending requirements, not newly implemented contexts.

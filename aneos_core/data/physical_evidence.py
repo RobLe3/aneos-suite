@@ -135,10 +135,69 @@ class PhysicalMeasurement:
         return cls(result)
 
     @classmethod
+    def from_neodys(cls, native, context):
+        """Normalize H from an actual OEF MAG line, never an invented phys_par row."""
+        if (
+            not isinstance(native, dict)
+            or set(native) != {"line"}
+            or not isinstance(native["line"], str)
+        ):
+            raise ValueError("Invalid native NEODyS magnitude record")
+        if not isinstance(context, dict):
+            raise ValueError("Invalid NEODyS physical context")
+        tokens = native["line"].split("!", 1)[0].split()
+        if not tokens or tokens[0] != "MAG":
+            raise ValueError("Expected OEF MAG record")
+        issues = []
+        normalized = None
+        try:
+            if len(tokens) != 3:
+                raise ValueError("Incomplete or unsupported MAG layout")
+            value = _number(tokens[1].replace("D", "E").replace("d", "e"))
+            _number(
+                tokens[2].replace("D", "E").replace("d", "e")
+            )  # Coupled H/G record must be interpretable.
+            if (
+                value == -9.99
+            ):  # OrbFit's undefined-orbit magnitude sentinel, not an observation.
+                issues.append("source_missing_value_sentinel")
+                raise ValueError("Undefined source magnitude")
+            normalized = {
+                "field": "absolute_magnitude_h",
+                "value": value,
+                "sigma": None,
+                "units": "mag",
+                "uncertainty_kind": "not_available",
+            }
+        except (ValueError, TypeError, OverflowError):
+            issues.append("invalid_or_unsupported_magnitude")
+        result = {
+            "schema_version": "physical-measurement-v1",
+            "adapter": "neodys-oef2-photometry-v1",
+            "source": "NEODyS",
+            "native": clone(native),
+            "context": clone(context),
+            "normalized": normalized,
+            "measurement_epoch": None,
+            "estimation_status": "not_provided",
+            "evidence_basis": "catalogued_external_assertion_not_independently_verified",
+            "issues": issues,
+            "status": "normalized" if normalized else "not_normalized",
+        }
+        result["assertion_id"] = fingerprint(result)
+        return cls(result)
+
+    @classmethod
     def from_dict(cls, record):
         if not isinstance(record, dict):
             raise ValueError("Invalid physical measurement")
-        actual = cls.from_sbdb(record["native"], record["context"])
+        adapter = record.get("adapter")
+        if adapter == "sbdb-phys-par-1.3":
+            actual = cls.from_sbdb(record["native"], record["context"])
+        elif adapter == "neodys-oef2-photometry-v1":
+            actual = cls.from_neodys(record["native"], record["context"])
+        else:
+            raise ValueError("Unsupported physical measurement adapter")
         if actual.to_dict() != record:
             raise ValueError("Physical measurement does not reproduce")
         return actual
@@ -153,6 +212,27 @@ def build_sbdb_evidence(records, context):
     parsed = [
         PhysicalMeasurement.from_sbdb(item, context).to_dict() for item in records
     ]
+    return _build_evidence(parsed, context)
+
+
+def build_neodys_evidence(lines, context):
+    if not isinstance(lines, list):
+        raise ValueError("NEODyS magnitude lines must be an array")
+    parsed = [
+        PhysicalMeasurement.from_neodys({"line": line}, context).to_dict()
+        for line in lines
+    ]
+    return _build_evidence(parsed, context, adapter="neodys-oef2-photometry-v1")
+
+
+def _record_field(record):
+    if record["adapter"] == "neodys-oef2-photometry-v1":
+        return "absolute_magnitude_h"
+    name = record["native"]["name"]
+    return SPECS[name][0] if name in SPECS else None
+
+
+def _build_evidence(parsed, context, adapter=None):
     selection = {}
     groups = {}
     duplicates = {}
@@ -169,9 +249,9 @@ def build_sbdb_evidence(records, context):
             unique.append(i)
     for i in unique:
         record = parsed[i]
-        name = record["native"]["name"]
-        if name in SPECS:
-            groups.setdefault(SPECS[name][0], []).append(i)
+        field = _record_field(record)
+        if field is not None:
+            groups.setdefault(field, []).append(i)
     for field, indices in groups.items():
         # Even an unnormalized alternative must not silently disappear from ambiguity.
         available = [i for i in indices if parsed[i]["normalized"] is not None]
@@ -197,6 +277,11 @@ def build_sbdb_evidence(records, context):
             "Alternative records are not averaged; physical correlation/independence is not established.",
         ],
     }
+    if adapter is not None:
+        evidence["adapter"] = adapter
+        evidence["limitations"].append(
+            "G is retained in native MAG records; no typed phase-slope model or independent photometry fit is supplied."
+        )
     evidence["evidence_id"] = fingerprint(evidence)
     return evidence
 
@@ -213,7 +298,14 @@ def verify_physical_evidence(evidence):
             r["context"] != context for r in records
         ):
             raise ValueError("Mixed physical response contexts")
-        actual = build_sbdb_evidence([r["native"] for r in records], context)
+        if evidence.get("adapter") == "neodys-oef2-photometry-v1":
+            actual = build_neodys_evidence(
+                [r["native"]["line"] for r in records], context
+            )
+        elif "adapter" not in evidence:
+            actual = build_sbdb_evidence([r["native"] for r in records], context)
+        else:
+            raise ValueError("Unsupported physical evidence adapter")
         if actual != evidence:
             raise ValueError("Physical evidence does not reproduce")
     except (KeyError, TypeError, AttributeError, OverflowError) as exc:
@@ -232,7 +324,7 @@ def physical_projection(evidence):
         r = evidence["records"][i]
         n = r["normalized"]
         projection[field] = n["value"]
-        sigma_field = SPECS[r["native"]["name"]][3]
+        sigma_field = next(v[3] for v in SPECS.values() if v[0] == field)
         if sigma_field and n["sigma"] is not None:
             projection[sigma_field] = n["sigma"]
     return projection

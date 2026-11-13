@@ -123,3 +123,10 @@ tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is creat
   MPC native identity/ambiguity and missing-value defects, whole-key cache
   collisions and constructor pickle deletion are corrected (ADR086, #59/#60).
   Partial-cache backfill and full source/menu/scientific readiness remain open.
+
+- NEODyS now queries valid provisional OEF filenames directly, binds native object
+  identity/frame/state, retains explicit outcomes and normalizes source-native H
+  assertions without discarding the native H/G pair. Alternatives/duplicates,
+  missing values and matrix/model records retain their distinct meanings.
+  Legacy HTTP projection no longer manufactures zeroes. ADR087 documents limits;
+  G fitting, covariance conversion, global aliases and scientific calibration remain open.

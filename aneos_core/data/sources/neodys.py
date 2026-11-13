@@ -3,17 +3,15 @@ NEODyS data source implementation.
 
 Fetches osculating orbital elements from the University of Pisa NEODyS-2
 catalogue.  Objects are stored as equinoctial-element files (.eq0) at:
-  https://newton.spacedys.com/~neodys2/epoch/{number}.eq0
+  https://newton.spacedys.com/~neodys2/epoch/{number-or-provisional-identifier}.eq0
 
 Equinoctial elements are converted to classical Keplerian elements
 (a, e, i, Omega, omega, M) for use with the rest of the pipeline.
 """
 
-import math
 import logging
-import re
 from typing import Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 import requests
 
@@ -22,8 +20,6 @@ from ...config.settings import APIConfig
 from ..cache import CacheManager
 
 logger = logging.getLogger(__name__)
-
-_NEODYS_EPOCH_BASE = "https://newton.spacedys.com/~neodys2/epoch/"
 
 
 class NEODySSource(DataSourceBase):
@@ -34,7 +30,11 @@ class NEODySSource(DataSourceBase):
     the equinoctial elements to classical orbital elements.
     """
 
-    def __init__(self, config: Optional[APIConfig] = None, cache_manager: Optional[CacheManager] = None):
+    def __init__(
+        self,
+        config: Optional[APIConfig] = None,
+        cache_manager: Optional[CacheManager] = None,
+    ):
         if config is None:
             config = APIConfig()
         super().__init__(name="NEODyS", config=config, cache_manager=cache_manager)
@@ -47,8 +47,11 @@ class NEODySSource(DataSourceBase):
     async def health_check(self) -> bool:
         """Check that the NEODyS epoch directory is accessible."""
         import aiohttp
+
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=8)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=8)
+            ) as session:
                 async with session.get(self.base_url) as response:
                     return response.status == 200
         except Exception:
@@ -58,215 +61,196 @@ class NEODySSource(DataSourceBase):
     # Synchronous implementation (overrides the abstract async stub)      #
     # ------------------------------------------------------------------ #
 
-    def fetch_orbital_elements(self, designation: str) -> Optional[Dict[str, Any]]:
-        """
-        Fetch and convert equinoctial elements from NEODyS.
+    def _catalogue_target(self, designation):
+        from ..neodys_evidence import catalogue_identifier
+        from .mpc import MPCSource
 
-        The catalogue number is resolved via astroquery.mpc when the
-        designation is a name rather than a plain integer.
-        """
         try:
-            number = self._resolve_number(designation)
+            return catalogue_identifier(designation), None
+        except ValueError:
+            # Names/number+name require actual native binding, not a leading-digit guess.
+            row = MPCSource(config=self.config)._query_mpc(designation)
+            if row is None:
+                return None, None
+            number = row.get("number")
             if number is None:
-                self.logger.debug(f"NEODyS: could not resolve number for {designation!r}")
-                return None
+                raise ValueError("Matched catalogue row supplies no permanent number")
+            target = catalogue_identifier(number)
+            if not target.isdigit():
+                raise ValueError("Invalid permanent number")
+            return target, {
+                "native_catalogue_row": dict(row),
+                "identity_assessment": getattr(row, "identity_assessment", None),
+            }
 
-            raw = self._fetch_eq0(number)
-            if raw is None:
-                return None
+    def fetch_acquisition(self, designation):
+        """Fetch a native numbered/provisional OEF file, with explicit outcomes."""
+        from .base import FetchResult
+        from ...utils.errors import AmbiguousObjectError, SourceIdentityError
 
-            return raw  # _fetch_eq0 → _parse_eq0 already converts to Keplerian elements
-        except Exception as e:
-            self.logger.error(f"NEODyS fetch_orbital_elements error for {designation}: {e}")
-            return None
+        try:
+            target, resolver = self._catalogue_target(designation)
+            if target is None:
+                return FetchResult(
+                    False,
+                    source=self.name,
+                    outcome="missing",
+                    error_code="NEODYS_ALIAS_NO_MATCH",
+                )
+            result = self._download_eq0(target)
+            if result.success and resolver is not None:
+                result.data["_evidence_metadata"]["alias_resolution"] = resolver
+            return result
+        except AmbiguousObjectError as exc:
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="ambiguous",
+                error_code="NEODYS_ALIAS_AMBIGUOUS",
+                raw_response=getattr(exc, "native_response", None),
+            )
+        except (SourceIdentityError, ValueError, TypeError) as exc:
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="invalid",
+                error_code="NEODYS_INVALID_IDENTITY",
+                raw_response=getattr(exc, "native_response", None),
+            )
+        except ImportError:
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="unavailable",
+                error_code="NEODYS_ALIAS_DEPENDENCY_UNAVAILABLE",
+            )
+        except Exception:
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="unavailable",
+                error_code="NEODYS_ALIAS_UNAVAILABLE",
+            )
 
-    # ------------------------------------------------------------------ #
-    # Internal helpers                                                     #
-    # ------------------------------------------------------------------ #
+    def fetch_orbital_elements(self, designation):
+        """Compatibility dict/None API; acquisition retains detailed outcome/native data."""
+        result = self.fetch_acquisition(designation)
+        return result.data if result.success else None
 
-    def _resolve_number(self, designation: str) -> Optional[int]:
+    def _resolve_number(self, designation):
+        """Legacy permanent-number resolver with native MPC identity binding.
+
+        Ordinary provisional acquisition uses its documented direct filename instead.
         """
-        Convert a designation string to an asteroid number.
+        from ..neodys_evidence import catalogue_identifier
 
-        Handles:
-        - Plain integers:   '99942'
-        - Number + name:    '99942 Apophis'
-        - Name only:        'Apophis'  (queries MPC)
-        - Provisional:      '2004 MN4', '1998 KY26' (queries MPC — NOT treated as numbers)
-        """
-        stripped = designation.strip()
-
-        # Provisional designations look like "YYYY X..." where YYYY is 1800–2200.
-        # Do NOT extract the year as a catalogue number.
-        _PROVISIONAL = re.compile(r'^(1[89]\d\d|2[012]\d\d)\s+[A-Z]')
-        if _PROVISIONAL.match(stripped):
-            # Fall through to MPC lookup below
+        try:
+            target = catalogue_identifier(designation)
+            if target.isdigit():
+                return int(target)
+        except ValueError:
             pass
-        else:
-            # Try leading integer (numbered asteroid or "99942 Apophis" style)
-            m = re.match(r'^(\d+)', stripped)
-            if m:
-                return int(m.group(1))
+        from .mpc import MPCSource
 
-        # MPC name / provisional lookup
+        row = MPCSource(config=self.config)._query_mpc(designation)
+        if row is None:
+            return None
+        number = catalogue_identifier(row.get("number"))
+        return int(number) if number.isdigit() else None
+
+    def _download_eq0(self, target):
+        from .base import FetchResult
+        from ..provider_http import APPLICATION_HEADERS
+        from ..neodys_evidence import parse_oef, catalogue_identifier
+
+        target = catalogue_identifier(target)
+        raw = None
+        response = None
         try:
-            from astroquery.mpc import MPC as _MPC
-            results = _MPC.query_object("asteroid", name=stripped)
-            if results:
-                num = results[0].get("number")
-                if num is not None:
-                    return int(num)
-        except Exception as exc:
-            logger.debug("MPC lookup failed for %r: %s", stripped, exc)
+            response = requests.get(
+                self.base_url.rstrip("/") + "/" + target + ".eq0",
+                timeout=self.config.request_timeout,
+                headers=APPLICATION_HEADERS,
+                allow_redirects=False,
+            )
+            raw = {"equinoctial_text": response.text}
+            if response.status_code == 404:
+                return FetchResult(
+                    False,
+                    source=self.name,
+                    outcome="missing",
+                    raw_response=raw,
+                    error_code="NEODYS_FILE_NOT_FOUND",
+                )
+            if response.status_code != 200:
+                return FetchResult(
+                    False,
+                    source=self.name,
+                    outcome="unavailable",
+                    raw_response=raw,
+                    error_code="NEODYS_HTTP_UNAVAILABLE",
+                )
+            parsed = parse_oef(response.text, target)
+            parsed["_native_response"] = raw
+            return FetchResult(
+                True,
+                data=parsed,
+                source=self.name,
+                outcome="available",
+                raw_response=raw,
+            )
+        except (ValueError, TypeError, OverflowError):
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="invalid",
+                raw_response=raw,
+                error_code="NEODYS_INVALID_OEF",
+            )
+        except Exception:
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="unavailable",
+                raw_response=raw,
+                error_code="NEODYS_REQUEST_UNAVAILABLE",
+            )
+        finally:
+            if response is not None:
+                response.close()
 
-        return None
+    def _fetch_eq0(self, number):
+        """Compatibility path; never replaces a failed request with invented elements."""
+        result = self._download_eq0(number)
+        return result.data if result.success else None
 
-    def _fetch_eq0(self, number: int) -> Optional[Dict[str, Any]]:
-        """Download the .eq0 file for the given asteroid number."""
-        url = f"{self.base_url}{number}.eq0"
-        try:
-            resp = requests.get(url, timeout=self.config.request_timeout)
-            resp.raise_for_status()
-            parsed = self._parse_eq0(resp.text, number)
-            if parsed is not None:
-                parsed["_native_response"] = {"equinoctial_text": resp.text}
-            return parsed
-        except requests.HTTPError as e:
-            self.logger.warning(f"NEODyS .eq0 not found for {number}: {e}")
-            return None
-        except Exception as e:
-            self.logger.error(f"NEODyS fetch failed for {number}: {e}")
-            return None
+    def _parse_eq0(self, text, number):
+        from ..neodys_evidence import parse_oef
 
-    def _parse_eq0(self, text: str, number: int) -> Optional[Dict[str, Any]]:
-        """
-        Parse OEF2.0 equinoctial element file.
-
-        File format (after END_OF_HEADER):
-          {number}
-          ! comment
-           EQU  a  e*sin(LP)  e*cos(LP)  tan(i/2)*sin(LN)  tan(i/2)*cos(LN)  mean_long
-           MJD  epoch_mjd  TDT
-           MAG  H  G
-        """
-        lines = [l.rstrip() for l in text.splitlines()]
-        # Skip header
-        try:
-            header_end = next(i for i, l in enumerate(lines) if "END_OF_HEADER" in l)
-        except StopIteration:
-            return None
-
-        data_lines = [l for l in lines[header_end + 1:] if l and not l.startswith("!")]
-
-        equ_line = mjd_line = mag_line = None
-        for line in data_lines:
-            tokens = line.split()
-            if not tokens:
-                continue
-            if tokens[0] == "EQU" and len(tokens) >= 7:
-                equ_line = tokens
-            elif tokens[0] == "MJD" and len(tokens) >= 2:
-                mjd_line = tokens
-            elif tokens[0] == "MAG" and len(tokens) >= 3:
-                mag_line = tokens
-
-        if equ_line is None:
-            return None
-
-        a       = float(equ_line[1])
-        esinLP  = float(equ_line[2])
-        ecosLP  = float(equ_line[3])
-        hLN     = float(equ_line[4])   # tan(i/2)*sin(LN)
-        kLN     = float(equ_line[5])   # tan(i/2)*cos(LN)
-        mean_L  = float(equ_line[6])   # mean longitude
-
-        result = self._equinoctial_to_keplerian(a, esinLP, ecosLP, hLN, kLN, mean_L)
-
-        if mjd_line:
-            result["_epoch_mjd"] = float(mjd_line[1])
-            from ..epoch_evidence import NativeEpoch, SCALES
-            scale=mjd_line[2] if len(mjd_line)>2 and mjd_line[2] in SCALES else 'UNKNOWN'
-            result['native_epoch']=NativeEpoch(mjd_line[1],'MJD',scale,'NEODyS').to_dict()
-
-        if mag_line:
-            result["_H"] = float(mag_line[1])
-            result["_G"] = float(mag_line[2]) if len(mag_line) > 2 else None
-
-        return result
+        return parse_oef(text, number)
 
     @staticmethod
-    def _equinoctial_to_keplerian(
-        a: float,
-        esinLP: float, ecosLP: float,
-        hLN: float, kLN: float,
-        mean_L: float,
-    ) -> Dict[str, float]:
-        """
-        Convert OEF2.0 equinoctial elements to classical Keplerian elements.
+    def _equinoctial_to_keplerian(a, esinLP, ecosLP, hLN, kLN, mean_L):
+        from ..neodys_evidence import equinoctial_to_keplerian
 
-        Equinoctial elements:
-          a         — semi-major axis (AU)
-          e*sin(LP) — where LP = omega + Omega (longitude of perihelion)
-          e*cos(LP)
-          tan(i/2)*sin(LN)  — where LN = Omega (longitude of ascending node)
-          tan(i/2)*cos(LN)
-          L = mean longitude = M + LP
+        return equinoctial_to_keplerian(a, esinLP, ecosLP, hLN, kLN, mean_L)
 
-        Output (degrees):
-          a, e, i, ra_of_ascending_node (Omega), arg_of_periapsis (omega), mean_anomaly (M)
-        """
-        e = math.sqrt(esinLP ** 2 + ecosLP ** 2)
-
-        LP_rad = math.atan2(esinLP, ecosLP)          # longitude of perihelion
-        LN_rad = math.atan2(hLN, kLN)               # longitude of ascending node
-        i_rad  = 2.0 * math.atan(math.sqrt(hLN ** 2 + kLN ** 2))
-
-        omega_deg = math.degrees(LP_rad - LN_rad)    # argument of perihelion
-        Omega_deg = math.degrees(LN_rad)             # longitude of ascending node
-        i_deg     = math.degrees(i_rad)
-
-        # Mean anomaly M = L - LP  (all in degrees)
-        LP_deg = math.degrees(LP_rad)
-        M_deg  = (mean_L - LP_deg) % 360.0
-
-        return {
-            "semi_major_axis":      a,
-            "eccentricity":         e,
-            "inclination":          i_deg % 180.0,
-            "ra_of_ascending_node": Omega_deg % 360.0,
-            "arg_of_periapsis":     omega_deg % 360.0,
-            "mean_anomaly":         M_deg,
-        }
-
-    def _make_request(self, designation: str) -> Optional[Dict]:
-        """Query the NEODyS-2 REST API for nominal orbital elements.
-
-        Uses the NEODyS-2 JSON endpoint. Returns a Keplerian element dict or None.
-        JSON keys: {"a":..., "e":..., "i":..., "node":..., "peri":..., "M":...}
-        """
-        import requests as _req
-        clean = designation.strip().replace(" ", "")
-        url = f"{self.rest_url}{clean}/orbits/nominal"
-        try:
-            resp = _req.get(url, timeout=10,
-                            headers={"User-Agent": "aNEOS/0.7 scientific research",
-                                     "Accept": "application/json"})
-            resp.raise_for_status()
-            data = resp.json()
-            if not data:
-                return None
-            return {
-                "a":     float(data.get("a",    0)),
-                "e":     float(data.get("e",    0)),
-                "i":     float(data.get("i",    0)),
-                "omega": float(data.get("node", 0)),
-                "w":     float(data.get("peri", 0)),
-                "M":     float(data.get("M",    0)),
-                "source": "NEODyS",
-            }
-        except Exception as exc:
-            self.logger.debug(f"NEODyS _make_request failed for {designation}: {exc}")
+    def _make_request(self, designation):
+        """Controlled legacy projection through validated OEF acquisition, not undocumented REST/zero defaults."""
+        result = self.fetch_acquisition(designation)
+        if not result.success:
             return None
+        data = result.data
+        return {
+            "a": data.get("semi_major_axis"),
+            "e": data.get("eccentricity"),
+            "i": data.get("inclination"),
+            "omega": data.get("ra_of_ascending_node"),
+            "w": data.get("arg_of_periapsis"),
+            "M": data.get("mean_anomaly"),
+            "H": data.get("_physical", {}).get("absolute_magnitude_h"),
+            "source": "NEODyS",
+        }
 
     def get_object_summary(self, designation: str) -> Optional[Dict[str, Any]]:
         """Return a combined summary dict."""
@@ -276,7 +260,7 @@ class NEODySSource(DataSourceBase):
                 "designation": designation,
                 "orbital_elements": orbital,
                 "data_source": "NEODyS",
-                "retrieved_at": datetime.now().isoformat(),
+                "retrieved_at": datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
             self.logger.error(f"NEODyS summary error for {designation}: {e}")

@@ -2950,3 +2950,29 @@ for persistence, preservation, UI and scientific limits. No calibrated sigma/ori
 claim follows from a complete source profile. Existing evidence and scientific
 quality gates remain unchanged; two new acquisition/repository coverage gates add
 90% component thresholds. Draft delivery is not whole-application certification.
+
+## ADR-087 — Source-native NEODyS identity and photometry, without matrix relabelling
+
+**Date:** 2026-11-13. **Status:** implemented in draft stack; verification scoped by
+[NEODyS guide](../engineering/neodys-evidence.md).
+
+Extend the existing acquisition/normalization and atomic physical-evidence contracts.
+Use documented numbered/provisional OEF files directly; only aliases need bounded
+native MPC resolution. Bind native OEF identity and supported header/frame/state.
+Retain source outcomes and packets instead of first-match, last-record-wins or
+fabricated zeroes. Keep existing helper names; legacy nominal-HTTP projection now
+uses the validated OEF path. Directory health is not object-query success.
+
+Add a source-specific physical assertion adapter for the real MAG line and a
+replay dispatcher, preserving the existing SBDB format unchanged. Normalize H
+atomically; preserve G natively because the domain has no typed phase-law model.
+No invented uncertainties/measurement dates/estimation status. Retain alternatives,
+duplicates and non-normalized native records. Account for each data record, but do
+not relabel EQU covariance as Keplerian or LSP as measured accelerations.
+
+Partition new acquisition caches by the normalization revision without rewriting
+old evidence. Reuse the same SQL ledger, menu/detail, Markdown and export paths;
+no new bounded context or engine. Scientific covariance transformations, global
+aliases, all-source field accounting and observational fits remain open. Add a
+90% NEODyS component gate; expand the existing physical-evidence gate's test inputs,
+not its threshold. The whole scientific goal is not certified by these tests.
