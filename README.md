@@ -44,6 +44,7 @@ results from different installations.
 | Preserve local evidence | Transactional file-SQLite acquisition receipts, source-specific assertions and replayable projections |
 | Read and export results | Rich/plain terminal views, versioned JSON, Markdown and existing dashboard loaders |
 | Inspect impact evidence | Scoped external JPL Sentry results and explicit conditional scenarios; not a validated local impact-risk solver |
+| Recover batch work | Development review: owned REST and primary-menu SQL jobs, committed per-object checkpoints and restart recovery; other job families remain separate |
 | Collect CAD candidates | Development only: one bounded Earth-encounter query, explicit partial coverage and optional object enrichment |
 
 These capabilities have scoped engineering tests. They do **not** establish

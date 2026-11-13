@@ -257,7 +257,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
         title="aNEOS API",
         description=(
             "Uncalibrated NEO screening and scoped research evidence. "
-            "Persistent network jobs require verified API credentials or scoped JWTs; "
+            "Persistent network and batch jobs require verified API credentials or correctly scoped JWTs; "
             "development mock tokens do not authorize them. "
             "Authentication on other routes varies; see their documented contracts."
         ),
@@ -301,6 +301,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
             services = raw.get('services', {})
             network = getattr(app.state, 'network_runtime', None)
             services['network_worker'] = bool(network and network.ready)
+            services['batch_worker'] = bool(network and network.batch_ready)
             checks = {
                 svc: CheckResult(
                     status="ok" if ok else "degraded",
@@ -399,6 +400,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
     async def http_exception_handler(request, exc):
         return JSONResponse(
             status_code=exc.status_code,
+            headers=exc.headers,
             content={
                 "error": exc.detail,
                 "status_code": exc.status_code,

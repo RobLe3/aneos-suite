@@ -31,7 +31,7 @@ def default_pipeline():
     return AnalysisPipeline()
 
 
-def build_request(source_input,*,source_profile_id=None,max_attempts=3,force_refresh=False,created_at=None,execution=None,source_attempts=1):
+def build_request(source_input,*,source_profile_id=None,max_attempts=3,force_refresh=False,created_at=None,execution=None,source_attempts=1,response_options=None):
     source=clone(source_input)
     if parse_input(base64.b64decode(source['content_base64'],validate=True),source['name'])!=source:
         raise ValueError('Original batch input does not reproduce')
@@ -57,19 +57,25 @@ def build_request(source_input,*,source_profile_id=None,max_attempts=3,force_ref
     for key,high in [('max_workers',64),('timeout_seconds',86400),('queue_size',10000)]:
         if type(execution[key]) is not int or not 1<=execution[key]<=high:raise ValueError('Invalid execution budget')
     if type(execution['parallel']) is not bool:raise ValueError('Invalid parallel policy')
+    if response_options is not None:
+        if (not isinstance(response_options,dict) or set(response_options)!={'schema_version','include_raw_data'} or
+            response_options['schema_version']!='batch-http-response-v1' or type(response_options['include_raw_data']) is not bool):
+            raise ValueError('Invalid batch HTTP response options')
     policy=ScreeningPolicy()
-    return clone({'schema_version':REQUEST_SCHEMA,'source_input':source,'source_profile_id':profile,
+    result = {'schema_version':REQUEST_SCHEMA,'source_input':source,'source_profile_id':profile,
         'max_attempts':max_attempts,'source_attempts':source_attempts,'force_refresh':force_refresh,'created_at':stamp,'execution':clone(execution),
         'timestamp_role':'local_submission_not_observation','pipeline_version':PIPELINE_VERSION,
         'screening_policy':asdict(policy),
-        'policy_id':ScreeningAnalysisService(policy).analyze_raw('job-contract',{}).policy_id})
+        'policy_id':ScreeningAnalysisService(policy).analyze_raw('job-contract',{}).policy_id}
+    if response_options is not None:result['response_options']=clone(response_options)
+    return clone(result)
 
 
 def validate_request(request):
     try:
         expected=build_request(request['source_input'],source_profile_id=request['source_profile_id'],
             max_attempts=request['max_attempts'],force_refresh=request['force_refresh'],created_at=request['created_at'],
-            execution=request['execution'],source_attempts=request['source_attempts'])
+            execution=request['execution'],source_attempts=request['source_attempts'],response_options=request.get('response_options'))
         if expected!=request:raise ValueError('Batch request policy/version differs')
     except (KeyError,TypeError,ValueError,AttributeError) as exc:
         raise ValueError('Invalid canonical batch request') from exc

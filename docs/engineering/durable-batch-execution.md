@@ -1,5 +1,8 @@
 # Durable primary-menu batch execution
 
+For the later separately authenticated REST adapter/shared API host, see
+[durable REST batches](durable-batch-api.md). This document describes the local host.
+
 Development work under #15/#2/#41; ADR-095. Not in published v2.2.0b2.
 This qualifies a specific local file-SQLite batch path, not every legacy/API job,
 production deployment or scientifically calibrated inference.

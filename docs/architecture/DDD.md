@@ -1608,3 +1608,12 @@ reference population, certify valid p-values or independently estimate deploymen
 error rates. Invalid/missing prerequisites raise errors; unavailable empirical
 FDR/FWER remain null. Canonical analysis retains its ranking policy and unavailable
 calibrated significance. No new bounded context is introduced.
+
+### Durable REST batch adapter (ADR-097)
+
+The existing API execution host owns registered job scheduling and readiness;
+JobStore owns durable admission, leases, cancellation and checkpoints. Identity
+uses existing fresh persistent principals with a separate batch token audience.
+Core Analysis/Reporting retain canonical scientific decisions and report ownership.
+REST projects owned immutable checkpoints; it cannot score independently or treat
+processing completion as validated origin inference. No new bounded context.

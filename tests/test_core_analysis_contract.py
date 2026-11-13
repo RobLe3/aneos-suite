@@ -10,6 +10,7 @@ from aneos_core.analysis.pipeline import AnalysisPipeline
 from aneos_core.analysis.screening import ScreeningAnalysisService
 from aneos_core.data.models import NEOData, OrbitalElements, PhysicalProperties
 from aneos_core.utils.errors import DataSourceUnavailableError
+from tests.test_durable_batch_api import api as durable_batch_http, wait as wait_batch_http
 
 
 @pytest.fixture(autouse=True)
@@ -332,26 +333,21 @@ def test_native_acceleration_survives_core_and_api_report(pipeline):
     assert response.close_approaches[0].evidence_metadata == n.close_approaches[0].evidence_metadata
 
 
-def test_existing_batch_route_forwards_refresh_and_raw_data(monkeypatch):
-    from aneos_api.endpoints import analysis
-    from aneos_api.models import BatchAnalysisRequest
-    from aneos_core.data.fetcher import DataFetcher
-    fetch = Mock(side_effect=lambda d, **kw: neo(d))
-    monkeypatch.setattr(DataFetcher, 'fetch_neo_data', fetch)
-    monkeypatch.setattr(analysis, '_persist_detection_result', Mock())
-    tasks = BackgroundTasks()
-    response = asyncio.run(analysis.analyze_batch(BatchAnalysisRequest(
-        designations=['marker'], force_refresh=True, include_raw_data=True), tasks, None))
-    try:
-        asyncio.run(tasks())
-        fetch.assert_called_once_with('marker', force_refresh=True)
-        result = analysis._batch_store[response['batch_id']]['results'][0]
-        assert result['candidate'] is True
-        assert result['raw_neo_data']['designation'] == 'marker'
-        assert result['sigma_confidence'] is None
-    finally:
-        analysis._batch_store.pop(response['batch_id'], None)
-        analysis._detection_cache.pop('marker', None)
+def test_existing_batch_route_forwards_refresh_and_raw_data(durable_batch_http):
+    from tests.test_durable_batch_api import headers,URL
+    client,_,_,_,source=durable_batch_http
+    fetch=Mock(side_effect=lambda d,**kw:neo(d))
+    source.fetch_neo_data=fetch
+    response=client.post(URL,json={'designations':['marker'],'force_refresh':True,
+        'include_raw_data':True},headers=headers())
+    assert response.status_code==200,response.text
+    saved=wait_batch_http(client,response.json())
+    fetch.assert_called_once_with('marker',force_refresh=True)
+    result=saved['results'][0]
+    assert result['candidate'] is True
+    assert result['raw_neo_data']['designation']=='marker'
+    assert result['sigma_confidence'] is None
+    assert saved['execution_storage']=='sql_durable'
 
 
 def test_search_uses_ranking_units_and_latest_result_not_stale_detect_cache(pipeline):

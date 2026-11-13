@@ -3357,3 +3357,43 @@ planning output is an independent empirical performance estimate. Preserve old
 callable entry points where scientifically meaningful, document stricter input
 requirements, and keep historical artifacts unchanged. No new bounded context,
 database, classifier, dependency or release-version change.
+
+## ADR-097 — REST batch submission uses the registered SQL execution handler
+
+**2026-11-13; #15/#2/#6.** Replace the existing REST batch dictionary/background
+callback with the ADR-095 registered handler, checkpoints and canonical reports.
+Keep the existing submit/status paths and useful response fields. Add explicit
+owner-scoped cancellation. No parallel queue, database or scoring implementation.
+
+The existing API-owned execution host may serve registered network and batch jobs
+on the same bounded SQL queue. One non-daemon host executes them serially with
+round-robin admission; each handler retains its own bounded internal work. Readiness
+is per enabled kind. A blocked provider can delay both kinds; do not imply parallel
+job throughput, remote cancellation or deployment-wide scheduling guarantees.
+Disabled workers admit no new jobs, while verified persisted history remains readable.
+Startup/shutdown and health must reflect the actual host, not an in-memory flag.
+
+REST batch operations require fresh verified persistent principals; legacy optional
+and mock authentication is insufficient. Batch bearer tokens use an explicitly
+issued batch-jobs-v1 audience; existing network tokens do not gain batch access.
+Reuse existing identity/key-revocation checks and role semantics. Submission and
+cancellation require analyst/admin; reads require the owning active principal.
+No administrator gets implicit cross-owner scientific-result access. Reject mixed
+or duplicate credentials and unsupported webhook options rather than ignore them.
+
+Freeze the ordered API designations as a deterministic CSV through the existing
+bounded parser, preserving occurrences and exact-duplicate reuse. Verify round-trip
+identity before admission. Freeze refresh and response options alongside the existing
+request configuration; optional versioned HTTP presentation options are additive,
+so existing menu requests remain reproducible. Client idempotency keys reuse the
+first acknowledged intent/configuration; conflicting intent is rejected. Without a
+client-supplied key, uncertain acknowledgement cannot promise idempotent resubmission.
+
+A submission is acknowledged only after durable readback. Status verifies owned
+request/checkpoints/results and accounts for every occurrence, including pending,
+partial, failed and unavailable results. Processing completion is not calibrated
+scientific acceptance. Raw-data opt-out affects response projection, not preservation
+of the internal replay inputs; do not publish a modified report as hash-valid. Queue
+and submission times are explicitly execution dates, not observation epochs. Public
+responses omit leases, authentication identities and arbitrary exception strings.
+Existing stored data and archived scientific outputs remain untouched.

@@ -38,7 +38,10 @@ jobs:
         run: python -m pytest tests/test_network_job_worker.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-worker.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify durable network API component coverage
-        run: python -m pytest tests/test_durable_network_api.py tests/test_pattern_api.py tests/test_api_bootstrap_contract.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-api.ini --cov-report=term-missing --cov-fail-under=85
+        run: python -m pytest tests/test_durable_network_api.py tests/test_durable_batch_api.py tests/test_pattern_api.py tests/test_api_bootstrap_contract.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-api.ini --cov-report=term-missing --cov-fail-under=85
+
+      - name: Verify owner-scoped durable REST batches and shared host lifecycle
+        run: python -m pytest tests/test_durable_batch_api.py tests/test_durable_network_api.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-batch-api.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify durable batch execution, recovery and shared lease driver
         run: python -m pytest tests/test_durable_batch_jobs.py tests/test_network_job_worker.py tests/test_batch_menu_accounting.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-batch-jobs.ini --cov-report=term-missing --cov-fail-under=90

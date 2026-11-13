@@ -103,7 +103,7 @@ def test_spacecraft_name_alone_cannot_create_five_sigma_or_confirm_origin():
 
 
 @pytest.mark.asyncio
-async def test_actual_menu_get_post_batch_and_automatic_paths_match(monkeypatch):
+async def test_actual_menu_get_post_batch_and_automatic_paths_match(monkeypatch,tmp_path):
     from aneos_api.endpoints import analysis
     from aneos_api.schemas.detection import OrbitalInput
     from aneos_core.pipeline.automatic_review_pipeline import AutomaticReviewPipeline
@@ -116,9 +116,18 @@ async def test_actual_menu_get_post_batch_and_automatic_paths_match(monkeypatch)
     raw = (await analysis.detect_neo_raw(OrbitalInput(
         designation=neo.designation, a=1, e=.2, i=neo.orbital_elements.inclination,
         diameter_km=.37, absolute_magnitude=19.7), None)).model_dump()
-    monkeypatch.setitem(analysis._batch_store, 'parity', {'results': [], 'completed': 0, 'failed': 0})
-    await analysis._run_batch_detection('parity', [neo.designation])
-    batch = analysis._batch_store['parity']['results'][0]
+    # Exercise the registered SQL batch handler, not the withdrawn RAM callback.
+    import asyncio
+    from aneos_api.batch_jobs import default_runtime
+    from aneos_core.analysis.batch_reporting import parse_input
+    monkeypatch.setenv('ANEOS_DATABASE_URL',f'sqlite:///{tmp_path}/parity.db')
+    runtime=default_runtime()
+    try:
+        submitted=runtime.submit(parse_input((neo.designation+'\n').encode(),'parity.txt'),'parity')
+        saved=await asyncio.to_thread(runtime.run,'job:'+submitted['job_id'])
+        assert saved['status']=='completed'
+        batch=saved['result']['batch_report']['requests'][0]['report']['screening_assessment']
+    finally:runtime.close()
     menu = ANEOSMenuV2.__new__(ANEOSMenuV2)
     menu.show_error = Mock(side_effect=AssertionError)
     menu_result = menu._run_detection(neo.designation, neo).analysis['assessment']
