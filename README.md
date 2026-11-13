@@ -10,6 +10,10 @@ installation or its uncommitted work. This preview supports testing the unified
 per-object screening/reporting path. Known-bad root legacy candidate polling/inference is temporarily unavailable
 while source restoration #73 is completed; it cannot return synthetic scores in this preview.
 
+**Post-beta2 development:** the [bounded CAD query foundation](docs/engineering/candidate-acquisition.md)
+adds durable collection receipts and source-body archives. It does not yet restore
+the quarantined root/menu bulk route or establish complete scientific datasets.
+
 aNEOS is a Python research platform for:
 
 1. **NEO candidate screening:** reproducible, uncalibrated anomaly ranking. It does

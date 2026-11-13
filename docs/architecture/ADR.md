@@ -3147,3 +3147,54 @@ coverage. Markdown escapes executable delimiters. Existing exports without this
 field keep their original format/hash; historical files are not rewritten. This is
 an additive presentation/provenance extension, not a new scoring engine or bounded
 context. File import preserves the original file but is not a migration or backup.
+
+## ADR-092: Candidate-query receipts belong to Acquisition, not a fake object
+
+**Date:** 2026-11-13. **Status:** Implemented foundation (#83); root/controller restoration remains #73.
+
+A catalog query can return several objects, no objects, or an unusable response.
+The existing object-acquisition envelope requires an actual designation. Giving a
+failed/empty collection a placeholder designation would misrepresent evidence and
+pollute the object warehouse. A distinct collection-query aggregate fits the
+existing Acquisition bounded context; no new detector or bounded context is needed.
+
+Add `neo_candidate_queries_v1` on the existing SQLAlchemy Base and validated
+file-SQLite backend. Its immutable receipt binds the explicit request, source body,
+outcome, grouped object-packet hashes and storage links. Use the existing enrichment
+transaction owner to commit this receipt, source assertions and frozen projections
+as one unit. Acknowledgement follows native replay and assertion/projection readback.
+Replay of an existing query ID is idempotent and cannot reapply a later projection
+policy. A changed binding under the same ID fails. Imports/construction do not open
+or initialize the database; schema preparation is an explicit acquisition prerequisite.
+Incompatible existing tables require migration, not silent alteration or fallback.
+
+The first profile is one bounded CAD request: explicit native calendar selection,
+NEO/Earth/distance filters, at most 1,000 returned encounter rows, no paging or
+additional-source enrichment. This is an application budget, not JPL's maximum.
+Group rows by exact native primary designation and retain every native row, including
+repeats and alternative orbit predictions. Existing reconciliation owns exact typed
+encounter deduplication and lineage. CAD predictions are not observed residuals,
+orbital elements or discovery dates. Other providers are not synthesized.
+
+Preserve buffered response entity bytes, not a claim of original compressed wire
+bytes. Ordinary bodies live in the receipt; larger bodies live in an immutable SQL
+BLOB in the same transaction. The 1 MiB JSON parse/prefix budget does not discard
+already-buffered data: oversized bodies are archived but not normalized, with an
+explicit `not_processed` result. The shared transport still buffers first, so this
+is not a receive/memory bound or an absolute request deadline. Failure bodies remain
+available after shared-transport HTTP errors without bypassing pacing/cooldown or
+adding retries. Source failure is not empty success; scientific completeness stays
+unestablished even when all source-declared matching query rows were returned.
+
+`started_at`/`received_at` are local UTC transport receipts; storage `recorded_at`
+is a local pre-commit write timestamp, not an exact commit/observation instant.
+Native encounter JD/calendar remain TDB. A nonmonotonic local clock is flagged, not
+silently corrected. Catalogue physical fields remain unit-labelled in native rows;
+admission to the existing atomic physical-evidence contract precedes root integration.
+
+Normal SQL updates/deletes are denied and readback checks hashes and model bindings.
+This is internal consistency, not provider authentication, protection from a database
+administrator, encryption or backup. Administrative DDL, file replacement/deletion,
+cleanup or explicit reset can remove data; preserve important research separately.
+The beta-2 tag and historical data are unchanged. Controller/enrichment budgeting,
+physical-field admission and broader source discovery remain subsequent work.

@@ -76,6 +76,9 @@ jobs:
       - name: Verify polling source retention through the actual workflow and SQLite ledger
         run: python -m pytest tests/test_polling_source_retention.py -q --tb=short
 
+      - name: Verify bounded CAD candidate acquisition and atomic query receipts
+        run: python -m pytest tests/test_candidate_discovery.py -q --tb=short --cov=aneos_core --cov=aneos_api --cov-config=tests/coverage-candidate-discovery.ini --cov-report=term-missing --cov-fail-under=95
+
       - name: Verify root poller presentation adapters and actual entrypoints
         run: python -m pytest tests/test_root_poller_presentation.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-root-poller-presentation.ini --cov-report=term-missing --cov-fail-under=95
 

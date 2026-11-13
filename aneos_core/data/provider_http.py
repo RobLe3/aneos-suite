@@ -27,10 +27,10 @@ _STATE_NAME = 'jpl-ssd-v1.json'
 class ProviderUnavailableError(requests.RequestException):
     """Unavailable acquisition, never an empty successful evidence response."""
 
-    def __init__(self, message, *, retry_at=None, status_code=None):
+    def __init__(self, message, *, retry_at=None, status_code=None, response=None):
         self.retry_at = retry_at
         self.status_code = status_code
-        super().__init__(message)
+        super().__init__(message, response=response)
 
 
 def is_jpl_api(url):
@@ -221,7 +221,7 @@ def get(url, *, _send=None, _clock=None, _max_wait=30., _accepted_statuses=(200,
                         if failed:
                             state['next_allowed_at'] = max(state['next_allowed_at'],
                                                           _retry_after(response.headers, clock.time()))
-                        raise ProviderUnavailableError(f'JPL returned HTTP {status}', status_code=status)
+                        raise ProviderUnavailableError(f'JPL returned HTTP {status}', status_code=status, response=response)
                     state['failures'] = 0
                     return response
                 except ProviderUnavailableError:

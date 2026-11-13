@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] - After 2.2.0b2
 
+- Add bounded CAD candidate-query acquisition and immutable collection receipts,
+  atomically linked to existing object assertions/projections (#83). Valid empty,
+  partial, invalid and failed queries remain distinct; full buffered source entities
+  are archived even when over the parse budget. Root integration remains #73.
+
 - Root poller summary/browser/detail now use shared nullable screening views (#81).
 - Root exports use exclusive JSON/Markdown bundles and preserve requested invocation
   context without treating it as verified coverage. Display/navigation are read-only.

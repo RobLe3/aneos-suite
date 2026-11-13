@@ -1534,3 +1534,23 @@ browser callbacks, replay-bound source-listed impact filter and explicit export.
 Request context belongs to the export receipt, not measurement provenance or a
 claim of date/source coverage. Acquisition restoration remains #73; these read-only
 views do not fetch or repair missing observations.
+
+## Bounded candidate acquisition — 2026-11-13 / ADR-092
+
+Acquisition has two related aggregates: an object query with a known designation,
+and a candidate collection query whose object set is unknown before the response.
+The latter owns selection, transport outcome and native entity bytes, including
+empty/failed outcomes without invented object identities. Grouped object packets
+flow through the existing assertion/projection transaction; the collection receipt
+binds those storage references. Exact native row repeats and alternative predictive
+solutions remain traceable, not independent observations or averaged measurements.
+
+The CAD service performs one explicitly bounded source request and no analysis,
+automatic paging or additional-source enrichment. The SQL adapter owns atomic
+commit/readback, immutability guards and source-body archive storage. Presentation
+and scientific assessment remain existing consumers, not acquisition side effects.
+Raw catalogue physical values are retained pending their atomic physical adapter.
+Root/menu restoration #73 must consume committed receipts and explicitly budget
+further enrichment rather than multiplying provider calls or re-ingesting a source
+query as a fresh observation. This foundation does not establish full source coverage,
+alias resolution, scientific completeness or calibrated detection performance.

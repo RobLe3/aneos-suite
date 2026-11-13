@@ -74,7 +74,7 @@ def parse_cad_row(row, fields, context=None):
         'encounter_id': _hash(identity), 'cad_evidence': evidence}
 
 
-def parse_cad_payload(payload, query=None, retrieved_at=None, require_complete=True):
+def parse_cad_payload(payload, query=None, retrieved_at=None, require_complete=True, *, received_at=None):
     if not isinstance(payload, dict) or payload.get('error') or payload.get('message'):
         raise ValueError('CAD response unavailable or contains a provider error')
     payload = json.loads(json.dumps(payload, allow_nan=False))  # own source evidence, never caller aliases
@@ -94,7 +94,7 @@ def parse_cad_payload(payload, query=None, retrieved_at=None, require_complete=T
         raise ValueError(f'Incomplete CAD response: {count} of {total} records; narrow query or paginate')
     metadata = {'api_version': CAD_VERSION, 'signature': signature,
         'query': dict(query or {}), 'retrieved_at': retrieved_at,
-        'received_at': datetime.now(timezone.utc).isoformat(),
+        'received_at': received_at if received_at is not None else datetime.now(timezone.utc).isoformat(),
         'retrieval_timestamp_status': 'available' if retrieved_at else 'not_available_from_adapter',
         'canonical_response_sha256': _hash(payload), 'count': count, 'total': total,
         'completeness_status': 'complete' if count == total else 'partial',
