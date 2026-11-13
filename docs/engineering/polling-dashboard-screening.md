@@ -1,6 +1,6 @@
 # Candidate screening dashboard and results browser
 
-**Application:** 2.2.0b1 engineering beta; source-retention follow-up targets main.
+**Application:** 2.2.0b2 engineering beta.
 **Issues:** #72 (dashboard), #71 (retention). **Decisions:** ADR-090, ADR-091.
 
 The dashboard now answers “Which supplied records meet the follow-up ranking policy?”
