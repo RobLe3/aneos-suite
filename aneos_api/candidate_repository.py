@@ -151,6 +151,8 @@ class CandidateQueryRepository:
             if old is not None:
                 if old.receipt_id != receipt['receipt_id'] or json.loads(old.receipt_json) != receipt:
                     raise ValueError('Query id already binds different data')
+                if native_body is not None:
+                    _native_body(receipt, native_body)
                 return False
         def append(db):
             _native_body(receipt, native_body)

@@ -55,8 +55,16 @@ request/body-derived records, source assertion identities/normalization, storage
 bindings and original projection inputs. A newer query for the same object does not
 rewrite the older receipt. Source snapshots use the existing local assertion ledger;
 there is no separate analysis engine. All rows, raw fields, native IDs and source
-versions remain traceable; exact repeats and alternatives are reported rather than
-counted as independent observations. Current per-source projections are not deletion
+versions remain traceable. Receipt `software` captures the application/Git/dirty state,
+package versions, floating-point settings and relevant source hashes using the same
+read-only metadata utility as scientific reports. It is not a complete environment
+lock or proof of loaded bytecode; dirty source must be preserved separately. Older
+metadata-free receipts are not retroactively relabeled.
+
+Within-response exact repeats and alternatives are reported rather than
+counted as independent observations. Cross-query bodies retain hashes for comparison;
+automatic cross-query deduplication/alias resolution remains integration work.
+Current per-source projections are not deletion
 of older evidence.
 
 ## Interpret outcomes

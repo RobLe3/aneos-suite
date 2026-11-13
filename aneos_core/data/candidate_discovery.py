@@ -88,7 +88,7 @@ def _body(response):
     return raw
 
 
-def make_receipt(query_id, parameters, started_at, received_at, response, transport_error=None):
+def make_receipt(query_id, parameters, started_at, received_at, response, transport_error=None, *, software=None):
     if not isinstance(query_id, str) or not re.fullmatch(r'cad-[a-f0-9]{32}', query_id):
         raise ValueError('Candidate query id requires a canonical CAD UUID')
     _stamp(started_at)
@@ -173,6 +173,10 @@ def make_receipt(query_id, parameters, started_at, received_at, response, transp
                    'Python float normalization retains native strings and response bytes; no origin inference.',
                    'Over-budget JSON is not normalized; its full buffered entity must be archived in SQL and checked on readback.'],
     }
+    if software is not None:
+        if not isinstance(software, dict):
+            raise ValueError('Software context must be finite JSON metadata')
+        receipt['software'] = clone(software)
     receipt['receipt_id'] = fingerprint(receipt)
     return clone(receipt), clone(packets)
 
@@ -182,7 +186,7 @@ def replay_receipt(receipt):
         raise ValueError('Unsupported candidate receipt')
     actual, packets = make_receipt(receipt['query_id'], receipt['request']['parameters'],
                                    receipt['started_at'], receipt['received_at'], receipt['response'],
-                                   receipt['transport_error'])
+                                   receipt['transport_error'], software=receipt.get('software'))
     if actual != receipt:
         raise ValueError('Candidate receipt does not reproduce')
     return actual, packets
@@ -199,6 +203,15 @@ class CADCandidateService:
             from aneos_api.candidate_repository import CandidateQueryRepository
             self.repository = CandidateQueryRepository()
         self.repository.prepare()
+        from ..utils.reproducibility import software_metadata
+        software = software_metadata(source_files=[
+            'aneos_version.py', 'aneos_core/data/candidate_discovery.py',
+            'aneos_core/data/provider_http.py', 'aneos_core/data/sources/cad.py',
+            'aneos_api/candidate_repository.py', 'aneos_api/enrichment_store.py',
+            'aneos_core/data/models.py', 'aneos_core/data/enrichment.py',
+            'aneos_core/data/reconciliation.py', 'aneos_core/data/physical_evidence.py',
+            'aneos_core/data/epoch_evidence.py', 'aneos_core/data/orbit_evidence.py',
+            'aneos_core/utils/reproducibility.py'])
         started = datetime.now(timezone.utc).isoformat()
         response, error = None, None
         try:
@@ -207,6 +220,6 @@ class CADCandidateService:
             response, error = getattr(exc, 'response', None), 'TRANSPORT_UNAVAILABLE'
         captured = capture_response(response)
         received = datetime.now(timezone.utc).isoformat()
-        receipt, _ = make_receipt('cad-'+uuid4().hex, parameters, started, received, captured, error)
+        receipt, _ = make_receipt('cad-'+uuid4().hex, parameters, started, received, captured, error, software=software)
         archive = response.content if response is not None and not captured['body_in_receipt_complete'] else None
         return self.repository.commit(receipt, native_body=archive)

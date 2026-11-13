@@ -537,3 +537,28 @@ def test_import_and_construction_do_not_create_database(tmp_path):
     run = subprocess.run([sys.executable,'-c',script],cwd=tmp_path,env=env,capture_output=True,text=True,timeout=30)
     assert run.returncode == 0,run.stderr
     assert list(tmp_path.iterdir()) == []
+
+
+def test_query_records_frozen_software_identity_and_old_metadata_free_receipts_still_replay(service):
+    from aneos_version import APPLICATION_VERSION
+    from aneos_core.data.candidate_discovery import make_receipt, replay_receipt
+    receipt = poll(service)['receipt']
+    assert receipt['software']['application_version'] == APPLICATION_VERSION
+    assert receipt['software']['float_mantissa_bits'] > 0
+    assert 'aneos_core/data/candidate_discovery.py' in receipt['software']['source_hashes_at_report_time']
+    assert replay_receipt(receipt)[0]['software'] == receipt['software']
+    old, _ = make_receipt(receipt['query_id'],receipt['request']['parameters'],receipt['started_at'],receipt['received_at'],receipt['response'])
+    assert 'software' not in old and replay_receipt(old)[0] == old
+    with pytest.raises(ValueError):
+        make_receipt(receipt['query_id'],receipt['request']['parameters'],receipt['started_at'],receipt['received_at'],receipt['response'],software=[])
+
+
+def test_idempotent_recommit_does_not_silently_ignore_contradictory_archive_argument(service):
+    from aneos_core.data.candidate_discovery import MAX_BODY
+    from aneos_core.utils.errors import EvidencePersistenceError
+    body = b'x'*(MAX_BODY+1)
+    service[2]['value'] = Response(body=body)
+    result = poll(service)
+    assert service[1].commit(result['receipt'],native_body=body) == result
+    with pytest.raises(EvidencePersistenceError): service[1].commit(result['receipt'],native_body=b'changed')
+    assert service[1].load_native_body(result['receipt']['query_id']) == body

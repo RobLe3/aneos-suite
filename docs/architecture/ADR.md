@@ -3168,6 +3168,11 @@ policy. A changed binding under the same ID fails. Imports/construction do not o
 or initialize the database; schema preparation is an explicit acquisition prerequisite.
 Incompatible existing tables require migration, not silent alteration or fallback.
 
+Acquisition and reporting share read-only software/Git/package/precision metadata
+through a common utility, avoiding a data-to-analysis dependency. This frozen context
+is included in new receipts and is not recomputed as historical source provenance.
+Older metadata-free receipts retain their original identities.
+
 The first profile is one bounded CAD request: explicit native calendar selection,
 NEO/Earth/distance filters, at most 1,000 returned encounter rows, no paging or
 additional-source enrichment. This is an application budget, not JPL's maximum.
