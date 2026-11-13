@@ -1391,3 +1391,21 @@ numeric/conic semantics. Request-error serialization owns redacted client diagno
 not authentication policy. No new bounded context is needed. All-source local persistence,
 identity, enrichment history, independent scientific validation and complete menu/API
 runtime prerequisites remain separate required workstreams.
+
+## Local correlated evidence persistence — 2026-11-13 / ADR-084
+
+Acquisition produces source-specific typed or explicitly legacy assertions. Persistence
+owns ingestion time, idempotent receipt identity, append-only history and atomic replayable
+projections in the existing database boundary. The shared acquisition reconciler selects
+whole orbital solutions and physical value/uncertainty pairs, retaining conflicts rather
+than treating them as independent evidence. Latest receipt per source is an explicit
+projection policy, not an astronomical epoch comparison or alias-resolution service.
+
+Analysis still owns scientific admissibility and canonical screening. Persistence does
+not fit observations, calibrate probabilities, establish measurement independence or
+supply a missing source-coverage denominator. Presentation reads verified projections and
+exposes source history, missingness and limitations. Legacy compatibility columns are a
+rebuildable view; unsupported origin/quality values are not current scientific outputs.
+The legacy polling enrichment path now uses this contract. Ordinary DataFetcher query
+persistence, all-source eligibility, identity ambiguity and complete research-case lifecycle
+remain pending in #40/#13. No additional bounded context or detection engine is introduced.

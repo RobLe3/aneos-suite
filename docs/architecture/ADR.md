@@ -2833,3 +2833,47 @@ new history-v2 metadata and changed outage semantics. Regenerate the real regist
 OpenAPI snapshot and test actual HTTP plus canonical parity. No auth eligibility,
 source authenticity, durable-job completeness, scientific calibration or all-menu
 readiness follows from transport correctness. See `http-evidence-parity.md` and #12/40.
+
+### ADR-084: Transactional local source assertions and replayable projections
+
+**Status**: Implemented for explicit file-SQLite enrichment and the existing legacy
+polling enrichment/detail paths. Automatic persistence of every ordinary acquisition
+query and a complete eligible-source plan remain pending (#40).
+**Date**: 2026-11-13
+
+Fresh-session SQL tests reproduced lost source/session list updates, discarded physical
+fields and rollback when an uncalibrated origin output was null (#54). Replace mutable
+four-provider consolidation with two additive tables on the existing SQLAlchemy Base:
+immutable source assertions and versioned object projections. Keep the old EnrichedNEO
+row as a compatibility projection, not the scientific authority. Share deterministic
+atomic source reconciliation with DataFetcher; do not create a second detector.
+
+An enrichment call owns a fresh transaction. Serialize writers with BEGIN IMMEDIATE;
+commit assertions, projection and compatibility fields together, and acknowledge only
+after commit. Exact same-session/source/payload repeats are idempotent. New receipts
+remain dated history; equal payloads are labelled repeats, not independent measurements.
+Query outcomes can be stored without manufacturing an object or a completeness score.
+Source priority and assertion IDs are inputs to each replayable projection. The latest
+receipt per source is a version-selection policy, not a claim about the newest scientific
+orbit solution. Preserve alternatives and select physical value/uncertainty pairs atomically.
+
+Schema initialization is explicit and additive; incompatible evidence tables fail with
+migration required. File-SQLite is the validated backend; memory and other database
+backends are not accepted by this initializer. UPDATE/DELETE triggers and SHA-256 replay
+checks detect ordinary mutation/inconsistency, not authenticity, administrative tamper
+resistance, external signatures, backups or compliance certification. Before first ledger
+write to a legacy object, archive its row values and source slots. Later writes update its
+compatibility row: neither original database bytes nor a backup are promised. Legacy
+reads alone do not migrate or reinterpret their stored heuristic outputs.
+
+Do not maximize legacy origin scores into a current posterior. Current origin probability
+and scientific/source completeness remain unavailable. Named 15-field catalogue presence
+is separate. Direct mutable private helper names remain but raise explicit controlled-
+deprecation errors. Existing public service calls retain their names. See the engineering
+report for tests, recovery behavior, integration limits and reproducible examples. No new
+bounded context is needed; acquisition, persistence, analysis and presentation retain their
+existing responsibilities.
+
+Compatibility note: DatabaseManager retains existing initialization for other backends,
+excluding the new ledger tables. That preserves the old startup path; it is not a new
+PostgreSQL runtime validation. Enrichment remains explicitly unavailable there.

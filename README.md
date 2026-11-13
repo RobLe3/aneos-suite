@@ -20,6 +20,15 @@ aNEOS is a Python research platform for:
 
 ---
 
+## Local evidence storage — scoped development capability
+
+Explicit file-SQLite enrichment now preserves source-specific history, atomic physical
+value/uncertainty selections and replayable object projections. The existing database
+detail view exposes provenance and missingness. See the [storage contract and runnable
+example](docs/engineering/durable-enrichment-ledger.md) before enabling writes to a
+research database. This is not yet automatic persistence of every source query, complete
+source coverage or scientific validation.
+
 ## Long-Term Goal: Addressing the Fermi Paradox Empirically
 
 The **Fermi Paradox** asks a deceptively simple question: given the age and scale of the galaxy, where is everybody? If intelligent civilisations arise at even a modest rate across billions of stars over billions of years, our solar system should statistically have been visited, observed, or contacted by now. The absence of any confirmed evidence is the paradox.

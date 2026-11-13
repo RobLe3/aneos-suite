@@ -52,6 +52,9 @@ jobs:
       - name: Verify HTTP evidence schema parity and validation
         run: python -m pytest tests/test_api_evidence_parity.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-api-evidence.ini --cov-report=term-missing --cov-fail-under=95
 
+      - name: Verify durable enrichment ledger and SQL-backed detail
+        run: python -m pytest tests/test_durable_enrichment.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-enrichment-ledger.ini --cov-report=term-missing --cov-fail-under=90
+
   docker-build:
     name: Docker build
     runs-on: ubuntu-latest

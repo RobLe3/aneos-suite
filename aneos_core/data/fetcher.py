@@ -7,8 +7,6 @@ error handling, and data quality assessment.
 
 from aneos_core.data.provider_http import get as provider_get
 import logging
-import copy
-from dataclasses import fields
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, Optional, List, Union
 from datetime import datetime, timezone
@@ -109,7 +107,7 @@ class DataFetcher:
         self.fetch_stats["total_requests"] += 1
         
         # Check cache first
-        cache_key = f"neo_data:atomic-physical-v1-native-epoch-v1:{designation}"
+        cache_key = f"neo_data:atomic-physical-v1-native-epoch-v1-source-projection-v2:{designation}"
         if not force_refresh:
             cached_data = self.cache_manager.get(cache_key)
             if cached_data:
@@ -168,89 +166,9 @@ class DataFetcher:
         return neo_data
 
     def _reconcile_sources(self, results: Dict[str, NEOData]) -> NEOData:
-        """Resolve by configured authority, never by response timing.
-
-        Orbit solutions and their coefficients remain atomic: never combine
-        elements or A2 from different epochs/solutions. Independent physical
-        measurements may fill gaps, with per-field provenance and conflicts.
-        """
-        order = list(dict.fromkeys(self.source_priority + sorted(results)))
-        order = [name for name in order if name in results]
-        primary = order[0]
-        merged = copy.deepcopy(results[primary])
-        merged.sources_used = order
-        provenance = {"orbital_elements": primary}
-        conflicts = {}
-        if merged.nongrav is not None:
-            provenance["nongrav"] = primary
-        # Value/uncertainty are one selection unit. Missing primary uncertainty
-        # must not be filled from a different provider, even if values round equal.
-        from .models import PhysicalProperties
-        paired={'diameter_km':'diameter_uncertainty','albedo':'albedo_uncertainty',
-                'rotation_period_hours':'rotation_period_uncertainty'}
-        uncertainty_fields=set(paired.values())
-        global_metadata={'reference_source','measurement_method','data_quality_flag'}
-        selection={};snapshots={}
-        merged.physical_properties=PhysicalProperties()
-        for name in order:
-            source=results[name]
-            if source.designation!=merged.designation:
-                raise ValueError('Cannot reconcile different object designations')
-            if name!=primary and source.orbital_elements.to_dict()!=merged.orbital_elements.to_dict():
-                conflicts[f'orbital_elements:{name}']=source.orbital_elements.to_dict()
-            pp=source.physical_properties
-            snapshots[name]={'physical_properties':copy.deepcopy(pp.to_dict()) if pp else None,
-                'source_metadata':copy.deepcopy(source.evidence_metadata)}
-            if pp is None:continue
-            for item in fields(pp):
-                field=item.name;value=getattr(pp,field)
-                if field in uncertainty_fields or field in global_metadata:continue
-                if value is None or (field=='color_indices' and not value):continue
-                key=f'physical_properties.{field}'
-                if field not in selection:
-                    setattr(merged.physical_properties,field,copy.deepcopy(value))
-                    sigma_field=paired.get(field)
-                    if sigma_field:
-                        setattr(merged.physical_properties,sigma_field,getattr(pp,sigma_field))
-                        if getattr(pp,sigma_field) is not None:provenance[f'physical_properties.{sigma_field}']=name
-                    selection[field]={'source':name,'value':copy.deepcopy(value),
-                        'uncertainty_field':sigma_field,
-                        'uncertainty':getattr(pp,sigma_field) if sigma_field else None,
-                        'reference_source':pp.reference_source,'measurement_method':pp.measurement_method,
-                        'basis':'source_projection_not_independently_verified'}
-                    atomic=source.evidence_metadata.get('physical_evidence')
-                    if atomic:
-                        from .physical_evidence import verify_physical_evidence,physical_projection
-                        atomic=verify_physical_evidence(atomic)
-                        projected=physical_projection(atomic)
-                        if field in projected:
-                            if value!=projected[field] or (sigma_field and getattr(pp,sigma_field)!=projected.get(sigma_field)):
-                                raise ValueError('Physical projection differs from atomic measurement')
-                            selected=atomic['selection'][field]['selected_index']
-                            selection[field]['assertion_id']=atomic['records'][selected]['assertion_id']
-                            selection[field]['basis']='normalized_catalogue_assertion'
-                    provenance[key]=name
-                elif value!=getattr(merged.physical_properties,field) or (field in paired and
-                    getattr(pp,paired[field])!=getattr(merged.physical_properties,paired[field])):
-                    conflicts[f'{key}:{name}']={'value':copy.deepcopy(value),
-                        'uncertainty':getattr(pp,paired[field]) if field in paired else None,
-                        'reference_source':pp.reference_source,'measurement_method':pp.measurement_method}
-        # Global reference fields cannot truthfully describe a mixed-source object.
-        # Their original values remain in each atomic selection/source snapshot.
-        if not selection:merged.physical_properties=None
-        merged.evidence_metadata = {
-            "schema_version": "source-reconciliation-v1",
-            "field_sources": provenance,
-            "source_solutions": {name: copy.deepcopy(results[name].evidence_metadata) for name in order},
-            "conflicts": conflicts,
-            "physical_selection":selection,
-            "physical_source_snapshots":snapshots,
-        }
-        from .physical_evidence import verify_neo_physical
-        verify_neo_physical(merged)
-        from .epoch_evidence import verify_neo_epoch
-        verify_neo_epoch(merged)
-        return merged
+        """Use the shared atomic source projection, including physical-only inputs."""
+        from .reconciliation import reconcile_sources
+        return reconcile_sources(results,self.source_priority)
 
     def _fetch_close_approaches(self, designation: str, date_min: str = "now", date_max: Optional[str] = None) -> List:
         """A bounded CAD query, with native TDB evidence and explicit source failure."""

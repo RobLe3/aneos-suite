@@ -2802,6 +2802,7 @@ class ANEOSMenu(ANEOSMenuBase):
 
     async def _enrich_database_with_polling_results(self, results: list, api_sources: list, period: str) -> dict:
         """Enrich the local NEO database with polling results."""
+        db = None
         try:
             # Import database components
             from aneos_api.database import db_manager, EnrichedNEOService
@@ -2811,7 +2812,9 @@ class ANEOSMenu(ANEOSMenuBase):
             # Generate unique session ID for this polling session
             session_id = f"polling_{period}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
             
-            # Get database session
+            # Schema creation is an explicit prerequisite of this requested write.
+            if db_manager.init_database() is not True:
+                return {'error':'ENRICHMENT_SCHEMA_UNAVAILABLE','commit_status':'not_committed'}
             db = db_manager.get_db()
             neo_service = EnrichedNEOService(db)
             
@@ -2827,15 +2830,15 @@ class ANEOSMenu(ANEOSMenuBase):
             # Enrich database with polling results
             enrichment_stats = neo_service.enrich_neo_data(results, session_id)
             
-            # Close database session
-            db.close()
-            
             return enrichment_stats
             
         except ImportError as e:
             return {'error': f'Database components not available: {e}'}
         except Exception as e:
-            return {'error': f'Database enrichment failed: {e}'}
+            return {'error': f'Database enrichment failed: {e}', 'commit_status': 'not_committed'}
+        finally:
+            if db is not None:
+                db.close()
 
     async def _check_outdated_database_entries(self, api_sources: list, period: str) -> dict:
         """Check for outdated database entries that need re-polling."""
@@ -4032,17 +4035,9 @@ class ANEOSMenu(ANEOSMenuBase):
             
             total = stats.get('total_neos', 0)
             stats_table.add_row("Total NEOs", str(total), "100%")
-            stats_table.add_row("High Completeness (≥80%)", str(stats.get('high_completeness', 0)), 
-                               f"{stats.get('database_coverage', {}).get('complete', 0)*100:.1f}%")
-            stats_table.add_row("Medium Completeness (50-80%)", str(stats.get('medium_completeness', 0)),
-                               f"{stats.get('database_coverage', {}).get('partial', 0)*100:.1f}%")
-            stats_table.add_row("High Artificial Probability", str(stats.get('high_artificial_probability', 0)),
-                               f"{stats.get('high_artificial_probability', 0)/total*100 if total > 0 else 0:.1f}%")
-            stats_table.add_row("Suspicious Objects", str(stats.get('suspicious_objects', 0)),
-                               f"{stats.get('suspicious_objects', 0)/total*100 if total > 0 else 0:.1f}%")
-            stats_table.add_row("Multi-Source Detections", str(stats.get('multi_source_detections', 0)),
-                               f"{stats.get('multi_source_detections', 0)/total*100 if total > 0 else 0:.1f}%")
-            
+            stats_table.add_row("Scientific completeness", "not established", "—")
+            stats_table.add_row("Artificial-origin probability", "not calibrated", "—")
+            stats_table.add_row("Multiple recorded sources",str(stats.get('multi_source_detections',0)),"not independent evidence")
             self.console.print(stats_table)
             
             # Browse options
@@ -4051,9 +4046,9 @@ class ANEOSMenu(ANEOSMenuBase):
             options_table.add_column("Description", style="white")
             
             options_table.add_row("1", "🔍 Search NEO by designation")
-            options_table.add_row("2", "🛸 Browse artificial objects")
-            options_table.add_row("3", "⚠️ Browse suspicious objects")
-            options_table.add_row("4", "🌟 Browse high completeness NEOs")
+            options_table.add_row("2", "Legacy uncalibrated score ≥0.8 (not origin)")
+            options_table.add_row("3", "Legacy uncalibrated score 0.5–0.8 (not origin)")
+            options_table.add_row("4", "Browse stored catalogue records (see coverage limits)")
             options_table.add_row("5", "🔄 Browse multi-source NEOs")
             options_table.add_row("0", "🚪 Return to dashboard")
             
@@ -4069,19 +4064,19 @@ class ANEOSMenu(ANEOSMenuBase):
                 designation = Prompt.ask("Enter NEO designation")
                 self._show_enriched_neo_details(neo_service, designation)
             elif choice == "2":
-                self._browse_enriched_filtered(neo_service, "artificial",
+                self._browse_enriched_filtered(neo_service, "legacy uncalibrated score ≥0.8",
                     lambda q, EnrichedNEO: q.filter(EnrichedNEO.artificial_probability >= 0.8))
             elif choice == "3":
-                self._browse_enriched_filtered(neo_service, "suspicious",
+                self._browse_enriched_filtered(neo_service, "legacy uncalibrated score 0.5–0.8",
                     lambda q, EnrichedNEO: q.filter(
                         EnrichedNEO.artificial_probability >= 0.5,
                         EnrichedNEO.artificial_probability < 0.8))
             elif choice == "4":
-                self._browse_enriched_filtered(neo_service, "high completeness",
-                    lambda q, EnrichedNEO: q.filter(EnrichedNEO.completeness_score >= 0.8))
+                self._browse_enriched_filtered(neo_service, "stored catalogue",lambda q, EnrichedNEO:q)
             elif choice == "5":
-                self._browse_enriched_filtered(neo_service, "multi-source",
-                    lambda q, EnrichedNEO: q.filter(EnrichedNEO.total_detections > 1))
+                from sqlalchemy import func
+                self._browse_enriched_filtered(neo_service, "multiple recorded sources",
+                    lambda q, EnrichedNEO: q.filter(func.json_array_length(EnrichedNEO.data_sources)>1))
             
             db.close()
             
@@ -4104,17 +4099,17 @@ class ANEOSMenu(ANEOSMenuBase):
                 return
             table = Table(show_header=True, title=f"{label.title()} Objects ({len(objects)} shown)")
             table.add_column("Designation", style="cyan")
-            table.add_column("Artif. Prob.", style="red")
-            table.add_column("Completeness", style="green")
+            table.add_column("Legacy score (uncalibrated)", style="red")
+            table.add_column("Coverage", style="green")
             table.add_column("Sources", style="dim")
             table.add_column("Classification", style="yellow")
             for obj in objects:
                 table.add_row(
-                    str(obj.designation),
-                    f"{obj.artificial_probability:.3f}",
-                    f"{getattr(obj, 'completeness_score', 0.0):.2f}",
-                    str(getattr(obj, 'total_detections', '?')),
-                    str(getattr(obj, 'neo_classification', 'Unknown')),
+                    Text(str(obj.designation)),
+                    "not calibrated" if obj.artificial_probability is None else f"{obj.artificial_probability:.3f} (legacy only)",
+                    "see details; not total completeness",
+                    str(len(set(obj.data_sources or []))),
+                    Text(str(getattr(obj,'neo_classification',None) or 'not assessed')),
                 )
             self.console.print(table)
             self.console.input("\nPress Enter to continue...")
@@ -4122,93 +4117,38 @@ class ANEOSMenu(ANEOSMenuBase):
             self.console.print(f"[red]Filter error: {exc}[/red]")
             self.console.input("Press Enter to continue...")
 
-    def _show_enriched_neo_details(self, neo_service, designation: str):
-        """Show detailed information about an enriched NEO."""
+    def _show_enriched_neo_details(self,neo_service,designation):
+        """Read verified stored evidence; do not rerun or invent an origin analysis."""
         try:
-            neo_data = neo_service.get_enriched_neo(designation)
-            
-            if not neo_data:
-                self.console.print(f"❌ [red]NEO '{designation}' not found in database[/red]")
-                self.console.input("Press Enter to continue...")
-                return
-            
-            self.console.clear()
-            self.display_header()
-            
-            # Main details
-            title = Panel(
-                f"🔍 ENRICHED NEO DETAILS: {designation}\n\nComprehensive multi-source data",
-                style="bold green",
-                border_style="green"
-            )
-            self.console.print(title)
-            
-            # Overview table
-            overview_table = Table(show_header=False, box=None, title="📋 Overview")
-            overview_table.add_column("Property", style="bold cyan")
-            overview_table.add_column("Value", style="white")
-            
-            overview_table.add_row("Designation", neo_data['designation'])
-            overview_table.add_row("First Discovered", neo_data['first_discovered'].strftime("%Y-%m-%d %H:%M:%S") if neo_data['first_discovered'] else "Unknown")
-            overview_table.add_row("Last Updated", neo_data['last_updated'].strftime("%Y-%m-%d %H:%M:%S"))
-            overview_table.add_row("Data Sources", ", ".join(neo_data['data_sources']))
-            overview_table.add_row("Completeness Score", f"{neo_data['completeness_score']:.2f}")
-            overview_table.add_row("Total Detections", str(neo_data['total_detections']))
-            overview_table.add_row("Artificial Probability", f"{neo_data['artificial_probability']:.3f}")
-            
-            self.console.print(overview_table)
-            
-            # Orbital elements
-            if neo_data['orbital_elements']:
-                orbital_table = Table(show_header=True, title="🌌 Orbital Elements")
-                orbital_table.add_column("Element", style="bold")
-                orbital_table.add_column("Value", style="yellow")
-                orbital_table.add_column("Source", style="dim")
-                
-                for key, value in neo_data['orbital_elements'].items():
-                    if isinstance(value, (int, float)):
-                        value_str = f"{value:.6f}"
-                    else:
-                        value_str = str(value)
-                    orbital_table.add_row(key, value_str, neo_data.get('orbital_elements_source', 'Unknown'))
-                
-                self.console.print(orbital_table)
-            
-            # Source data summary
-            sources_table = Table(show_header=True, title="📡 Source Data Availability")
-            sources_table.add_column("Source", style="bold")
-            sources_table.add_column("Status", style="center")
-            sources_table.add_column("Data Available", style="dim")
-            
-            source_data = neo_data.get('source_data', {})
-            for source, data in source_data.items():
-                if data:
-                    status = "✅ Available"
-                    data_summary = f"{len(data)} fields"
-                else:
-                    status = "❌ No Data"
-                    data_summary = "N/A"
-                
-                sources_table.add_row(source.upper(), status, data_summary)
-            
-            self.console.print(sources_table)
-            
-            # Risk factors
-            if neo_data.get('risk_factors'):
-                risk_table = Table(show_header=True, title="⚠️ Risk Factors")
-                risk_table.add_column("Factor", style="yellow")
-                
-                for factor in neo_data['risk_factors']:
-                    risk_table.add_row(factor)
-                
-                self.console.print(risk_table)
-            
-            self.console.input("\nPress Enter to return to database browser...")
-            
-        except Exception as e:
-            self.console.print(f"❌ [red]Error showing NEO details: {e}[/red]")
-            self.console.input("Press Enter to continue...")
-        
+            data=neo_service.get_enriched_neo(designation)
+            if data is None:
+                self.console.print(Text('No stored object evidence found.'))
+            else:
+                from aneos_core.analysis.object_review import render_data_inventory,literal
+                self.console.print(Panel(Text('Stored evidence — '+literal(designation)),border_style='blue'))
+                self.console.print(Text('Storage: '+data['storage_status']+'; artificial-origin probability: not calibrated.'))
+                if data.get('data_inventory'):render_data_inventory(data['data_inventory'],console=self.console)
+                else:self.console.print(Text('Legacy unverified snapshot; overall completeness and source coverage not established.'))
+                if data.get('neo_data'):
+                    from aneos_core.analysis.object_review import number
+                    selection=data['neo_data']['evidence_metadata'].get('physical_selection',{})
+                    if selection:
+                        lineage=Table(title='Physical selection provenance — not independent origin evidence')
+                        for name in ('Field','Selected source','Uncertainty','Reference'):lineage.add_column(name,overflow='fold')
+                        for field,selected in selection.items():
+                            lineage.add_row(Text(field),Text(literal(selected['source'])),Text(number(selected['uncertainty'])),Text(literal(selected.get('reference_source') or 'not supplied')))
+                        self.console.print(lineage)
+                table=Table(title='Dated source assertion history — not independent observations')
+                for name in ('Source','Recorded at','Kind','Receipt (short)'):table.add_column(name,overflow='fold')
+                for record in data.get('evidence_history',[]):
+                    table.add_row(Text(literal(record['source'])),Text(record['recorded_at'].replace('T','\n',1)),Text(record['kind']),Text(record['assertion_id'][:12]))
+                self.console.print(table)
+                self.console.print(Text('Full receipt IDs and unknown/alternative measurements remain in JSON source history. No source authentication, physical fit or calibrated origin inference is established.'))
+            self.console.input('Press Enter to return to database browser...')
+        except Exception:
+            self.console.print(Text('Stored evidence could not be verified; no scientific assessment displayed.'))
+            self.console.input('Press Enter to continue...')
+
     def configure_analysis(self):
         """Configure analysis parameters and enhanced validation settings with validated detector integration."""
         if self.console:

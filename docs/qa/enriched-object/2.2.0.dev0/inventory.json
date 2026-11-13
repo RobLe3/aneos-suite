@@ -1,0 +1,39 @@
+{
+  "schema_version": "sql-enriched-detail-qa-v1",
+  "synthetic": true,
+  "metrics": {
+    "80": {
+      "lines": 57,
+      "max_columns": 80
+    },
+    "120": {
+      "lines": 48,
+      "max_columns": 120
+    },
+    "160": {
+      "lines": 48,
+      "max_columns": 160
+    }
+  },
+  "artifact_sha256": {
+    "detail-80.html": "9f4006e020ca0e876c8da3d0475142f52f9cd734b1b71f207fefa335162da1fe",
+    "detail-160.txt": "65c37b3ba1e6be4a1871072c9b9e09eb12c45ef0da20fc59b7f639abf7429b3b",
+    "detail-160.svg": "8064fd6b61b0135b778e14a34cb3a8ee679671b051163466d1841b2b96adca2f",
+    "detail-80.txt": "089f964cf36e9bb9b8e5564ad81f1698daa69301f13467165b54db08a52ab85c",
+    "detail-80.svg": "8064fd6b61b0135b778e14a34cb3a8ee679671b051163466d1841b2b96adca2f",
+    "object-evidence.json": "e273a1e3ccc6fd512f3a5db69261472281c352ae8188598222b8f6c4f85e33b8",
+    "detail-160.html": "9f4006e020ca0e876c8da3d0475142f52f9cd734b1b71f207fefa335162da1fe",
+    "detail-120.txt": "f0c5d4a581faed0c31dcbe2b6df759a372ffbf1008e449d07f871b971b847e44",
+    "detail-120.html": "9f4006e020ca0e876c8da3d0475142f52f9cd734b1b71f207fefa335162da1fe",
+    "detail-120.svg": "8064fd6b61b0135b778e14a34cb3a8ee679671b051163466d1841b2b96adca2f"
+  },
+  "source_sha256": {
+    "aneos_api/enrichment_store.py": "6fdbccad77b641a5a8cd4424f08f78910b1d49f29c5317db2dca4382a6b5db91",
+    "aneos_api/database.py": "8c5bb0df1208987f33ab48fec0569d13f9e82558494e3f1e742a6160f657ac11",
+    "aneos_core/data/enrichment.py": "500ec6b89f7f225cd815a46f0720bc36e7e771c2bcff1d63cb3c5fae25b4017a",
+    "aneos_core/data/reconciliation.py": "68d674619778cca17cc8d45d201a35daa2fc58a827001bd2021118613c1f80cb",
+    "aneos_menu.py": "9687f4702ea66df6639090c93e02f927aa486c25764748065271e204bb8f9698",
+    "scripts/qa_enriched_object.py": "7468efcb5870aa78beed7da8d73f35b0c447771c7c514e9e847e6ee627f47a88"
+  },
+  "limits": "Synthetic file-SQLite and actual Rich detail only; no live providers, full acquisition polling, scientific validation, DB-admin tamper guarantee or all-menu certification."
+}
