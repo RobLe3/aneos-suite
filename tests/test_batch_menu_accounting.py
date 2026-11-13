@@ -137,7 +137,8 @@ def test_rich_and_plain_accounting_are_readable(bundle,width,capsys):
     render_batch_report(bundle,console)
     text=out.getvalue()
     assert max(map(len,text.splitlines()))<=width
-    assert '[bold]' not in text and 'not independent evidence' in text
+    assert '[bold]' not in text
+    assert 'not independent evidence' in ' '.join(text.split())
     assert 'INCONCLUSIVE' in text and 'candidate' in text
     render_batch_report(bundle)
     plain=capsys.readouterr().out

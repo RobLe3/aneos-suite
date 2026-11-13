@@ -29,7 +29,10 @@ passed. Two further negative tests showed that a rehashed failed report could cl
 candidate/completed status. The shared report verifier now rejects those contradictions
 without requiring a checksum to establish authenticity. Existing `service_unavailable`
 was retained after the first full-suite run exposed its omission from the failure set.
-No test is disabled or acceptance gate reduced.
+After the explicit ranking-unit warning was added, the 80-column footer wrapped
+across a phrase assertion. That check now compares normalized whitespace while
+retaining the same message, literal-markup and hard width assertions. No test is
+disabled or scientific acceptance gate reduced.
 
 ## Artifacts and reproduction
 
