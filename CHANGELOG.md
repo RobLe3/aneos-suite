@@ -170,3 +170,7 @@ tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is creat
   use the same contract and preserve frozen per-record policies. Controlled helper
   deprecations, source-listed impact checks and actual-width QA are documented in
   ADR090. Root legacy polling/source-retention defects remain #73/#71.
+
+Beta startup correction: the V2 script now actually starts its existing menu loop.
+The launcher preserves the active interpreter and propagates menu/API child failures;
+real executable-path help/exit and failure-code regressions cover this (#77).

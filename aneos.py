@@ -28,21 +28,19 @@ def main():
     if "--legacy-menu" in sys.argv:
         sys.argv.remove("--legacy-menu")
         print(f"Starting aNEOS {APPLICATION_VERSION} legacy grouped menu…")
-        subprocess.run([sys.executable, "aneos_menu.py"])
-        return
+        return subprocess.run([sys.executable, "aneos_menu.py"]).returncode
 
     # If no arguments, start the new v2 menu
     if len(sys.argv) == 1:
         print(f"Starting aNEOS {APPLICATION_VERSION} ({BUILD_CHANNEL}) menu…")
-        subprocess.run([sys.executable, "aneos_menu_v2.py"])
-        return
+        return subprocess.run([sys.executable, "aneos_menu_v2.py"]).returncode
 
     # Parse command-line arguments for direct execution
     command = sys.argv[1].lower()
 
     if command in ['menu', 'interactive', 'm']:
         print(f"Starting aNEOS {APPLICATION_VERSION} ({BUILD_CHANNEL}) menu…")
-        subprocess.run([sys.executable, "aneos_menu_v2.py"])
+        return subprocess.run([sys.executable, "aneos_menu_v2.py"]).returncode
         
     elif command in ['api', 'server', 'start']:
         print("🚀 Starting aNEOS API Server...")
@@ -61,7 +59,7 @@ def main():
                 if idx + 1 < len(sys.argv):
                     args.extend(["--port", sys.argv[idx + 1]])
                     
-        subprocess.run(args)
+        return subprocess.run(args).returncode
         
     elif command in ['analyze', 'analysis', 'a', 'simple', 'detect']:
         from aneos_core.analysis.cli import main as analysis_main
@@ -97,7 +95,7 @@ def main():
             elif '--fix-deps' in sys.argv:
                 args.append("--fix-deps")
                 
-        subprocess.run(args)
+        return subprocess.run(args).returncode
         
     elif command in ['poll', 'poller']:
         print("🌍 Starting NEO API Poller...")
@@ -113,7 +111,7 @@ def main():
                 period = sys.argv[2]
                 args.extend(["--api", "NASA_CAD", "--period", period])
                 
-        subprocess.run(args)
+        return subprocess.run(args).returncode
         
     elif command in ['help', '--help', '-h']:
         print_help()
@@ -182,4 +180,4 @@ For full functionality, use the interactive menu:
     print(help_text)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

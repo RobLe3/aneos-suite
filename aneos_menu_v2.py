@@ -1222,3 +1222,12 @@ class ANEOSMenuV2(ANEOSMenuBase):
     def _rough_torino(prob: float, energy_mt: Optional[float]) -> str:
         """Controlled deprecation: no local Torino class from heuristic inputs."""
         raise NotImplementedError('Use a source-reported Torino value within its documented scope')
+
+
+def main():
+    """Start the interactive menu when this module is executed as a script."""
+    ANEOSMenuV2().run()
+
+
+if __name__ == '__main__':
+    main()

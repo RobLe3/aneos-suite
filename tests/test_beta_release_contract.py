@@ -43,3 +43,23 @@ def test_release_archives_exclude_local_config_and_mutable_database():
     attrs=(Path(__file__).parents[1]/'.gitattributes').read_text()
     assert '/.env export-ignore' in attrs
     assert '/aneos.db export-ignore' in attrs
+
+
+def test_real_launcher_executes_versioned_menu_help_and_exit(tmp_path):
+    from pathlib import Path
+    import os,sys,subprocess
+    root=Path(__file__).parents[1]
+    run=subprocess.run([sys.executable,'aneos.py'],cwd=root,input='14\n\n0\n',capture_output=True,text=True,
+        env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1','ANEOS_DATABASE_URL':'sqlite:///'+str(tmp_path/'menu.sqlite')},timeout=30)
+    assert run.returncode==0,run.stderr
+    assert '2.2.0b1' in run.stdout and 'NOT_FLAGGED' in run.stdout
+    assert 'Scientific guide' in run.stdout
+
+
+@pytest.mark.parametrize('args',[['aneos.py'],['aneos.py','menu'],['aneos.py','--legacy-menu'],['aneos.py','api']])
+def test_launcher_propagates_child_process_failure(monkeypatch,args):
+    import aneos,sys
+    from types import SimpleNamespace
+    monkeypatch.setattr(sys,'argv',args.copy())
+    monkeypatch.setattr(aneos.subprocess,'run',Mock(return_value=SimpleNamespace(returncode=7)))
+    assert aneos.main()==7
