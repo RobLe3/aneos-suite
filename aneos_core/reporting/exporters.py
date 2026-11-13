@@ -251,6 +251,21 @@ class Exporter:
                         'batch_envelope_json':json.dumps(report, ensure_ascii=False, allow_nan=False) if i == 0 else ''})
         return str(path)
 
+    def export_policy_experiment(self, report, output_file=None):
+        """Replay-verified, exclusive JSON; no legacy natural/artificial summary."""
+        from aneos_core.validation.policy_evaluation import verify_experiment, canonical
+        report = verify_experiment(report)
+        if output_file is None:
+            output_file = f"policy_experiment_{report['report_id'][:16]}.json"
+        if (not isinstance(output_file, str) or Path(output_file).name != output_file
+            or Path(output_file).suffix != '.json'):
+            raise ValueError('Choose a JSON filename within the experiment export directory')
+        text = canonical(report) + '\n'  # Validate before creating a new artifact.
+        path = self.output_dir / output_file
+        with path.open('x', encoding='utf-8') as stream:
+            stream.write(text)
+        return str(path)
+
     def export_to_xml(self, data: List[Dict[str, Any]], 
                      output_file: Optional[str] = None,
                      include_metadata: bool = True) -> str:

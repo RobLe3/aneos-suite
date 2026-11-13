@@ -3397,3 +3397,38 @@ of the internal replay inputs; do not publish a modified report as hash-valid. Q
 and submission times are explicitly execution dates, not observation epochs. Public
 responses omit leases, authentication identities and arbitrary exception strings.
 Existing stored data and archived scientific outputs remain untouched.
+
+## ADR-098 — Evaluate the deployed candidate policy, not unavailable origin labels
+
+**2026-11-13; #11/#23/#6.** Scientific Validation owns the retained Monte Carlo
+harnesses. Their synthetic candidate experiments must call the shared canonical
+screening service, preserve the deployed threshold/policy, and count every input
+as assessed, abstained, invalid or failed. Unavailable `is_artificial` is not a
+natural negative, and worker/import/chunk failures are not successful evaluations.
+There is no second classifier, persistence engine or bounded context.
+
+Share pure orbital-scenario evaluation and deterministic generators between the
+two existing facades. Experiments freeze inputs, generator recipe/state/version,
+policy/software identity, ordered outcomes and hashes. Canonical ranking is not
+modified. Synthetic intervals apply only to complete, reproducible independent
+draws from the declared toy generator; supplied/unqualified samples and incomplete
+runs have no fabricated binomial uncertainty. Even a valid conditional simulation
+interval is not a real-world FPR, discovery significance or artificial-origin
+probability. Legacy FP/sigma aliases remain null and comparison-to-five-sigma
+recommendations are withdrawn. Two names calling the same model cannot constitute
+an original-versus-corrected comparison.
+
+Use local PCG64 state, including seed zero, without altering NumPy global RNG.
+Version corrected recipes; do not present clipped/adjusted distributions as
+empirically validated populations or silently relabel them as real orbital classes.
+Record missing physical observations and all unscored fields. Bound sample, chunk
+and process budgets; deterministic aggregation does not depend on completion order.
+Unexpected whole-worker failure aborts the experiment rather than inventing data.
+
+Keep historical artifacts unchanged. The existing reporting boundary owns exclusive,
+finite-JSON experiment export and replay verification, not legacy origin-summary
+injection. Hash/replay consistency is not initial authenticity. Scripts/defaults
+must remain modest, explicit offline experiments, not automatic million-object
+certification or background calibration. Representative independent natural/human
+controls, labels, object/time holdouts, conditional populations and prospective
+Brier targets remain #10/#11 prerequisites, not satisfied by synthetic mechanics.

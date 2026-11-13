@@ -1617,3 +1617,11 @@ uses existing fresh persistent principals with a separate batch token audience.
 Core Analysis/Reporting retain canonical scientific decisions and report ownership.
 REST projects owned immutable checkpoints; it cannot score independently or treat
 processing completion as validated origin inference. No new bounded context.
+
+### Candidate-policy experiments (ADR-098)
+
+Scientific Validation reuses canonical Core Analysis for each supplied orbital
+scenario and records assessed/candidate/abstained/failed counts with frozen inputs
+and policy. Reporting exports/verifies those experiments without origin claims.
+Synthetic generation is an explicit test method, not source acquisition, independent
+truth labelling or population calibration. No new bounded context or scoring engine.
