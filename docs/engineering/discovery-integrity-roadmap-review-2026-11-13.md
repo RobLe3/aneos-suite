@@ -182,6 +182,19 @@ project-wide milestone restructuring is unnecessary for the first increment.
 
 ## D. Dependency-aware roadmap and release gates
 
+### Priority, risk and release impact
+
+| Increment | Priority / scope | Main risk / release impact |
+|---|---|---|
+| Current assessment, glossary and contract review (#17/#44/#86/#87) | P0 review; planning and regression boundary only | Low runtime risk; no version/schema/score change |
+| #83 → #84/#73 acquisition | P0 prerequisite / bounded integration | Medium data-loss/budget/admission risk; critical path for a restored polling release |
+| #40/#13/#87 historical lineage/comparison | P1 data integrity | High false-attribution/compatibility risk; not a prerequisite to claim bounded current-query engineering support |
+| #86 qualified diagnostics → #10 aggregation/populations | P1 exploratory discovery | High scientific false-positive/dependence risk; cannot silently replace canonical ranking |
+| #5/#7 → #8/#9 physical fits | P1 scientific investigation | High model/data sufficiency risk; block physical-origin model claims, not unrelated engineering increments |
+| #11 prospective calibration / independent evaluation | P2 capability, mandatory before corresponding accuracy claims | High leakage/label/selection risk; blocks calibrated inference, not honest unavailable results |
+| #12/#41/#42/#43/#46 reporting, fitness and QA | P1/P2 per existing owner | Misleading output/coverage risk; actual changed paths must pass before their release |
+| Independent checkpoints, operational scale and #14 predictions | Later / separately scoped | Security/authenticity/access risk; no automatic provisioning or release-date promise |
+
 ### Short term: safe acquisition, preservation and contract review
 
 1. Preserve beta2 and canonical/baseline numerical contracts. Finish qualified #83

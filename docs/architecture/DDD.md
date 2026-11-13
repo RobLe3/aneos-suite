@@ -1,6 +1,6 @@
 # Domain-Driven Design — aNEOS Suite
 
-_Derived: 2026-03-06 | Last updated: 2026-03-10 | Codebase Version: 1.1.0_
+_Historical design basis: 2026-03-06–10 / v1.1.0. Current-status review: 2026-11-13 / v2.2.0b2 plus main 3dd47f1._
 _Concept documents: README.md, docs/scientific/scientific-documentation.md,
 docs/engineering/sigma5_success_criteria.md, Calibration Plan v1.2_
 
