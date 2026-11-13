@@ -2,7 +2,7 @@
 
 # aNEOS: Advanced Near Earth Object Suite
 
-**v1.2.2 | Research Platform | Phase 24: bug fixes, input validation, endpoint wiring | 2026-03-11**
+**v2.2.0.dev0 | Development review | Unreleased reliability work | 2026-11-13**
 
 aNEOS is a Python research platform for:
 
@@ -14,7 +14,7 @@ aNEOS is a Python research platform for:
 > **Current contract:** this review branch does not provide independently calibrated
 > origin probabilities, FDR estimates or five-sigma discovery significance. Earlier
 > numerical examples and aspirational capability descriptions below are not current
-> scientific validation. Follow the scoped engineering reports and ADR-065–075;
+> scientific validation. Follow the scoped engineering reports and ADR-065–079;
 > remaining work is tracked in [programme #2](https://github.com/RobLe3/aneos-suite/issues/2).
 > This is not an operational warning or planetary-defense decision service.
 
@@ -912,3 +912,15 @@ Requested source completeness/local enrichment, every-menu render QA, verified o
 explanations/graphics, scientific suitability, current user documentation and version
 consistency are tracked separately in [the requirements register](docs/engineering/user-quality-programme.md).
 They remain acceptance work, not claims already achieved by engineering test counts.
+
+
+Application version is defined in `aneos_version.py`. Run `python aneos.py --version`
+without starting scientific or API services. The REST API contract remains2.0.0;
+`application_version` and `X-Application-Version` identify this development build.
+Model/schema/provider versions remain independent. No release tag or scientific
+readiness is implied; historical result versions are preserved.
+
+[Menu-entry before/after captures and scope](docs/engineering/version-and-menu-identity.md)
+include actual text/HTML/SVG at80/120/160 columns, current Scientific Help and a
+machine-readable inventory. Fifteen feature dispatch routes are checked; detailed
+prerequisite/behavior/result QA remains explicitly pending in #41.

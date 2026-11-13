@@ -1,4 +1,5 @@
 """Reproducible presentation of current screening, not scientific confirmation."""
+from aneos_version import APPLICATION_VERSION, BUILD_CHANNEL
 import copy
 import json
 from hashlib import sha256
@@ -27,7 +28,7 @@ def _software_metadata():
             packages[name] = version(name)
         except PackageNotFoundError:
             packages[name] = None
-    modules = ['aneos_core/analysis/pipeline.py', 'aneos_core/analysis/screening.py',
+    modules = ['aneos_version.py', 'aneos_core/analysis/pipeline.py', 'aneos_core/analysis/screening.py',
         'aneos_core/analysis/reporting.py', 'simple_neo_analyzer.py',
         'aneos_core/analysis/advanced_aneos_analyzer.py', 'aneos_core/analysis/impact_evidence.py',
         'aneos_core/interfaces/unified_analysis.py', 'aneos_core/data/models.py',
@@ -36,7 +37,8 @@ def _software_metadata():
         'aneos_core/detection/validated_sigma5_artificial_neo_detector.py']
     hashes = {name:sha256((root/name).read_bytes()).hexdigest() if (root/name).is_file() else None
         for name in modules}
-    return {'repository_commit':commit, 'working_tree_dirty':dirty,
+    return {'application_version':APPLICATION_VERSION, 'build_channel':BUILD_CHANNEL,
+        'repository_commit':commit, 'working_tree_dirty':dirty,
         'python_version':sys.version.split()[0], 'package_versions':packages,
         'float_mantissa_bits':sys.float_info.mant_dig, 'float_epsilon':sys.float_info.epsilon,
         'source_hashes_at_report_time':hashes,
@@ -147,6 +149,8 @@ def render_screening_markdown(report):
         f"Policy ID: {_cell(assessment.get('policy_id'))}",
         f"Review input ID: {_cell(report.get('review_input_id'))}",
         f"Report ID: {_cell(report.get('report_id'))}",
+        f"Application version: {_cell(report.get('software', {}).get('application_version'))}",
+        f"Build channel: {_cell(report.get('software', {}).get('build_channel'))}",
         f"Repository commit: {_cell(report.get('software', {}).get('repository_commit'))}",
         f"Working tree dirty: {_cell(report.get('software', {}).get('working_tree_dirty'))}", '',
         '## Non-gravitational coefficients', '',

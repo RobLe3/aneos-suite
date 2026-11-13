@@ -5,6 +5,7 @@ This module provides the core API application with all endpoints,
 middleware, and service integrations.
 """
 
+from aneos_version import APPLICATION_VERSION, API_CONTRACT_VERSION, BUILD_CHANNEL
 from typing import Dict, List, Optional, Any
 import asyncio
 import logging
@@ -206,7 +207,8 @@ class ANEOSApp:
                 'alert_manager': self.alert_manager is not None,
                 'auth_manager': self.auth_manager is not None
             },
-            'version': '2.0.0'
+            'version': API_CONTRACT_VERSION, 'application_version': APPLICATION_VERSION,
+            'api_contract_version': API_CONTRACT_VERSION
         }
 
 # Global application instance
@@ -258,7 +260,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
             "development mock tokens do not authorize them. "
             "Authentication on other routes varies; see their documented contracts."
         ),
-        version="2.0.0",
+        version=API_CONTRACT_VERSION,
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
@@ -308,7 +310,8 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
             return HealthResponse(
                 status=raw.get('status', 'unknown') if checks and all(c.status == 'ok' for c in checks.values()) else 'degraded',
                 checks=checks,
-                version=raw.get('version', '0.7.0'),
+                version=raw.get('version', API_CONTRACT_VERSION),
+                application_version=APPLICATION_VERSION, api_contract_version=API_CONTRACT_VERSION,
             )
         except Exception as e:
             return HealthResponse(
@@ -321,7 +324,9 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
         """Root endpoint with API information."""
         return {
             "name": "aNEOS API",
-            "version": "2.0.0",
+            "version": API_CONTRACT_VERSION,
+            "application_version": APPLICATION_VERSION, "api_contract_version": API_CONTRACT_VERSION,
+            "build_channel": BUILD_CHANNEL,
             "description": "Advanced Near Earth Object detection System",
             "documentation": "/docs",
             "dashboard": "/dashboard",
@@ -342,15 +347,14 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
         
         openapi_schema = get_openapi(
             title="aNEOS API",
-            version="2.0.0",
-            description="Advanced Near Earth Object detection System - RESTful API for artificial NEO detection",
+            version=API_CONTRACT_VERSION,
+            description=app.description,
             routes=app.routes,
         )
         
         # Add custom schema elements
-        openapi_schema["info"]["x-logo"] = {
-            "url": "https://example.com/aneos-logo.png"
-        }
+        openapi_schema["info"]["x-application-version"] = APPLICATION_VERSION
+        openapi_schema["info"]["x-build-channel"] = BUILD_CHANNEL
         
         app.openapi_schema = openapi_schema
         return app.openapi_schema

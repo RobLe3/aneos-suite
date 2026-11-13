@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+.r1 {color: #000080; text-decoration-color: #000080}
+.r2 {font-weight: bold; text-decoration: underline}
+.r3 {color: #800080; text-decoration-color: #800080; text-decoration: underline}
+.r4 {color: #008080; text-decoration-color: #008080}
+.r5 {font-weight: bold}
+body {
+    color: #000000;
+    background-color: #ffffff;
+}
+</style>
+</head>
+<body>
+    <pre style="font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><code style="font-family:inherit"><span class="r1">╭─────────────────── Scientific guide — evidence and limits ───────────────────╮</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span>                           <span class="r2">Reading an aNEOS result</span>                            <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> This development build supports reproducible research screening. It is not   <span class="r1">│</span>
+<span class="r1">│</span> an operational warning service, an independently calibrated discovery        <span class="r1">│</span>
+<span class="r1">│</span> procedure or an origin classifier. A successful query is not proof of        <span class="r1">│</span>
+<span class="r1">│</span> complete observations.                                                       <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> <span class="r3">Start with the evidence</span>                                                      <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> Check the designation and catalogue identity, source and retrieval time,     <span class="r1">│</span>
+<span class="r1">│</span> observation arc, orbit solution and epoch. Distinguish observations from     <span class="r1">│</span>
+<span class="r1">│</span> fitted parameters and computed encounters. Preserve native units, time       <span class="r1">│</span>
+<span class="r1">│</span> scales, uncertainty and covariance labels. A catalogue query date or         <span class="r1">│</span>
+<span class="r1">│</span> predicted encounter is not an observation date.                              <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> Missing values mean not available, never zero. Conflicting identities or     <span class="r1">│</span>
+<span class="r1">│</span> measurements need resolution or an explicit alternative; more rows are not   <span class="r1">│</span>
+<span class="r1">│</span> necessarily more independent evidence. Completeness is meaningful only       <span class="r1">│</span>
+<span class="r1">│</span> against a declared required field set. Source coverage, enrichment           <span class="r1">│</span>
+<span class="r1">│</span> completion and analysis readiness are different. The target is all           <span class="r1">│</span>
+<span class="r1">│</span> obtainable required data, with unresolved gaps shown honestly.               <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> <span class="r3">What the screening result means</span>                                              <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4">                                                                            </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span><span class="r5">                        </span><span class="r4"> </span><span class="r5">                        </span><span class="r4"> </span><span class="r4">What it does not </span><span class="r5">       </span><span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span><span class="r4">Output</span><span class="r5">                  </span><span class="r4"> </span><span class="r4">Meaning</span><span class="r5">                 </span><span class="r4"> </span><span class="r4">establish</span><span class="r5">               </span><span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> ────────────────────────────────────────────────────────────────────────── </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>Screening score         <span class="r4"> </span>Uncalibrated ranking    <span class="r4"> </span>Gaussian significance or<span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>                        <span class="r4"> </span>under the stated        <span class="r4"> </span>origin probability      <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>                        <span class="r4"> </span>engine/reference        <span class="r4"> </span>                        <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>FOLLOW_UP_CANDIDATE     <span class="r4"> </span>Ranking meets the       <span class="r4"> </span>An artificial object or <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>                        <span class="r4"> </span>recorded policy         <span class="r4"> </span>a validated physical    <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>                        <span class="r4"> </span>threshold               <span class="r4"> </span>anomaly                 <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>NOT_FLAGGED             <span class="r4"> </span>This policy did not     <span class="r4"> </span>Perfectly normal,       <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>                        <span class="r4"> </span>flag the supplied       <span class="r4"> </span>natural origin or no    <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>                        <span class="r4"> </span>evidence                <span class="r4"> </span>need for other research <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>INCONCLUSIVE            <span class="r4"> </span>Evidence or model       <span class="r4"> </span>A negative scientific   <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>                        <span class="r4"> </span>prerequisites do not    <span class="r4"> </span>finding                 <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>                        <span class="r4"> </span>support the operation   <span class="r4"> </span>                        <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>Null                    <span class="r4"> </span>No justified calibrated <span class="r4"> </span>Zero risk, zero anomaly <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4"> </span>significance/probabili… <span class="r4"> </span>result is available     <span class="r4"> </span>or zero probability     <span class="r4"> </span> <span class="r1">│</span>
+<span class="r1">│</span> <span class="r4">                                                                            </span> <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> The existing rank includes dependent proxies and prototype population        <span class="r1">│</span>
+<span class="r1">│</span> assumptions. Size, albedo and absolute magnitude must not be treated as      <span class="r1">│</span>
+<span class="r1">│</span> independent origin evidence. The report records evidence, reference/policy   <span class="r1">│</span>
+<span class="r1">│</span> identifiers and limitations; compare like-for-like inputs and versions       <span class="r1">│</span>
+<span class="r1">│</span> rather than interpreting a rank as a probability.                            <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> <span class="r3">Physical dynamics and comparative explanations</span>                               <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> A1, A2 and A3 are radial, transverse and out-of-plane force-model            <span class="r1">│</span>
+<span class="r1">│</span> coefficients. Check their source units, uncertainties,                       <span class="r1">│</span>
+<span class="r1">│</span> estimated/fixed/considered status and orbit solution. A coefficient or       <span class="r1">│</span>
+<span class="r1">│</span> improved fit does not identify a cause. Assess compatible natural,           <span class="r1">│</span>
+<span class="r1">│</span> human-technology and measurement/model-artifact explanations against the     <span class="r1">│</span>
+<span class="r1">│</span> same observations, with uncertainty, parameter complexity and predictive     <span class="r1">│</span>
+<span class="r1">│</span> checks. A human spacecraft hypothesis is not extraterrestrial evidence.      <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> No valid physical-origin fit comparison or calibrated origin probability is  <span class="r1">│</span>
+<span class="r1">│</span> installed in the current normal screening path. Keep unsupported conclusions <span class="r1">│</span>
+<span class="r1">│</span> unresolved. A five-sigma claim needs a validated null and the full           <span class="r1">│</span>
+<span class="r1">│</span> search/error-control procedure; no fixed ranking threshold supplies that     <span class="r1">│</span>
+<span class="r1">│</span> evidence.                                                                    <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> <span class="r3">Population and impact views</span>                                                  <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> Population neighbourhoods and native-TDB computed encounter gaps are         <span class="r1">│</span>
+<span class="r1">│</span> descriptive. They do not establish a common origin, deliberate coordination, <span class="r1">│</span>
+<span class="r1">│</span> measured acceleration periodicity or calibrated network significance.        <span class="r1">│</span>
+<span class="r1">│</span> Cross-object temporal correlation requires compatible paired observations,   <span class="r1">│</span>
+<span class="r1">│</span> not one fitted scalar per object.                                            <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> JPL Sentry evidence concerns the source model&#x27;s tabulated Earth events and   <span class="r1">│</span>
+<span class="r1">│</span> scope. Not listed is not zero impact probability. Impact evidence and origin <span class="r1">│</span>
+<span class="r1">│</span> screening are separate; a screening rank cannot supply a collision           <span class="r1">│</span>
+<span class="r1">│</span> probability or risk class.                                                   <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> <span class="r3">Reproduce, then investigate</span>                                                  <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> Save the JSON/Markdown report, exact inputs/configuration,                   <span class="r1">│</span>
+<span class="r1">│</span> evidence/policy/report IDs, source solution/epoch and software identity.     <span class="r1">│</span>
+<span class="r1">│</span> Compare archived assessments rather than overwrite them with later           <span class="r1">│</span>
+<span class="r1">│</span> measurements. A completed execution means work was stored, not that every    <span class="r1">│</span>
+<span class="r1">│</span> scientific prerequisite passed. Check missing evidence and follow-up needs   <span class="r1">│</span>
+<span class="r1">│</span> before deriving a physical conclusion.                                       <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">│</span> Detailed current contracts: docs/scientific/VALIDATION_INTEGRITY.md and the  <span class="r1">│</span>
+<span class="r1">│</span> scoped reports in docs/engineering/. The older scientific-documentation.md   <span class="r1">│</span>
+<span class="r1">│</span> is historical prototype material, not current validated methodology. Full    <span class="r1">│</span>
+<span class="r1">│</span> object explanations, menu QA, source enrichment and independent evaluation   <span class="r1">│</span>
+<span class="r1">│</span> remain active work (#40–#46).                                                <span class="r1">│</span>
+<span class="r1">│</span>                                                                              <span class="r1">│</span>
+<span class="r1">╰──────────────────────────────────────────────────────────────────────────────╯</span>
+</code></pre>
+</body>
+</html>

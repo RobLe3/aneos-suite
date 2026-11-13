@@ -6,6 +6,7 @@ dashboard system. Integrates with the aNEOS API and validation pipeline
 to provide operational monitoring and visualization.
 """
 
+from aneos_version import APPLICATION_VERSION
 import asyncio
 import logging
 from pathlib import Path
@@ -67,7 +68,7 @@ class DashboardApp:
         return {
             'title': 'aNEOS Real-Time Validation Dashboard',
             'description': 'Comprehensive monitoring and visualization for the aNEOS validation pipeline',
-            'version': '1.0.0',
+            'version': APPLICATION_VERSION,
             'max_history_hours': 24,
             'max_sessions_memory': 1000,
             'websocket_update_interval': 1.0,

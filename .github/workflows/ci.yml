@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Frozen menu baseline is a prior commit, not network-fetched by tests.
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -34,6 +36,9 @@ jobs:
 
       - name: Verify durable network API component coverage
         run: python -m pytest tests/test_durable_network_api.py tests/test_pattern_api.py tests/test_api_bootstrap_contract.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-api.ini --cov-report=term-missing --cov-fail-under=85
+
+      - name: Verify application identity and real menu-entry renders
+        run: python -m pytest tests/test_application_identity.py -q --tb=short
 
   docker-build:
     name: Docker build

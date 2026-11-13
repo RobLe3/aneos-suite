@@ -9,10 +9,15 @@ for both interactive menu and direct command execution.
 import sys
 import subprocess
 from pathlib import Path
+from aneos_version import APPLICATION_VERSION, BUILD_CHANNEL
 
 def main():
     """Main launcher with command-line argument support."""
     
+    if len(sys.argv) == 2 and sys.argv[1] in ('--version', 'version'):
+        print(f'aNEOS {APPLICATION_VERSION} ({BUILD_CHANNEL})')
+        return
+
     # Check if we're in the right directory
     if not Path("aneos_core").exists():
         print("❌ Error: Please run this script from the aNEOS project root directory")
@@ -22,13 +27,13 @@ def main():
     # --legacy-menu flag anywhere → use the original 121-option menu
     if "--legacy-menu" in sys.argv:
         sys.argv.remove("--legacy-menu")
-        print("🚀 Starting aNEOS Legacy Menu (full 121-option interface)…")
+        print(f"Starting aNEOS {APPLICATION_VERSION} legacy grouped menu…")
         subprocess.run([sys.executable, "aneos_menu.py"])
         return
 
     # If no arguments, start the new v2 menu
     if len(sys.argv) == 1:
-        print("🚀 Starting aNEOS Menu…")
+        print(f"Starting aNEOS {APPLICATION_VERSION} ({BUILD_CHANNEL}) menu…")
         subprocess.run([sys.executable, "aneos_menu_v2.py"])
         return
 
@@ -36,7 +41,7 @@ def main():
     command = sys.argv[1].lower()
 
     if command in ['menu', 'interactive', 'm']:
-        print("🚀 Starting aNEOS Menu…")
+        print(f"Starting aNEOS {APPLICATION_VERSION} ({BUILD_CHANNEL}) menu…")
         subprocess.run([sys.executable, "aneos_menu_v2.py"])
         
     elif command in ['api', 'server', 'start']:
@@ -172,6 +177,8 @@ For full functionality, use the interactive menu:
 📚 Documentation: Available at /docs when API server is running
 🌐 Web Dashboard: Available at /dashboard when API server is running
 """
+    print(f'aNEOS {APPLICATION_VERSION} ({BUILD_CHANNEL})')
+    print('  --version, version    Show application version without starting services')
     print(help_text)
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ or a claim that those optional services are healthy/validated.
 """
 from importlib import import_module
 
-__version__ = "1.0.0"
+from aneos_version import APPLICATION_VERSION as __version__
 __author__ = "aNEOS Project"
 
 _EXPORTS = {

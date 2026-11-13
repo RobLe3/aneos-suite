@@ -1,0 +1,345 @@
+<svg class="rich-terminal" viewBox="0 0 1482 1880.0" xmlns="http://www.w3.org/2000/svg">
+    <!-- Generated with Rich https://www.textualize.io -->
+    <style>
+
+    
+    
+
+    .terminal-3523838226-matrix {
+        font-family: monospace;
+        font-size: 20px;
+        line-height: 24.4px;
+        font-variant-east-asian: full-width;
+    }
+
+    .terminal-3523838226-title {
+        font-size: 18px;
+        font-weight: bold;
+        font-family: arial;
+    }
+
+    .terminal-3523838226-r1 { fill: #608ab1 }
+.terminal-3523838226-r2 { fill: #c5c8c6 }
+.terminal-3523838226-r3 { fill: #c5c8c6;font-weight: bold;text-decoration: underline; }
+.terminal-3523838226-r4 { fill: #98729f;text-decoration: underline; }
+.terminal-3523838226-r5 { fill: #68a0b3 }
+.terminal-3523838226-r6 { fill: #c5c8c6;font-weight: bold }
+    </style>
+
+    <defs>
+    <clipPath id="terminal-3523838226-clip-terminal">
+      <rect x="0" y="0" width="1463.0" height="1829.0" />
+    </clipPath>
+    <clipPath id="terminal-3523838226-line-0">
+    <rect x="0" y="1.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-1">
+    <rect x="0" y="25.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-2">
+    <rect x="0" y="50.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-3">
+    <rect x="0" y="74.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-4">
+    <rect x="0" y="99.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-5">
+    <rect x="0" y="123.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-6">
+    <rect x="0" y="147.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-7">
+    <rect x="0" y="172.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-8">
+    <rect x="0" y="196.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-9">
+    <rect x="0" y="221.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-10">
+    <rect x="0" y="245.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-11">
+    <rect x="0" y="269.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-12">
+    <rect x="0" y="294.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-13">
+    <rect x="0" y="318.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-14">
+    <rect x="0" y="343.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-15">
+    <rect x="0" y="367.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-16">
+    <rect x="0" y="391.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-17">
+    <rect x="0" y="416.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-18">
+    <rect x="0" y="440.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-19">
+    <rect x="0" y="465.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-20">
+    <rect x="0" y="489.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-21">
+    <rect x="0" y="513.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-22">
+    <rect x="0" y="538.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-23">
+    <rect x="0" y="562.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-24">
+    <rect x="0" y="587.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-25">
+    <rect x="0" y="611.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-26">
+    <rect x="0" y="635.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-27">
+    <rect x="0" y="660.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-28">
+    <rect x="0" y="684.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-29">
+    <rect x="0" y="709.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-30">
+    <rect x="0" y="733.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-31">
+    <rect x="0" y="757.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-32">
+    <rect x="0" y="782.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-33">
+    <rect x="0" y="806.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-34">
+    <rect x="0" y="831.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-35">
+    <rect x="0" y="855.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-36">
+    <rect x="0" y="879.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-37">
+    <rect x="0" y="904.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-38">
+    <rect x="0" y="928.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-39">
+    <rect x="0" y="953.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-40">
+    <rect x="0" y="977.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-41">
+    <rect x="0" y="1001.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-42">
+    <rect x="0" y="1026.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-43">
+    <rect x="0" y="1050.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-44">
+    <rect x="0" y="1075.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-45">
+    <rect x="0" y="1099.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-46">
+    <rect x="0" y="1123.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-47">
+    <rect x="0" y="1148.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-48">
+    <rect x="0" y="1172.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-49">
+    <rect x="0" y="1197.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-50">
+    <rect x="0" y="1221.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-51">
+    <rect x="0" y="1245.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-52">
+    <rect x="0" y="1270.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-53">
+    <rect x="0" y="1294.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-54">
+    <rect x="0" y="1319.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-55">
+    <rect x="0" y="1343.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-56">
+    <rect x="0" y="1367.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-57">
+    <rect x="0" y="1392.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-58">
+    <rect x="0" y="1416.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-59">
+    <rect x="0" y="1441.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-60">
+    <rect x="0" y="1465.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-61">
+    <rect x="0" y="1489.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-62">
+    <rect x="0" y="1514.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-63">
+    <rect x="0" y="1538.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-64">
+    <rect x="0" y="1563.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-65">
+    <rect x="0" y="1587.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-66">
+    <rect x="0" y="1611.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-67">
+    <rect x="0" y="1636.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-68">
+    <rect x="0" y="1660.7" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-69">
+    <rect x="0" y="1685.1" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-70">
+    <rect x="0" y="1709.5" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-71">
+    <rect x="0" y="1733.9" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-72">
+    <rect x="0" y="1758.3" width="1464" height="24.65"/>
+            </clipPath>
+<clipPath id="terminal-3523838226-line-73">
+    <rect x="0" y="1782.7" width="1464" height="24.65"/>
+            </clipPath>
+    </defs>
+
+    <rect fill="#292929" stroke="rgba(255,255,255,0.35)" stroke-width="1" x="1" y="1" width="1480" height="1878" rx="8"/><text class="terminal-3523838226-title" fill="#c5c8c6" text-anchor="middle" x="740" y="27">Actual&#160;Rich&#160;menu&#160;render</text>
+            <g transform="translate(26,22)">
+            <circle cx="0" cy="0" r="7" fill="#ff5f57"/>
+            <circle cx="22" cy="0" r="7" fill="#febc2e"/>
+            <circle cx="44" cy="0" r="7" fill="#28c840"/>
+            </g>
+        
+    <g transform="translate(9, 41)" clip-path="url(#terminal-3523838226-clip-terminal)">
+    
+    <g class="terminal-3523838226-matrix">
+    <text class="terminal-3523838226-r1" x="0" y="20" textLength="24.4" clip-path="url(#terminal-3523838226-line-0)">╭─</text><text class="terminal-3523838226-r1" x="24.4" y="20" textLength="463.6" clip-path="url(#terminal-3523838226-line-0)">──────────────────────────────────────</text><text class="terminal-3523838226-r1" x="488" y="20" textLength="488" clip-path="url(#terminal-3523838226-line-0)">&#160;Scientific&#160;guide&#160;—&#160;evidence&#160;and&#160;limits&#160;</text><text class="terminal-3523838226-r1" x="976" y="20" textLength="463.6" clip-path="url(#terminal-3523838226-line-0)">──────────────────────────────────────</text><text class="terminal-3523838226-r1" x="1439.6" y="20" textLength="24.4" clip-path="url(#terminal-3523838226-line-0)">─╮</text><text class="terminal-3523838226-r2" x="1464" y="20" textLength="12.2" clip-path="url(#terminal-3523838226-line-0)">
+</text><text class="terminal-3523838226-r1" x="0" y="44.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-1)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="44.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-1)">│</text><text class="terminal-3523838226-r2" x="1464" y="44.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-1)">
+</text><text class="terminal-3523838226-r1" x="0" y="68.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-2)">│</text><text class="terminal-3523838226-r3" x="585.6" y="68.8" textLength="280.6" clip-path="url(#terminal-3523838226-line-2)">Reading&#160;an&#160;aNEOS&#160;result</text><text class="terminal-3523838226-r1" x="1451.8" y="68.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-2)">│</text><text class="terminal-3523838226-r2" x="1464" y="68.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-2)">
+</text><text class="terminal-3523838226-r1" x="0" y="93.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-3)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="93.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-3)">│</text><text class="terminal-3523838226-r2" x="1464" y="93.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-3)">
+</text><text class="terminal-3523838226-r1" x="0" y="117.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-4)">│</text><text class="terminal-3523838226-r2" x="24.4" y="117.6" textLength="1415.2" clip-path="url(#terminal-3523838226-line-4)">This&#160;development&#160;build&#160;supports&#160;reproducible&#160;research&#160;screening.&#160;It&#160;is&#160;not&#160;an&#160;operational&#160;warning&#160;service,&#160;an&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="117.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-4)">│</text><text class="terminal-3523838226-r2" x="1464" y="117.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-4)">
+</text><text class="terminal-3523838226-r1" x="0" y="142" textLength="12.2" clip-path="url(#terminal-3523838226-line-5)">│</text><text class="terminal-3523838226-r2" x="24.4" y="142" textLength="1415.2" clip-path="url(#terminal-3523838226-line-5)">independently&#160;calibrated&#160;discovery&#160;procedure&#160;or&#160;an&#160;origin&#160;classifier.&#160;A&#160;successful&#160;query&#160;is&#160;not&#160;proof&#160;of&#160;complete&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="142" textLength="12.2" clip-path="url(#terminal-3523838226-line-5)">│</text><text class="terminal-3523838226-r2" x="1464" y="142" textLength="12.2" clip-path="url(#terminal-3523838226-line-5)">
+</text><text class="terminal-3523838226-r1" x="0" y="166.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-6)">│</text><text class="terminal-3523838226-r2" x="24.4" y="166.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-6)">observations.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="166.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-6)">│</text><text class="terminal-3523838226-r2" x="1464" y="166.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-6)">
+</text><text class="terminal-3523838226-r1" x="0" y="190.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-7)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="190.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-7)">│</text><text class="terminal-3523838226-r2" x="1464" y="190.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-7)">
+</text><text class="terminal-3523838226-r1" x="0" y="215.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-8)">│</text><text class="terminal-3523838226-r4" x="24.4" y="215.2" textLength="280.6" clip-path="url(#terminal-3523838226-line-8)">Start&#160;with&#160;the&#160;evidence</text><text class="terminal-3523838226-r1" x="1451.8" y="215.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-8)">│</text><text class="terminal-3523838226-r2" x="1464" y="215.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-8)">
+</text><text class="terminal-3523838226-r1" x="0" y="239.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-9)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="239.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-9)">│</text><text class="terminal-3523838226-r2" x="1464" y="239.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-9)">
+</text><text class="terminal-3523838226-r1" x="0" y="264" textLength="12.2" clip-path="url(#terminal-3523838226-line-10)">│</text><text class="terminal-3523838226-r2" x="24.4" y="264" textLength="1415.2" clip-path="url(#terminal-3523838226-line-10)">Check&#160;the&#160;designation&#160;and&#160;catalogue&#160;identity,&#160;source&#160;and&#160;retrieval&#160;time,&#160;observation&#160;arc,&#160;orbit&#160;solution&#160;and&#160;epoch.&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="264" textLength="12.2" clip-path="url(#terminal-3523838226-line-10)">│</text><text class="terminal-3523838226-r2" x="1464" y="264" textLength="12.2" clip-path="url(#terminal-3523838226-line-10)">
+</text><text class="terminal-3523838226-r1" x="0" y="288.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-11)">│</text><text class="terminal-3523838226-r2" x="24.4" y="288.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-11)">Distinguish&#160;observations&#160;from&#160;fitted&#160;parameters&#160;and&#160;computed&#160;encounters.&#160;Preserve&#160;native&#160;units,&#160;time&#160;scales,&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="288.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-11)">│</text><text class="terminal-3523838226-r2" x="1464" y="288.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-11)">
+</text><text class="terminal-3523838226-r1" x="0" y="312.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-12)">│</text><text class="terminal-3523838226-r2" x="24.4" y="312.8" textLength="1415.2" clip-path="url(#terminal-3523838226-line-12)">uncertainty&#160;and&#160;covariance&#160;labels.&#160;A&#160;catalogue&#160;query&#160;date&#160;or&#160;predicted&#160;encounter&#160;is&#160;not&#160;an&#160;observation&#160;date.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="312.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-12)">│</text><text class="terminal-3523838226-r2" x="1464" y="312.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-12)">
+</text><text class="terminal-3523838226-r1" x="0" y="337.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-13)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="337.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-13)">│</text><text class="terminal-3523838226-r2" x="1464" y="337.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-13)">
+</text><text class="terminal-3523838226-r1" x="0" y="361.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-14)">│</text><text class="terminal-3523838226-r2" x="24.4" y="361.6" textLength="1415.2" clip-path="url(#terminal-3523838226-line-14)">Missing&#160;values&#160;mean&#160;not&#160;available,&#160;never&#160;zero.&#160;Conflicting&#160;identities&#160;or&#160;measurements&#160;need&#160;resolution&#160;or&#160;an&#160;explicit</text><text class="terminal-3523838226-r1" x="1451.8" y="361.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-14)">│</text><text class="terminal-3523838226-r2" x="1464" y="361.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-14)">
+</text><text class="terminal-3523838226-r1" x="0" y="386" textLength="12.2" clip-path="url(#terminal-3523838226-line-15)">│</text><text class="terminal-3523838226-r2" x="24.4" y="386" textLength="1415.2" clip-path="url(#terminal-3523838226-line-15)">alternative;&#160;more&#160;rows&#160;are&#160;not&#160;necessarily&#160;more&#160;independent&#160;evidence.&#160;Completeness&#160;is&#160;meaningful&#160;only&#160;against&#160;a&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="386" textLength="12.2" clip-path="url(#terminal-3523838226-line-15)">│</text><text class="terminal-3523838226-r2" x="1464" y="386" textLength="12.2" clip-path="url(#terminal-3523838226-line-15)">
+</text><text class="terminal-3523838226-r1" x="0" y="410.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-16)">│</text><text class="terminal-3523838226-r2" x="24.4" y="410.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-16)">declared&#160;required&#160;field&#160;set.&#160;Source&#160;coverage,&#160;enrichment&#160;completion&#160;and&#160;analysis&#160;readiness&#160;are&#160;different.&#160;The&#160;target</text><text class="terminal-3523838226-r1" x="1451.8" y="410.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-16)">│</text><text class="terminal-3523838226-r2" x="1464" y="410.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-16)">
+</text><text class="terminal-3523838226-r1" x="0" y="434.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-17)">│</text><text class="terminal-3523838226-r2" x="24.4" y="434.8" textLength="1415.2" clip-path="url(#terminal-3523838226-line-17)">is&#160;all&#160;obtainable&#160;required&#160;data,&#160;with&#160;unresolved&#160;gaps&#160;shown&#160;honestly.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="434.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-17)">│</text><text class="terminal-3523838226-r2" x="1464" y="434.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-17)">
+</text><text class="terminal-3523838226-r1" x="0" y="459.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-18)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="459.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-18)">│</text><text class="terminal-3523838226-r2" x="1464" y="459.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-18)">
+</text><text class="terminal-3523838226-r1" x="0" y="483.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-19)">│</text><text class="terminal-3523838226-r4" x="24.4" y="483.6" textLength="378.2" clip-path="url(#terminal-3523838226-line-19)">What&#160;the&#160;screening&#160;result&#160;means</text><text class="terminal-3523838226-r1" x="1451.8" y="483.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-19)">│</text><text class="terminal-3523838226-r2" x="1464" y="483.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-19)">
+</text><text class="terminal-3523838226-r1" x="0" y="508" textLength="12.2" clip-path="url(#terminal-3523838226-line-20)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="508" textLength="12.2" clip-path="url(#terminal-3523838226-line-20)">│</text><text class="terminal-3523838226-r2" x="1464" y="508" textLength="12.2" clip-path="url(#terminal-3523838226-line-20)">
+</text><text class="terminal-3523838226-r1" x="0" y="532.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-21)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="532.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-21)">│</text><text class="terminal-3523838226-r2" x="1464" y="532.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-21)">
+</text><text class="terminal-3523838226-r1" x="0" y="556.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-22)">│</text><text class="terminal-3523838226-r5" x="36.6" y="556.8" textLength="73.2" clip-path="url(#terminal-3523838226-line-22)">Output</text><text class="terminal-3523838226-r5" x="414.8" y="556.8" textLength="85.4" clip-path="url(#terminal-3523838226-line-22)">Meaning</text><text class="terminal-3523838226-r5" x="927.2" y="556.8" textLength="317.2" clip-path="url(#terminal-3523838226-line-22)">What&#160;it&#160;does&#160;not&#160;establish</text><text class="terminal-3523838226-r1" x="1451.8" y="556.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-22)">│</text><text class="terminal-3523838226-r2" x="1464" y="556.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-22)">
+</text><text class="terminal-3523838226-r1" x="0" y="581.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-23)">│</text><text class="terminal-3523838226-r5" x="24.4" y="581.2" textLength="1415.2" clip-path="url(#terminal-3523838226-line-23)">&#160;──────────────────────────────────────────────────────────────────────────────────────────────────────────────────&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="581.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-23)">│</text><text class="terminal-3523838226-r2" x="1464" y="581.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-23)">
+</text><text class="terminal-3523838226-r1" x="0" y="605.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-24)">│</text><text class="terminal-3523838226-r2" x="36.6" y="605.6" textLength="183" clip-path="url(#terminal-3523838226-line-24)">Screening&#160;score</text><text class="terminal-3523838226-r2" x="414.8" y="605.6" textLength="463.6" clip-path="url(#terminal-3523838226-line-24)">Uncalibrated&#160;ranking&#160;under&#160;the&#160;stated&#160;</text><text class="terminal-3523838226-r2" x="927.2" y="605.6" textLength="390.4" clip-path="url(#terminal-3523838226-line-24)">Gaussian&#160;significance&#160;or&#160;origin&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="605.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-24)">│</text><text class="terminal-3523838226-r2" x="1464" y="605.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-24)">
+</text><text class="terminal-3523838226-r1" x="0" y="630" textLength="12.2" clip-path="url(#terminal-3523838226-line-25)">│</text><text class="terminal-3523838226-r2" x="414.8" y="630" textLength="195.2" clip-path="url(#terminal-3523838226-line-25)">engine/reference</text><text class="terminal-3523838226-r2" x="927.2" y="630" textLength="134.2" clip-path="url(#terminal-3523838226-line-25)">probability</text><text class="terminal-3523838226-r1" x="1451.8" y="630" textLength="12.2" clip-path="url(#terminal-3523838226-line-25)">│</text><text class="terminal-3523838226-r2" x="1464" y="630" textLength="12.2" clip-path="url(#terminal-3523838226-line-25)">
+</text><text class="terminal-3523838226-r1" x="0" y="654.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-26)">│</text><text class="terminal-3523838226-r2" x="36.6" y="654.4" textLength="231.8" clip-path="url(#terminal-3523838226-line-26)">FOLLOW_UP_CANDIDATE</text><text class="terminal-3523838226-r2" x="414.8" y="654.4" textLength="414.8" clip-path="url(#terminal-3523838226-line-26)">Ranking&#160;meets&#160;the&#160;recorded&#160;policy&#160;</text><text class="terminal-3523838226-r2" x="927.2" y="654.4" textLength="439.2" clip-path="url(#terminal-3523838226-line-26)">An&#160;artificial&#160;object&#160;or&#160;a&#160;validated&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="654.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-26)">│</text><text class="terminal-3523838226-r2" x="1464" y="654.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-26)">
+</text><text class="terminal-3523838226-r1" x="0" y="678.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-27)">│</text><text class="terminal-3523838226-r2" x="414.8" y="678.8" textLength="109.8" clip-path="url(#terminal-3523838226-line-27)">threshold</text><text class="terminal-3523838226-r2" x="927.2" y="678.8" textLength="195.2" clip-path="url(#terminal-3523838226-line-27)">physical&#160;anomaly</text><text class="terminal-3523838226-r1" x="1451.8" y="678.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-27)">│</text><text class="terminal-3523838226-r2" x="1464" y="678.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-27)">
+</text><text class="terminal-3523838226-r1" x="0" y="703.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-28)">│</text><text class="terminal-3523838226-r2" x="36.6" y="703.2" textLength="134.2" clip-path="url(#terminal-3523838226-line-28)">NOT_FLAGGED</text><text class="terminal-3523838226-r2" x="414.8" y="703.2" textLength="463.6" clip-path="url(#terminal-3523838226-line-28)">This&#160;policy&#160;did&#160;not&#160;flag&#160;the&#160;supplied&#160;</text><text class="terminal-3523838226-r2" x="927.2" y="703.2" textLength="475.8" clip-path="url(#terminal-3523838226-line-28)">Perfectly&#160;normal,&#160;natural&#160;origin&#160;or&#160;no&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="703.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-28)">│</text><text class="terminal-3523838226-r2" x="1464" y="703.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-28)">
+</text><text class="terminal-3523838226-r1" x="0" y="727.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-29)">│</text><text class="terminal-3523838226-r2" x="414.8" y="727.6" textLength="97.6" clip-path="url(#terminal-3523838226-line-29)">evidence</text><text class="terminal-3523838226-r2" x="927.2" y="727.6" textLength="280.6" clip-path="url(#terminal-3523838226-line-29)">need&#160;for&#160;other&#160;research</text><text class="terminal-3523838226-r1" x="1451.8" y="727.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-29)">│</text><text class="terminal-3523838226-r2" x="1464" y="727.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-29)">
+</text><text class="terminal-3523838226-r1" x="0" y="752" textLength="12.2" clip-path="url(#terminal-3523838226-line-30)">│</text><text class="terminal-3523838226-r2" x="36.6" y="752" textLength="146.4" clip-path="url(#terminal-3523838226-line-30)">INCONCLUSIVE</text><text class="terminal-3523838226-r2" x="414.8" y="752" textLength="475.8" clip-path="url(#terminal-3523838226-line-30)">Evidence&#160;or&#160;model&#160;prerequisites&#160;do&#160;not&#160;</text><text class="terminal-3523838226-r2" x="927.2" y="752" textLength="353.8" clip-path="url(#terminal-3523838226-line-30)">A&#160;negative&#160;scientific&#160;finding</text><text class="terminal-3523838226-r1" x="1451.8" y="752" textLength="12.2" clip-path="url(#terminal-3523838226-line-30)">│</text><text class="terminal-3523838226-r2" x="1464" y="752" textLength="12.2" clip-path="url(#terminal-3523838226-line-30)">
+</text><text class="terminal-3523838226-r1" x="0" y="776.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-31)">│</text><text class="terminal-3523838226-r2" x="414.8" y="776.4" textLength="256.2" clip-path="url(#terminal-3523838226-line-31)">support&#160;the&#160;operation</text><text class="terminal-3523838226-r1" x="1451.8" y="776.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-31)">│</text><text class="terminal-3523838226-r2" x="1464" y="776.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-31)">
+</text><text class="terminal-3523838226-r1" x="0" y="800.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-32)">│</text><text class="terminal-3523838226-r2" x="36.6" y="800.8" textLength="353.8" clip-path="url(#terminal-3523838226-line-32)">Null&#160;significance/probability</text><text class="terminal-3523838226-r2" x="414.8" y="800.8" textLength="414.8" clip-path="url(#terminal-3523838226-line-32)">No&#160;justified&#160;calibrated&#160;result&#160;is&#160;</text><text class="terminal-3523838226-r2" x="927.2" y="800.8" textLength="390.4" clip-path="url(#terminal-3523838226-line-32)">Zero&#160;risk,&#160;zero&#160;anomaly&#160;or&#160;zero&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="800.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-32)">│</text><text class="terminal-3523838226-r2" x="1464" y="800.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-32)">
+</text><text class="terminal-3523838226-r1" x="0" y="825.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-33)">│</text><text class="terminal-3523838226-r2" x="414.8" y="825.2" textLength="109.8" clip-path="url(#terminal-3523838226-line-33)">available</text><text class="terminal-3523838226-r2" x="927.2" y="825.2" textLength="134.2" clip-path="url(#terminal-3523838226-line-33)">probability</text><text class="terminal-3523838226-r1" x="1451.8" y="825.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-33)">│</text><text class="terminal-3523838226-r2" x="1464" y="825.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-33)">
+</text><text class="terminal-3523838226-r1" x="0" y="849.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-34)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="849.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-34)">│</text><text class="terminal-3523838226-r2" x="1464" y="849.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-34)">
+</text><text class="terminal-3523838226-r1" x="0" y="874" textLength="12.2" clip-path="url(#terminal-3523838226-line-35)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="874" textLength="12.2" clip-path="url(#terminal-3523838226-line-35)">│</text><text class="terminal-3523838226-r2" x="1464" y="874" textLength="12.2" clip-path="url(#terminal-3523838226-line-35)">
+</text><text class="terminal-3523838226-r1" x="0" y="898.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-36)">│</text><text class="terminal-3523838226-r2" x="24.4" y="898.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-36)">The&#160;existing&#160;rank&#160;includes&#160;dependent&#160;proxies&#160;and&#160;prototype&#160;population&#160;assumptions.&#160;Size,&#160;albedo&#160;and&#160;absolute&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="898.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-36)">│</text><text class="terminal-3523838226-r2" x="1464" y="898.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-36)">
+</text><text class="terminal-3523838226-r1" x="0" y="922.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-37)">│</text><text class="terminal-3523838226-r2" x="24.4" y="922.8" textLength="1415.2" clip-path="url(#terminal-3523838226-line-37)">magnitude&#160;must&#160;not&#160;be&#160;treated&#160;as&#160;independent&#160;origin&#160;evidence.&#160;The&#160;report&#160;records&#160;evidence,&#160;reference/policy&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="922.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-37)">│</text><text class="terminal-3523838226-r2" x="1464" y="922.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-37)">
+</text><text class="terminal-3523838226-r1" x="0" y="947.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-38)">│</text><text class="terminal-3523838226-r2" x="24.4" y="947.2" textLength="1415.2" clip-path="url(#terminal-3523838226-line-38)">identifiers&#160;and&#160;limitations;&#160;compare&#160;like-for-like&#160;inputs&#160;and&#160;versions&#160;rather&#160;than&#160;interpreting&#160;a&#160;rank&#160;as&#160;a&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="947.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-38)">│</text><text class="terminal-3523838226-r2" x="1464" y="947.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-38)">
+</text><text class="terminal-3523838226-r1" x="0" y="971.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-39)">│</text><text class="terminal-3523838226-r2" x="24.4" y="971.6" textLength="1415.2" clip-path="url(#terminal-3523838226-line-39)">probability.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="971.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-39)">│</text><text class="terminal-3523838226-r2" x="1464" y="971.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-39)">
+</text><text class="terminal-3523838226-r1" x="0" y="996" textLength="12.2" clip-path="url(#terminal-3523838226-line-40)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="996" textLength="12.2" clip-path="url(#terminal-3523838226-line-40)">│</text><text class="terminal-3523838226-r2" x="1464" y="996" textLength="12.2" clip-path="url(#terminal-3523838226-line-40)">
+</text><text class="terminal-3523838226-r1" x="0" y="1020.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-41)">│</text><text class="terminal-3523838226-r4" x="24.4" y="1020.4" textLength="561.2" clip-path="url(#terminal-3523838226-line-41)">Physical&#160;dynamics&#160;and&#160;comparative&#160;explanations</text><text class="terminal-3523838226-r1" x="1451.8" y="1020.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-41)">│</text><text class="terminal-3523838226-r2" x="1464" y="1020.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-41)">
+</text><text class="terminal-3523838226-r1" x="0" y="1044.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-42)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="1044.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-42)">│</text><text class="terminal-3523838226-r2" x="1464" y="1044.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-42)">
+</text><text class="terminal-3523838226-r1" x="0" y="1069.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-43)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1069.2" textLength="1415.2" clip-path="url(#terminal-3523838226-line-43)">A1,&#160;A2&#160;and&#160;A3&#160;are&#160;radial,&#160;transverse&#160;and&#160;out-of-plane&#160;force-model&#160;coefficients.&#160;Check&#160;their&#160;source&#160;units,&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1069.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-43)">│</text><text class="terminal-3523838226-r2" x="1464" y="1069.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-43)">
+</text><text class="terminal-3523838226-r1" x="0" y="1093.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-44)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1093.6" textLength="1415.2" clip-path="url(#terminal-3523838226-line-44)">uncertainties,&#160;estimated/fixed/considered&#160;status&#160;and&#160;orbit&#160;solution.&#160;A&#160;coefficient&#160;or&#160;improved&#160;fit&#160;does&#160;not&#160;identify</text><text class="terminal-3523838226-r1" x="1451.8" y="1093.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-44)">│</text><text class="terminal-3523838226-r2" x="1464" y="1093.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-44)">
+</text><text class="terminal-3523838226-r1" x="0" y="1118" textLength="12.2" clip-path="url(#terminal-3523838226-line-45)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1118" textLength="1415.2" clip-path="url(#terminal-3523838226-line-45)">a&#160;cause.&#160;Assess&#160;compatible&#160;natural,&#160;human-technology&#160;and&#160;measurement/model-artifact&#160;explanations&#160;against&#160;the&#160;same&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1118" textLength="12.2" clip-path="url(#terminal-3523838226-line-45)">│</text><text class="terminal-3523838226-r2" x="1464" y="1118" textLength="12.2" clip-path="url(#terminal-3523838226-line-45)">
+</text><text class="terminal-3523838226-r1" x="0" y="1142.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-46)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1142.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-46)">observations,&#160;with&#160;uncertainty,&#160;parameter&#160;complexity&#160;and&#160;predictive&#160;checks.&#160;A&#160;human&#160;spacecraft&#160;hypothesis&#160;is&#160;not&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1142.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-46)">│</text><text class="terminal-3523838226-r2" x="1464" y="1142.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-46)">
+</text><text class="terminal-3523838226-r1" x="0" y="1166.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-47)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1166.8" textLength="1415.2" clip-path="url(#terminal-3523838226-line-47)">extraterrestrial&#160;evidence.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1166.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-47)">│</text><text class="terminal-3523838226-r2" x="1464" y="1166.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-47)">
+</text><text class="terminal-3523838226-r1" x="0" y="1191.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-48)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="1191.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-48)">│</text><text class="terminal-3523838226-r2" x="1464" y="1191.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-48)">
+</text><text class="terminal-3523838226-r1" x="0" y="1215.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-49)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1215.6" textLength="1415.2" clip-path="url(#terminal-3523838226-line-49)">No&#160;valid&#160;physical-origin&#160;fit&#160;comparison&#160;or&#160;calibrated&#160;origin&#160;probability&#160;is&#160;installed&#160;in&#160;the&#160;current&#160;normal&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1215.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-49)">│</text><text class="terminal-3523838226-r2" x="1464" y="1215.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-49)">
+</text><text class="terminal-3523838226-r1" x="0" y="1240" textLength="12.2" clip-path="url(#terminal-3523838226-line-50)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1240" textLength="1415.2" clip-path="url(#terminal-3523838226-line-50)">screening&#160;path.&#160;Keep&#160;unsupported&#160;conclusions&#160;unresolved.&#160;A&#160;five-sigma&#160;claim&#160;needs&#160;a&#160;validated&#160;null&#160;and&#160;the&#160;full&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1240" textLength="12.2" clip-path="url(#terminal-3523838226-line-50)">│</text><text class="terminal-3523838226-r2" x="1464" y="1240" textLength="12.2" clip-path="url(#terminal-3523838226-line-50)">
+</text><text class="terminal-3523838226-r1" x="0" y="1264.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-51)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1264.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-51)">search/error-control&#160;procedure;&#160;no&#160;fixed&#160;ranking&#160;threshold&#160;supplies&#160;that&#160;evidence.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1264.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-51)">│</text><text class="terminal-3523838226-r2" x="1464" y="1264.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-51)">
+</text><text class="terminal-3523838226-r1" x="0" y="1288.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-52)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="1288.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-52)">│</text><text class="terminal-3523838226-r2" x="1464" y="1288.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-52)">
+</text><text class="terminal-3523838226-r1" x="0" y="1313.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-53)">│</text><text class="terminal-3523838226-r4" x="24.4" y="1313.2" textLength="329.4" clip-path="url(#terminal-3523838226-line-53)">Population&#160;and&#160;impact&#160;views</text><text class="terminal-3523838226-r1" x="1451.8" y="1313.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-53)">│</text><text class="terminal-3523838226-r2" x="1464" y="1313.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-53)">
+</text><text class="terminal-3523838226-r1" x="0" y="1337.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-54)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="1337.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-54)">│</text><text class="terminal-3523838226-r2" x="1464" y="1337.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-54)">
+</text><text class="terminal-3523838226-r1" x="0" y="1362" textLength="12.2" clip-path="url(#terminal-3523838226-line-55)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1362" textLength="1415.2" clip-path="url(#terminal-3523838226-line-55)">Population&#160;neighbourhoods&#160;and&#160;native-TDB&#160;computed&#160;encounter&#160;gaps&#160;are&#160;descriptive.&#160;They&#160;do&#160;not&#160;establish&#160;a&#160;common&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1362" textLength="12.2" clip-path="url(#terminal-3523838226-line-55)">│</text><text class="terminal-3523838226-r2" x="1464" y="1362" textLength="12.2" clip-path="url(#terminal-3523838226-line-55)">
+</text><text class="terminal-3523838226-r1" x="0" y="1386.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-56)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1386.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-56)">origin,&#160;deliberate&#160;coordination,&#160;measured&#160;acceleration&#160;periodicity&#160;or&#160;calibrated&#160;network&#160;significance.&#160;Cross-object&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1386.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-56)">│</text><text class="terminal-3523838226-r2" x="1464" y="1386.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-56)">
+</text><text class="terminal-3523838226-r1" x="0" y="1410.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-57)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1410.8" textLength="1415.2" clip-path="url(#terminal-3523838226-line-57)">temporal&#160;correlation&#160;requires&#160;compatible&#160;paired&#160;observations,&#160;not&#160;one&#160;fitted&#160;scalar&#160;per&#160;object.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1410.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-57)">│</text><text class="terminal-3523838226-r2" x="1464" y="1410.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-57)">
+</text><text class="terminal-3523838226-r1" x="0" y="1435.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-58)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="1435.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-58)">│</text><text class="terminal-3523838226-r2" x="1464" y="1435.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-58)">
+</text><text class="terminal-3523838226-r1" x="0" y="1459.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-59)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1459.6" textLength="1415.2" clip-path="url(#terminal-3523838226-line-59)">JPL&#160;Sentry&#160;evidence&#160;concerns&#160;the&#160;source&#160;model&#x27;s&#160;tabulated&#160;Earth&#160;events&#160;and&#160;scope.&#160;Not&#160;listed&#160;is&#160;not&#160;zero&#160;impact&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1459.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-59)">│</text><text class="terminal-3523838226-r2" x="1464" y="1459.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-59)">
+</text><text class="terminal-3523838226-r1" x="0" y="1484" textLength="12.2" clip-path="url(#terminal-3523838226-line-60)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1484" textLength="1415.2" clip-path="url(#terminal-3523838226-line-60)">probability.&#160;Impact&#160;evidence&#160;and&#160;origin&#160;screening&#160;are&#160;separate;&#160;a&#160;screening&#160;rank&#160;cannot&#160;supply&#160;a&#160;collision&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1484" textLength="12.2" clip-path="url(#terminal-3523838226-line-60)">│</text><text class="terminal-3523838226-r2" x="1464" y="1484" textLength="12.2" clip-path="url(#terminal-3523838226-line-60)">
+</text><text class="terminal-3523838226-r1" x="0" y="1508.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-61)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1508.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-61)">probability&#160;or&#160;risk&#160;class.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1508.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-61)">│</text><text class="terminal-3523838226-r2" x="1464" y="1508.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-61)">
+</text><text class="terminal-3523838226-r1" x="0" y="1532.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-62)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="1532.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-62)">│</text><text class="terminal-3523838226-r2" x="1464" y="1532.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-62)">
+</text><text class="terminal-3523838226-r1" x="0" y="1557.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-63)">│</text><text class="terminal-3523838226-r4" x="24.4" y="1557.2" textLength="329.4" clip-path="url(#terminal-3523838226-line-63)">Reproduce,&#160;then&#160;investigate</text><text class="terminal-3523838226-r1" x="1451.8" y="1557.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-63)">│</text><text class="terminal-3523838226-r2" x="1464" y="1557.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-63)">
+</text><text class="terminal-3523838226-r1" x="0" y="1581.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-64)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="1581.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-64)">│</text><text class="terminal-3523838226-r2" x="1464" y="1581.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-64)">
+</text><text class="terminal-3523838226-r1" x="0" y="1606" textLength="12.2" clip-path="url(#terminal-3523838226-line-65)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1606" textLength="1415.2" clip-path="url(#terminal-3523838226-line-65)">Save&#160;the&#160;JSON/Markdown&#160;report,&#160;exact&#160;inputs/configuration,&#160;evidence/policy/report&#160;IDs,&#160;source&#160;solution/epoch&#160;and&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1606" textLength="12.2" clip-path="url(#terminal-3523838226-line-65)">│</text><text class="terminal-3523838226-r2" x="1464" y="1606" textLength="12.2" clip-path="url(#terminal-3523838226-line-65)">
+</text><text class="terminal-3523838226-r1" x="0" y="1630.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-66)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1630.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-66)">software&#160;identity.&#160;Compare&#160;archived&#160;assessments&#160;rather&#160;than&#160;overwrite&#160;them&#160;with&#160;later&#160;measurements.&#160;A&#160;completed&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1630.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-66)">│</text><text class="terminal-3523838226-r2" x="1464" y="1630.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-66)">
+</text><text class="terminal-3523838226-r1" x="0" y="1654.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-67)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1654.8" textLength="1415.2" clip-path="url(#terminal-3523838226-line-67)">execution&#160;means&#160;work&#160;was&#160;stored,&#160;not&#160;that&#160;every&#160;scientific&#160;prerequisite&#160;passed.&#160;Check&#160;missing&#160;evidence&#160;and&#160;follow-up</text><text class="terminal-3523838226-r1" x="1451.8" y="1654.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-67)">│</text><text class="terminal-3523838226-r2" x="1464" y="1654.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-67)">
+</text><text class="terminal-3523838226-r1" x="0" y="1679.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-68)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1679.2" textLength="1415.2" clip-path="url(#terminal-3523838226-line-68)">needs&#160;before&#160;deriving&#160;a&#160;physical&#160;conclusion.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1679.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-68)">│</text><text class="terminal-3523838226-r2" x="1464" y="1679.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-68)">
+</text><text class="terminal-3523838226-r1" x="0" y="1703.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-69)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="1703.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-69)">│</text><text class="terminal-3523838226-r2" x="1464" y="1703.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-69)">
+</text><text class="terminal-3523838226-r1" x="0" y="1728" textLength="12.2" clip-path="url(#terminal-3523838226-line-70)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1728" textLength="1415.2" clip-path="url(#terminal-3523838226-line-70)">Detailed&#160;current&#160;contracts:&#160;docs/scientific/VALIDATION_INTEGRITY.md&#160;and&#160;the&#160;scoped&#160;reports&#160;in&#160;docs/engineering/.&#160;The</text><text class="terminal-3523838226-r1" x="1451.8" y="1728" textLength="12.2" clip-path="url(#terminal-3523838226-line-70)">│</text><text class="terminal-3523838226-r2" x="1464" y="1728" textLength="12.2" clip-path="url(#terminal-3523838226-line-70)">
+</text><text class="terminal-3523838226-r1" x="0" y="1752.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-71)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1752.4" textLength="1415.2" clip-path="url(#terminal-3523838226-line-71)">older&#160;scientific-documentation.md&#160;is&#160;historical&#160;prototype&#160;material,&#160;not&#160;current&#160;validated&#160;methodology.&#160;Full&#160;object&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1752.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-71)">│</text><text class="terminal-3523838226-r2" x="1464" y="1752.4" textLength="12.2" clip-path="url(#terminal-3523838226-line-71)">
+</text><text class="terminal-3523838226-r1" x="0" y="1776.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-72)">│</text><text class="terminal-3523838226-r2" x="24.4" y="1776.8" textLength="1415.2" clip-path="url(#terminal-3523838226-line-72)">explanations,&#160;menu&#160;QA,&#160;source&#160;enrichment&#160;and&#160;independent&#160;evaluation&#160;remain&#160;active&#160;work&#160;(#40–#46).&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-3523838226-r1" x="1451.8" y="1776.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-72)">│</text><text class="terminal-3523838226-r2" x="1464" y="1776.8" textLength="12.2" clip-path="url(#terminal-3523838226-line-72)">
+</text><text class="terminal-3523838226-r1" x="0" y="1801.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-73)">│</text><text class="terminal-3523838226-r1" x="1451.8" y="1801.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-73)">│</text><text class="terminal-3523838226-r2" x="1464" y="1801.2" textLength="12.2" clip-path="url(#terminal-3523838226-line-73)">
+</text><text class="terminal-3523838226-r1" x="0" y="1825.6" textLength="1464" clip-path="url(#terminal-3523838226-line-74)">╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text><text class="terminal-3523838226-r2" x="1464" y="1825.6" textLength="12.2" clip-path="url(#terminal-3523838226-line-74)">
+</text>
+    </g>
+    </g>
+</svg>

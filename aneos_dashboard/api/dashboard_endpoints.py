@@ -5,6 +5,7 @@ FastAPI endpoints for the comprehensive real-time validation dashboard,
 providing metrics, alerts, visualization data, and WebSocket connections.
 """
 
+from aneos_version import APPLICATION_VERSION
 import asyncio
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
@@ -525,7 +526,7 @@ async def dashboard_health_check():
                 'websocket_manager': websocket_manager is not None,
                 'fastapi': HAS_FASTAPI
             },
-            'version': '1.0.0'
+            'version': APPLICATION_VERSION
         }
         
         # Check service health

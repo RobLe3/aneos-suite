@@ -236,13 +236,18 @@ class TestOption15Exists:
             "_rendezvous_scan is not defined on ANEOSMenuV2"
         )
 
-    def test_rendezvous_scan_in_handlers(self):
-        """The run() method must include '15' as a handler key."""
+    def test_rendezvous_scan_in_handlers(self,monkeypatch):
+        """Actual advertised option15 dispatch, not a literal source-map assertion."""
         from aneos_menu_v2 import ANEOSMenuV2
-        src = inspect.getsource(ANEOSMenuV2.run)
-        assert '"15"' in src or "'15'" in src, (
-            "Option '15' not found in handlers dict in ANEOSMenuV2.run()"
-        )
+        from aneos_menu_catalog import MENU_OPTIONS
+        from unittest.mock import Mock
+        menu=ANEOSMenuV2();probe=Mock();choices=iter(['15','0'])
+        assert next(o for o in MENU_OPTIONS if o.choice=='15').handler=='_rendezvous_scan'
+        monkeypatch.setattr(menu,'_rendezvous_scan',probe)
+        monkeypatch.setattr(menu,'_prompt_choice',lambda:next(choices))
+        monkeypatch.setattr(menu,'_print_banner',lambda:None)
+        monkeypatch.setattr(menu,'wait_for_input',lambda:None)
+        menu.run();probe.assert_called_once_with()
 
 
 # ===========================================================================

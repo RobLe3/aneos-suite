@@ -1,44 +1,8 @@
-"""
-ANEOSMenuV2 — Redesigned interactive menu for the aNEOS platform.
+"""Primary grouped menu for aNEOS research workflows.
 
-Covers the full feature set of the legacy 121-option menu, organized into
-15 real options across 5 groups. No theater: every option invokes real backend
-code with honest result labelling.
-
-GROUP A — Detection & Classification
-  1  Detect NEO (single)           — uncalibrated candidate screening
-  2  Multi-Evidence Analysis        — same detector + per-source evidence breakdown
-  3  Batch Detection               — concurrent file-driven classification
-  4  Orbital History Analysis      — course corrections / smoking-gun via Horizons
-
-GROUP B — Scoped Impact Evidence
-  5  Impact Evidence               — scoped external Earth-event model output
-  6  Close Approach History        — historical Earth close-approaches (CAD API)
-
-GROUP C — Monitoring & Polling
-  7  Live Pipeline Dashboard       — 200-year historical polling via pipeline
-  8  Population Pattern Analysis   — BC11 network-sigma clustering / harmonics
- 15  Rendezvous Scan               — PA-6 MOID-based pairwise scan of all PHAs
-
-GROUP D — Results & Reports
-  9  Browse Results                — in-session + DB-persisted results
- 10  Export Results                — JSON / CSV via Exporter
-
-GROUP E — System
- 11  Health Check                  — component imports + API reachability
- 12  Start API Server              — uvicorn :8000 subprocess
- 13  Detection Analytics           — session stats, σ-tier breakdown, JSON export
- 14  Scientific Help               — methodology + σ thresholds from docs
-
-  0  Exit
-
-Design principles
------------------
-- Every option calls real, tested backend code (no fake progress bars)
-- σ < 2 → INCONCLUSIVE (not "natural")
-- Data failures are hard errors shown to the user, not silent fallbacks
-- Sentry impact reports are synchronously archived and verified; detection persistence remains separate
-- Inherits only stateless UI helpers from ANEOSMenuBase
+Navigation is declared in aneos_menu_catalog. Backend presence or an attractive
+screen does not establish scientific validity; complete per-option prerequisite,
+behavior and rendering QA remains tracked in #41. Legacy coverage is not assumed.
 """
 
 import json
@@ -49,10 +13,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from aneos_menu_base import ANEOSMenuBase
+from aneos_version import APPLICATION_VERSION, BUILD_CHANNEL
+from aneos_menu_catalog import MENU_OPTIONS
 
 
 class ANEOSMenuV2(ANEOSMenuBase):
-    """Full-featured 15-option menu for the aNEOS research platform."""
+    """Primary grouped research menu; per-feature QA coverage is recorded separately."""
 
     # ------------------------------------------------------------------
     # Construction
@@ -75,23 +41,8 @@ class ANEOSMenuV2(ANEOSMenuBase):
             if choice == "0":
                 self.show_info("Exiting aNEOS. Goodbye.")
                 break
-            handlers = {
-                "1": self._detect_single,
-                "2": self._detect_multi_evidence,
-                "3": self._detect_batch,
-                "4": self._orbital_history_analysis,
-                "5": self._impact_assessment,
-                "6": self._close_approach_history,
-                "7": self._live_pipeline,
-                "8": self._population_pattern_analysis,
-                "9": self._results_browser,
-                "10": self._export_results,
-                "11": self._system_health,
-                "12": self._start_api_server,
-                "13": self._detection_analytics,
-                "14": self._show_help,
-                "15": self._rendezvous_scan,
-            }
+            handlers = {item.choice: getattr(self,item.handler)
+                        for item in MENU_OPTIONS if item.handler is not None}
             handler = handlers.get(choice)
             if handler:
                 handler()
@@ -104,33 +55,34 @@ class ANEOSMenuV2(ANEOSMenuBase):
     # ------------------------------------------------------------------
 
     def _print_banner(self) -> None:
-        content = (
-            "\n"
-            "  [bold]aNEOS — Artificial NEO Analysis Platform[/bold]\n"
-            "  [dim]Research tool — not an operational warning system[/dim]\n\n"
-            "  [bold cyan]── Detection & Classification ──────────────────[/bold cyan]\n"
-            "  [cyan] 1[/cyan]  Detect NEO (single)          [uncalibrated screening]\n"
-            "  [cyan] 2[/cyan]  Multi-Evidence Analysis       [per-source breakdown]\n"
-            "  [cyan] 3[/cyan]  Batch Detection               [concurrent, from file]\n"
-            "  [cyan] 4[/cyan]  Orbital History Analysis      [catalogue history, not manoeuvre proof]\n\n"
-            "  [bold cyan]── Impact Assessment ───────────────────────────[/bold cyan]\n"
-            "  [cyan] 5[/cyan]  Impact Evidence               [scoped Sentry events]\n"
-            "  [cyan] 6[/cyan]  Close Approach History        [historical CAD data]\n\n"
-            "  [bold cyan]── Monitoring & Polling ─────────────────────────[/bold cyan]\n"
-            "  [cyan] 7[/cyan]  Live Pipeline Dashboard       [200-year historical poll]\n"
-            "  [cyan] 8[/cyan]  Population Pattern Analysis   [BC11 network sigma]\n"
-            "  [cyan]15[/cyan]  Rendezvous Scan               [PA-6 MOID pairwise, all PHAs]\n\n"
-            "  [bold cyan]── Results & Reports ───────────────────────────[/bold cyan]\n"
-            "  [cyan] 9[/cyan]  Browse Results                [in-session + DB]\n"
-            "  [cyan]10[/cyan]  Export Results                [JSON / CSV]\n\n"
-            "  [bold cyan]── System ─────────────────────────────────────[/bold cyan]\n"
-            "  [cyan]11[/cyan]  Health Check                  [component status]\n"
-            "  [cyan]12[/cyan]  Start API Server              [uvicorn :8000]\n"
-            "  [cyan]13[/cyan]  Detection Analytics           [session stats + export]\n"
-            "  [cyan]14[/cyan]  Scientific Help               [methodology + σ thresholds]\n\n"
-            "  [cyan] 0[/cyan]  Exit\n"
-        )
-        self.display_panel(content, title="aNEOS v2", style="blue")
+        title = f'aNEOS {APPLICATION_VERSION} | {BUILD_CHANNEL}'
+        subtitle = 'Rank candidates. Trace evidence. Keep origin unresolved.'
+        limits = 'Research tool; not an operational warning service.'
+        if self.console:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+            table = Table(box=None, padding=(0,1), expand=True, show_header=True)
+            table.add_column('Choice',justify='right',width=6,style='cyan',no_wrap=True)
+            table.add_column('Feature',ratio=2,overflow='fold')
+            table.add_column('What this provides',ratio=3,overflow='fold')
+            group = None
+            for item in MENU_OPTIONS:
+                if item.group != group:
+                    if group is not None:table.add_section()
+                    table.add_row('',Text(item.group,style='bold cyan'),'')
+                    group = item.group
+                table.add_row(item.choice,Text(item.label),Text(item.basis))
+            self.console.print(Panel(Group(Text(subtitle),Text(limits),Text(''),table),
+                                     title=Text(title),border_style='blue',padding=(1,1)))
+        else:
+            print(f'\n{title}\n{subtitle}\n{limits}')
+            group = None
+            for item in MENU_OPTIONS:
+                if item.group != group:
+                    print(f'\n{item.group}');group = item.group
+                print(f'{item.choice:>2}  {item.label}\n    {item.basis}')
 
     def _prompt_choice(self) -> str:
         if self.console:
@@ -1301,27 +1253,21 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     def _show_help(self) -> None:
         """Option 14: Display scientific methodology documentation."""
-        doc_path = Path(__file__).parent / "docs" / "scientific" / "scientific-documentation.md"
+        doc_path = Path(__file__).parent / 'docs' / 'scientific' / 'screening-guide.md'
         if not doc_path.exists():
-            self.show_error(f"Documentation not found: {doc_path}")
+            self.show_error(f'Current scientific guide not found: {doc_path}')
             return
         try:
-            text = doc_path.read_text(encoding="utf-8")
-            lines = text.splitlines()
-            # Extract all key sections: Methodology, Sigma, Classification, Detection
-            KEYWORDS = {"Methodology", "Sigma", "Classification", "Detection", "Threshold"}
-            sections: List[str] = []
-            capture = False
-            for line in lines:
-                is_heading = line.startswith("## ") or line.startswith("# ")
-                if is_heading:
-                    capture = any(kw in line for kw in KEYWORDS)
-                if capture:
-                    sections.append(line)
-            content = "\n".join(sections[:120]) if sections else "\n".join(lines[:100])
-            self.display_panel(content, title="aNEOS Scientific Documentation", style="green")
+            text = doc_path.read_text(encoding='utf-8')
+            if self.console:
+                from rich.markdown import Markdown
+                from rich.panel import Panel
+                self.console.print(Panel(Markdown(text),title='Scientific guide — evidence and limits',
+                                         border_style='blue',padding=(1,1)))
+            else:
+                print(text)
         except Exception as exc:
-            self.show_error(f"Failed to read documentation: {exc}")
+            self.show_error(f'Failed to read current scientific guide: {exc}')
 
     def _rendezvous_scan(self) -> None:
         """Option 15: PA-6 MOID-based pairwise rendezvous scan of all PHAs."""

@@ -85,6 +85,7 @@ except ImportError:
     HAS_RICH = False
 
 from aneos_menu_base import ANEOSMenuBase
+from aneos_version import APPLICATION_VERSION, BUILD_CHANNEL
 
 try:
     import uvicorn
@@ -155,7 +156,7 @@ class ANEOSMenu(ANEOSMenuBase):
         
     def display_header(self):
         """Component presence is not calibrated scientific readiness."""
-        text = ('aNEOS: evidence acquisition and candidate screening\n'
+        text = (f'aNEOS {APPLICATION_VERSION} ({BUILD_CHANNEL}): evidence acquisition and candidate screening\n'
             'Ranking is uncalibrated. Physical hypotheses and origin remain unresolved.\n'
             'No calibrated five-sigma or independent performance claim is installed.')
         if self.console:

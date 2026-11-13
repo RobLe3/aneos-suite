@@ -1,8 +1,9 @@
 """
 aNEOS Core - Modular Near Earth Object Analysis System
 
-This package provides a modular, production-ready framework for analyzing
-Near Earth Objects (NEOs) to identify potentially artificial characteristics.
+This package provides modular research tooling for Near Earth Object evidence
+and uncalibrated candidate screening. Scientific validity and origin require
+independent evaluation; an application version is not a readiness certificate.
 
 Key Components:
 - config: Configuration management and settings
@@ -11,11 +12,11 @@ Key Components:
 - reporting: Report generation and visualization
 - utils: Common utilities and helper functions
 
-Version: 1.2.2 (Phase 24 — Bug fixes, input validation, endpoint wiring)
+Application identity: aneos_version.py (independent of API/model versions)
 Original: neos_o3high_v6.19.1.py
 """
 
-__version__ = "1.2.2"
+from aneos_version import APPLICATION_VERSION as __version__
 __author__ = "aNEOS Development Team"
 
 from .config.settings import ANEOSConfig, ConfigManager

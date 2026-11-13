@@ -1,3 +1,10 @@
+> **Historical prototype document — not current validated methodology.**
+> The normal menu now opens [the current screening guide](screening-guide.md).
+> Several causal/statistical claims below are unsupported or superseded, including
+> interpreting unusual elements, fitted acceleration or proxies as origin evidence.
+> This archive is retained for review, not scientific certification. See programme#2,
+> VALIDATION_INTEGRITY.md and the current scoped engineering contracts before use.
+
 # aNEOS Scientific Documentation
 
 Advanced Near Earth Object Detection System - Scientific Methodology and Analysis Framework

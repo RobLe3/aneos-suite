@@ -1,0 +1,1200 @@
+{
+  "schema_version": "menu-entry-qa-v1",
+  "application_version": "2.2.0.dev0",
+  "baseline_commit": "1ae3fe2da299331843620041eae7100fe7fc4285",
+  "baseline_menu_sha256": "05e02c8dc1c54e90a061511ca86949c7e9f896ce5dfc5f111463dccb154753f2",
+  "current_menu_sha256": "cd6b4d70ce27dff7252858922a6a03457a12d6ca31e4cff03df4412679fb0741",
+  "source_files_sha256": {
+    "aneos_version.py": "1ad0b715d491c5d2a2cd53c41be2283df34164c1b4b98b1f935a4b5c0b3ea3fd",
+    "aneos_menu_catalog.py": "e7f7f6917805179e01a0c9c9cac005b4edeecd02ff407b453384b979b7a61e6a",
+    "aneos_menu_v2.py": "cd6b4d70ce27dff7252858922a6a03457a12d6ca31e4cff03df4412679fb0741",
+    "aneos_menu.py": "fc77e96c244cba911d978508741767e38528c47f71a1510b51f73cd63e4b1547",
+    "scripts/qa_menu_entry.py": "d3d5389537d0790652049cd1d0214deb4baf39bfe7c4708c1c7ae96cc932791c"
+  },
+  "primary_options": [
+    {
+      "choice": "1",
+      "group": "Screening",
+      "label": "Screen one object",
+      "basis": "Uncalibrated follow-up ranking",
+      "handler": "_detect_single",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "2",
+      "group": "Screening",
+      "label": "Inspect screening evidence",
+      "basis": "Inputs, proxy contributions and limitations",
+      "handler": "_detect_multi_evidence",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "3",
+      "group": "Screening",
+      "label": "Screen a batch",
+      "basis": "Designation file; per-object results",
+      "handler": "_detect_batch",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "4",
+      "group": "Screening",
+      "label": "Inspect orbital history",
+      "basis": "Catalogue history, not manoeuvre proof",
+      "handler": "_orbital_history_analysis",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "5",
+      "group": "External evidence",
+      "label": "Inspect impact evidence",
+      "basis": "Scoped JPL Sentry model results",
+      "handler": "_impact_assessment",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "6",
+      "group": "External evidence",
+      "label": "Inspect encounter history",
+      "basis": "Computed encounters, not observations",
+      "handler": "_close_approach_history",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "7",
+      "group": "Acquisition & research",
+      "label": "Run historical polling",
+      "basis": "Configured acquisition; verify coverage",
+      "handler": "_live_pipeline",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "8",
+      "group": "Acquisition & research",
+      "label": "Inspect population patterns",
+      "basis": "Descriptive groups; significance unavailable",
+      "handler": "_population_pattern_analysis",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "15",
+      "group": "Acquisition & research",
+      "label": "Screen orbital proximity",
+      "basis": "Pairwise catalogue prefilter, not rendezvous proof",
+      "handler": "_rendezvous_scan",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "9",
+      "group": "Results",
+      "label": "Browse results",
+      "basis": "Session and persisted result views",
+      "handler": "_results_browser",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "10",
+      "group": "Results",
+      "label": "Export results",
+      "basis": "Machine-readable JSON or CSV",
+      "handler": "_export_results",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "11",
+      "group": "System",
+      "label": "Check components",
+      "basis": "Imports/reachability, not scientific certification",
+      "handler": "_system_health",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "12",
+      "group": "System",
+      "label": "Start API server",
+      "basis": "Starts a local server process",
+      "handler": "_start_api_server",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "13",
+      "group": "System",
+      "label": "Inspect session analytics",
+      "basis": "Session summary and export",
+      "handler": "_detection_analytics",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "14",
+      "group": "System",
+      "label": "Read scientific help",
+      "basis": "Method definitions and limits",
+      "handler": "_show_help",
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    },
+    {
+      "choice": "0",
+      "group": "Navigation",
+      "label": "Exit",
+      "basis": "Return without starting a feature",
+      "handler": null,
+      "label_render_status": "captured_80_120_160",
+      "feature_prerequisite_qa": "pending",
+      "feature_behavior_qa": "pending",
+      "detailed_result_qa": "pending"
+    }
+  ],
+  "primary_option_count": 16,
+  "feature_count_excluding_exit": 15,
+  "legacy_static_candidates": [
+    {
+      "method": "display_main_menu",
+      "line": 210,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🎯 NEO Detection & Analysis",
+          "line": 228
+        },
+        {
+          "choice": "2",
+          "label": "📊 Mission Status & Intelligence",
+          "line": 229
+        },
+        {
+          "choice": "3",
+          "label": "🔬 Scientific Tools",
+          "line": 230
+        },
+        {
+          "choice": "9",
+          "label": "⚙️ Mission Control (Advanced)",
+          "line": 232
+        },
+        {
+          "choice": "0",
+          "label": "🚪 End Mission",
+          "line": 234
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "neo_detection_menu",
+      "line": 246,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "⚡ Quick Scan",
+          "line": 258
+        },
+        {
+          "choice": "2",
+          "label": "🛸 Survey Mission",
+          "line": 259
+        },
+        {
+          "choice": "3",
+          "label": "📡 Continuous Monitoring",
+          "line": 260
+        },
+        {
+          "choice": "4",
+          "label": "🔍 Investigation Mode",
+          "line": 261
+        },
+        {
+          "choice": "5",
+          "label": "🚀 Orbital History Analysis",
+          "line": 262
+        },
+        {
+          "choice": "6",
+          "label": "🎯 Automated Polling Dashboard",
+          "line": 263
+        },
+        {
+          "choice": "7",
+          "label": "📋 Mission Reports",
+          "line": 264
+        },
+        {
+          "choice": "8",
+          "label": "🗂️ Results Browser",
+          "line": 265
+        },
+        {
+          "choice": "9",
+          "label": "🎛️ Mission Parameters",
+          "line": 266
+        },
+        {
+          "choice": "A",
+          "label": "📊 Detection Analytics",
+          "line": 267
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Mission Control",
+          "line": 269
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 281
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "machine_learning_menu",
+      "line": 320,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🏋️  Model Training",
+          "line": 332
+        },
+        {
+          "choice": "2",
+          "label": "🎯 Real-time Predictions",
+          "line": 333
+        },
+        {
+          "choice": "3",
+          "label": "📊 Model Management",
+          "line": 334
+        },
+        {
+          "choice": "4",
+          "label": "🔍 Feature Analysis",
+          "line": 335
+        },
+        {
+          "choice": "5",
+          "label": "📈 Model Performance",
+          "line": 336
+        },
+        {
+          "choice": "6",
+          "label": "🔧 Training Configuration",
+          "line": 337
+        },
+        {
+          "choice": "7",
+          "label": "💾 Model Export/Import",
+          "line": 338
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 340
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 352
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "basic_api_services_menu",
+      "line": 382,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🚀 Start API Server",
+          "line": 394
+        },
+        {
+          "choice": "2",
+          "label": "🔧 Development Mode",
+          "line": 395
+        },
+        {
+          "choice": "3",
+          "label": "📚 View API Documentation",
+          "line": 396
+        },
+        {
+          "choice": "4",
+          "label": "🔍 API Health Check",
+          "line": 397
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 399
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 411
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "api_services_menu",
+      "line": 432,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🚀 Start API Server",
+          "line": 444
+        },
+        {
+          "choice": "2",
+          "label": "🌐 Start Web Dashboard",
+          "line": 445
+        },
+        {
+          "choice": "3",
+          "label": "📡 Start Streaming Services",
+          "line": 446
+        },
+        {
+          "choice": "4",
+          "label": "🔧 Development Mode",
+          "line": 447
+        },
+        {
+          "choice": "5",
+          "label": "📊 API Performance Test",
+          "line": 448
+        },
+        {
+          "choice": "6",
+          "label": "🔑 Manage API Keys",
+          "line": 449
+        },
+        {
+          "choice": "7",
+          "label": "📚 View API Documentation",
+          "line": 450
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 452
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 464
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "health_diagnostics_menu",
+      "line": 494,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🔍 System Health Check",
+          "line": 506
+        },
+        {
+          "choice": "2",
+          "label": "📊 Basic System Status",
+          "line": 507
+        },
+        {
+          "choice": "3",
+          "label": "🧪 Run System Tests",
+          "line": 508
+        },
+        {
+          "choice": "4",
+          "label": "📋 System Diagnostics",
+          "line": 509
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 511
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 523
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "monitoring_menu",
+      "line": 544,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "📊 Live System Monitor",
+          "line": 556
+        },
+        {
+          "choice": "2",
+          "label": "🚨 Alert Management",
+          "line": 557
+        },
+        {
+          "choice": "3",
+          "label": "📈 Performance Metrics",
+          "line": 558
+        },
+        {
+          "choice": "4",
+          "label": "🔍 Health Check",
+          "line": 559
+        },
+        {
+          "choice": "5",
+          "label": "📋 System Diagnostics",
+          "line": 560
+        },
+        {
+          "choice": "6",
+          "label": "📊 Metrics Export",
+          "line": 561
+        },
+        {
+          "choice": "7",
+          "label": "🔧 Configure Monitoring",
+          "line": 562
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 564
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 576
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "system_management_menu",
+      "line": 606,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "📦 Installation & Dependencies",
+          "line": 618
+        },
+        {
+          "choice": "2",
+          "label": "🗄️  Database Management",
+          "line": 619
+        },
+        {
+          "choice": "3",
+          "label": "🧹 System Cleanup",
+          "line": 620
+        },
+        {
+          "choice": "4",
+          "label": "⚙️  Configuration Management",
+          "line": 621
+        },
+        {
+          "choice": "5",
+          "label": "👥 User Management",
+          "line": 622
+        },
+        {
+          "choice": "6",
+          "label": "🔧 System Maintenance",
+          "line": 623
+        },
+        {
+          "choice": "7",
+          "label": "📦 Dependency Check",
+          "line": 624
+        },
+        {
+          "choice": "8",
+          "label": "🔄 System Reset",
+          "line": 625
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 627
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 639
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "development_tools_menu",
+      "line": 672,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🧪 Run Tests",
+          "line": 684
+        },
+        {
+          "choice": "2",
+          "label": "🐛 Debug Mode",
+          "line": 685
+        },
+        {
+          "choice": "3",
+          "label": "📊 Code Analysis",
+          "line": 686
+        },
+        {
+          "choice": "4",
+          "label": "⚡ Performance Profiling",
+          "line": 687
+        },
+        {
+          "choice": "5",
+          "label": "🔍 Memory Analysis",
+          "line": 688
+        },
+        {
+          "choice": "6",
+          "label": "📝 Generate Documentation",
+          "line": 689
+        },
+        {
+          "choice": "7",
+          "label": "🔧 Development Server",
+          "line": 690
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 692
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 704
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "docker_deployment_menu",
+      "line": 734,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🐳 Build Docker Images",
+          "line": 746
+        },
+        {
+          "choice": "2",
+          "label": "🚀 Docker Compose Up",
+          "line": 747
+        },
+        {
+          "choice": "3",
+          "label": "☸️  Kubernetes Deploy",
+          "line": 748
+        },
+        {
+          "choice": "4",
+          "label": "📊 Container Status",
+          "line": 749
+        },
+        {
+          "choice": "5",
+          "label": "📋 View Logs",
+          "line": 750
+        },
+        {
+          "choice": "6",
+          "label": "🔧 Scale Services",
+          "line": 751
+        },
+        {
+          "choice": "7",
+          "label": "🛑 Stop Services",
+          "line": 752
+        },
+        {
+          "choice": "8",
+          "label": "🧹 Cleanup Containers",
+          "line": 753
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 755
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 767
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "help_documentation_menu",
+      "line": 800,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "📚 User Guide",
+          "line": 812
+        },
+        {
+          "choice": "2",
+          "label": "🔬 Scientific Documentation",
+          "line": 813
+        },
+        {
+          "choice": "3",
+          "label": "🤖 ML Documentation",
+          "line": 814
+        },
+        {
+          "choice": "4",
+          "label": "🌐 API Documentation",
+          "line": 815
+        },
+        {
+          "choice": "5",
+          "label": "🐳 Deployment Guide",
+          "line": 816
+        },
+        {
+          "choice": "6",
+          "label": "🛠️  Troubleshooting",
+          "line": 817
+        },
+        {
+          "choice": "7",
+          "label": "📊 System Requirements",
+          "line": 818
+        },
+        {
+          "choice": "8",
+          "label": "🔧 Configuration Reference",
+          "line": 819
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 821
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 833
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "_run_advanced_pipeline_menu",
+      "line": 938,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🕰️ 200-Year Complete Historical Poll",
+          "line": 963
+        },
+        {
+          "choice": "2",
+          "label": "📅 50-Year Comprehensive Survey",
+          "line": 964
+        },
+        {
+          "choice": "3",
+          "label": "🎯 10-Year Targeted Analysis",
+          "line": 965
+        },
+        {
+          "choice": "4",
+          "label": "🧪 5-Year Test Run",
+          "line": 966
+        },
+        {
+          "choice": "5",
+          "label": "🔍 Pipeline Component Status",
+          "line": 967
+        },
+        {
+          "choice": "6",
+          "label": "⚙️ Basic NEO Poller (Legacy)",
+          "line": 968
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Detection Menu",
+          "line": 970
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "_dashboard_interactive_menu",
+      "line": 3100,
+      "literal_option_candidates": [
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 3120
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "_file_selection_menu",
+      "line": 3185,
+      "literal_option_candidates": [],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "_enhanced_filter_menu",
+      "line": 3619,
+      "literal_option_candidates": [
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 3642
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "_enhanced_sort_menu",
+      "line": 3712,
+      "literal_option_candidates": [
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 3732
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "advanced_features_menu",
+      "line": 5621,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🤖 Machine Learning",
+          "line": 5644
+        },
+        {
+          "choice": "2",
+          "label": "🌐 Advanced API Services",
+          "line": 5645
+        },
+        {
+          "choice": "3",
+          "label": "📊 Advanced Monitoring",
+          "line": 5646
+        },
+        {
+          "choice": "4",
+          "label": "🛠️  Development Tools",
+          "line": 5647
+        },
+        {
+          "choice": "5",
+          "label": "🐳 Docker & Deployment",
+          "line": 5648
+        },
+        {
+          "choice": "6",
+          "label": "📡 Stream Processing",
+          "line": 5649
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Main Menu",
+          "line": 5651
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 5663
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "_show_api_docs_menu",
+      "line": 6015,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🌐 Interactive API Documentation",
+          "line": 6028
+        },
+        {
+          "choice": "2",
+          "label": "📖 API Documentation File",
+          "line": 6029
+        },
+        {
+          "choice": "3",
+          "label": "🔧 API Development Guide",
+          "line": 6030
+        },
+        {
+          "choice": "4",
+          "label": "🧪 Test API Endpoints",
+          "line": 6031
+        },
+        {
+          "choice": "0",
+          "label": "← Back",
+          "line": 6033
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 6045
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "mission_intelligence_menu",
+      "line": 6217,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🎯 Current Detections",
+          "line": 6229
+        },
+        {
+          "choice": "2",
+          "label": "🛰️ Surveillance Coverage",
+          "line": 6230
+        },
+        {
+          "choice": "3",
+          "label": "💊 System Health",
+          "line": 6231
+        },
+        {
+          "choice": "4",
+          "label": "🚨 Alert Center",
+          "line": 6232
+        },
+        {
+          "choice": "5",
+          "label": "📊 Intelligence Dashboard",
+          "line": 6233
+        },
+        {
+          "choice": "6",
+          "label": "📈 Trend Analysis",
+          "line": 6234
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Mission Control",
+          "line": 6236
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 6248
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "scientific_tools_menu",
+      "line": 6276,
+      "literal_option_candidates": [
+        {
+          "choice": "L",
+          "label": "🎓 Learning Mode",
+          "line": 6297
+        },
+        {
+          "choice": "P",
+          "label": "🔬 Professional Mode",
+          "line": 6298
+        },
+        {
+          "choice": "1",
+          "label": "🔬 Enhanced Validation Pipeline",
+          "line": 6300
+        },
+        {
+          "choice": "2",
+          "label": "🌈 Spectral Analysis Suite",
+          "line": 6301
+        },
+        {
+          "choice": "3",
+          "label": "🌍 Orbital Dynamics Modeling",
+          "line": 6302
+        },
+        {
+          "choice": "4",
+          "label": "🔗 Cross-Reference Database",
+          "line": 6303
+        },
+        {
+          "choice": "5",
+          "label": "📊 Statistical Analysis Tools",
+          "line": 6304
+        },
+        {
+          "choice": "6",
+          "label": "🎯 Custom Analysis Workflows",
+          "line": 6305
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Mission Control",
+          "line": 6307
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 6319
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "learning_mode_menu",
+      "line": 6479,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🔬 Detection Confidence",
+          "line": 6504
+        },
+        {
+          "choice": "2",
+          "label": "🌈 Color Analysis",
+          "line": 6505
+        },
+        {
+          "choice": "3",
+          "label": "🌍 Path Prediction",
+          "line": 6506
+        },
+        {
+          "choice": "4",
+          "label": "🔗 Database Detective",
+          "line": 6507
+        },
+        {
+          "choice": "5",
+          "label": "📊 Success Statistics",
+          "line": 6508
+        },
+        {
+          "choice": "6",
+          "label": "🎯 Tutorial Center",
+          "line": 6509
+        },
+        {
+          "choice": "G",
+          "label": "📚 Glossary",
+          "line": 6511
+        },
+        {
+          "choice": "H",
+          "label": "❓ Help & FAQ",
+          "line": 6512
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Scientific Tools",
+          "line": 6514
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 6527
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "professional_mode_menu",
+      "line": 6561,
+      "literal_option_candidates": [
+        {
+          "choice": "1",
+          "label": "🔬 Enhanced Validation Pipeline",
+          "line": 6586
+        },
+        {
+          "choice": "2",
+          "label": "🌈 Spectral Analysis Suite",
+          "line": 6587
+        },
+        {
+          "choice": "3",
+          "label": "🌍 Orbital Dynamics Modeling",
+          "line": 6588
+        },
+        {
+          "choice": "4",
+          "label": "🔗 Cross-Reference Database",
+          "line": 6589
+        },
+        {
+          "choice": "5",
+          "label": "📊 Statistical Analysis Tools",
+          "line": 6590
+        },
+        {
+          "choice": "6",
+          "label": "🎯 Custom Analysis Workflows",
+          "line": 6591
+        },
+        {
+          "choice": "A",
+          "label": "🚀 ATLAS Advanced Scoring",
+          "line": 6593
+        },
+        {
+          "choice": "B",
+          "label": "📦 Batch Processing",
+          "line": 6594
+        },
+        {
+          "choice": "C",
+          "label": "⚙️ Advanced Configuration",
+          "line": 6595
+        },
+        {
+          "choice": "0",
+          "label": "← Back to Scientific Tools",
+          "line": 6597
+        },
+        {
+          "choice": "0",
+          "label": "1",
+          "line": 6610
+        }
+      ],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    },
+    {
+      "method": "_display_workflow_menu",
+      "line": 7456,
+      "literal_option_candidates": [],
+      "runtime_behavior_status": "not_audited",
+      "prerequisites_status": "not_audited"
+    }
+  ],
+  "artifact_sha256": {
+    "before-80.txt": "83644760a31db5c6bc675b71da6de1ab56e59524450c6646e5968bb4c6e85cb7",
+    "before-160.html": "02b3fc13be83f0bc685d242e2021c9c6dc0878f8c93ee3a5e48abe47a94de1eb",
+    "help-120.svg": "236c863b4e6e7589593bf2f67629f636a9e2aff7f878f183412af33a5d98dbbf",
+    "after-80.html": "13cc0dbf6e86cd3944b9cd5b5ddbdcdc8bfa8680b9300d97bb9d2fa6795c7745",
+    "legacy-header-plain.txt": "080fa8c3a9ad063819a15a271388624587d91bf6942bf1e8de26e95b79da8f16",
+    "before-120.html": "02b3fc13be83f0bc685d242e2021c9c6dc0878f8c93ee3a5e48abe47a94de1eb",
+    "help-120.txt": "49143032104b014748b33616b5b772c4ad378f6e36a1ae3e69a06277f3aa6410",
+    "before-80.svg": "58633596cf2e49e00b8d59663de59855cdf4e3e93aafa990a213d0a5b5753104",
+    "after-160.svg": "a984b7f1f6695bb0f60b9f67fc3024988ce88317a7bb3a3a912dd93b6c385fcf",
+    "before-120.svg": "c187bc61a4a6d6e92a27381bc8e5810828bf9b9d0c3d5e45e18f788834d6093d",
+    "after-160.txt": "09b16a4e7e37e820a2492a93c3b958e9f3edc904da3a0f5561bead9f00fd572a",
+    "before-120.txt": "83644760a31db5c6bc675b71da6de1ab56e59524450c6646e5968bb4c6e85cb7",
+    "help-160.svg": "fcc20eb999bd628a4c1660c850c1882bcbf477fe99a605300f48ddc6bdbfeb70",
+    "before-80.html": "02b3fc13be83f0bc685d242e2021c9c6dc0878f8c93ee3a5e48abe47a94de1eb",
+    "after-plain.txt": "6343165b16cfb5c8dd9931900aaa8f851f96338312af777e9f0ac4d42b327073",
+    "after-80.txt": "663b00b24fda07f85b36cc66a766f2bd51ffe3540e5b2fe457d0f2683d008105",
+    "after-120.html": "a4bd145629f97e08c7c5e24aa66d137e92fac6cfaa2cd23c5bd1000bdb270107",
+    "after-160.html": "1877b3a338041e053b5b1bfa3685d9979731779c04f088e6e15ee28d39fc9518",
+    "help-160.txt": "61063a9d3faa80b18ef5cc1fdf8baeb478f13b11f847402208e004cee2b2e4cc",
+    "after-80.svg": "b7ef7ac958f8b68191e41aaf09683aa0118e78ac209d1cae4e564b5086c84c37",
+    "before-160.svg": "bf4f03f8469ff8b1a995bf89d5b4f49f7c2d0e5544e3e73af2b585edad8d4920",
+    "after-120.svg": "8ff60cc05df65dc134db22817edb215a1d5edf55f5e8b5942a6cb4e8e54951a0",
+    "help-80.html": "85bcc9ce4631cec1c734d05953e1a910e9f3b1ea82e19d80fba42f5ff2b1ebe3",
+    "help-80.svg": "a6faa5fd37bd898aa5850acb0e06747e234c75b8f9cbfb8e77248ec17b0fde69",
+    "help-120.html": "c2365c56287c8a199d58a57e6c8d2268819a00000835a9b6d4d3400728c423e1",
+    "help-80.txt": "0a95f278a16b1de8c7719fce2cacad177b1f2aa2b8c074e0709d79c022d41f06",
+    "help-160.html": "23bef5a2324d03d6af1f67f333bd9f99f5e838aed16201286c81b7809051d8df",
+    "before-160.txt": "83644760a31db5c6bc675b71da6de1ab56e59524450c6646e5968bb4c6e85cb7",
+    "after-120.txt": "042a5d6ce45f095f612d3383c536feb5bba61cea000ba1ea366ee62966d59a39"
+  },
+  "coverage_limits": "Entry/labels and legacy header only. Static candidates are not a verified reachable feature denominator. No provider/feature execution, scientific readiness or full menu certification."
+}

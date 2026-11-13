@@ -1531,6 +1531,16 @@
       },
       "HealthResponse": {
         "properties": {
+          "api_contract_version": {
+            "default": "2.0.0",
+            "title": "Api Contract Version",
+            "type": "string"
+          },
+          "application_version": {
+            "default": "2.2.0.dev0",
+            "title": "Application Version",
+            "type": "string"
+          },
           "checks": {
             "additionalProperties": {
               "$ref": "#/components/schemas/CheckResult"
@@ -1548,7 +1558,7 @@
             "type": "string"
           },
           "version": {
-            "default": "0.7.0",
+            "default": "2.0.0",
             "title": "Version",
             "type": "string"
           }
@@ -3830,12 +3840,11 @@
     }
   },
   "info": {
-    "description": "Advanced Near Earth Object detection System - RESTful API for artificial NEO detection",
+    "description": "Uncalibrated NEO screening and scoped research evidence. Persistent network jobs require verified API credentials or scoped JWTs; development mock tokens do not authorize them. Authentication on other routes varies; see their documented contracts.",
     "title": "aNEOS API",
     "version": "2.0.0",
-    "x-logo": {
-      "url": "https://example.com/aneos-logo.png"
-    }
+    "x-application-version": "2.2.0.dev0",
+    "x-build-channel": "development"
   },
   "openapi": "3.1.0",
   "paths": {

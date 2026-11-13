@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0.dev0] - Unreleased
+
+Development review, 2026-11-13. This advances beyond the existingv2.1.6 repository
+tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is created.
+
+- Central application identity across core/API/dashboard exports, launcher/menu
+  banners, active defaults, HTTP headers/root/health and reproduction metadata.
+- REST contract2.0.0 and independent scientific model/schema/provider versions are
+  not relabelled. Historical changelog/case/source versions remain unchanged.
+- Existing reliability review stack adds evidence integrity, truthful uncalibrated
+  screening, scoped impact evidence and recoverable owned network execution; see
+  programme#2 and ADR065–079 for exact scope, tests and unresolved requirements.
+- Menu/version presentation is under active QA, not proof all features or science
+  are ready. Independent calibration, fullKY26 fits and whole-menu/source/docs
+  audits remain open. No calibrated origin/five-sigma claim is introduced.
+
 ## [v1.2.2] - 2026-03-11 (Phase 24)
 ### Fixed
 - `DetectionResult.__init__`: falsy-zero bug — `artificial_probability=0.0` was replaced

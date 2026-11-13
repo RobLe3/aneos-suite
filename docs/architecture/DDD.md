@@ -1329,3 +1329,12 @@ legacy development administrator must not mint SQL users to bypass persistent jo
 ownership. Provisioning/listing use the same runtime database and verified admin
 role. This does not certify all legacy user-management implementations; #47 tracks
 remaining lifecycle/default-grant defects.
+
+## Application identity versus domain versions — 2026-11-13
+
+Dependency-free application identity (`aneos_version.py`) belongs to shared build/
+presentation metadata. It is not a data-source schema, orbit solution, screening
+policy, model, API contract or readiness certificate. Preserve those independent
+identifiers and recorded historical versions. Menu navigation/labels share one
+presentation catalogue; dispatch/renders do not certify feature prerequisites or
+scientific results. No new bounded context is needed for this distinction.

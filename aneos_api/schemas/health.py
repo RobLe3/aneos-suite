@@ -7,6 +7,7 @@ except ImportError:
     from datetime import timezone as _tz
     UTC = _tz.utc
 from typing import Dict
+from aneos_version import APPLICATION_VERSION, API_CONTRACT_VERSION
 
 try:
     from pydantic import BaseModel, Field
@@ -26,5 +27,7 @@ class CheckResult(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     checks: Dict[str, CheckResult] = Field(default_factory=dict)
-    version: str = "0.7.0"
+    version: str = API_CONTRACT_VERSION
+    application_version: str = APPLICATION_VERSION
+    api_contract_version: str = API_CONTRACT_VERSION
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

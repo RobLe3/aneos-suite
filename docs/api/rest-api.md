@@ -949,3 +949,13 @@ fresh verified principal (admin role required); development mock/placeholder gra
 cannot mint a bypass. Provisioning/listing are bound to the runtime database. This
 does not certify incomplete legacy user update/delete/password behavior; #47 tracks
 that work. Do not infer a working password-login flow from the required request field.
+
+## Application identity (development review)
+
+Application release2.2.0.dev0 is distinct from REST contract2.0.0. Root/health
+`application_version`, X-Application-Version and OpenAPI x-application-version
+expose the release; compatibility `version`/X-API-Version remain the API contract.
+Model/provider/schema identifiers and historical reports keep their own versions.
+Use `python aneos.py --version` for a dependency-free application check, not a
+readiness/health test. OpenAPI now reflects the app's actual uncalibrated-research
+description rather than a placeholder artificial-discovery claim/logo.
