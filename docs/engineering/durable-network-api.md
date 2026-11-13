@@ -127,7 +127,14 @@ worker positive/error cases. No tests or scientific gates were disabled/lowered.
 Initial red run had11 missing-runtime errors; a subsequent helper import path error
 was corrected. Full OpenAPI is regenerated from actual application registration,
 not its test relaxed. Earlier exploratory runs are superseded by these receipts.
-Root experimental research/database and frozen KY26 artifacts remain untouched.
+No root research reset/deletion or frozen KY26 artifact rewrite is part of this patch.
+The live root database is independently mutable; byte-for-byte preservation is not
+claimed from these tests. At handoff its metadata differs from the earlier session
+snapshot (5,509,120 bytes, local2026-11-13 00:59:30 versus5,480,448 bytes,
+2026-11-12 19:14:09). The cause is not established. Only read-only schema/file
+metadata was inspected; no unrelated user records were read and no restore/reset
+was attempted. Tests use explicit disposable databases; this is not proof that
+concurrent workspace activity leaves the live database unchanged.
 
 Follow-up inspection found the legacy administrator could provision SQL identities.
 The same verified-admin boundary now guards administration, and actual authorized
