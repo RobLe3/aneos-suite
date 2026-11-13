@@ -72,7 +72,18 @@ def verify_screening_report(report):
         if key in report and report[key] is not None:
             raise ValueError('Unsupported standalone scientific claim in screening report')
     assessment = report.get('screening_assessment')
+    errors = report.get('errors')
+    if not isinstance(errors, list) or any(not isinstance(error, str) for error in errors):
+        raise ValueError('Report errors must be an explicit list of messages')
+    if assessment is None:
+        failed = {'source_unavailable', 'service_unavailable', 'evidence_persistence_unavailable', 'invalid_evidence',
+                  'failed', 'unavailable', 'inconclusive'}
+        if report.get('classification') != 'INCONCLUSIVE' or report.get('status') not in failed or not errors:
+            raise ValueError('Missing assessment cannot establish successful screening or a candidate')
     if assessment is not None:
+        expected_status = 'completed' if assessment.get('screening_score') is not None else 'inconclusive'
+        if report.get('classification') != assessment.get('classification') or report.get('status') != expected_status:
+            raise ValueError('Report execution/classification contradicts its assessment')
         service = ScreeningAnalysisService()
         replay = service.replay(assessment['evidence_snapshot'], assessment['evidence_id'])
         if replay.policy_id != assessment['policy_id'] or replay.to_payload() != assessment:

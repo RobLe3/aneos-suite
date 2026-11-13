@@ -3253,3 +3253,33 @@ reference. The ordinary default profile and historical envelopes are unchanged.
 The root analysis reads the existing verified combined ledger projection after
 acquisition; original discovery rows remain separately available. No new-source
 data is reported explicitly even when the reused CAD assertion is available.
+
+## ADR-094 — Batch request accounting reuses canonical per-object reports
+
+**2026-11-13; additive reporting contract; #41/#12/#15/#44.** Primary option 3
+must use the existing `AnalysisPipeline.analyze_batch`, not a separate detector
+loop that discards missing or failed objects. Preserve each requested occurrence,
+its file/line and exact identity. An exact duplicate may reuse one frozen result;
+this saves acquisition work, not independent observations. Do not merge aliases or
+case variants without source identity evidence. Canonical ranking/policy stay unchanged.
+
+Reporting owns `screening-batch-report-v1`: original bounded input bytes and their
+hash, parser/workload policy, local creation timestamp, ordered request/report
+bindings and reproducible counts. Each entry embeds the existing verified
+`scientific-screening-report-v1`, including explicit failed/inconclusive results.
+The whole report is content-bound; replay checks original input, order, duplicate
+reuse, counts and each existing per-object report. Hashes detect inconsistency,
+not original authenticity or adversarial administrator compromise.
+
+Acquisition remains in the existing pipeline/adapters/ledger. Session batch history
+is a read model, not a second store or restart-safe job system. Existing reporting
+export owns exclusive JSON/CSV creation; full per-object reports accompany CSV
+rows. Latest-object views remain separate from request history. Rendering, browsing
+and export never poll. File reads are UTF-8, at most 1 MiB and 1,000 request rows;
+CSV is explicitly one column with an optional `designation` header. Invalid files
+fail before provider work; limits are declared, not silently clamped.
+
+No new bounded context, database, inference engine, origin probability or incompatible
+API contract. Existing best-effort background analysis persistence remains for compatible object
+views; it is not made durable by this change. Users must explicitly export full
+session request history. Durable execution remains #15.

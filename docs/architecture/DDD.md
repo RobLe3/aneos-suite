@@ -1578,3 +1578,12 @@ anti-corruption layer admits only same-row native CAD assertions under an option
 versioned receipt policy. Core shared screening owns all ranking decisions; the root
 controller and Rich/dashboard/export paths consume its result, not legacy origin
 scores. Receipt replay is read-only. No new bounded context is introduced.
+
+### Batch request history (ADR-094, additive)
+
+Core Analysis remains the owner of bounded per-object execution and scientific
+assessment. Reporting owns the versioned batch envelope of existing per-object
+reports, input/occurrence provenance, duplicate reuse and request-vs-identity counts.
+The primary menu holds session history and renders/exports that envelope through
+existing presentation/reporting boundaries. It is not a new persistence context,
+a calibrated population evaluation or a durable batch-job claim.

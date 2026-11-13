@@ -28,6 +28,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
         super().__init__()
         self._detection_results: Dict[str, Any] = {}
         self._impact_results: Dict[str, Any] = {}
+        self._batch_reports: List[Dict[str, Any]] = []
 
     # ------------------------------------------------------------------
     # Entry point
@@ -135,77 +136,98 @@ class ANEOSMenuV2(ANEOSMenuBase):
         self._persist_detection_result_async(designation, result)
 
     def _detect_batch(self) -> None:
-        """Option 3: Concurrent batch detection from a file of designations."""
-        path_str = self.browse_files(
-            search_dirs=[".", "neo_data", "data", "tests"],
-            extensions=[".txt", ".csv"],
-            prompt="Designation file",
-        )
-        if not path_str:
+        """Option 3: shared bounded execution, retaining every requested occurrence."""
+        path = self.browse_files(search_dirs=[".", "neo_data", "data", "tests"],
+            extensions=[".txt", ".csv"], prompt="Designation file")
+        if not path:
             self.show_error("No path provided.")
             return
-
-        p = Path(path_str)
-        if not p.exists():
-            self.show_error(f"File not found: {p}")
-            return
-
-        lines = [l.strip() for l in p.read_text().splitlines()
-                 if l.strip() and not l.startswith("#")]
-        if not lines:
-            self.show_error("File is empty or contains only comments.")
-            return
-
-        self.show_info(f"Fetching {len(lines)} designations concurrently…")
         try:
-            from aneos_core.data.fetcher import DataFetcher
-            from aneos_core.analysis.screening import ScreeningAnalysisService
-            fetcher = DataFetcher()
-            manager = ScreeningAnalysisService()
-        except Exception as exc:
-            self.show_error(f"Failed to initialise detector: {exc}")
+            from aneos_core.analysis.batch_reporting import read_input, build_batch_report, render_batch_report
+            source = read_input(path)
+        except (OSError, ValueError, UnicodeError) as exc:
+            self.show_error(f"Batch input unavailable or invalid: {exc}")
             return
+        names = list(dict.fromkeys(r['designation'] for r in source['requests']))
+        self.show_info(f"Requested {len(source['requests'])} rows; {len(names)} exact designation labels. "
+                       "Exact repeats reuse one acquisition; aliases are not merged.")
+        try:
+            import asyncio
+            from aneos_core.analysis.pipeline import AnalysisPipeline
+            from aneos_core.analysis.reporting import build_screening_report
+            pipeline = AnalysisPipeline()
+            if self.console:
+                with self.console.status("Screening requested objects; provider timeouts apply…"):
+                    results = asyncio.run(pipeline.analyze_batch(names))
+            else:
+                results = asyncio.run(pipeline.analyze_batch(names))
+            if len(results) != len(names) or any(r.designation != name for r, name in zip(results, names)):
+                raise ValueError('Batch pipeline returned incomplete or reordered identities')
+            reports = {r.designation: build_screening_report(r) for r in results}
+            report = build_batch_report(source, reports)
+        except Exception as exc:
+            self.show_error(f"Batch execution unavailable: {exc}. No completed batch published.")
+            return
+        self._batch_reports = getattr(self, '_batch_reports', [])
+        self._batch_reports.append(report)
+        # Latest-object compatibility views do not replace the ordered request history.
+        from aneos_core.analysis.object_review import build_assessment_review
+        for result in results:
+            payload = result.screening_assessment
+            if payload is None:
+                continue
+            assessment = pipeline.screening_service.replay(payload['evidence_snapshot'], payload['evidence_id'])
+            view = assessment.to_detection_result()
+            view.object_review = build_assessment_review(payload, neo=result.neo_data)
+            view.analysis['object_review'] = view.object_review
+            self._detection_results[result.designation] = view
+            self._persist_detection_result_async(result.designation, view)
+        render_batch_report(report, self.console)
+        self.show_info("Batch history is session-only until explicitly exported with option 10.")
 
-        # Concurrent fetch — show spinner (bulk operation, not per-item trackable)
-        if self.console:
-            with self.console.status(f"[green]Fetching {len(lines)} NEOs…", spinner="dots"):
-                neo_map = fetcher.fetch_multiple(lines)
-        else:
-            neo_map = fetcher.fetch_multiple(lines)
+    def _browse_batch_reports(self) -> None:
+        """Browse frozen request history; never fetch or recompute scientific inputs."""
+        from aneos_core.analysis.batch_reporting import verify_batch_report, render_batch_report
+        from aneos_core.analysis.reporting import render_screening_markdown
+        try:
+            number = self._ask(f"Batch run # [1..{len(self._batch_reports)}, Enter=latest]").strip()
+            index = int(number) - 1 if number else len(self._batch_reports) - 1
+            if not 0 <= index < len(self._batch_reports):
+                raise ValueError('Batch run number is outside available history')
+            report = verify_batch_report(self._batch_reports[index])
+            render_batch_report(report, self.console)
+            row = self._ask("Request row # for full report (Enter to skip)").strip()
+            if not row:
+                return
+            row_index = int(row) - 1
+            if not 0 <= row_index < len(report['requests']):
+                raise ValueError('Request row number is outside this batch')
+            text = render_screening_markdown(report['requests'][row_index]['report'])
+            if self.console:
+                from rich.markdown import Markdown
+                self.console.print(Markdown(text))
+            else:
+                print(text)
+        except (ValueError, TypeError, KeyError) as exc:
+            self.show_error(f"Batch review unavailable: {exc}")
 
-        fetched = sum(1 for v in neo_map.values() if v)
-        self.show_info(f"Fetched {fetched}/{len(lines)} — running detector…")
-
-        # Detection loop with progress bar
-        rows = []
-        valid = [d for d in lines if neo_map.get(d) and neo_map[d].orbital_elements]
-        skipped = [d for d in lines if not neo_map.get(d) or not neo_map[d].orbital_elements]
-        for s in skipped:
-            self.show_info(f"{s}: no orbital data — skipped")
-
-        for designation in self.track_progress(valid, f"Detecting {len(valid)} NEOs"):
-            neo_data = neo_map[designation]
-            try:
-                result = self._run_detection(designation, neo_data, manager=manager)
-                if result is None:
-                    continue
-                self._detection_results[designation.upper()] = result
-                sigma = getattr(result, "sigma_level", 0.0)
-                prob = getattr(result, "artificial_probability", 0.0)
-                cls = getattr(result, "classification", "—")
-                rows.append([designation, self._format_score(getattr(result, "screening_score", None)), self.format_probability(prob), cls])
-                self._persist_detection_result_async(designation, result)
-            except Exception as exc:
-                self.show_error(f"{designation}: {exc}")
-
-        if rows:
-            self.display_table(
-                headers=["Designation", "Legacy ranking score", "Origin probability", "Classification"],
-                rows=rows,
-                title=f"Batch Results — {len(rows)}/{len(lines)} processed",
-            )
-        else:
-            self.show_info("No results produced.")
+    def _export_batch_report(self) -> None:
+        """Existing exporter owns exclusive files; all requests and errors remain."""
+        try:
+            number = self._ask(f"Batch run # [1..{len(self._batch_reports)}, Enter=latest]").strip()
+            index = int(number) - 1 if number else len(self._batch_reports) - 1
+            if not 0 <= index < len(self._batch_reports):
+                raise ValueError('Batch run number is outside available history')
+            fmt = self._ask("Export format [1=JSON, 2=CSV]").strip()
+            if fmt not in ('1', '2'):
+                raise ValueError('Choose 1 (JSON) or 2 (CSV)')
+            path = self._ask("Output filename (leave blank for auto)").strip()
+            from aneos_core.reporting.exporters import Exporter
+            saved = Exporter().export_batch_report(self._batch_reports[index],
+                output_file=path or None, format='json' if fmt == '1' else 'csv')
+            self.show_success(f"Exported complete request history to: {saved}")
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            self.show_error(f"Batch export refused: {exc}")
 
     def _orbital_history_analysis(self) -> None:
         """Option 4: Fetch orbital history via Horizons; detect course corrections."""
@@ -500,6 +522,10 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     def _results_browser(self) -> None:
         """Option 9: Interactive browser for session detection/impact results + DB."""
+        if getattr(self, '_batch_reports', []):
+            self._browse_batch_reports()
+            if not self._detection_results and not self._impact_results:
+                return
         if not self._detection_results and not self._impact_results:
             self.show_info("No results in this session yet. Run options 1–5 first.")
             self._show_db_results()
@@ -561,6 +587,14 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     def _export_results(self) -> None:
         """Option 10: Export in-session results to JSON or CSV."""
+        if getattr(self, '_batch_reports', []):
+            scope = self._ask("Export scope [1=latest object views, 2=batch request history]").strip()
+            if scope == '2':
+                self._export_batch_report()
+                return
+            if scope != '1':
+                self.show_error('Choose 1 (latest object views) or 2 (batch request history).')
+                return
         if not self._detection_results and not self._impact_results:
             self.show_info("No results to export. Run options 1–5 first.")
             return
@@ -1140,21 +1174,37 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     def _detection_analytics(self) -> None:
         """Session candidate counts; never pool unavailable sigma as zero."""
+        if getattr(self, '_batch_reports', []):
+            from aneos_core.analysis.batch_reporting import verify_batch_report
+            try:
+                batches = [verify_batch_report(r) for r in self._batch_reports]
+            except ValueError as exc:
+                self.show_error(f'Batch accounting unavailable: {exc}')
+                return
+            count = sum(b['summary']['request_count'] for b in batches)
+            labels = {r['designation'] for b in batches for r in b['requests']}
+            self.show_info(f'Batch session: {len(batches)} runs; {count} request occurrences; '
+                           f'{len(labels)} distinct exact designation labels. '
+                           'Requests are not independent observations. Full history: options 9/10.')
         if not self._detection_results:
-            self.show_info('No screening results this session.')
+            self.show_info('No latest-object screening views this session; batch request history is separate.')
             return
         rows = []
         for designation, result in self._detection_results.items():
             rows.append([designation, self._format_score(getattr(result, 'screening_score', None)),
                          getattr(result, 'classification', 'INCONCLUSIVE')])
         self.display_table(headers=['Designation', 'Screening score', 'Classification'], rows=rows,
-                           title='Session screening — significance unavailable')
+                           title='Latest-object screening views — not full request history')
         fmt = self._ask('Export JSON? [y/N]').strip().lower()
         if fmt == 'y':
             from aneos_core.reporting.exporters import Exporter
             records = [(getattr(r, 'analysis', {}) or {}).get('assessment', {})
                        for r in self._detection_results.values()]
-            Exporter().export_to_json(records)
+            try:
+                path = Exporter().export_to_json(records, exclusive=True)
+                self.show_success(f'Exported latest-object views to: {path}. Full batch history uses option 10.')
+            except Exception as exc:
+                self.show_error(f'Export refused: {exc}')
         else:
             self.show_info("Export skipped.")
 

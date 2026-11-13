@@ -37,6 +37,9 @@ jobs:
       - name: Verify durable network API component coverage
         run: python -m pytest tests/test_durable_network_api.py tests/test_pattern_api.py tests/test_api_bootstrap_contract.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-api.ini --cov-report=term-missing --cov-fail-under=85
 
+      - name: Verify canonical batch request accounting and actual menu history
+        run: python -m pytest tests/test_batch_menu_accounting.py tests/test_menu_v2_e2e.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-batch-report.ini --cov-report=term-missing --cov-fail-under=95
+
       - name: Verify application identity and real menu-entry renders
         run: python -m pytest tests/test_application_identity.py -q --tb=short
 

@@ -85,3 +85,24 @@ normal-case screenshot is not proof that a failure state is understandable.
 Full option-by-option QA remains
 [issue #41](https://github.com/RobLe3/aneos-suite/issues/41), with presentation work
 tracked in [#42](https://github.com/RobLe3/aneos-suite/issues/42).
+
+## Batch request history — development checkout
+
+Option 3 now accepts UTF-8 `.txt` (one designation per non-comment line) or a
+one-column `.csv` with an optional `designation` header. Input is limited to 1 MiB
+and 1,000 request rows; split larger work explicitly. This is not in the published
+v2.2.0b2 tag. All requests remain visible, including unavailable/invalid evidence.
+Exact duplicate labels reuse an acquisition but retain their own file/row identity;
+aliases and case variants are not silently merged.
+
+Option 9 opens frozen batch history before latest-object views. Choose a batch run
+and request row to inspect its full report and errors without polling. In option
+10, choose **2: batch request history** to export every request in JSON or CSV;
+**1: latest object views** is a different projection and can contain fewer entries.
+Full JSON reports retain unrounded values and null inference. CSV includes those
+reports as JSON fields; formula-like display labels are escaped for spreadsheets.
+
+History remains in this session until explicitly exported. The existing best-effort
+analysis DB write is not a restart-safe batch archive. A saved batch JSON can be
+loaded by the existing dashboard file command, without new acquisition. See the
+[batch contract and replay guide](../engineering/batch-request-accounting.md).

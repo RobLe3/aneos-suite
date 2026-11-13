@@ -550,6 +550,17 @@ def records_from_file(data):
         return data
     if not isinstance(data, dict):
         raise ValueError("Unsupported dashboard file")
+    if data.get("schema_version") == "screening-batch-report-v1":
+        from .batch_reporting import verify_batch_report
+        batch = verify_batch_report(data)
+        records = []
+        for entry in batch['requests']:
+            report = entry['report']
+            records.append({'designation':entry['designation'],
+                'neo_data':report['neo_data'], 'screening_assessment':report['screening_assessment'],
+                'batch_request_context':{k:v for k,v in entry.items() if k != 'report'},
+                'batch_report_id':batch['batch_report_id'],'frozen_report':report})
+        return records
     if data.get("schema_version") == "polling-screening-dashboard-v1":
         if data.get("report_id") != fingerprint(
             {k: v for k, v in data.items() if k != "report_id"}
