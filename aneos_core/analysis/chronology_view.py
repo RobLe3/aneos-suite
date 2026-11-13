@@ -93,6 +93,10 @@ def _notes(c):
         )
     )
     notes = [note]
+    if c.get("reference_scope") != "chronology_input_json_pointers":
+        notes.append(
+            "Legacy references identify snapshot context, not guaranteed direct value pointers; preserved compact inputs remain available."
+        )
     if any(s["discovery_evidence"] is not None for s in c["inputs"]["sources"]):
         notes.append(
             "SBDB documents discovery circumstances only for numbered asteroids/comets; an omitted date is not evidence of non-discovery."

@@ -1,0 +1,85 @@
+{
+  "baseline_commit": "c5edb01cb979c7813e716e26fc41b6b9894af3fa",
+  "basis": "synthetic pre-reference-scope chronology, not live data",
+  "chronology": {
+    "schema_version": "object-chronology-v1",
+    "designation": "SYNTHETIC",
+    "events": [
+      {
+        "role": "first_observation",
+        "value": "1998-05-30T00:00:00",
+        "source": "SBDB",
+        "reference": "/source_snapshot/first_observation",
+        "representation": "ISO timestamp",
+        "time_scale": "not_declared",
+        "precision": "literal timestamp precision",
+        "status": "time_scale_unverified",
+        "meaning": "Legacy observation timestamp; native precision/time basis may be unavailable. Not a discovery date."
+      },
+      {
+        "role": "last_observation",
+        "value": null,
+        "source": "SBDB",
+        "reference": "/source_snapshot/last_observation",
+        "representation": "native calendar label",
+        "time_scale": "not_declared",
+        "precision": "not_established",
+        "status": "not_available",
+        "meaning": "Observation used in the orbit fit; may include precovery. Not the discovery date or an invented midnight UTC instant."
+      },
+      {
+        "role": "adapter_receipt",
+        "value": "2026-11-13T07:00:00+00:00",
+        "source": "SBDB",
+        "reference": "/source_snapshot/fetched_at",
+        "representation": "ISO timestamp",
+        "time_scale": "UTC",
+        "precision": "literal timestamp precision",
+        "status": "explicit_utc_offset",
+        "meaning": "Adapter receipt; not an observation, discovery or orbit epoch. An offset does not certify clock accuracy."
+      }
+    ],
+    "discovery": {
+      "status": "not_available",
+      "selected": null,
+      "claims": []
+    },
+    "local_receipts": {
+      "first_ledger_recorded_at": null,
+      "last_ledger_recorded_at": null,
+      "scope": "verified ledger sequence only; earlier local intake may predate this ledger",
+      "clock_order": "not_established",
+      "unverified_count": 0,
+      "records": []
+    },
+    "legacy_dates": {},
+    "inputs": {
+      "designation": "SYNTHETIC",
+      "sources": [
+        {
+          "source": "SBDB",
+          "reference": "/source_snapshot",
+          "designation": "SYNTHETIC",
+          "first_observation": "1998-05-30T00:00:00",
+          "last_observation": null,
+          "fetched_at": "2026-11-13T07:00:00+00:00",
+          "native_observation_window": {},
+          "native_orbit_epoch": null,
+          "legacy_orbit_epoch": null,
+          "covariance_epoch_jd_tdb": null,
+          "covariance_reference": "/source_snapshot/evidence_metadata/covariance/epoch_jd_tdb",
+          "orbit_fit_label": null,
+          "orbit_fit_schema": null,
+          "discovery_evidence": null
+        }
+      ],
+      "ledger_records": [],
+      "legacy_dates": {}
+    },
+    "limitations": [
+      "Source labels, local receipts and dynamical epochs are different roles; no common UTC time axis is inferred.",
+      "Consistency/replay does not authenticate sources, verify clock synchronization or establish scientific readiness."
+    ],
+    "chronology_id": "40649fd2d46108425d0239c5dffa28e33d7d95899e28302fae6cf6ee60034638"
+  }
+}

@@ -684,4 +684,93 @@ def test_covariance_epoch_is_visible_even_without_ng_acceleration_components():
     c = build_chronology("SYNTHETIC", [source_input(n, "SBDB", "/source")])
     e = next(e for e in c["events"] if e["role"] == "covariance_epoch")
     assert e["value"] == "2457098.500000000001" and e["time_scale"] == "TDB"
-    assert e["reference"] == "/source/evidence_metadata/covariance/epoch_jd_tdb"
+    assert e["reference"] == "/inputs/sources/0/covariance_epoch_jd_tdb"
+    assert (
+        c["inputs"]["sources"][0]["covariance_reference"]
+        == "/source/evidence_metadata/covariance/epoch_jd_tdb"
+    )
+
+
+def test_reconciled_chronology_references_resolve_to_preserved_inputs_not_missing_root_fields():
+    from aneos_core.data.chronology import build_object_chronology, build_sbdb_discovery
+
+    n = row()["neo_data"]
+    n["sources_used"] = ["SBDB"]
+    n["first_observation"] = None
+    metadata = {
+        "native_observation_window": {"first_observation": {"value": "1919-??-??"}},
+        "solution": {"schema_version": "1.3", "solution_date": "2024-May-07 06:44:30"},
+        "covariance": {"epoch_jd_tdb": "2457098.5"},
+        "discovery_evidence": build_sbdb_discovery(
+            {"date": "1998-May-31"},
+            {"requested_designation": "SYNTHETIC", "source_response_sha256": "a" * 64},
+        ),
+    }
+    n["evidence_metadata"] = {
+        "field_sources": {"orbital_elements": "SBDB"},
+        "source_solutions": {"SBDB": metadata},
+    }
+    c = build_object_chronology(n)
+    assert c["reference_scope"] == "chronology_input_json_pointers"
+    for event in c["events"]:
+        if event["status"] == "not_available":
+            continue
+        pointer = event["reference"]
+        assert pointer.startswith("/inputs/")
+        target = c
+        for token in pointer.split("/")[1:]:
+            token = token.replace("~1", "/").replace("~0", "~")
+            target = target[int(token)] if isinstance(target, list) else target[token]
+        if event["role"] == "discovery":
+            assert target["normalized"]["calendar_date"] == event["value"]
+        elif event["role"] == "orbit_epoch":
+            assert target["native_value"] == event["value"]
+        else:
+            assert str(target) == str(event["value"])
+
+
+def test_legacy_context_reference_chronology_replays_without_rewriting():
+    from pathlib import Path
+    from aneos_core.data.chronology import verify_chronology
+
+    x = json.loads(
+        (
+            Path(__file__).parent / "fixtures/chronology_legacy_context_refs.json"
+        ).read_text()
+    )["chronology"]
+    assert verify_chronology(x) == x
+    from aneos_core.analysis.chronology_view import chronology_markdown
+    assert 'Legacy references identify snapshot context' in chronology_markdown(x)
+
+
+def test_compact_reference_resolver_returns_native_assertion_and_rejects_external_paths():
+    from aneos_core.data.chronology import (
+        build_chronology,
+        source_input,
+        resolve_chronology_reference,
+    )
+
+    c = build_chronology(
+        "SYNTHETIC",
+        [source_input(row()["neo_data"], "SBDB", "/context")],
+        [receipt("2026-11-13T07:00:00Z")],
+        reference_scope="compact_inputs_v1",
+    )
+    for e in c["events"]:
+        if e["role"] == "first_observation":
+            assert resolve_chronology_reference(c, e["reference"]) == "1998-05-30"
+    assert (
+        resolve_chronology_reference(c, c["local_receipts"]["records"][0]["reference"])
+        == "2026-11-13T07:00:00Z"
+    )
+    for bad in (
+        "https://example.invalid",
+        "/etc/passwd",
+        "/inputs/missing",
+        "/inputs/sources/999",
+        "/inputs/sources/-1",
+        "/inputs/sources/00",
+        "/inputs/~2",
+    ):
+        with pytest.raises(ValueError):
+            resolve_chronology_reference(c, bad)

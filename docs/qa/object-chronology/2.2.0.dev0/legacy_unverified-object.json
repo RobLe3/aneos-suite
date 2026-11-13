@@ -2,7 +2,7 @@
   "acquisition_history": [],
   "artificial_probability": null,
   "chronology": {
-    "chronology_id": "751714cf26cc9dfe88c577ee0f90cdd0d1104a2a4fcebad9bafdb429d3b42830",
+    "chronology_id": "b3ad81c6127f76f750cb2ba40d299faf0c4ab3d4d4fda468bb1b42edd37b7012",
     "designation": "SYNTHETIC",
     "discovery": {
       "claims": [],
@@ -17,6 +17,7 @@
         "first_discovered": "2020-01-02T03:04:00",
         "last_updated": "2021-02-03T04:05:00"
       },
+      "reference_scope": "compact_inputs_v1",
       "sources": []
     },
     "legacy_dates": {
@@ -45,6 +46,7 @@
       "scope": "verified ledger sequence only; earlier local intake may predate this ledger",
       "unverified_count": 0
     },
+    "reference_scope": "chronology_input_json_pointers",
     "schema_version": "object-chronology-v1"
   },
   "close_approaches": null,

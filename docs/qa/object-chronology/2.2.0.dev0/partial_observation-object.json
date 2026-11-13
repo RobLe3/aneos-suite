@@ -2,7 +2,7 @@
   "acquisition_history": [
     {
       "bundle": {
-        "bundle_id": "1ba83630171554402244074c2a5303e88909e2e84c1eb5c35f1683e3df39be6b",
+        "bundle_id": "2079f51b073243262801af7ff688b07b24f901fe5beee99c5e201c16a6c9bc8b",
         "coverage": {
           "contributing_fraction": 0.2,
           "contributing_sources": 1,
@@ -26,7 +26,7 @@
         "neo_data": {
           "close_approaches": [],
           "completeness": 0.5714285714285714,
-          "created_at": "2026-11-13T06:52:34.367926+00:00",
+          "created_at": "2026-11-13T07:21:39.334928+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
@@ -158,7 +158,7 @@
                   },
                   "discovery_evidence": {
                     "adapter": "sbdb-discovery-1.3",
-                    "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                    "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                     "context": {
                       "object": {
                         "des": "SYNTHETIC",
@@ -166,7 +166,7 @@
                       },
                       "requested": true,
                       "requested_designation": "SYNTHETIC",
-                      "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                      "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                       "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                       "source_schema_version": "1.3"
                     },
@@ -205,11 +205,11 @@
                         "kind": "au"
                       },
                       "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                      "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                      "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                       "schema_version": "1.3"
                     },
                     "duplicate_records": {},
-                    "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                    "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                     "limitations": [
                       "Normalization/replay is not independent source verification.",
                       "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -257,7 +257,7 @@
                       "kind": "au"
                     },
                     "orbit_id": "SYNTHETIC_SOLUTION",
-                    "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                    "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                     "schema_version": "1.3",
                     "solution_date": "2024-May-07 06:44:30",
                     "source": "JPL SBDB",
@@ -385,7 +385,7 @@
                 },
                 "discovery_evidence": {
                   "adapter": "sbdb-discovery-1.3",
-                  "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                  "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                   "context": {
                     "object": {
                       "des": "SYNTHETIC",
@@ -393,7 +393,7 @@
                     },
                     "requested": true,
                     "requested_designation": "SYNTHETIC",
-                    "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                    "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                     "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                     "source_schema_version": "1.3"
                   },
@@ -432,11 +432,11 @@
                       "kind": "au"
                     },
                     "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                    "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                    "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                     "schema_version": "1.3"
                   },
                   "duplicate_records": {},
-                  "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                  "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                   "limitations": [
                     "Normalization/replay is not independent source verification.",
                     "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -484,7 +484,7 @@
                     "kind": "au"
                   },
                   "orbit_id": "SYNTHETIC_SOLUTION",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "schema_version": "1.3",
                   "solution_date": "2024-May-07 06:44:30",
                   "source": "JPL SBDB",
@@ -493,7 +493,7 @@
               }
             }
           },
-          "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+          "fetched_at": "2026-11-13T07:21:39.334928+00:00",
           "first_observation": null,
           "last_observation": "2024-05-06T00:00:00",
           "nongrav": null,
@@ -527,7 +527,7 @@
           "sources_used": [
             "SBDB"
           ],
-          "updated_at": "2026-11-13T06:52:34.367926+00:00"
+          "updated_at": "2026-11-13T07:21:39.334928+00:00"
         },
         "outcomes": [
           {
@@ -650,7 +650,7 @@
                 },
                 "discovery_evidence": {
                   "adapter": "sbdb-discovery-1.3",
-                  "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                  "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                   "context": {
                     "object": {
                       "des": "SYNTHETIC",
@@ -658,7 +658,7 @@
                     },
                     "requested": true,
                     "requested_designation": "SYNTHETIC",
-                    "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                    "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                     "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                     "source_schema_version": "1.3"
                   },
@@ -685,11 +685,11 @@
                       "kind": "au"
                     },
                     "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                    "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                    "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                     "schema_version": "1.3"
                   },
                   "duplicate_records": {},
-                  "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                  "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                   "limitations": [
                     "Normalization/replay is not independent source verification.",
                     "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -737,14 +737,14 @@
                     "kind": "au"
                   },
                   "orbit_id": "SYNTHETIC_SOLUTION",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "schema_version": "1.3",
                   "solution_date": "2024-May-07 06:44:30",
                   "source": "JPL SBDB",
                   "time_scale": "TDB"
                 }
               },
-              "_fetched_at": "2026-11-13T06:52:34.367622+00:00",
+              "_fetched_at": "2026-11-13T07:21:39.334708+00:00",
               "_native_response": {
                 "object": {
                   "des": "SYNTHETIC",
@@ -859,13 +859,13 @@
               "semi_major_axis": 1.23
             },
             "basis": "typed_adapter_projection_not_independently_verified",
-            "completed_at": "2026-11-13T06:52:34.367926+00:00",
+            "completed_at": "2026-11-13T07:21:39.334928+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
             "neo_data": {
               "close_approaches": [],
               "completeness": 0.5714285714285714,
-              "created_at": "2026-11-13T06:52:34.367926+00:00",
+              "created_at": "2026-11-13T07:21:39.334928+00:00",
               "designation": "SYNTHETIC",
               "dynamic_TAS": null,
               "dynamic_category": null,
@@ -986,7 +986,7 @@
                 },
                 "discovery_evidence": {
                   "adapter": "sbdb-discovery-1.3",
-                  "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                  "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                   "context": {
                     "object": {
                       "des": "SYNTHETIC",
@@ -994,7 +994,7 @@
                     },
                     "requested": true,
                     "requested_designation": "SYNTHETIC",
-                    "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                    "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                     "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                     "source_schema_version": "1.3"
                   },
@@ -1033,11 +1033,11 @@
                       "kind": "au"
                     },
                     "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                    "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                    "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                     "schema_version": "1.3"
                   },
                   "duplicate_records": {},
-                  "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                  "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                   "limitations": [
                     "Normalization/replay is not independent source verification.",
                     "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -1085,14 +1085,14 @@
                     "kind": "au"
                   },
                   "orbit_id": "SYNTHETIC_SOLUTION",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "schema_version": "1.3",
                   "solution_date": "2024-May-07 06:44:30",
                   "source": "JPL SBDB",
                   "time_scale": "TDB"
                 }
               },
-              "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+              "fetched_at": "2026-11-13T07:21:39.334928+00:00",
               "first_observation": null,
               "last_observation": "2024-05-06T00:00:00",
               "nongrav": null,
@@ -1126,63 +1126,63 @@
               "sources_used": [
                 "SBDB"
               ],
-              "updated_at": "2026-11-13T06:52:34.367926+00:00"
+              "updated_at": "2026-11-13T07:21:39.334928+00:00"
             },
             "reason_code": null,
             "source": "SBDB",
-            "started_at": "2026-11-13T06:52:34.366738+00:00",
+            "started_at": "2026-11-13T07:21:39.333956+00:00",
             "status": "available"
           },
           {
             "adapter_payload": null,
             "basis": "source_initialization",
-            "completed_at": "2026-11-13T06:52:34.366828+00:00",
+            "completed_at": "2026-11-13T07:21:39.334039+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "SOURCE_INITIALIZATION_FAILED",
             "source": "NEODyS",
-            "started_at": "2026-11-13T06:52:34.366828+00:00",
+            "started_at": "2026-11-13T07:21:39.334039+00:00",
             "status": "unavailable"
           },
           {
             "adapter_payload": null,
             "basis": "source_initialization",
-            "completed_at": "2026-11-13T06:52:34.366856+00:00",
+            "completed_at": "2026-11-13T07:21:39.334065+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "SOURCE_INITIALIZATION_FAILED",
             "source": "MPC",
-            "started_at": "2026-11-13T06:52:34.366856+00:00",
+            "started_at": "2026-11-13T07:21:39.334065+00:00",
             "status": "unavailable"
           },
           {
             "adapter_payload": null,
             "basis": "source_initialization",
-            "completed_at": "2026-11-13T06:52:34.366868+00:00",
+            "completed_at": "2026-11-13T07:21:39.334076+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "SOURCE_INITIALIZATION_FAILED",
             "source": "Horizons",
-            "started_at": "2026-11-13T06:52:34.366868+00:00",
+            "started_at": "2026-11-13T07:21:39.334076+00:00",
             "status": "unavailable"
           },
           {
             "adapter_payload": null,
             "basis": "legacy_adapter_outcome_unknown",
-            "completed_at": "2026-11-13T06:52:34.368843+00:00",
+            "completed_at": "2026-11-13T07:21:39.335848+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "CAD_SCHEMA_UNVERIFIED",
             "source": "CAD",
-            "started_at": "2026-11-13T06:52:34.368813+00:00",
+            "started_at": "2026-11-13T07:21:39.335833+00:00",
             "status": "unavailable"
           }
         ],
-        "query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+        "query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
         "schema_version": "object-acquisition-v1",
         "software": {
           "application_version": "2.2.0.dev0",
@@ -1199,12 +1199,12 @@
             "scipy": "1.15.1"
           },
           "python_version": "3.11.9",
-          "repository_commit": "d7d8a8e0f466ae23f9dc8a1c30ca6f70998c3205",
+          "repository_commit": "c5edb01cb979c7813e716e26fc41b6b9894af3fa",
           "source_hashes_at_report_time": {
             "aneos_api/acquisition_repository.py": "9ca4cdb889e2738744913999eb529de4c4c9a7cf11c63bc2898a670dce246751",
             "aneos_api/enrichment_store.py": "a6775c273c72f8370ee73538d028f6808c69172e43a874c8770143f568b982b6",
             "aneos_core/analysis/advanced_aneos_analyzer.py": "ecfd7b43db434d990bae486f28904c0c7e95a60052d5299e4daa795abc7f10a0",
-            "aneos_core/analysis/chronology_view.py": "79b3a359727a6cabd4013bcf4451e50e34a5ad13d723e868c2ecf16992256ca6",
+            "aneos_core/analysis/chronology_view.py": "d13551bb3e66fc13c5416a96afe56546257b221578a2b6ce01ce5e682eb7e68d",
             "aneos_core/analysis/impact_evidence.py": "ecf8820b8ecb5f87d45fdb22e71bbfca2bcba6b51217f8152452903462010552",
             "aneos_core/analysis/object_review.py": "ded064664a2f5c007fcedaefdf12208b4c0fd0cbf467af43a943bae703fbc491",
             "aneos_core/analysis/pipeline.py": "effb2fe26d1734b7c8b8cfdc1e458ed3a556c8d2dc6851d0e23e80c622600aa9",
@@ -1212,7 +1212,7 @@
             "aneos_core/analysis/screening.py": "f442ec4ef601f7cb432fdb6c230eeefb63c75519afd11afa298d2e18d62c8345",
             "aneos_core/data/acquisition.py": "50148c4c43d70f788b2605cfea0467495f7b65191e6c31a94cbe4302a1c88e94",
             "aneos_core/data/cache.py": "7e4b6d40f9a9c1b1bb1fc7ffdbcec479b3d3f2f622dfc1fafb4373899bc0e1a3",
-            "aneos_core/data/chronology.py": "617792ba406a2125c0c752bb5393cab9ea669ae19e0b2b5d1cf7a5bf83e5f69f",
+            "aneos_core/data/chronology.py": "fb116c9c5279feedf5052b682bf2388c67b10442fed8719093075f98276c0266",
             "aneos_core/data/enrichment.py": "500ec6b89f7f225cd815a46f0720bc36e7e771c2bcff1d63cb3c5fae25b4017a",
             "aneos_core/data/epoch_evidence.py": "5ca2e443a536eeb0bffa220b69133f05c322cd65ed5fbb44df28d546abc473f5",
             "aneos_core/data/fetcher.py": "9cfc97a3002f0dc927baa8abf0ca21d1821b28e7a96fad4bae001dce001a6cff",
@@ -1260,7 +1260,7 @@
             "CAD"
           ]
         },
-        "started_at": "2026-11-13T06:52:34.366603+00:00"
+        "started_at": "2026-11-13T07:21:39.333837+00:00"
       },
       "native_response_repeat_checks": [
         {
@@ -1272,12 +1272,12 @@
       ],
       "receipt": {
         "assertion_count": 6,
-        "bundle_id": "1ba83630171554402244074c2a5303e88909e2e84c1eb5c35f1683e3df39be6b",
+        "bundle_id": "2079f51b073243262801af7ff688b07b24f901fe5beee99c5e201c16a6c9bc8b",
         "commit_status": "committed",
-        "committed_at": "2026-11-13T06:52:34.426519+00:00",
+        "committed_at": "2026-11-13T07:21:39.393370+00:00",
         "consistency_status": "replayed_not_authenticated",
-        "projection_id": "e025eef68acc486cee8ad4277ce916bab3f2b205d45876b8100ff7e467932133",
-        "query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+        "projection_id": "9d249d6194febebd1be617351a9b1474d35d1db636d6980aa94c99f8cf988989",
+        "query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
         "query_sequence": 1,
         "schema_version": "acquisition-storage-receipt-v1"
       }
@@ -1285,7 +1285,7 @@
   ],
   "artificial_probability": null,
   "chronology": {
-    "chronology_id": "c1dc8028f707ef60102c996dba70fcb49173135a237c325b3457d5746d2b8b53",
+    "chronology_id": "3bd36e5284b5d0766916901eb16d5eac0847a1fa1198ebc8c2e3d062b3c3b600",
     "designation": "SYNTHETIC",
     "discovery": {
       "claims": [],
@@ -1296,7 +1296,7 @@
       {
         "meaning": "Observation used in the orbit fit; may include precovery. Not the discovery date or an invented midnight UTC instant.",
         "precision": "partial month/day",
-        "reference": "/evidence_history/0/normalized/normalized_neo/first_observation",
+        "reference": "/inputs/sources/0/native_observation_window/first_observation/value",
         "representation": "native calendar label",
         "role": "first_observation",
         "source": "SBDB",
@@ -1307,7 +1307,7 @@
       {
         "meaning": "Observation used in the orbit fit; may include precovery. Not the discovery date or an invented midnight UTC instant.",
         "precision": "day",
-        "reference": "/evidence_history/0/normalized/normalized_neo/last_observation",
+        "reference": "/inputs/sources/0/native_observation_window/last_observation/value",
         "representation": "native calendar label",
         "role": "last_observation",
         "source": "SBDB",
@@ -1318,7 +1318,7 @@
       {
         "meaning": "Osculating-element epoch; not observation/retrieval time. No conversion or propagation performed.",
         "precision": "native literal precision",
-        "reference": "/evidence_history/0/normalized/normalized_neo/orbital_elements/native_epoch",
+        "reference": "/inputs/sources/0/native_orbit_epoch",
         "representation": "JD",
         "role": "orbit_epoch",
         "source": "SBDB",
@@ -1329,7 +1329,7 @@
       {
         "meaning": "Labelled covariance epoch from the existing typed TDB contract; not propagated to the displayed orbit epoch.",
         "precision": "native literal precision",
-        "reference": "/evidence_history/0/normalized/normalized_neo/evidence_metadata/covariance/epoch_jd_tdb",
+        "reference": "/inputs/sources/0/covariance_epoch_jd_tdb",
         "representation": "JD",
         "role": "covariance_epoch",
         "source": "SBDB",
@@ -1340,7 +1340,7 @@
       {
         "meaning": "When the catalogue fit was produced, not its dynamical epoch. No UTC/DST offset inferred.",
         "precision": "native literal precision",
-        "reference": "/evidence_history/0/normalized/normalized_neo/evidence_metadata/solution/solution_date",
+        "reference": "/inputs/sources/0/orbit_fit_label",
         "representation": "native fit-date label",
         "role": "orbit_fit_date",
         "source": "SBDB",
@@ -1351,18 +1351,18 @@
       {
         "meaning": "Adapter receipt; not an observation, discovery or orbit epoch. An offset does not certify clock accuracy.",
         "precision": "literal timestamp precision",
-        "reference": "/evidence_history/0/normalized/normalized_neo/fetched_at",
+        "reference": "/inputs/sources/0/fetched_at",
         "representation": "ISO timestamp",
         "role": "adapter_receipt",
         "source": "SBDB",
         "status": "explicit_utc_offset",
         "time_scale": "UTC",
-        "value": "2026-11-13T06:52:34.367926+00:00"
+        "value": "2026-11-13T07:21:39.334928+00:00"
       },
       {
         "meaning": "Catalogued discovery day, not a UTC instant or a storage receipt. SBDB circumstances are documented only for numbered objects.",
         "precision": "day",
-        "reference": "/evidence_history/0/normalized/normalized_neo/evidence_metadata/discovery_evidence",
+        "reference": "/inputs/sources/0/discovery_evidence",
         "representation": "catalogue calendar date",
         "role": "discovery",
         "source": "SBDB",
@@ -1375,52 +1375,53 @@
       "designation": "SYNTHETIC",
       "ledger_records": [
         {
-          "assertion_id": "bb62ddad012e04e1f300c382b86257390fe0c8d72d583aa8c085c5ffbb1903bb",
+          "assertion_id": "3078727645da32f561e9f0e1f7fc51b2b0cd5c3ce77f77bca36cb32ca8695157",
           "kind": "source_assertion",
-          "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+          "recorded_at": "2026-11-13T07:21:39.383970+00:00",
           "reference": "/evidence_history/0",
           "sequence": 1
         },
         {
-          "assertion_id": "a6da5d25178db2c5c461cd59a7fa5f1bd64979ece74e9b83e16953a7ebae9c97",
+          "assertion_id": "11be9c8356d98cd41f2d3acaab27bacdb828f2e9c85b5dacaed248a640fec7f2",
           "kind": "query_attempt",
-          "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+          "recorded_at": "2026-11-13T07:21:39.383970+00:00",
           "reference": "/evidence_history/1",
           "sequence": 2
         },
         {
-          "assertion_id": "dafc63d0421d2b193529dd90d44097551c7413e576fc7bd6a0ee63aa40c5cd95",
+          "assertion_id": "f6af9198b1ec8f58dc40db33562ebda655dbca8f51cf43971049bcdae632a87f",
           "kind": "query_attempt",
-          "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+          "recorded_at": "2026-11-13T07:21:39.383970+00:00",
           "reference": "/evidence_history/2",
           "sequence": 3
         },
         {
-          "assertion_id": "839f68da7b1e8c3da45d2b61c105d6e1ac5d9433d226f2c3f82196638d573414",
+          "assertion_id": "333dc852a9949ec55506a6724fea61f14dcede3b3102724e9b286454f42e8728",
           "kind": "query_attempt",
-          "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+          "recorded_at": "2026-11-13T07:21:39.383970+00:00",
           "reference": "/evidence_history/3",
           "sequence": 4
         },
         {
-          "assertion_id": "d0dd82adb57a0681383d8ffe3549c93e5c5b65b3f3a72444fdf8490272bb702b",
+          "assertion_id": "cd5bb7b0f5669a8d74585244a8579c7a4d524154449bd3bb87f524a2bc08dff1",
           "kind": "query_attempt",
-          "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+          "recorded_at": "2026-11-13T07:21:39.383970+00:00",
           "reference": "/evidence_history/4",
           "sequence": 5
         },
         {
-          "assertion_id": "82b0d79c7194659b50f3fc2e89fad09c281e193eb720bff8e1043f82fd5a5c66",
+          "assertion_id": "23568d84f0dadd73ec564debdee88a76980cc5a4974ffaec9a0fe02c48fd76a7",
           "kind": "query_attempt",
-          "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+          "recorded_at": "2026-11-13T07:21:39.383970+00:00",
           "reference": "/evidence_history/5",
           "sequence": 6
         }
       ],
       "legacy_dates": {
         "first_discovered": null,
-        "last_updated": "2026-11-13T06:52:34.416360"
+        "last_updated": "2026-11-13T07:21:39.383970"
       },
+      "reference_scope": "compact_inputs_v1",
       "sources": [
         {
           "covariance_epoch_jd_tdb": "2457098.500000000001",
@@ -1428,7 +1429,7 @@
           "designation": "SYNTHETIC",
           "discovery_evidence": {
             "adapter": "sbdb-discovery-1.3",
-            "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+            "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
             "context": {
               "object": {
                 "des": "SYNTHETIC",
@@ -1436,7 +1437,7 @@
               },
               "requested": true,
               "requested_designation": "SYNTHETIC",
-              "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+              "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
               "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
               "source_schema_version": "1.3"
             },
@@ -1452,7 +1453,7 @@
             "source": "SBDB",
             "status": "not_available"
           },
-          "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+          "fetched_at": "2026-11-13T07:21:39.334928+00:00",
           "first_observation": null,
           "last_observation": "2024-05-06T00:00:00",
           "legacy_orbit_epoch": null,
@@ -1498,7 +1499,7 @@
         "meaning": "Preserved compatibility value; not accepted as discovery or a UTC ledger receipt.",
         "status": "semantics_and_time_scale_unverified",
         "time_scale": "not_declared",
-        "value": "2026-11-13T06:52:34.416360"
+        "value": "2026-11-13T07:21:39.383970"
       }
     },
     "limitations": [
@@ -1507,79 +1508,80 @@
     ],
     "local_receipts": {
       "clock_order": "nondecreasing_verified_clock_values",
-      "first_ledger_recorded_at": "2026-11-13T06:52:34.416360+00:00",
-      "last_ledger_recorded_at": "2026-11-13T06:52:34.416360+00:00",
+      "first_ledger_recorded_at": "2026-11-13T07:21:39.383970+00:00",
+      "last_ledger_recorded_at": "2026-11-13T07:21:39.383970+00:00",
       "records": [
         {
           "meaning": "Local append receipt; not discovery or observation time. Ledger order is sequence order.",
           "precision": "literal timestamp precision",
-          "reference": "/evidence_history/0/recorded_at",
+          "reference": "/inputs/ledger_records/0/recorded_at",
           "representation": "ISO timestamp",
           "role": "ledger_receipt",
           "source": "local evidence ledger",
           "status": "explicit_utc_offset",
           "time_scale": "UTC",
-          "value": "2026-11-13T06:52:34.416360+00:00"
+          "value": "2026-11-13T07:21:39.383970+00:00"
         },
         {
           "meaning": "Local append receipt; not discovery or observation time. Ledger order is sequence order.",
           "precision": "literal timestamp precision",
-          "reference": "/evidence_history/1/recorded_at",
+          "reference": "/inputs/ledger_records/1/recorded_at",
           "representation": "ISO timestamp",
           "role": "ledger_receipt",
           "source": "local evidence ledger",
           "status": "explicit_utc_offset",
           "time_scale": "UTC",
-          "value": "2026-11-13T06:52:34.416360+00:00"
+          "value": "2026-11-13T07:21:39.383970+00:00"
         },
         {
           "meaning": "Local append receipt; not discovery or observation time. Ledger order is sequence order.",
           "precision": "literal timestamp precision",
-          "reference": "/evidence_history/2/recorded_at",
+          "reference": "/inputs/ledger_records/2/recorded_at",
           "representation": "ISO timestamp",
           "role": "ledger_receipt",
           "source": "local evidence ledger",
           "status": "explicit_utc_offset",
           "time_scale": "UTC",
-          "value": "2026-11-13T06:52:34.416360+00:00"
+          "value": "2026-11-13T07:21:39.383970+00:00"
         },
         {
           "meaning": "Local append receipt; not discovery or observation time. Ledger order is sequence order.",
           "precision": "literal timestamp precision",
-          "reference": "/evidence_history/3/recorded_at",
+          "reference": "/inputs/ledger_records/3/recorded_at",
           "representation": "ISO timestamp",
           "role": "ledger_receipt",
           "source": "local evidence ledger",
           "status": "explicit_utc_offset",
           "time_scale": "UTC",
-          "value": "2026-11-13T06:52:34.416360+00:00"
+          "value": "2026-11-13T07:21:39.383970+00:00"
         },
         {
           "meaning": "Local append receipt; not discovery or observation time. Ledger order is sequence order.",
           "precision": "literal timestamp precision",
-          "reference": "/evidence_history/4/recorded_at",
+          "reference": "/inputs/ledger_records/4/recorded_at",
           "representation": "ISO timestamp",
           "role": "ledger_receipt",
           "source": "local evidence ledger",
           "status": "explicit_utc_offset",
           "time_scale": "UTC",
-          "value": "2026-11-13T06:52:34.416360+00:00"
+          "value": "2026-11-13T07:21:39.383970+00:00"
         },
         {
           "meaning": "Local append receipt; not discovery or observation time. Ledger order is sequence order.",
           "precision": "literal timestamp precision",
-          "reference": "/evidence_history/5/recorded_at",
+          "reference": "/inputs/ledger_records/5/recorded_at",
           "representation": "ISO timestamp",
           "role": "ledger_receipt",
           "source": "local evidence ledger",
           "status": "explicit_utc_offset",
           "time_scale": "UTC",
-          "value": "2026-11-13T06:52:34.416360+00:00"
+          "value": "2026-11-13T07:21:39.383970+00:00"
         }
       ],
       "scope": "verified ledger sequence only; earlier local intake may predate this ledger",
       "unverified_count": 0
     },
+    "reference_scope": "chronology_input_json_pointers",
     "schema_version": "object-chronology-v1"
   },
   "close_approaches": [],
@@ -1622,7 +1624,7 @@
             "kind": "au"
           },
           "orbit_id": "SYNTHETIC_SOLUTION",
-          "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+          "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
           "schema_version": "1.3",
           "solution_date": "2024-May-07 06:44:30",
           "source": "JPL SBDB",
@@ -1837,7 +1839,7 @@
         "status": "present",
         "time_status": "offset_recorded_not_time_scale_conversion",
         "units": "retrieval timestamp",
-        "value": "2026-11-13T06:52:34.367926+00:00"
+        "value": "2026-11-13T07:21:39.334928+00:00"
       }
     ],
     "missing_fields": [
@@ -1902,11 +1904,11 @@
               "kind": "au"
             },
             "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-            "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+            "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
             "schema_version": "1.3"
           },
           "duplicate_records": {},
-          "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+          "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
           "limitations": [
             "Normalization/replay is not independent source verification.",
             "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -1925,11 +1927,11 @@
     "raw_physical_assertions": [],
     "schema_version": "object-field-inventory-v1",
     "source_differences": {},
-    "source_id": "2234d80be8fe91eed71f56f55f5b3bc1f7ca7b4343056614cb0a01ac64dcc3a0",
+    "source_id": "f0f1e74e7ed3ec71b942122c16e9ca46e0d5df744b04904f050393bc27c05fa9",
     "source_snapshot": {
       "close_approaches": [],
       "completeness": 0.5714285714285714,
-      "created_at": "2026-11-13T06:52:34.367926+00:00",
+      "created_at": "2026-11-13T07:21:39.334928+00:00",
       "designation": "SYNTHETIC",
       "dynamic_TAS": null,
       "dynamic_category": null,
@@ -2061,7 +2063,7 @@
               },
               "discovery_evidence": {
                 "adapter": "sbdb-discovery-1.3",
-                "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                 "context": {
                   "object": {
                     "des": "SYNTHETIC",
@@ -2069,7 +2071,7 @@
                   },
                   "requested": true,
                   "requested_designation": "SYNTHETIC",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                   "source_schema_version": "1.3"
                 },
@@ -2108,11 +2110,11 @@
                     "kind": "au"
                   },
                   "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "schema_version": "1.3"
                 },
                 "duplicate_records": {},
-                "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                 "limitations": [
                   "Normalization/replay is not independent source verification.",
                   "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -2160,7 +2162,7 @@
                   "kind": "au"
                 },
                 "orbit_id": "SYNTHETIC_SOLUTION",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "schema_version": "1.3",
                 "solution_date": "2024-May-07 06:44:30",
                 "source": "JPL SBDB",
@@ -2288,7 +2290,7 @@
             },
             "discovery_evidence": {
               "adapter": "sbdb-discovery-1.3",
-              "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+              "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
               "context": {
                 "object": {
                   "des": "SYNTHETIC",
@@ -2296,7 +2298,7 @@
                 },
                 "requested": true,
                 "requested_designation": "SYNTHETIC",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                 "source_schema_version": "1.3"
               },
@@ -2335,11 +2337,11 @@
                   "kind": "au"
                 },
                 "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "schema_version": "1.3"
               },
               "duplicate_records": {},
-              "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+              "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
               "limitations": [
                 "Normalization/replay is not independent source verification.",
                 "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -2387,7 +2389,7 @@
                 "kind": "au"
               },
               "orbit_id": "SYNTHETIC_SOLUTION",
-              "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+              "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
               "schema_version": "1.3",
               "solution_date": "2024-May-07 06:44:30",
               "source": "JPL SBDB",
@@ -2396,7 +2398,7 @@
           }
         }
       },
-      "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+      "fetched_at": "2026-11-13T07:21:39.334928+00:00",
       "first_observation": null,
       "last_observation": "2024-05-06T00:00:00",
       "nongrav": null,
@@ -2430,7 +2432,7 @@
       "sources_used": [
         "SBDB"
       ],
-      "updated_at": "2026-11-13T06:52:34.367926+00:00"
+      "updated_at": "2026-11-13T07:21:39.334928+00:00"
     },
     "sources_recorded": [
       "SBDB"
@@ -2451,7 +2453,7 @@
   "discovery_date": null,
   "evidence_history": [
     {
-      "assertion_id": "bb62ddad012e04e1f300c382b86257390fe0c8d72d583aa8c085c5ffbb1903bb",
+      "assertion_id": "3078727645da32f561e9f0e1f7fc51b2b0cd5c3ce77f77bca36cb32ca8695157",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "source_assertion",
@@ -2459,13 +2461,13 @@
         "calibrated_artificial_probability": null,
         "designation": "SYNTHETIC",
         "native_payload": {
-          "acquisition_query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+          "acquisition_query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
           "data_source": "SBDB",
           "designation": "SYNTHETIC",
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.5714285714285714,
-            "created_at": "2026-11-13T06:52:34.367926+00:00",
+            "created_at": "2026-11-13T07:21:39.334928+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
@@ -2586,7 +2588,7 @@
               },
               "discovery_evidence": {
                 "adapter": "sbdb-discovery-1.3",
-                "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                 "context": {
                   "object": {
                     "des": "SYNTHETIC",
@@ -2594,7 +2596,7 @@
                   },
                   "requested": true,
                   "requested_designation": "SYNTHETIC",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                   "source_schema_version": "1.3"
                 },
@@ -2633,11 +2635,11 @@
                     "kind": "au"
                   },
                   "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "schema_version": "1.3"
                 },
                 "duplicate_records": {},
-                "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                 "limitations": [
                   "Normalization/replay is not independent source verification.",
                   "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -2685,14 +2687,14 @@
                   "kind": "au"
                 },
                 "orbit_id": "SYNTHETIC_SOLUTION",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "schema_version": "1.3",
                 "solution_date": "2024-May-07 06:44:30",
                 "source": "JPL SBDB",
                 "time_scale": "TDB"
               }
             },
-            "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+            "fetched_at": "2026-11-13T07:21:39.334928+00:00",
             "first_observation": null,
             "last_observation": "2024-05-06T00:00:00",
             "nongrav": null,
@@ -2726,16 +2728,16 @@
             "sources_used": [
               "SBDB"
             ],
-            "updated_at": "2026-11-13T06:52:34.367926+00:00"
+            "updated_at": "2026-11-13T07:21:39.334928+00:00"
           },
           "snapshot_schema": "neo-data-v1"
         },
         "normalization_status": "typed_snapshot_not_independently_verified",
-        "normalization_timestamp": "2026-11-13T06:52:34.416360+00:00",
+        "normalization_timestamp": "2026-11-13T07:21:39.383970+00:00",
         "normalized_neo": {
           "close_approaches": [],
           "completeness": 0.5714285714285714,
-          "created_at": "2026-11-13T06:52:34.367926+00:00",
+          "created_at": "2026-11-13T07:21:39.334928+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
@@ -2856,7 +2858,7 @@
             },
             "discovery_evidence": {
               "adapter": "sbdb-discovery-1.3",
-              "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+              "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
               "context": {
                 "object": {
                   "des": "SYNTHETIC",
@@ -2864,7 +2866,7 @@
                 },
                 "requested": true,
                 "requested_designation": "SYNTHETIC",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                 "source_schema_version": "1.3"
               },
@@ -2903,11 +2905,11 @@
                   "kind": "au"
                 },
                 "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "schema_version": "1.3"
               },
               "duplicate_records": {},
-              "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+              "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
               "limitations": [
                 "Normalization/replay is not independent source verification.",
                 "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -2955,14 +2957,14 @@
                 "kind": "au"
               },
               "orbit_id": "SYNTHETIC_SOLUTION",
-              "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+              "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
               "schema_version": "1.3",
               "solution_date": "2024-May-07 06:44:30",
               "source": "JPL SBDB",
               "time_scale": "TDB"
             }
           },
-          "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+          "fetched_at": "2026-11-13T07:21:39.334928+00:00",
           "first_observation": null,
           "last_observation": "2024-05-06T00:00:00",
           "nongrav": null,
@@ -2996,7 +2998,7 @@
           "sources_used": [
             "SBDB"
           ],
-          "updated_at": "2026-11-13T06:52:34.367926+00:00"
+          "updated_at": "2026-11-13T07:21:39.334928+00:00"
         },
         "origin_status": "not_assessed",
         "schema_version": "normalized-source-assertion-v1",
@@ -3006,13 +3008,13 @@
         ]
       },
       "payload": {
-        "acquisition_query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+        "acquisition_query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
         "data_source": "SBDB",
         "designation": "SYNTHETIC",
         "neo_data": {
           "close_approaches": [],
           "completeness": 0.5714285714285714,
-          "created_at": "2026-11-13T06:52:34.367926+00:00",
+          "created_at": "2026-11-13T07:21:39.334928+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
@@ -3133,7 +3135,7 @@
             },
             "discovery_evidence": {
               "adapter": "sbdb-discovery-1.3",
-              "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+              "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
               "context": {
                 "object": {
                   "des": "SYNTHETIC",
@@ -3141,7 +3143,7 @@
                 },
                 "requested": true,
                 "requested_designation": "SYNTHETIC",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                 "source_schema_version": "1.3"
               },
@@ -3180,11 +3182,11 @@
                   "kind": "au"
                 },
                 "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "schema_version": "1.3"
               },
               "duplicate_records": {},
-              "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+              "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
               "limitations": [
                 "Normalization/replay is not independent source verification.",
                 "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -3232,14 +3234,14 @@
                 "kind": "au"
               },
               "orbit_id": "SYNTHETIC_SOLUTION",
-              "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+              "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
               "schema_version": "1.3",
               "solution_date": "2024-May-07 06:44:30",
               "source": "JPL SBDB",
               "time_scale": "TDB"
             }
           },
-          "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+          "fetched_at": "2026-11-13T07:21:39.334928+00:00",
           "first_observation": null,
           "last_observation": "2024-05-06T00:00:00",
           "nongrav": null,
@@ -3273,18 +3275,18 @@
           "sources_used": [
             "SBDB"
           ],
-          "updated_at": "2026-11-13T06:52:34.367926+00:00"
+          "updated_at": "2026-11-13T07:21:39.334928+00:00"
         },
         "snapshot_schema": "neo-data-v1"
       },
-      "payload_sha256": "b16ccf5a75b5096d92070b216fd987cfad70cb8ce4eb1b8bc29da4ad5ee08ce5",
-      "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+      "payload_sha256": "b67c3de421b0ca09b8324c0c558754d9a41653d7ee16064254bc8da9b043b9c1",
+      "recorded_at": "2026-11-13T07:21:39.383970+00:00",
       "sequence": 1,
-      "session_id": "acquisition-ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+      "session_id": "acquisition-ab2293e5-3838-4d14-b93b-554643e76024",
       "source": "SBDB"
     },
     {
-      "assertion_id": "a6da5d25178db2c5c461cd59a7fa5f1bd64979ece74e9b83e16953a7ebae9c97",
+      "assertion_id": "11be9c8356d98cd41f2d3acaab27bacdb828f2e9c85b5dacaed248a640fec7f2",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -3292,7 +3294,7 @@
         "status": "available"
       },
       "payload": {
-        "acquisition_query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+        "acquisition_query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
         "data_source": "SBDB",
         "designation": "SYNTHETIC",
         "source_outcome": {
@@ -3415,7 +3417,7 @@
               },
               "discovery_evidence": {
                 "adapter": "sbdb-discovery-1.3",
-                "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                 "context": {
                   "object": {
                     "des": "SYNTHETIC",
@@ -3423,7 +3425,7 @@
                   },
                   "requested": true,
                   "requested_designation": "SYNTHETIC",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                   "source_schema_version": "1.3"
                 },
@@ -3450,11 +3452,11 @@
                     "kind": "au"
                   },
                   "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "schema_version": "1.3"
                 },
                 "duplicate_records": {},
-                "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                 "limitations": [
                   "Normalization/replay is not independent source verification.",
                   "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -3502,14 +3504,14 @@
                   "kind": "au"
                 },
                 "orbit_id": "SYNTHETIC_SOLUTION",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "schema_version": "1.3",
                 "solution_date": "2024-May-07 06:44:30",
                 "source": "JPL SBDB",
                 "time_scale": "TDB"
               }
             },
-            "_fetched_at": "2026-11-13T06:52:34.367622+00:00",
+            "_fetched_at": "2026-11-13T07:21:39.334708+00:00",
             "_native_response": {
               "object": {
                 "des": "SYNTHETIC",
@@ -3624,13 +3626,13 @@
             "semi_major_axis": 1.23
           },
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T06:52:34.367926+00:00",
+          "completed_at": "2026-11-13T07:21:39.334928+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.5714285714285714,
-            "created_at": "2026-11-13T06:52:34.367926+00:00",
+            "created_at": "2026-11-13T07:21:39.334928+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
@@ -3751,7 +3753,7 @@
               },
               "discovery_evidence": {
                 "adapter": "sbdb-discovery-1.3",
-                "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                 "context": {
                   "object": {
                     "des": "SYNTHETIC",
@@ -3759,7 +3761,7 @@
                   },
                   "requested": true,
                   "requested_designation": "SYNTHETIC",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                   "source_schema_version": "1.3"
                 },
@@ -3798,11 +3800,11 @@
                     "kind": "au"
                   },
                   "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "schema_version": "1.3"
                 },
                 "duplicate_records": {},
-                "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                 "limitations": [
                   "Normalization/replay is not independent source verification.",
                   "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -3850,14 +3852,14 @@
                   "kind": "au"
                 },
                 "orbit_id": "SYNTHETIC_SOLUTION",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "schema_version": "1.3",
                 "solution_date": "2024-May-07 06:44:30",
                 "source": "JPL SBDB",
                 "time_scale": "TDB"
               }
             },
-            "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+            "fetched_at": "2026-11-13T07:21:39.334928+00:00",
             "first_observation": null,
             "last_observation": "2024-05-06T00:00:00",
             "nongrav": null,
@@ -3891,11 +3893,11 @@
             "sources_used": [
               "SBDB"
             ],
-            "updated_at": "2026-11-13T06:52:34.367926+00:00"
+            "updated_at": "2026-11-13T07:21:39.334928+00:00"
           },
           "reason_code": null,
           "source": "SBDB",
-          "started_at": "2026-11-13T06:52:34.366738+00:00",
+          "started_at": "2026-11-13T07:21:39.333956+00:00",
           "status": "available"
         },
         "source_plan": {
@@ -3928,14 +3930,14 @@
         },
         "status": "available"
       },
-      "payload_sha256": "deb7c3fb1ebe546dcecb9136cc88b0c2818f7248c0efe65e66bc81da2137ad4d",
-      "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+      "payload_sha256": "9eb66af812fe1c72d6e1866372f9227bb3436e5bf8a1dbeb1aaa3b25de179c21",
+      "recorded_at": "2026-11-13T07:21:39.383970+00:00",
       "sequence": 2,
-      "session_id": "acquisition-ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+      "session_id": "acquisition-ab2293e5-3838-4d14-b93b-554643e76024",
       "source": "SBDB"
     },
     {
-      "assertion_id": "dafc63d0421d2b193529dd90d44097551c7413e576fc7bd6a0ee63aa40c5cd95",
+      "assertion_id": "f6af9198b1ec8f58dc40db33562ebda655dbca8f51cf43971049bcdae632a87f",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -3943,19 +3945,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+        "acquisition_query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
         "data_source": "NEODyS",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "source_initialization",
-          "completed_at": "2026-11-13T06:52:34.366828+00:00",
+          "completed_at": "2026-11-13T07:21:39.334039+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "SOURCE_INITIALIZATION_FAILED",
           "source": "NEODyS",
-          "started_at": "2026-11-13T06:52:34.366828+00:00",
+          "started_at": "2026-11-13T07:21:39.334039+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -3988,14 +3990,14 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "df858d4a92deb7839b7c5c10e0d6f64728918b17b716eac5eedc1e2e56801e1d",
-      "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+      "payload_sha256": "8de374d34a770d4043b7ec2e17c22b4f6aa4bf11769972dc8d6dc2c338524333",
+      "recorded_at": "2026-11-13T07:21:39.383970+00:00",
       "sequence": 3,
-      "session_id": "acquisition-ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+      "session_id": "acquisition-ab2293e5-3838-4d14-b93b-554643e76024",
       "source": "NEODyS"
     },
     {
-      "assertion_id": "839f68da7b1e8c3da45d2b61c105d6e1ac5d9433d226f2c3f82196638d573414",
+      "assertion_id": "333dc852a9949ec55506a6724fea61f14dcede3b3102724e9b286454f42e8728",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -4003,19 +4005,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+        "acquisition_query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
         "data_source": "MPC",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "source_initialization",
-          "completed_at": "2026-11-13T06:52:34.366856+00:00",
+          "completed_at": "2026-11-13T07:21:39.334065+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "SOURCE_INITIALIZATION_FAILED",
           "source": "MPC",
-          "started_at": "2026-11-13T06:52:34.366856+00:00",
+          "started_at": "2026-11-13T07:21:39.334065+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -4048,14 +4050,14 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "fc92861b3724aec9ac7f9833d342367e1620b68ab9c3cf7f05f7c3a4e084c147",
-      "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+      "payload_sha256": "8d53d1286ff9b05b86834addd126dcf8d5ed020122e2234f2378dce1aa0c392b",
+      "recorded_at": "2026-11-13T07:21:39.383970+00:00",
       "sequence": 4,
-      "session_id": "acquisition-ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+      "session_id": "acquisition-ab2293e5-3838-4d14-b93b-554643e76024",
       "source": "MPC"
     },
     {
-      "assertion_id": "d0dd82adb57a0681383d8ffe3549c93e5c5b65b3f3a72444fdf8490272bb702b",
+      "assertion_id": "cd5bb7b0f5669a8d74585244a8579c7a4d524154449bd3bb87f524a2bc08dff1",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -4063,19 +4065,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+        "acquisition_query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
         "data_source": "Horizons",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "source_initialization",
-          "completed_at": "2026-11-13T06:52:34.366868+00:00",
+          "completed_at": "2026-11-13T07:21:39.334076+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "SOURCE_INITIALIZATION_FAILED",
           "source": "Horizons",
-          "started_at": "2026-11-13T06:52:34.366868+00:00",
+          "started_at": "2026-11-13T07:21:39.334076+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -4108,14 +4110,14 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "e4de02db6fb75c5e233818f618b14ebd92b4e7cd83bd99b040ce29330800c25c",
-      "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+      "payload_sha256": "62c013fde2f85c52fab48b3b9cc1959410181184e573714f68012b61e6f1c598",
+      "recorded_at": "2026-11-13T07:21:39.383970+00:00",
       "sequence": 5,
-      "session_id": "acquisition-ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+      "session_id": "acquisition-ab2293e5-3838-4d14-b93b-554643e76024",
       "source": "Horizons"
     },
     {
-      "assertion_id": "82b0d79c7194659b50f3fc2e89fad09c281e193eb720bff8e1043f82fd5a5c66",
+      "assertion_id": "23568d84f0dadd73ec564debdee88a76980cc5a4974ffaec9a0fe02c48fd76a7",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -4123,19 +4125,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+        "acquisition_query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
         "data_source": "CAD",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "legacy_adapter_outcome_unknown",
-          "completed_at": "2026-11-13T06:52:34.368843+00:00",
+          "completed_at": "2026-11-13T07:21:39.335848+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "CAD_SCHEMA_UNVERIFIED",
           "source": "CAD",
-          "started_at": "2026-11-13T06:52:34.368813+00:00",
+          "started_at": "2026-11-13T07:21:39.335833+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -4168,22 +4170,22 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "4db8e6eb8fc1d3dc2f567d49e017ff3ae6c3d5558480d8e822d483c2dfd4bb6f",
-      "recorded_at": "2026-11-13T06:52:34.416360+00:00",
+      "payload_sha256": "a00b5d2d2f980e3dad9be49431dee72ee4a089eae9cc336616ab31e1f860cbae",
+      "recorded_at": "2026-11-13T07:21:39.383970+00:00",
       "sequence": 6,
-      "session_id": "acquisition-ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+      "session_id": "acquisition-ab2293e5-3838-4d14-b93b-554643e76024",
       "source": "CAD"
     }
   ],
   "first_discovered": null,
-  "first_ledger_recorded_at": "2026-11-13T06:52:34.416360+00:00",
-  "last_ledger_recorded_at": "2026-11-13T06:52:34.416360+00:00",
+  "first_ledger_recorded_at": "2026-11-13T07:21:39.383970+00:00",
+  "last_ledger_recorded_at": "2026-11-13T07:21:39.383970+00:00",
   "last_updated": null,
   "latest_acquisition": {
     "assertion_count": 6,
-    "bundle_id": "1ba83630171554402244074c2a5303e88909e2e84c1eb5c35f1683e3df39be6b",
+    "bundle_id": "2079f51b073243262801af7ff688b07b24f901fe5beee99c5e201c16a6c9bc8b",
     "commit_status": "committed",
-    "committed_at": "2026-11-13T06:52:34.426519+00:00",
+    "committed_at": "2026-11-13T07:21:39.393370+00:00",
     "consistency_status": "replayed_not_authenticated",
     "coverage": {
       "contributing_fraction": 0.2,
@@ -4204,8 +4206,8 @@
       "validated_response_fraction": 0.2,
       "validated_response_sources": 1
     },
-    "projection_id": "e025eef68acc486cee8ad4277ce916bab3f2b205d45876b8100ff7e467932133",
-    "query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+    "projection_id": "9d249d6194febebd1be617351a9b1474d35d1db636d6980aa94c99f8cf988989",
+    "query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
     "query_sequence": 1,
     "schema_version": "acquisition-storage-receipt-v1",
     "source_plan": {
@@ -4237,7 +4239,7 @@
       ]
     },
     "summary": {
-      "bundle_id": "1ba83630171554402244074c2a5303e88909e2e84c1eb5c35f1683e3df39be6b",
+      "bundle_id": "2079f51b073243262801af7ff688b07b24f901fe5beee99c5e201c16a6c9bc8b",
       "coverage": {
         "contributing_fraction": 0.2,
         "contributing_sources": 1,
@@ -4260,46 +4262,46 @@
       "outcomes": [
         {
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T06:52:34.367926+00:00",
+          "completed_at": "2026-11-13T07:21:39.334928+00:00",
           "reason_code": null,
           "source": "SBDB",
-          "started_at": "2026-11-13T06:52:34.366738+00:00",
+          "started_at": "2026-11-13T07:21:39.333956+00:00",
           "status": "available"
         },
         {
           "basis": "source_initialization",
-          "completed_at": "2026-11-13T06:52:34.366828+00:00",
+          "completed_at": "2026-11-13T07:21:39.334039+00:00",
           "reason_code": "SOURCE_INITIALIZATION_FAILED",
           "source": "NEODyS",
-          "started_at": "2026-11-13T06:52:34.366828+00:00",
+          "started_at": "2026-11-13T07:21:39.334039+00:00",
           "status": "unavailable"
         },
         {
           "basis": "source_initialization",
-          "completed_at": "2026-11-13T06:52:34.366856+00:00",
+          "completed_at": "2026-11-13T07:21:39.334065+00:00",
           "reason_code": "SOURCE_INITIALIZATION_FAILED",
           "source": "MPC",
-          "started_at": "2026-11-13T06:52:34.366856+00:00",
+          "started_at": "2026-11-13T07:21:39.334065+00:00",
           "status": "unavailable"
         },
         {
           "basis": "source_initialization",
-          "completed_at": "2026-11-13T06:52:34.366868+00:00",
+          "completed_at": "2026-11-13T07:21:39.334076+00:00",
           "reason_code": "SOURCE_INITIALIZATION_FAILED",
           "source": "Horizons",
-          "started_at": "2026-11-13T06:52:34.366868+00:00",
+          "started_at": "2026-11-13T07:21:39.334076+00:00",
           "status": "unavailable"
         },
         {
           "basis": "legacy_adapter_outcome_unknown",
-          "completed_at": "2026-11-13T06:52:34.368843+00:00",
+          "completed_at": "2026-11-13T07:21:39.335848+00:00",
           "reason_code": "CAD_SCHEMA_UNVERIFIED",
           "source": "CAD",
-          "started_at": "2026-11-13T06:52:34.368813+00:00",
+          "started_at": "2026-11-13T07:21:39.335833+00:00",
           "status": "unavailable"
         }
       ],
-      "query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+      "query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
       "schema_version": "object-acquisition-v1",
       "source_plan": {
         "context_id": "d7e3836bc8da5be0c5d3179d7a29da6cd5712f3b8e87d6815d12f69f9f5bbd77",
@@ -4331,12 +4333,12 @@
       },
       "storage_receipt": {
         "assertion_count": 6,
-        "bundle_id": "1ba83630171554402244074c2a5303e88909e2e84c1eb5c35f1683e3df39be6b",
+        "bundle_id": "2079f51b073243262801af7ff688b07b24f901fe5beee99c5e201c16a6c9bc8b",
         "commit_status": "committed",
-        "committed_at": "2026-11-13T06:52:34.426519+00:00",
+        "committed_at": "2026-11-13T07:21:39.393370+00:00",
         "consistency_status": "replayed_not_authenticated",
-        "projection_id": "e025eef68acc486cee8ad4277ce916bab3f2b205d45876b8100ff7e467932133",
-        "query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+        "projection_id": "9d249d6194febebd1be617351a9b1474d35d1db636d6980aa94c99f8cf988989",
+        "query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
         "query_sequence": 1,
         "schema_version": "acquisition-storage-receipt-v1"
       }
@@ -4347,7 +4349,7 @@
   "neo_data": {
     "close_approaches": [],
     "completeness": 0.5714285714285714,
-    "created_at": "2026-11-13T06:52:34.367926+00:00",
+    "created_at": "2026-11-13T07:21:39.334928+00:00",
     "designation": "SYNTHETIC",
     "dynamic_TAS": null,
     "dynamic_category": null,
@@ -4479,7 +4481,7 @@
             },
             "discovery_evidence": {
               "adapter": "sbdb-discovery-1.3",
-              "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+              "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
               "context": {
                 "object": {
                   "des": "SYNTHETIC",
@@ -4487,7 +4489,7 @@
                 },
                 "requested": true,
                 "requested_designation": "SYNTHETIC",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                 "source_schema_version": "1.3"
               },
@@ -4526,11 +4528,11 @@
                   "kind": "au"
                 },
                 "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "schema_version": "1.3"
               },
               "duplicate_records": {},
-              "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+              "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
               "limitations": [
                 "Normalization/replay is not independent source verification.",
                 "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -4578,7 +4580,7 @@
                 "kind": "au"
               },
               "orbit_id": "SYNTHETIC_SOLUTION",
-              "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+              "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
               "schema_version": "1.3",
               "solution_date": "2024-May-07 06:44:30",
               "source": "JPL SBDB",
@@ -4706,7 +4708,7 @@
           },
           "discovery_evidence": {
             "adapter": "sbdb-discovery-1.3",
-            "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+            "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
             "context": {
               "object": {
                 "des": "SYNTHETIC",
@@ -4714,7 +4716,7 @@
               },
               "requested": true,
               "requested_designation": "SYNTHETIC",
-              "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+              "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
               "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
               "source_schema_version": "1.3"
             },
@@ -4753,11 +4755,11 @@
                 "kind": "au"
               },
               "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-              "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+              "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
               "schema_version": "1.3"
             },
             "duplicate_records": {},
-            "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+            "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
             "limitations": [
               "Normalization/replay is not independent source verification.",
               "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -4805,7 +4807,7 @@
               "kind": "au"
             },
             "orbit_id": "SYNTHETIC_SOLUTION",
-            "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+            "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
             "schema_version": "1.3",
             "solution_date": "2024-May-07 06:44:30",
             "source": "JPL SBDB",
@@ -4814,7 +4816,7 @@
         }
       }
     },
-    "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+    "fetched_at": "2026-11-13T07:21:39.334928+00:00",
     "first_observation": null,
     "last_observation": "2024-05-06T00:00:00",
     "nongrav": null,
@@ -4848,7 +4850,7 @@
     "sources_used": [
       "SBDB"
     ],
-    "updated_at": "2026-11-13T06:52:34.367926+00:00"
+    "updated_at": "2026-11-13T07:21:39.334928+00:00"
   },
   "orbital_elements": {
     "arg_of_periapsis": null,
@@ -4880,16 +4882,16 @@
   "projection_cache_status": "consistent",
   "projection_query_bindings": [
     {
-      "assertion_id": "bb62ddad012e04e1f300c382b86257390fe0c8d72d583aa8c085c5ffbb1903bb",
+      "assertion_id": "3078727645da32f561e9f0e1f7fc51b2b0cd5c3ce77f77bca36cb32ca8695157",
       "from_latest_query": true,
-      "query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+      "query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
       "source": "SBDB"
     }
   ],
   "projection_receipt": {
-    "created_at": "2026-11-13T06:52:34.416360+00:00",
+    "created_at": "2026-11-13T07:21:39.383970+00:00",
     "input_assertions": [
-      "bb62ddad012e04e1f300c382b86257390fe0c8d72d583aa8c085c5ffbb1903bb"
+      "3078727645da32f561e9f0e1f7fc51b2b0cd5c3ce77f77bca36cb32ca8695157"
     ],
     "projection": {
       "artificial_probability": null,
@@ -4902,7 +4904,7 @@
       "neo_data": {
         "close_approaches": [],
         "completeness": 0.5714285714285714,
-        "created_at": "2026-11-13T06:52:34.367926+00:00",
+        "created_at": "2026-11-13T07:21:39.334928+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
@@ -5034,7 +5036,7 @@
                 },
                 "discovery_evidence": {
                   "adapter": "sbdb-discovery-1.3",
-                  "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                  "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                   "context": {
                     "object": {
                       "des": "SYNTHETIC",
@@ -5042,7 +5044,7 @@
                     },
                     "requested": true,
                     "requested_designation": "SYNTHETIC",
-                    "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                    "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                     "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                     "source_schema_version": "1.3"
                   },
@@ -5081,11 +5083,11 @@
                       "kind": "au"
                     },
                     "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                    "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                    "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                     "schema_version": "1.3"
                   },
                   "duplicate_records": {},
-                  "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                  "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                   "limitations": [
                     "Normalization/replay is not independent source verification.",
                     "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -5133,7 +5135,7 @@
                     "kind": "au"
                   },
                   "orbit_id": "SYNTHETIC_SOLUTION",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "schema_version": "1.3",
                   "solution_date": "2024-May-07 06:44:30",
                   "source": "JPL SBDB",
@@ -5261,7 +5263,7 @@
               },
               "discovery_evidence": {
                 "adapter": "sbdb-discovery-1.3",
-                "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+                "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
                 "context": {
                   "object": {
                     "des": "SYNTHETIC",
@@ -5269,7 +5271,7 @@
                   },
                   "requested": true,
                   "requested_designation": "SYNTHETIC",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
                   "source_schema_version": "1.3"
                 },
@@ -5308,11 +5310,11 @@
                     "kind": "au"
                   },
                   "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-                  "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                  "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                   "schema_version": "1.3"
                 },
                 "duplicate_records": {},
-                "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+                "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
                 "limitations": [
                   "Normalization/replay is not independent source verification.",
                   "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -5360,7 +5362,7 @@
                   "kind": "au"
                 },
                 "orbit_id": "SYNTHETIC_SOLUTION",
-                "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+                "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
                 "schema_version": "1.3",
                 "solution_date": "2024-May-07 06:44:30",
                 "source": "JPL SBDB",
@@ -5369,7 +5371,7 @@
             }
           }
         },
-        "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+        "fetched_at": "2026-11-13T07:21:39.334928+00:00",
         "first_observation": null,
         "last_observation": "2024-05-06T00:00:00",
         "nongrav": null,
@@ -5403,13 +5405,13 @@
         "sources_used": [
           "SBDB"
         ],
-        "updated_at": "2026-11-13T06:52:34.367926+00:00"
+        "updated_at": "2026-11-13T07:21:39.334928+00:00"
       },
       "origin_status": "not_assessed",
       "overall_data_completeness": null,
       "schema_version": "enriched-object-projection-v1",
       "selected_source_assertions": {
-        "SBDB": "bb62ddad012e04e1f300c382b86257390fe0c8d72d583aa8c085c5ffbb1903bb"
+        "SBDB": "3078727645da32f561e9f0e1f7fc51b2b0cd5c3ce77f77bca36cb32ca8695157"
       },
       "source_acquisition_coverage": null,
       "source_priority": [
@@ -5420,18 +5422,18 @@
         "CAD"
       ]
     },
-    "projection_id": "e025eef68acc486cee8ad4277ce916bab3f2b205d45876b8100ff7e467932133"
+    "projection_id": "9d249d6194febebd1be617351a9b1474d35d1db636d6980aa94c99f8cf988989"
   },
   "source_acquisition_coverage": null,
   "source_data": {
     "SBDB": {
-      "acquisition_query_id": "ff1535f1-aa91-4fbf-a19a-2d077bdcb9f9",
+      "acquisition_query_id": "ab2293e5-3838-4d14-b93b-554643e76024",
       "data_source": "SBDB",
       "designation": "SYNTHETIC",
       "neo_data": {
         "close_approaches": [],
         "completeness": 0.5714285714285714,
-        "created_at": "2026-11-13T06:52:34.367926+00:00",
+        "created_at": "2026-11-13T07:21:39.334928+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
@@ -5552,7 +5554,7 @@
           },
           "discovery_evidence": {
             "adapter": "sbdb-discovery-1.3",
-            "assertion_id": "7448124c70c6804da4f06ed2350b0aa6c38b4b65db23e7510f31b7c5daf5f876",
+            "assertion_id": "f747589bd3ec65d6dfcd4194c8eff3fe3fc4c0004b2b4ae4e3274a00ab606c25",
             "context": {
               "object": {
                 "des": "SYNTHETIC",
@@ -5560,7 +5562,7 @@
               },
               "requested": true,
               "requested_designation": "SYNTHETIC",
-              "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+              "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
               "source_response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
               "source_schema_version": "1.3"
             },
@@ -5599,11 +5601,11 @@
                 "kind": "au"
               },
               "response_sha256": "18c76eb201aedc106d5b9a7bf4c0e2330ae66bfeb1d6aa0464fc4dc36e7ce848",
-              "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+              "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
               "schema_version": "1.3"
             },
             "duplicate_records": {},
-            "evidence_id": "9b8a8b9dfaa2b30d11a5eeac4ef9147ccde0a09bdfdac23fd8ded3c05af4b06b",
+            "evidence_id": "24fa37d8efa735c392ea28a1f0ed84331f84a7539f98d3e64ba29e3f081a5287",
             "limitations": [
               "Normalization/replay is not independent source verification.",
               "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
@@ -5651,14 +5653,14 @@
               "kind": "au"
             },
             "orbit_id": "SYNTHETIC_SOLUTION",
-            "retrieved_at": "2026-11-13T06:52:34.367352+00:00",
+            "retrieved_at": "2026-11-13T07:21:39.334497+00:00",
             "schema_version": "1.3",
             "solution_date": "2024-May-07 06:44:30",
             "source": "JPL SBDB",
             "time_scale": "TDB"
           }
         },
-        "fetched_at": "2026-11-13T06:52:34.367926+00:00",
+        "fetched_at": "2026-11-13T07:21:39.334928+00:00",
         "first_observation": null,
         "last_observation": "2024-05-06T00:00:00",
         "nongrav": null,
@@ -5692,7 +5694,7 @@
         "sources_used": [
           "SBDB"
         ],
-        "updated_at": "2026-11-13T06:52:34.367926+00:00"
+        "updated_at": "2026-11-13T07:21:39.334928+00:00"
       },
       "snapshot_schema": "neo-data-v1"
     }

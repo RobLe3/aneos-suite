@@ -133,11 +133,29 @@ correctly labelled dates or complete response-profile coverage.
 
 ## Delivery evidence
 
-Final local offline suite: **1,566 passed**, eight network tests excluded; core
-coverage **50.98%** against the unchanged 30% floor. The **71 new cases** reach
-**96.73%** chronology component coverage against the new 90% floor. Every existing
+Final local offline suite: **1,569 passed**, eight network tests excluded; core
+coverage **51.06%** against the unchanged 30% floor. The **74 new cases** reach
+**96.82%** chronology component coverage against the new 90% floor. Every existing
 CI gate remains. Final capture/source hashes and all nine terminal-width bounds
 were verified, with sourced, partial and legacy views visually inspected. These
 are bounded engineering checks, not an independent scientific review. The
 published revision's complete CI/Docker results and live receipts are reported
 in its PR; none is inferred from this local run.
+
+### Reference-scope correction (#68)
+
+Current event/receipt references are JSON pointers scoped to the chronology's own
+preserved compact inputs (`reference_scope=chronology_input_json_pointers`). A
+native discovery/epoch record may be the target rather than a scalar; its normalized
+value and original context remain available together. Source snapshot/context locators
+are retained separately in those inputs. This avoids pretending copied reconciliation
+metadata is at the snapshot root. The read-only resolver cannot access files or URLs.
+
+Earlier context-reference reports remain replayable without changing their IDs;
+the view labels their locators as context, not guaranteed direct value pointers.
+A frozen synthetic prior-format chronology and reconciled/partial-date positive
+controls cover this distinction. This correction changes neither measurements nor
+the scientific assessment.
+
+New builders default to compact-input pointers. Explicit legacy-reference mode is
+reserved for compatibility replay, not a shortcut for newly generated reports.

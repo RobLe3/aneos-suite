@@ -397,11 +397,19 @@ def source_events(s):
     return out
 
 
-def build_chronology(designation, sources=(), ledger_records=(), legacy_dates=None):
+def build_chronology(
+    designation,
+    sources=(),
+    ledger_records=(),
+    legacy_dates=None,
+    reference_scope="compact_inputs_v1",
+):
     # A frozen legacy review may contain controls in its label. Preserve the input;
     # presentation escapes it rather than executing or silently renaming it.
     if not isinstance(designation, str) or not designation or len(designation) > 100:
         raise ValueError("Invalid designation")
+    if reference_scope not in (None, "compact_inputs_v1"):
+        raise ValueError("Unsupported chronology reference scope")
     sources = clone(list(sources))
     ledger_records = clone(list(ledger_records))
     legacy_dates = clone(legacy_dates or {})
@@ -417,7 +425,37 @@ def build_chronology(designation, sources=(), ledger_records=(), legacy_dates=No
         _text(s["reference"], "reference")
         if not isinstance(s["native_observation_window"], dict):
             raise ValueError("Invalid observation window")
-    events = [e for s in sources for e in source_events(s)]
+    events = []
+    for index, s in enumerate(sources):
+        items = source_events(s)
+        if reference_scope == "compact_inputs_v1":
+            base = f"/inputs/sources/{index}"
+            fields = {
+                "orbit_epoch": (
+                    "native_orbit_epoch"
+                    if s["native_orbit_epoch"] is not None
+                    else "legacy_orbit_epoch"
+                ),
+                "covariance_epoch": "covariance_epoch_jd_tdb",
+                "orbit_fit_date": "orbit_fit_label",
+                "adapter_receipt": "fetched_at",
+                "discovery": "discovery_evidence",
+            }
+            for e in items:
+                role = e["role"]
+                if role in ("first_observation", "last_observation"):
+                    native = (s["native_observation_window"].get(role) or {}).get(
+                        "value"
+                    )
+                    suffix = (
+                        "native_observation_window/" + role + "/value"
+                        if native is not None
+                        else role
+                    )
+                else:
+                    suffix = fields[role]
+                e["reference"] = base + "/" + suffix
+        events.extend(items)
     discovery = [
         e for e in events if e["role"] == "discovery" and e["status"] == "available"
     ]
@@ -425,7 +463,7 @@ def build_chronology(designation, sources=(), ledger_records=(), legacy_dates=No
     selected = discovery[0] if len(unique) == 1 else None
     receipts = []
     last_sequence = 0
-    for r in ledger_records:
+    for record_index, r in enumerate(ledger_records):
         if not isinstance(r, dict) or set(r) != {
             "sequence",
             "recorded_at",
@@ -445,7 +483,11 @@ def build_chronology(designation, sources=(), ledger_records=(), legacy_dates=No
                 "ledger_receipt",
                 r["recorded_at"],
                 "local evidence ledger",
-                r["reference"] + "/recorded_at",
+                (
+                    f"/inputs/ledger_records/{record_index}/recorded_at"
+                    if reference_scope == "compact_inputs_v1"
+                    else r["reference"] + "/recorded_at"
+                ),
                 ledger=True,
             )
         )
@@ -512,6 +554,9 @@ def build_chronology(designation, sources=(), ledger_records=(), legacy_dates=No
             "Consistency/replay does not authenticate sources, verify clock synchronization or establish scientific readiness.",
         ],
     }
+    if reference_scope is not None:
+        result["reference_scope"] = "chronology_input_json_pointers"
+        result["inputs"]["reference_scope"] = reference_scope
     result["chronology_id"] = fingerprint(result)
     return result
 
@@ -520,7 +565,12 @@ def verify_chronology(document):
     if not isinstance(document, dict) or document.get("schema_version") != SCHEMA:
         raise ValueError("Unsupported chronology")
     try:
-        actual = build_chronology(**document["inputs"])
+        inputs = clone(document["inputs"])
+        if "reference_scope" not in inputs:
+            inputs["reference_scope"] = (
+                None  # Explicit compatibility replay, not the new-builder default.
+            )
+        actual = build_chronology(**inputs)
     except (KeyError, TypeError, AttributeError) as exc:
         raise ValueError("Invalid chronology") from exc
     if actual != document:
@@ -556,4 +606,32 @@ def build_object_chronology(snapshot):
                     "/source_snapshot/evidence_metadata/source_solutions/" + name,
                 )
             )
-    return build_chronology(snapshot["designation"], sources)
+    return build_chronology(
+        snapshot["designation"], sources, reference_scope="compact_inputs_v1"
+    )
+
+
+def resolve_chronology_reference(document, reference):
+    """Resolve a checked compact-input pointer, never a filesystem or network path."""
+    verified = verify_chronology(document)
+    if (
+        verified.get("reference_scope") != "chronology_input_json_pointers"
+        or not isinstance(reference, str)
+        or not reference.startswith("/inputs/")
+    ):
+        raise ValueError("Not a compact chronology input pointer")
+    value = verified
+    try:
+        for token in reference.split("/")[1:]:
+            if re.search(r"~(?![01])", token):
+                raise ValueError("Invalid JSON pointer escape")
+            token = token.replace("~1", "/").replace("~0", "~")
+            if isinstance(value, list):
+                if not re.fullmatch(r"0|[1-9][0-9]*", token):
+                    raise ValueError("Invalid JSON pointer array index")
+                value = value[int(token)]
+            else:
+                value = value[token]
+    except (KeyError, IndexError, ValueError, TypeError) as exc:
+        raise ValueError("Unresolvable chronology input pointer") from exc
+    return clone(value)

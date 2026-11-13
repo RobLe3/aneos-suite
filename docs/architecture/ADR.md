@@ -3005,3 +3005,9 @@ remain replayable; additional rendered chronology derives from their frozen inpu
 Partition new acquisition caches by normalization revision without rewriting history.
 Add a 90% chronology component gate; retain every existing quality gate. The separate
 legacy freshness-polling defects remain #66/#40, and scientific readiness remains open.
+
+ADR-088 clarification (#68): current date-event pointers resolve inside preserved
+chronology inputs, while original snapshot locators remain context references.
+Reconciliation metadata is not assumed to exist at the snapshot root. Old context-
+reference reports retain replay/IDs with a limitation label; no silent history rewrite
+or external path resolution. This does not add another context or scientific model.

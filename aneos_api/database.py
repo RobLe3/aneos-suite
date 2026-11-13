@@ -697,16 +697,15 @@ class EnrichedNEOService:
         chronology = build_chronology(designation, sources,
             [{'sequence': r['sequence'], 'recorded_at': r['recorded_at'],
               'assertion_id': r['assertion_id'], 'kind': r['kind'], 'reference': f'/evidence_history/{i}'}
-             for i, r in enumerate(history)], legacy_dates)
+             for i, r in enumerate(history)], legacy_dates, reference_scope='compact_inputs_v1')
         data['chronology'] = chronology
         data['first_ledger_recorded_at'] = chronology['local_receipts']['first_ledger_recorded_at']
         data['last_ledger_recorded_at'] = chronology['local_receipts']['last_ledger_recorded_at']
         choice = chronology['discovery']['selected']
         data['discovery_date'] = choice['value'] if choice else None
         data['legacy_discovery_data'] = data['discovery_data']
-        data['discovery_data'] = next((s['discovery_evidence']['native'] for s in sources
-            if choice and s['discovery_evidence'] and s['discovery_evidence']['status'] == 'available'
-            and s['reference'] + '/evidence_metadata/discovery_evidence' == choice['reference']), None)
+        from aneos_core.data.chronology import resolve_chronology_reference
+        data['discovery_data'] = resolve_chronology_reference(chronology, choice['reference'])['native'] if choice else None
         data['deprecated_timestamp_fields'] = {
             'first_discovered': 'Not a trustworthy discovery timestamp; use sourced discovery_date/chronology. Legacy values are retained, not silently reinterpreted.',
             'last_updated': 'Use last_ledger_recorded_at for a verified local receipt, not the last scientific observation. Compatibility values remain in chronology.'}
