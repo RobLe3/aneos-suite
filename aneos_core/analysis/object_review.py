@@ -84,7 +84,7 @@ def _inventory(snapshot):
     minimum=[r for r in rows if r['key'] in ('semi_major_axis','eccentricity','inclination')]
     ng=snapshot.get('nongrav')
     ng_report=NonGravitationalParameters.from_dict(ng).evidence_report() if ng else None
-    raw_physical=[];identities=[]
+    raw_physical=[];identities=[];normalized_physical=[]
     solutions=meta.get('source_solutions') or {}
     if not isinstance(solutions,dict):raise ValueError('Invalid source solution inventory')
     # Older single-source records may place the raw measurements at top level.
@@ -95,6 +95,10 @@ def _inventory(snapshot):
         for i,measurement in enumerate(record.get('physical_measurements') or []):
             raw_physical.append({'source':name,'record':_copy(measurement),'reference':root+f'/physical_measurements/{i}',
                                  'status':'raw_not_normalized_or_reconciled'})
+        if record.get('physical_evidence') is not None:
+            from aneos_core.data.physical_evidence import verify_physical_evidence
+            normalized_physical.append({'source':name,'evidence':verify_physical_evidence(record['physical_evidence']),
+                'reference':root+'/physical_evidence'})
         solution=record.get('solution') or {}
         if solution:
             identities.append({'source':name,'solution':_copy(solution),'reference':root+'/solution',
@@ -105,7 +109,7 @@ def _inventory(snapshot):
             'epoch_jd_tdb':ca.get('epoch_jd_tdb'),'time_scale':ca.get('time_scale'),
             'calendar_literal':ca.get('native_calendar') or ca.get('cd'),'body':ca.get('body'),
             'basis':'computed_encounter','reference':f'/source_snapshot/close_approaches/{i}'})
-    return {'schema_version':'object-field-inventory-v1','designation':snapshot['designation'],
+    inventory={'schema_version':'object-field-inventory-v1','designation':snapshot['designation'],
         'source_snapshot':_copy(snapshot),'source_id':_hash(snapshot),'measurements':rows,
         'coverage':{
             'profile_id':'basic-catalogue-presence-15-v1',
@@ -120,6 +124,10 @@ def _inventory(snapshot):
         'query_coverage':_copy({k:meta[k] for k in ('close_approach_query','historical_query_evidence') if k in meta}),
         'typed_physical_uncertainty_fields':_copy({k:v for k,v in (snapshot.get('physical_properties') or {}).items() if 'uncertainty' in k}),
         'uncertainty_note':'Scalar-model uncertainty fields and raw assertions are retained; unit/measurement reconciliation is not inferred.'}
+    if normalized_physical:
+        inventory['physical_measurement_evidence']=normalized_physical
+        inventory['physical_selection']=_copy(meta.get('physical_selection',{}))
+    return inventory
 
 
 def build_data_inventory(neo):
@@ -281,6 +289,8 @@ def render_object_review(review,*,console=None,verbose=True):
         items.extend([trace if review['ranking_trace']['terms'] else Text('Ranking decomposition unavailable: no supported terms.'),Text('')])
     items.append(Text('Evidence-grounded explanation',style='bold cyan'))
     for insight in review['insights']:items.extend([Text(insight['text']),Text('')])
+    if review['inventory'] and review['inventory'].get('physical_measurement_evidence'):
+        items.extend([Text('Atomic physical assertions',style='bold cyan'),Text(_physical_inventory_text(review['inventory']))])
     if review['inventory'] and review['inventory']['non_gravitational']:
         ng=Table(title='Non-gravitational coefficient inventory — not thrust',expand=True)
         for label in ('Axis','Native coefficient ± uncertainty','Units / estimation'):ng.add_column(label,overflow='fold')
@@ -306,11 +316,33 @@ def object_review_markdown(review,*,verbose=True):
         lines+=['## Recorded data','| Field | Value | Units / status |','| --- | --- | --- |']
         for row in review['inventory']['measurements']:
             lines.append('| '+' | '.join(_cell(v) for v in (row['label'],_measurement_value(row),row['units']+'; '+row['status']))+' |')
+    if review['inventory'] and review['inventory'].get('physical_measurement_evidence'):
+        lines+=['','## Atomic physical assertions',_physical_inventory_text(review['inventory'])]
     lines+=['','## Explanation']
     for item in review['insights']:lines.extend([item['text'],'References: '+', '.join(item['references']),''])
     lines+=['## Follow-up and limits']+['- '+s for s in review['follow_up']+review['limitations']]
     if verbose:lines+=['','## Complete unrounded review','```json',json.dumps(review,indent=2,allow_nan=False),'```']
     return '\n'.join(lines)+'\n'
+
+
+def _physical_inventory_text(inventory):
+    lines=[]
+    for registration in inventory.get('physical_measurement_evidence',[]):
+        evidence=registration['evidence']
+        for index,record in enumerate(evidence['records']):
+            native=record['native'];n=record['normalized']
+            text=f"{literal(native['name'])}: "
+            if n:
+                text+=f"{number(n['value'])} ± {number(n['sigma'])} {literal(n['units'])}; {n['uncertainty_kind']}"
+            else:text+='not normalized; '+', '.join(record['issues'])
+            text+=f"; ref: {literal(native.get('ref') or 'not available')}"
+            duplicate=evidence['duplicate_records'].get(str(index))
+            if duplicate is not None:text+=f'; duplicate of record {duplicate}, not additional evidence'
+            lines.append(text)
+        for field,choice in evidence['selection'].items():
+            if choice['status']!='selected':lines.append(f"{field}: {choice['status']} — no scalar selection from this source.")
+    if lines:lines.append('Catalogue assertions, not independently verified measurements. Physical measurement epoch: not available; retrieval/container orbit dates are not measurement dates.')
+    return '\n'.join(lines)
 
 
 def _nongrav_inventory_text(inventory):
@@ -337,6 +369,7 @@ def render_data_inventory(inventory,*,console=None):
         print(literal(title))
         print(f"Basic catalogue field presence {basic['present']}/{basic['required']}; not total completeness or scientific readiness.")
         for row in actual['measurements']:print(f"{row['label']}: {_measurement_value(row)} {row['units']} [{row['status']}]")
+        if actual.get('physical_measurement_evidence'):print(_physical_inventory_text(actual))
         print(_nongrav_inventory_text(actual))
         print('Overall completeness and source coverage: not established.');return
     from rich.console import Group
@@ -347,5 +380,5 @@ def render_data_inventory(inventory,*,console=None):
     for label in ('Field','Recorded value','Units / status'):table.add_column(label,overflow='fold')
     for row in actual['measurements']:table.add_row(Text(row['label']),Text(_measurement_value(row)),Text(row['units']+'; '+row['status']))
     console.print(Panel(Group(Text(f"Basic catalogue field presence {basic['present']}/{basic['required']}; not total completeness or readiness."),
-        table,Text(_nongrav_inventory_text(actual)),Text('Overall completeness and source coverage: not established. Native solutions/uncertainties remain in the JSON.')),
+        table,Text(_physical_inventory_text(actual)),Text(_nongrav_inventory_text(actual)),Text('Overall completeness and source coverage: not established. Native solutions/uncertainties remain in the JSON.')),
         title=Text(literal(title)),border_style='blue'))

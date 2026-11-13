@@ -2716,3 +2716,42 @@ flat significance/origin claims and use exclusive creation. Legacy exports remai
 labeled unverified. Pipeline-specific views, historical SQL playback, all other
 entrypoints, durable evidence enrichment and physical-model inference are not certified
 by this change. See `docs/engineering/evidence-bound-object-detail.md` and #40–#43.
+
+### ADR-081: Atomic physical catalogue assertions and paired source selection
+
+**Status**: Implemented for SBDB acquisition, common merge/cache/analysis and canonical
+object details; broader measurement modelling/enrichment pending.
+**Date**: 2026-11-13
+
+SBDB physical values previously lost their uncertainties in the typed adapter. The
+common merge could independently select a value from one source and an uncertainty
+from another, including when rounded values happened to match. A scalar global
+reference could then imply one provenance for a mixed-source object.
+
+Use `physical-evidence-v1` assertions in existing NEO evidence metadata: unmodified
+native parameter, units, sigma syntax, reference/notes and response context plus an
+explicit normalized projection. JPL documents phys_par sigma as1-sigma. Only supported
+numeric/unit forms are normalized. Missing sigma is not zero; unsupported intervals
+stay native with an explicit issue. H sigma remains in the assertion even though the
+legacy scalar model has no H-uncertainty field. Retrieval and container orbit dates
+must not become physical measurement epochs. Estimation status remains not provided.
+
+Select each value/uncertainty pair atomically by existing provider priority. Preserve
+all source projections, references and alternatives. Do not fill a missing primary
+uncertainty from a secondary source, or imply that equal rounded values prove common
+measurement identity. Duplicate native assertions are marked, not independent evidence;
+nonidentical same-parameter alternatives cause scalar abstention within that source.
+No averaging or uncertainty-weighted origin inference is introduced.
+
+Replay normalization and projection on reconstruction/analysis; hashes are consistency
+checks, not independent source authentication. Version the fetch-cache key so new
+queries cannot silently reuse old unpaired projections; do not delete, migrate or
+relabel historical cache/research data. Legacy snapshots remain available but unverified.
+Canonical details expose normalized assertions with their uncertainty convention.
+Existing historical reviews without the optional new evidence inventory remain valid.
+
+Geometric albedo is not a probability and may exceed one. Preserve finite nonnegative
+catalogue albedo rather than clipping it to[0,1]; Bond-albedo/reflectivity conventions
+must remain distinct in future physical models. This correction changes admissible
+input domain, not the ranking formula, thresholds or calibration claims. See the
+primary sources and execution limits in `docs/engineering/atomic-physical-evidence.md`.

@@ -16,6 +16,7 @@ except ImportError:
 import json
 import logging
 import copy
+import math
 from .orbit_evidence import OrbitModelParameter, OrbitalCovariance, AU_DAY2_TO_M_S2, finite_number
 from pathlib import Path
 
@@ -392,6 +393,9 @@ class NEOData:
         if self.orbital_elements:
             self.completeness = self.orbital_elements.completeness_score()
         
+        from .physical_evidence import verify_neo_physical
+        verify_neo_physical(self)
+
         # Predicted encounters are not observations of the fitted orbit.
         # Only source first_obs/last_obs may establish the observation arc.
 
@@ -613,8 +617,8 @@ class PhysicalProperties:
                 errors.append(f"Density {self.density_g_cm3} g/cm³ must be positive")
         
         if self.albedo is not None:
-            if not (0 <= self.albedo <= 1):
-                errors.append(f"Albedo {self.albedo} outside valid range [0, 1]")
+            if not math.isfinite(self.albedo) or self.albedo < 0:
+                errors.append(f"Albedo {self.albedo} must be finite and nonnegative")
         
         if self.rotation_period_hours is not None:
             if self.rotation_period_hours <= 0:

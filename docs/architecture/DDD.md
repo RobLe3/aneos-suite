@@ -1350,3 +1350,18 @@ research-case lifecycle, a physical fit, or independent calibration. Coverage pr
 have frozen named denominators and describe presence only. Full acquisition coverage
 and operation-specific scientific readiness remain separate, currently unavailable
 outputs. Existing source/domain and research boundaries remain unchanged.
+
+## Atomic physical assertions — 2026-11-13 / ADR-081
+
+Acquisition owns native catalogue assertions and documented normalization. The common
+reconciler owns priority selection of value/uncertainty pairs and preservation of all
+source snapshots; it does not decide physical origin or average incompatible solutions.
+NEO metadata carries the versioned contract through cache/export/report reconstruction.
+Analysis validates projection consistency before consuming scalar compatibility fields.
+Presentation explains the selected/ambiguous/unavailable status. Physical fitting must
+separately establish uncertainty convention, observation epoch, covariance/dependencies
+and source comparability. A global reference cannot describe a mixed-source object;
+per-selection references remain authoritative only as catalogue assertions. No new
+bounded context, independent detector or database migration is required for this fix.
+Full multi-source object-ledger/history/pollability (#40), alternative spin coordinate
+models, observation likelihoods and calibrated uncertainty use remain unimplemented.

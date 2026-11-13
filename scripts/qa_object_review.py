@@ -15,7 +15,9 @@ from aneos_core.data.models import NEOData,OrbitalElements,PhysicalProperties
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',required=True)
-    directory=Path(parser.parse_args().output);directory.mkdir(parents=True,exist_ok=False)
+    parser.add_argument('--physical-cases',action='store_true',help='Use provider-shaped atomic physical assertion controls')
+    args=parser.parse_args()
+    directory=Path(args.output);directory.mkdir(parents=True,exist_ok=False)
     cases={
         'small':NEOData(designation='SYNTHETIC small-body illustration',orbital_elements=OrbitalElements(
             semi_major_axis=1.23,eccentricity=.2,inclination=1.49,ra_of_ascending_node=0.,arg_of_periapsis=0.,mean_anomaly=0.),
@@ -24,6 +26,25 @@ def main():
         'candidate':NEOData(designation='SYNTHETIC follow-up control',orbital_elements=OrbitalElements(
             semi_major_axis=1.,eccentricity=.2,inclination=180.),sources_used=['synthetic-control']),
         'missing':NEOData(designation='SYNTHETIC missing-data control')}
+    if args.physical_cases:
+        import logging
+        from aneos_core.data.sources.sbdb import SBDBSource
+        from aneos_core.config.settings import APIConfig
+        from aneos_core.data.fetcher import DataFetcher
+        raw={'name':'diameter','value':'11','sigma':'2','units':'m','ref':'SYNTHETIC study'}
+        cases={}
+        for label,records in [('selected',[raw]),('ambiguous',[raw,dict(raw,value='20',ref='SYNTHETIC alternative')]),
+                              ('units-unavailable',[dict(raw,units=None)])]:
+            name='SYNTHETIC atomic '+label
+            payload={'signature':{'version':'1.3','source':'synthetic contract control'},'object':{'des':name},
+                'orbit':{'orbit_id':'synthetic-orbit','epoch':'2461200.5','model_pars':[],
+                    'elements':[{'name':k,'value':v} for k,v in [('a','1.2'),('e','.2'),('i','1.49')]]},'phys_par':records}
+            parsed=SBDBSource(APIConfig())._parse_sbdb_response(payload,name)
+            class SyntheticSource:
+                def fetch_orbital_elements(self,designation):return parsed
+            fetcher=DataFetcher.__new__(DataFetcher);fetcher.logger=logging.getLogger('qa-synthetic')
+            cases[label]=fetcher._fetch_from_source('SBDB',SyntheticSource(),name)
+            if cases[label] is None:raise ValueError('Synthetic control failed acquisition')
     class View:
         def __init__(self,review):self.review=review
         def _print_banner(self):render_object_review(self.review,console=self.console)
@@ -39,7 +60,8 @@ def main():
     files={p.name:sha256(p.read_bytes()).hexdigest() for p in directory.iterdir() if p.is_file()}
     (directory/'inventory.json').write_text(json.dumps({'schema_version':'object-detail-qa-v1',
         'cases':inventory,'artifact_sha256':files,'source_sha256':{p:sha256((ROOT/p).read_bytes()).hexdigest()
-            for p in ['aneos_core/analysis/object_review.py','aneos_core/analysis/screening.py','scripts/qa_object_review.py']},
+            for p in (['aneos_core/analysis/object_review.py','aneos_core/analysis/screening.py','scripts/qa_object_review.py']+
+                (['aneos_core/data/physical_evidence.py','aneos_core/data/models.py','aneos_core/data/fetcher.py','aneos_core/data/sources/sbdb.py'] if args.physical_cases else []))},
         'limits':'Synthetic illustrative controls only; no source acquisition, independent calibration, physical fits or all-menu certification.'},indent=2)+'\n')
     print(directory)
 if __name__=='__main__':main()

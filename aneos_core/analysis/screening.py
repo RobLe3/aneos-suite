@@ -140,6 +140,8 @@ class ScreeningAnalysisService:
         self.detector = detector
 
     def analyze_neo(self, neo: NEOData, additional_data=None):
+        from aneos_core.data.physical_evidence import verify_neo_physical
+        verify_neo_physical(neo)
         oe = neo.orbital_elements
         orbital = {} if oe is None else {'a': oe.semi_major_axis, 'e': oe.eccentricity, 'i': oe.inclination}
         physical = {}
@@ -192,8 +194,8 @@ class ScreeningAnalysisService:
                 raise ValueError(f'{key} must be finite')
         if 'diameter' in phys and phys['diameter'] <= 0:
             raise ValueError('diameter must be positive; missing is null, not zero')
-        if 'albedo' in phys and not 0 <= phys['albedo'] <= 1:
-            raise ValueError('albedo must be in [0,1]')
+        if 'albedo' in phys and phys['albedo'] < 0:
+            raise ValueError('albedo must be nonnegative; geometric albedo is not a probability')
         extra = {k: v for k, v in (additional_data or {}).items() if v is not None}
         snapshot = {'schema_version': 'screening-evidence-v1', 'designation': designation,
                     'orbital': orbit, 'physical': phys, 'additional': extra,

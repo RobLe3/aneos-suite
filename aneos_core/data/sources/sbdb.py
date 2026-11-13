@@ -113,30 +113,8 @@ class SBDBSource(HTTPDataSource):
                     except (ValueError, TypeError) as e:
                         logger.warning(f"Error parsing {sbdb_name}='{value}' for {designation}: {e}")
 
-        # Extract physical parameters (list of {name, value, ...} dicts → convert to dict)
-        phys_list = data.get("phys_par", [])
-        phys_par = {p["name"]: p.get("value") for p in phys_list if p.get("value") is not None}
-
-        # Build physical sub-dict for PhysicalProperties construction
-        physical_data: Dict[str, Any] = {}
-        for float_field in ("diameter", "albedo", "rot_per"):
-            if float_field in phys_par:
-                try:
-                    physical_data[float_field] = float(phys_par[float_field])
-                except (ValueError, TypeError):
-                    pass
-
-        if "spec_T" in phys_par:
-            physical_data["spectral_type"] = str(phys_par["spec_T"])
-
-        if "H" in phys_par:
-            try:
-                physical_data["absolute_magnitude_h"] = float(phys_par["H"])
-            except (ValueError, TypeError):
-                pass
-
-        # Store physical data separately for consumers that use NEOData.physical_properties
-        orbital_data["_physical"] = physical_data
+        # Native physical assertions are normalized only after response context exists.
+        phys_list = data.get('phys_par', [])
 
         orbit_section = data.get('orbit', {})
         if not isinstance(orbit_section, dict):
@@ -189,13 +167,26 @@ class SBDBSource(HTTPDataSource):
             orbital_data['_nongrav'] = ng.to_dict()
         else:
             orbital_data['_nongrav'] = None
+        from ..physical_evidence import build_sbdb_evidence, physical_projection
+        physical_evidence=build_sbdb_evidence(phys_list,{
+            'object':copy.deepcopy(data.get('object',{})),
+            'retrieved_at':solution['retrieved_at'],
+            'response_sha256':solution['canonical_response_sha256'],
+            'container_orbit_id':solution['orbit_id'],
+            'container_orbit_epoch_jd_tdb':solution['epoch_jd_tdb'],
+            'schema_version':signature.get('version'),
+        })
+        projection=physical_projection(physical_evidence)
+        compatibility={'diameter_km':'diameter','rotation_period_hours':'rot_per'}
+        orbital_data['_physical']={compatibility.get(k,k):v for k,v in projection.items()}
         orbital_data['_evidence_metadata'] = {
             'schema_status': 'supported' if signature else 'unverified_missing_signature',
             'signature': copy.deepcopy(signature), 'solution': solution,
             'nongrav_status': 'available' if orbital_data['_nongrav'] else 'not_available',
             'covariance': covariance.to_dict() if covariance else None,
             'model_pars': [parameter.to_dict() for parameter in parameters.values()],
-            'physical_measurements': copy.deepcopy(data.get('phys_par', [])),
+            'physical_measurements': copy.deepcopy(phys_list),
+            'physical_evidence':physical_evidence,
         }
 
         # Observation window (first_obs / last_obs from orbit section)

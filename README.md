@@ -926,3 +926,5 @@ machine-readable inventory. Fifteen feature dispatch routes are checked; detaile
 prerequisite/behavior/result QA remains explicitly pending in #41.
 
 For the canonical V2 object-detail scope and its limits, see [evidence-bound object details](docs/engineering/evidence-bound-object-detail.md).
+
+Physical source normalization, paired uncertainty and compatibility limits: [atomic physical evidence](docs/engineering/atomic-physical-evidence.md).

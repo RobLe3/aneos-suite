@@ -1,0 +1,88 @@
+╭───────────────────────────────────── Object review — SYNTHETIC atomic selected ──────────────────────────────────────╮
+│                                                                                                                      │
+│ Screening classification                                                                                             │
+│ NOT_FLAGGED                                                                                                          │
+│                                                                                                                      │
+│ Interpretation                                                                                                       │
+│ Uncalibrated rank 3.3661271244322752 is below policy threshold 5.0 ranking units. This does not establish a natural  │
+│ origin or a perfectly normal object.                                                                                 │
+│                                                                                                                      │
+│ Scientific status                                                                                                    │
+│ not independently validated; significance and origin probability unavailable                                         │
+│                                                                                                                      │
+│ Evidence binding                                                                                                     │
+│ Review ID: d1b44630bb359805597fdf2fcf3b9e5e7fc1fe72e2efaeba8b060f1e853582be                                          │
+│ Evidence ID: 173351fec87bb225205547fb3f3cf25347f63ab52611f5e19957002bc5fbd5e9                                        │
+│ Policy ID: 7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37                                          │
+│                                                                                                                      │
+│ Data coverage                                                                                                        │
+│ Basic catalogue field presence: 5/15 (declared 15-field profile only).                                               │
+│ Screening orbital fields present: 3/3; domain eligibility is separate.                                               │
+│ Overall data completeness: not established. Eligible source coverage: not established.                               │
+│                                                                                                                      │
+│                                               Recorded catalogue data                                                │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Field                ┃ Recorded value / display conversion         ┃ Units / status                              ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis      │ 1.2                                         │ AU; present                                 │ │
+│ │ Eccentricity         │ 0.2                                         │ dimensionless; present                      │ │
+│ │ Inclination          │ 1.49                                        │ degrees; present                            │ │
+│ │ Ascending node       │ not available                               │ degrees; not_available                      │ │
+│ │ Periapsis argument   │ not available                               │ degrees; not_available                      │ │
+│ │ Mean anomaly         │ not available                               │ degrees; not_available                      │ │
+│ │ Orbit epoch          │ not available                               │ model timestamp; native solution retained;  │ │
+│ │                      │                                             │ not_available                               │ │
+│ │ Diameter             │ 0.011 (~11 m)                               │ km; present                                 │ │
+│ │ Absolute magnitude H │ not available                               │ mag; not_available                          │ │
+│ │ Albedo               │ not available                               │ dimensionless; not_available                │ │
+│ │ Spectral label       │ not available                               │ catalogue label; not_available              │ │
+│ │ Rotation period      │ not available                               │ h; not_available                            │ │
+│ │ First observation    │ not available                               │ catalogue timestamp; source precision       │ │
+│ │                      │                                             │ retained; not_available                     │ │
+│ │ Last observation     │ not available                               │ catalogue timestamp; source precision       │ │
+│ │                      │                                             │ retained; not_available                     │ │
+│ │ Retrieved at         │ 2026-11-13T01:16:47.373003+00:00; offset    │ retrieval timestamp; present                │ │
+│ │                      │ recorded not time scale conversion          │                                             │ │
+│ └──────────────────────┴─────────────────────────────────────────────┴─────────────────────────────────────────────┘ │
+│                                                                                                                      │
+│                                  Squared-ranking decomposition — not probabilities                                   │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Proxy channel           ┃ Effect / weight               ┃ Weighted square / share                                ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ orbital_dynamics        │ 2.66028616 / 1                │ 7.07712247; 62.5% of squared rank ━━━━━━━━━━━━         │ │
+│ │ physical_properties     │ 3.57226371 / 0.333333333      │ 4.25368934; 37.5% of squared rank ━━━━━━━━             │ │
+│ └─────────────────────────┴───────────────────────────────┴────────────────────────────────────────────────────────┘ │
+│                                                                                                                      │
+│ Evidence-grounded explanation                                                                                        │
+│ The rank uses fixed global prototype reference parameters, not a size/survey-conditioned population or calibrated    │
+│ null. Its proxy channels are not independent observations.                                                           │
+│                                                                                                                      │
+│ A hand-set inclination enhancement was applied to the orbital proxy. This is an algorithm assumption, not origin     │
+│ evidence.                                                                                                            │
+│                                                                                                                      │
+│ The supplied diameter 11.0 m is smaller than the legacy reference centre 800.0 m. The physical proxy compares        │
+│ diameter in log space; this prototype comparison is not origin evidence.                                             │
+│                                                                                                                      │
+│ Diameter, absolute magnitude and albedo have physical dependencies. Their availability is not three independent      │
+│ pieces of origin evidence; recorded albedo is not independently scored by the current physical proxy.                │
+│                                                                                                                      │
+│ The largest squared-ranking term is orbital_dynamics. This is a decomposition of the heuristic, not the strongest    │
+│ physical evidence or a probability.                                                                                  │
+│                                                                                                                      │
+│ The displayed profile counts recorded fields, not complete knowledge or verified source coverage. Missing physical   │
+│ uncertainties, observations and unresolved sources still limit scientific use.                                       │
+│                                                                                                                      │
+│ Atomic physical assertions                                                                                           │
+│ diameter: 0.011 ± 0.002 km; provider_1sigma; ref: SYNTHETIC study                                                    │
+│ Catalogue assertions, not independently verified measurements. Physical measurement epoch: not available;            │
+│ retrieval/container orbit dates are not measurement dates.                                                           │
+│ Follow-up and limits                                                                                                 │
+│ • Verify source identity, dated measurements, required uncertainty and compatible solutions.                         │
+│ • Use fitted natural/human-technology/artifact comparisons and withheld observations before physical-origin          │
+│ inference.                                                                                                           │
+│ • Independent population calibration and search-wide error control are required before significance claims.          │
+│ • Binding/replay verifies consistency, not source authenticity or measurement accuracy.                              │
+│ • No natural/artificial origin, calibrated probability or five-sigma result is supplied.                             │
+│ • Complete local enrichment and scientific operation readiness remain separate requirements.                         │
+│                                                                                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

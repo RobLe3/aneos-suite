@@ -109,7 +109,7 @@ class DataFetcher:
         self.fetch_stats["total_requests"] += 1
         
         # Check cache first
-        cache_key = f"neo_data:{designation}"
+        cache_key = f"neo_data:atomic-physical-v1:{designation}"
         if not force_refresh:
             cached_data = self.cache_manager.get(cache_key)
             if cached_data:
@@ -183,34 +183,71 @@ class DataFetcher:
         conflicts = {}
         if merged.nongrav is not None:
             provenance["nongrav"] = primary
+        # Value/uncertainty are one selection unit. Missing primary uncertainty
+        # must not be filled from a different provider, even if values round equal.
+        from .models import PhysicalProperties
+        paired={'diameter_km':'diameter_uncertainty','albedo':'albedo_uncertainty',
+                'rotation_period_hours':'rotation_period_uncertainty'}
+        uncertainty_fields=set(paired.values())
+        global_metadata={'reference_source','measurement_method','data_quality_flag'}
+        selection={};snapshots={}
+        merged.physical_properties=PhysicalProperties()
         for name in order:
-            source = results[name]
-            if name != primary and source.orbital_elements.to_dict() != merged.orbital_elements.to_dict():
-                conflicts[f"orbital_elements:{name}"] = source.orbital_elements.to_dict()
-            pp = source.physical_properties
-            if pp is None:
-                continue
-            if merged.physical_properties is None:
-                merged.physical_properties = copy.deepcopy(pp)
+            source=results[name]
+            if source.designation!=merged.designation:
+                raise ValueError('Cannot reconcile different object designations')
+            if name!=primary and source.orbital_elements.to_dict()!=merged.orbital_elements.to_dict():
+                conflicts[f'orbital_elements:{name}']=source.orbital_elements.to_dict()
+            pp=source.physical_properties
+            snapshots[name]={'physical_properties':copy.deepcopy(pp.to_dict()) if pp else None,
+                'source_metadata':copy.deepcopy(source.evidence_metadata)}
+            if pp is None:continue
             for item in fields(pp):
-                value = getattr(pp, item.name)
-                if value is None:
-                    continue
-                key = f"physical_properties.{item.name}"
-                current = getattr(merged.physical_properties, item.name)
-                if current is None:
-                    setattr(merged.physical_properties, item.name, value)
-                    provenance[key] = name
-                elif key not in provenance:
-                    provenance[key] = name
-                elif current != value:
-                    conflicts[f"{key}:{name}"] = value
+                field=item.name;value=getattr(pp,field)
+                if field in uncertainty_fields or field in global_metadata:continue
+                if value is None or (field=='color_indices' and not value):continue
+                key=f'physical_properties.{field}'
+                if field not in selection:
+                    setattr(merged.physical_properties,field,copy.deepcopy(value))
+                    sigma_field=paired.get(field)
+                    if sigma_field:
+                        setattr(merged.physical_properties,sigma_field,getattr(pp,sigma_field))
+                        if getattr(pp,sigma_field) is not None:provenance[f'physical_properties.{sigma_field}']=name
+                    selection[field]={'source':name,'value':copy.deepcopy(value),
+                        'uncertainty_field':sigma_field,
+                        'uncertainty':getattr(pp,sigma_field) if sigma_field else None,
+                        'reference_source':pp.reference_source,'measurement_method':pp.measurement_method,
+                        'basis':'source_projection_not_independently_verified'}
+                    atomic=source.evidence_metadata.get('physical_evidence')
+                    if atomic:
+                        from .physical_evidence import verify_physical_evidence,physical_projection
+                        atomic=verify_physical_evidence(atomic)
+                        projected=physical_projection(atomic)
+                        if field in projected:
+                            if value!=projected[field] or (sigma_field and getattr(pp,sigma_field)!=projected.get(sigma_field)):
+                                raise ValueError('Physical projection differs from atomic measurement')
+                            selected=atomic['selection'][field]['selected_index']
+                            selection[field]['assertion_id']=atomic['records'][selected]['assertion_id']
+                            selection[field]['basis']='normalized_catalogue_assertion'
+                    provenance[key]=name
+                elif value!=getattr(merged.physical_properties,field) or (field in paired and
+                    getattr(pp,paired[field])!=getattr(merged.physical_properties,paired[field])):
+                    conflicts[f'{key}:{name}']={'value':copy.deepcopy(value),
+                        'uncertainty':getattr(pp,paired[field]) if field in paired else None,
+                        'reference_source':pp.reference_source,'measurement_method':pp.measurement_method}
+        # Global reference fields cannot truthfully describe a mixed-source object.
+        # Their original values remain in each atomic selection/source snapshot.
+        if not selection:merged.physical_properties=None
         merged.evidence_metadata = {
             "schema_version": "source-reconciliation-v1",
             "field_sources": provenance,
             "source_solutions": {name: copy.deepcopy(results[name].evidence_metadata) for name in order},
             "conflicts": conflicts,
+            "physical_selection":selection,
+            "physical_source_snapshots":snapshots,
         }
+        from .physical_evidence import verify_neo_physical
+        verify_neo_physical(merged)
         return merged
 
     def _fetch_close_approaches(self, designation: str, date_min: str = "now", date_max: Optional[str] = None) -> List:
@@ -300,18 +337,28 @@ class DataFetcher:
 
                 # Build PhysicalProperties from the _physical sub-dict if present
                 phys_raw = orbital_elements_data.get("_physical", {})
+                if orbital_elements_data.get('_evidence_metadata',{}).get('physical_evidence') is not None:
+                    from .physical_evidence import physical_projection
+                    projected=physical_projection(orbital_elements_data['_evidence_metadata']['physical_evidence'])
+                    compatibility={'diameter_km':'diameter','rotation_period_hours':'rot_per'}
+                    if {compatibility.get(k,k):v for k,v in projected.items()}!=phys_raw:
+                        raise ValueError('Physical adapter projection does not match its evidence')
                 if phys_raw:
                     from .models import PhysicalProperties
                     try:
                         physical_properties = PhysicalProperties(
                             diameter_km=phys_raw.get("diameter"),
+                            diameter_uncertainty=phys_raw.get("diameter_uncertainty"),
                             albedo=phys_raw.get("albedo"),
+                            albedo_uncertainty=phys_raw.get("albedo_uncertainty"),
                             rotation_period_hours=phys_raw.get("rot_per"),
+                            rotation_period_uncertainty=phys_raw.get("rotation_period_uncertainty"),
                             spectral_type=phys_raw.get("spectral_type"),
+                            spectral_class=phys_raw.get("spectral_class"),
                             absolute_magnitude_h=phys_raw.get("absolute_magnitude_h"),
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        raise ValueError(f'Invalid physical projection: {exc}') from exc
 
                 # Build NonGravitationalParameters from _nongrav sub-dict if present
                 nongrav = None
