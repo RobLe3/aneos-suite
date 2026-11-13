@@ -2755,3 +2755,41 @@ catalogue albedo rather than clipping it to[0,1]; Bond-albedo/reflectivity conve
 must remain distinct in future physical models. This correction changes admissible
 input domain, not the ranking formula, thresholds or calibration claims. See the
 primary sources and execution limits in `docs/engineering/atomic-physical-evidence.md`.
+
+### ADR-082: Native orbital epochs, explicit time scales and bound computed history
+
+**Status**: Implemented for SBDB/Horizons/NEODyS native epoch transport and canonical
+views; physical propagation/time-scale conversion and full source verification pending.
+**Date**: 2026-11-13
+
+A datetime alone cannot express a native TDB orbit epoch or establish its relationship
+to the covariance epoch. SBDB supplied an epoch retained only in solution metadata;
+its absence in the old typed field made the view misleading. Real Horizons history
+headers contain `JD = calendar TDB`; treating every equals-sign line as an element
+also discarded valid computed histories. Sub-float-precision differences could be
+incorrectly declared equal by the old covariance/display epoch comparison.
+
+Add `NativeEpoch` / `native-epoch-v1`, preserving native literal, JD/MJD/calendar
+representation, explicit source time scale, role and optional header. MJD→JD is an
+exact decimal representation offset on the same time scale, not a conversion to UTC.
+Unknown scales remain UNKNOWN; calendar/era conventions are not guessed. Numeric epoch
+equality requires compatible declared scales and is not covariance/frame/solution
+compatibility. Compare retained covariance/display literals without float rounding.
+
+Store the optional record in existing OrbitalElements; omit it from legacy serialization
+when absent. Do not retrofit historical source data or attach TDB to legacy datetimes.
+Bind new SBDB/Horizons typed epochs to retained source solutions at reconstruction and
+analysis. Keep source-priority orbit solutions atomic; never borrow a secondary epoch
+or covariance. Use a new fetch-cache key suffix, leaving earlier cache/history intact.
+
+Parse real Horizons headers before element lines; keep complete rows bound to their
+native computed epoch, not an observation. Reject unbound, duplicate or nonfinite
+values. Preserve older calendar-only headers without invented Julian dates. Carry
+NEODyS MJD/time-scale labels literally; no TDT/TT/TDB inference or conversion.
+
+Views/report exports expose both orbital and covariance epochs, compatible-scale
+numeric comparison, missing scales and non-propagation limits. The15-field presence
+profile becomes v2 only when using a native epoch; old v1 inventories remain replayable.
+Neither profile establishes scientific completeness. No new bounded context/detector,
+calendar conversion service, fitted likelihood, origin conclusion or calibrated sigma
+is introduced. See `docs/engineering/native-orbital-epochs.md` and issues5/40/41/43.

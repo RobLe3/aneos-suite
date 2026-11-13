@@ -1,0 +1,116 @@
+╭─────────────── Object review — SYNTHETIC different-covariance ───────────────╮
+│                                                                              │
+│ Screening classification                                                     │
+│ NOT_FLAGGED                                                                  │
+│                                                                              │
+│ Interpretation                                                               │
+│ Uncalibrated rank 2.660286163971114 is below policy threshold 5.0 ranking    │
+│ units. This does not establish a natural origin or a perfectly normal        │
+│ object.                                                                      │
+│                                                                              │
+│ Scientific status                                                            │
+│ not independently validated; significance and origin probability unavailable │
+│                                                                              │
+│ Evidence binding                                                             │
+│ Review ID: 4d280195a2a2e409bc62331473535c2f8402557b533c32f1587e8cb6a11958df  │
+│ Evidence ID:                                                                 │
+│ d63ad4e6691081bcffdbcbc14f99af7c740528d5c309d47c4f4466a167f99d0b             │
+│ Policy ID: 7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37  │
+│                                                                              │
+│ Data coverage                                                                │
+│ Basic catalogue field presence: 4/15 (declared 15-field profile only).       │
+│ Screening orbital fields present: 3/3; domain eligibility is separate.       │
+│ Overall data completeness: not established. Eligible source coverage: not    │
+│ established.                                                                 │
+│                                                                              │
+│ Epochs and compatibility                                                     │
+│ Orbital element epoch: 2461200.500000001 JD TDB (SYNTHETIC).                 │
+│ Covariance epoch: 2457098.5 JD TDB.                                          │
+│ Epoch values differ; covariance is not propagated to the display epoch.      │
+│ Native times retained; not propagated, converted to UTC or treated as        │
+│ observation dates.                                                           │
+│                                                                              │
+│                           Recorded catalogue data                            │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃                      ┃ Recorded value /        ┃                         ┃ │
+│ ┃ Field                ┃ display conversion      ┃ Units / status          ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis      │ 1.2                     │ AU; present             │ │
+│ │ Eccentricity         │ 0.2                     │ dimensionless; present  │ │
+│ │ Inclination          │ 1.49                    │ degrees; present        │ │
+│ │ Ascending node       │ not available           │ degrees; not_available  │ │
+│ │ Periapsis argument   │ not available           │ degrees; not_available  │ │
+│ │ Mean anomaly         │ not available           │ degrees; not_available  │ │
+│ │ Orbit epoch          │ 2461200.500000001;      │ JD TDB; present         │ │
+│ │                      │ native scale not        │                         │ │
+│ │                      │ converted to UTC        │                         │ │
+│ │ Diameter             │ not available           │ km; not_available       │ │
+│ │ Absolute magnitude H │ not available           │ mag; not_available      │ │
+│ │ Albedo               │ not available           │ dimensionless;          │ │
+│ │                      │                         │ not_available           │ │
+│ │ Spectral label       │ not available           │ catalogue label;        │ │
+│ │                      │                         │ not_available           │ │
+│ │ Rotation period      │ not available           │ h; not_available        │ │
+│ │ First observation    │ not available           │ catalogue timestamp;    │ │
+│ │                      │                         │ source precision        │ │
+│ │                      │                         │ retained; not_available │ │
+│ │ Last observation     │ not available           │ catalogue timestamp;    │ │
+│ │                      │                         │ source precision        │ │
+│ │                      │                         │ retained; not_available │ │
+│ │ Retrieved at         │ not available           │ retrieval timestamp;    │ │
+│ │                      │                         │ not_available           │ │
+│ └──────────────────────┴─────────────────────────┴─────────────────────────┘ │
+│                                                                              │
+│              Squared-ranking decomposition — not probabilities               │
+│ ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Proxy channel    ┃ Effect / weight ┃ Weighted square / share             ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ orbital_dynamics │ 2.66028616 / 1  │ 7.07712247; 100% of squared rank    │ │
+│ │                  │                 │ ━━━━━━━━━━━━━━━━━━━━                │ │
+│ └──────────────────┴─────────────────┴─────────────────────────────────────┘ │
+│                                                                              │
+│ Evidence-grounded explanation                                                │
+│ The rank uses fixed global prototype reference parameters, not a             │
+│ size/survey-conditioned population or calibrated null. Its proxy channels    │
+│ are not independent observations.                                            │
+│                                                                              │
+│ A hand-set inclination enhancement was applied to the orbital proxy. This is │
+│ an algorithm assumption, not origin evidence.                                │
+│                                                                              │
+│ The largest squared-ranking term is orbital_dynamics. This is a              │
+│ decomposition of the heuristic, not the strongest physical evidence or a     │
+│ probability.                                                                 │
+│                                                                              │
+│ Non-gravitational coefficients/uncertainty/covariance are an inventory of    │
+│ orbit-model evidence; no force-model attribution, propulsion detection or    │
+│ temporal correlation is established by this report.                          │
+│                                                                              │
+│ The displayed profile counts recorded fields, not complete knowledge or      │
+│ verified source coverage. Missing physical uncertainties, observations and   │
+│ unresolved sources still limit scientific use.                               │
+│                                                                              │
+│             Non-gravitational coefficient inventory — not thrust             │
+│ ┏━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Axis  ┃ Native coefficient ± uncertainty     ┃ Units / estimation        ┃ │
+│ ┡━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ A1    │ not available ± not available        │ AU/day^2; not_available   │ │
+│ │ A2    │ not available ± not available        │ AU/day^2; not_available   │ │
+│ │ A3    │ not available ± not available        │ AU/day^2; not_available   │ │
+│ └───────┴──────────────────────────────────────┴───────────────────────────┘ │
+│ Covariance/solution labels and native epochs are preserved in the review     │
+│ JSON; do not assume compatible epochs.                                       │
+│ Follow-up and limits                                                         │
+│ • Verify source identity, dated measurements, required uncertainty and       │
+│ compatible solutions.                                                        │
+│ • Use fitted natural/human-technology/artifact comparisons and withheld      │
+│ observations before physical-origin inference.                               │
+│ • Independent population calibration and search-wide error control are       │
+│ required before significance claims.                                         │
+│ • Binding/replay verifies consistency, not source authenticity or            │
+│ measurement accuracy.                                                        │
+│ • No natural/artificial origin, calibrated probability or five-sigma result  │
+│ is supplied.                                                                 │
+│ • Complete local enrichment and scientific operation readiness remain        │
+│ separate requirements.                                                       │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯

@@ -16,7 +16,9 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',required=True)
     parser.add_argument('--physical-cases',action='store_true',help='Use provider-shaped atomic physical assertion controls')
+    parser.add_argument('--epoch-cases',action='store_true',help='Use native epoch and distinct covariance epoch controls')
     args=parser.parse_args()
+    if args.epoch_cases and args.physical_cases:parser.error('Choose one control family')
     directory=Path(args.output);directory.mkdir(parents=True,exist_ok=False)
     cases={
         'small':NEOData(designation='SYNTHETIC small-body illustration',orbital_elements=OrbitalElements(
@@ -45,6 +47,21 @@ def main():
             fetcher=DataFetcher.__new__(DataFetcher);fetcher.logger=logging.getLogger('qa-synthetic')
             cases[label]=fetcher._fetch_from_source('SBDB',SyntheticSource(),name)
             if cases[label] is None:raise ValueError('Synthetic control failed acquisition')
+    if args.epoch_cases:
+        from aneos_core.data.epoch_evidence import NativeEpoch
+        from aneos_core.data.models import NonGravitationalParameters
+        from aneos_core.data.orbit_evidence import OrbitalCovariance
+        cases={}
+        for label,scale in [('native-tdb','TDB'),('unknown-scale','UNKNOWN'),('different-covariance','TDB')]:
+            n=NEOData('SYNTHETIC '+label,orbital_elements=OrbitalElements(
+                semi_major_axis=1.2,eccentricity=.2,inclination=1.49,
+                native_epoch=NativeEpoch('2461200.500000001','JD',scale,'SYNTHETIC')),
+                sources_used=['synthetic-control'])
+            if label=='different-covariance':
+                n.nongrav=NonGravitationalParameters(covariance=OrbitalCovariance(
+                    ['e','q','tp','node','peri','i'],[[1. if i==j else 0. for j in range(6)] for i in range(6)],'2457098.5'),
+                    solution={'epoch_jd_tdb':'2461200.500000001'})
+            cases[label]=n
     class View:
         def __init__(self,review):self.review=review
         def _print_banner(self):render_object_review(self.review,console=self.console)
@@ -61,7 +78,8 @@ def main():
     (directory/'inventory.json').write_text(json.dumps({'schema_version':'object-detail-qa-v1',
         'cases':inventory,'artifact_sha256':files,'source_sha256':{p:sha256((ROOT/p).read_bytes()).hexdigest()
             for p in (['aneos_core/analysis/object_review.py','aneos_core/analysis/screening.py','scripts/qa_object_review.py']+
-                (['aneos_core/data/physical_evidence.py','aneos_core/data/models.py','aneos_core/data/fetcher.py','aneos_core/data/sources/sbdb.py'] if args.physical_cases else []))},
+                (['aneos_core/data/physical_evidence.py','aneos_core/data/models.py','aneos_core/data/fetcher.py','aneos_core/data/sources/sbdb.py'] if args.physical_cases else [])+
+                (['aneos_core/data/epoch_evidence.py','aneos_core/data/models.py','aneos_core/data/sources/sbdb.py','aneos_core/data/sources/horizons.py','aneos_core/data/sources/neodys.py'] if args.epoch_cases else []))},
         'limits':'Synthetic illustrative controls only; no source acquisition, independent calibration, physical fits or all-menu certification.'},indent=2)+'\n')
     print(directory)
 if __name__=='__main__':main()

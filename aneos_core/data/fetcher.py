@@ -109,7 +109,7 @@ class DataFetcher:
         self.fetch_stats["total_requests"] += 1
         
         # Check cache first
-        cache_key = f"neo_data:atomic-physical-v1:{designation}"
+        cache_key = f"neo_data:atomic-physical-v1-native-epoch-v1:{designation}"
         if not force_refresh:
             cached_data = self.cache_manager.get(cache_key)
             if cached_data:
@@ -248,6 +248,8 @@ class DataFetcher:
         }
         from .physical_evidence import verify_neo_physical
         verify_neo_physical(merged)
+        from .epoch_evidence import verify_neo_epoch
+        verify_neo_epoch(merged)
         return merged
 
     def _fetch_close_approaches(self, designation: str, date_min: str = "now", date_max: Optional[str] = None) -> List:

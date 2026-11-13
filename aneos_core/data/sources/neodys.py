@@ -181,6 +181,9 @@ class NEODySSource(DataSourceBase):
 
         if mjd_line:
             result["_epoch_mjd"] = float(mjd_line[1])
+            from ..epoch_evidence import NativeEpoch, SCALES
+            scale=mjd_line[2] if len(mjd_line)>2 and mjd_line[2] in SCALES else 'UNKNOWN'
+            result['native_epoch']=NativeEpoch(mjd_line[1],'MJD',scale,'NEODyS').to_dict()
 
         if mag_line:
             result["_H"] = float(mag_line[1])

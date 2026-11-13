@@ -64,6 +64,9 @@ def _inventory(snapshot):
     sources=snapshot.get('sources_used',[])
     if not isinstance(sources,list) or any(not isinstance(x,str) for x in sources):
         raise ValueError('Invalid source inventory')
+    native_record=(snapshot.get('orbital_elements') or {}).get('native_epoch')
+    from aneos_core.data.epoch_evidence import NativeEpoch
+    native_epoch=NativeEpoch.from_dict(native_record) if native_record is not None else None
     rows=[]
     for key,label,section,field,units in FIELDS:
         record=snapshot if section=='root' else snapshot.get(section) or {}
@@ -77,6 +80,10 @@ def _inventory(snapshot):
         row={'key':key,'label':label,'value':value,'units':units,'status':status,'references':[path],
              'source_assertion':lineage,'basis':'catalogue_input_not_independently_verified'}
         if time_status:row['time_status']=time_status
+        if key=='orbit_epoch' and native_epoch is not None:
+            row.update(value=native_epoch.native_value,units=native_epoch.format+' '+native_epoch.time_scale,
+                status='present',time_status='native_scale_not_converted_to_UTC',
+                references=['/source_snapshot/orbital_elements/native_epoch'],source_assertion=native_epoch.source)
         if key=='diameter' and status=='present':row['display_conversion']={'value':value*1000,'units':'m','factor':1000}
         if key=='rotation_period' and status=='present':row['display_conversion']={'value':value*60,'units':'min','factor':60}
         rows.append(row)
@@ -112,7 +119,7 @@ def _inventory(snapshot):
     inventory={'schema_version':'object-field-inventory-v1','designation':snapshot['designation'],
         'source_snapshot':_copy(snapshot),'source_id':_hash(snapshot),'measurements':rows,
         'coverage':{
-            'profile_id':'basic-catalogue-presence-15-v1',
+            'profile_id':'basic-catalogue-presence-15-v2' if native_epoch else 'basic-catalogue-presence-15-v1',
             'basic_catalogue':{'present':present,'required':len(FIELDS),'fraction_present':present/len(FIELDS)},
             'screening_orbit':{'present':sum(r['status']=='present' for r in minimum),'required':3},
             'overall_data_completeness':None,'eligible_source_coverage':None,
@@ -124,6 +131,15 @@ def _inventory(snapshot):
         'query_coverage':_copy({k:meta[k] for k in ('close_approach_query','historical_query_evidence') if k in meta}),
         'typed_physical_uncertainty_fields':_copy({k:v for k,v in (snapshot.get('physical_properties') or {}).items() if 'uncertainty' in k}),
         'uncertainty_note':'Scalar-model uncertainty fields and raw assertions are retained; unit/measurement reconciliation is not inferred.'}
+    if native_epoch is not None:
+        inventory['orbital_epoch_evidence']=native_epoch.to_dict()
+        inventory['epoch_comparison']={'covariance_epoch':None,'same_julian_instant':None,
+            'interpretation':'Epoch equality alone does not establish frame/solution/covariance compatibility; no propagation or time-scale conversion is performed.'}
+        if ng_report and ng_report.get('covariance'):
+            value=ng_report['covariance']['epoch_jd_tdb']
+            covariance_epoch=NativeEpoch(str(value),'JD','TDB','SBDB','covariance')
+            inventory['epoch_comparison'].update(covariance_epoch=covariance_epoch.to_dict(),
+                same_julian_instant=native_epoch.same_julian_instant(covariance_epoch))
     if normalized_physical:
         inventory['physical_measurement_evidence']=normalized_physical
         inventory['physical_selection']=_copy(meta.get('physical_selection',{}))
@@ -258,6 +274,8 @@ def _sections(review):
             f"Screening orbital fields present: {minimum['present']}/3; domain eligibility is separate.\n"
             'Overall data completeness: not established. Eligible source coverage: not established.'))
     else:sections.append(('Data coverage','Full object snapshot unavailable; assessment-only review. No full-object completeness claim.'))
+    if inventory and inventory.get('orbital_epoch_evidence'):
+        sections.append(('Epochs and compatibility',_epoch_inventory_text(inventory)))
     return sections
 
 
@@ -325,6 +343,23 @@ def object_review_markdown(review,*,verbose=True):
     return '\n'.join(lines)+'\n'
 
 
+def _epoch_inventory_text(inventory):
+    epoch=inventory.get('orbital_epoch_evidence')
+    if not epoch:return ''
+    lines=[f"Orbital element epoch: {literal(epoch['native_value'])} {epoch['format']} {epoch['time_scale']} ({literal(epoch['source'])})."]
+    if epoch['time_scale']=='UNKNOWN':lines.append('Time scale not provided; no UTC or TDB inference is justified.')
+    comparison=inventory['epoch_comparison'];cov=comparison['covariance_epoch']
+    if cov:
+        lines.append(f"Covariance epoch: {literal(cov['native_value'])} {cov['format']} {cov['time_scale']}.")
+        equal=comparison['same_julian_instant']
+        lines.append('Epoch values differ; covariance is not propagated to the display epoch.' if equal is False else
+            'Epoch values match; this alone does not establish solution/frame compatibility.' if equal is True else
+            'Epoch compatibility not established across these representations/time scales.')
+    else:lines.append('Covariance epoch: not available in this inventory.')
+    lines.append('Native times retained; not propagated, converted to UTC or treated as observation dates.')
+    return '\n'.join(lines)
+
+
 def _physical_inventory_text(inventory):
     lines=[]
     for registration in inventory.get('physical_measurement_evidence',[]):
@@ -352,9 +387,11 @@ def _nongrav_inventory_text(inventory):
     for name,component in ng['components'].items():
         native=component.get('native') or component
         lines.append(f"{name}: {number(native.get('value'))} ± {number(native.get('sigma'))} {literal(native.get('units','not available'))}; {literal(component['status'])}")
-    if ng['covariance_applies_to_display_epoch'] is False:
+    comparison=inventory.get('epoch_comparison')
+    applies=comparison['same_julian_instant'] if comparison else ng['covariance_applies_to_display_epoch']
+    if applies is False:
         lines.append('Covariance epoch differs from display epoch; do not combine without propagation.')
-    elif ng['covariance_applies_to_display_epoch'] is None:
+    elif applies is None:
         lines.append('Covariance/display epoch compatibility: not established.')
     else:lines.append('Covariance and display epochs match; coordinate ordering/units still require checking.')
     return '\n'.join(lines)
@@ -369,6 +406,7 @@ def render_data_inventory(inventory,*,console=None):
         print(literal(title))
         print(f"Basic catalogue field presence {basic['present']}/{basic['required']}; not total completeness or scientific readiness.")
         for row in actual['measurements']:print(f"{row['label']}: {_measurement_value(row)} {row['units']} [{row['status']}]")
+        if actual.get('orbital_epoch_evidence'):print(_epoch_inventory_text(actual))
         if actual.get('physical_measurement_evidence'):print(_physical_inventory_text(actual))
         print(_nongrav_inventory_text(actual))
         print('Overall completeness and source coverage: not established.');return
@@ -380,5 +418,5 @@ def render_data_inventory(inventory,*,console=None):
     for label in ('Field','Recorded value','Units / status'):table.add_column(label,overflow='fold')
     for row in actual['measurements']:table.add_row(Text(row['label']),Text(_measurement_value(row)),Text(row['units']+'; '+row['status']))
     console.print(Panel(Group(Text(f"Basic catalogue field presence {basic['present']}/{basic['required']}; not total completeness or readiness."),
-        table,Text(_physical_inventory_text(actual)),Text(_nongrav_inventory_text(actual)),Text('Overall completeness and source coverage: not established. Native solutions/uncertainties remain in the JSON.')),
+        table,Text(_epoch_inventory_text(actual)),Text(_physical_inventory_text(actual)),Text(_nongrav_inventory_text(actual)),Text('Overall completeness and source coverage: not established. Native solutions/uncertainties remain in the JSON.')),
         title=Text(literal(title)),border_style='blue'))

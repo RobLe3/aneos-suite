@@ -142,6 +142,8 @@ class ScreeningAnalysisService:
     def analyze_neo(self, neo: NEOData, additional_data=None):
         from aneos_core.data.physical_evidence import verify_neo_physical
         verify_neo_physical(neo)
+        from aneos_core.data.epoch_evidence import verify_neo_epoch
+        verify_neo_epoch(neo)
         oe = neo.orbital_elements
         orbital = {} if oe is None else {'a': oe.semi_major_axis, 'e': oe.eccentricity, 'i': oe.inclination}
         physical = {}

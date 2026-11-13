@@ -30,7 +30,7 @@ def _software_metadata():
             packages[name] = None
     modules = ['aneos_version.py', 'aneos_core/analysis/pipeline.py', 'aneos_core/analysis/screening.py',
         'aneos_core/analysis/reporting.py', 'aneos_core/analysis/object_review.py',
-        'aneos_core/data/physical_evidence.py', 'simple_neo_analyzer.py',
+        'aneos_core/data/physical_evidence.py', 'aneos_core/data/epoch_evidence.py', 'simple_neo_analyzer.py',
         'aneos_core/analysis/advanced_aneos_analyzer.py', 'aneos_core/analysis/impact_evidence.py',
         'aneos_core/interfaces/unified_analysis.py', 'aneos_core/data/models.py',
         'aneos_core/data/orbit_evidence.py', 'aneos_core/data/fetcher.py',

@@ -162,6 +162,8 @@ class SBDBSource(HTTPDataSource):
         }
         if solution['epoch_jd_tdb'] is not None:
             finite_number(solution['epoch_jd_tdb'], 'orbit epoch')
+            from ..epoch_evidence import NativeEpoch
+            orbital_data['native_epoch'] = NativeEpoch(str(solution['epoch_jd_tdb']), 'JD', 'TDB', 'SBDB').to_dict()
         if any(key in parameters for key in ('A1', 'A2', 'A3')):
             ng = NonGravitationalParameters(parameters=parameters, covariance=covariance, solution=solution)
             orbital_data['_nongrav'] = ng.to_dict()

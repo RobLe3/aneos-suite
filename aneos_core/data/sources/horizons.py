@@ -8,6 +8,8 @@ and ephemeris data for Near-Earth Objects.
 
 from aneos_core.data.provider_http import get as provider_get
 import re
+import hashlib
+import math
 import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
@@ -110,11 +112,7 @@ class HorizonsSource(HTTPDataSource):
             if not elements:
                 return None
 
-            # Metadata
-            elements["_source"] = self.name
-            elements["_designation"] = designation
-            elements["_fetched_at"] = datetime.now(UTC).isoformat()
-            return elements
+            return self._attach_orbit_metadata(elements,result_text,designation,data.get('signature'))
 
         except requests.HTTPError as e:
             self.logger.error(f"Horizons HTTP error for {designation}: {e}")
@@ -137,16 +135,25 @@ class HorizonsSource(HTTPDataSource):
                 timeout=self.config.request_timeout,
             )
             resp.raise_for_status()
-            result_text = resp.json().get("result", "")
+            data=resp.json()
+            result_text = data.get("result", "")
             if not result_text or "No matches found" in result_text:
                 return None
             elements = self._parse_obj_data(result_text)
-            if elements:
-                elements["_source"] = self.name
-            return elements
+            return self._attach_orbit_metadata(elements,result_text,designation,data.get('signature')) if elements else None
         except Exception as e:
             self.logger.error(f"Horizons DES fetch error for {designation}: {e}")
             return None
+
+    def _attach_orbit_metadata(self,elements,text,designation,signature=None):
+        retrieved=datetime.now(UTC).isoformat()
+        elements.update(_source=self.name,_designation=designation,_fetched_at=retrieved,
+            _evidence_metadata={'schema_version':'horizons-object-evidence-v1','solution':{
+                'source':'JPL Horizons','native_epoch':elements.get('native_epoch'),
+                'retrieved_at':retrieved,'result_text_sha256':hashlib.sha256(text.encode()).hexdigest(),
+                'signature':signature,'designation_requested':designation,
+                'basis':'catalogue_object_data_not_observation'}})
+        return elements
 
     # ------------------------------------------------------------------ #
     # Text parser for OBJ_DATA output                                     #
@@ -179,6 +186,15 @@ class HorizonsSource(HTTPDataSource):
                 except ValueError:
                     pass
             return None
+
+        # The object-data epoch is native TDB/TT/etc only when explicitly labeled.
+        from ..epoch_evidence import NativeEpoch
+        match = re.search(r'(?m)^\s*EPOCH\s*=\s*([+\-\d.Ee]+)([^\n]*)', text)
+        if match:
+            label=match.group(0).strip()
+            scale_match=re.search(r'\b(TDB|TDT|TT|UTC|UT1|UT)\b',match.group(2))
+            scale=scale_match.group(1) if scale_match else 'UNKNOWN'
+            elements['native_epoch']=NativeEpoch(match.group(1),'JD',scale,'Horizons','osculating_elements',label).to_dict()
 
         # Orbital elements
         ec   = _find("EC")
@@ -293,61 +309,38 @@ class HorizonsSource(HTTPDataSource):
             return []
 
     def _parse_elements_table(self, text: str) -> List[Dict[str, Any]]:
-        """Parse the $$SOE ... $$EOE block from a Horizons ELEMENTS ephemeris.
+        """Keep complete computed element rows bound to their native epoch header.
 
-        Horizons ELEMENTS output emits multiple lines per epoch (one element per
-        line).  This version accumulates all element keys into a single record and
-        flushes only when the next epoch header (a non-element, non-comment line)
-        is encountered, preventing duplicate/partial rows.
+        A real Horizons header contains JD = calendar TDB, unlike an element line.
+        Its equals sign must not cause the entire history to be discarded.
         """
-        import re as _re
-        rows: List[Dict[str, Any]] = []
-        in_block = False
-        pending_epoch: Optional[str] = None
-        pending_record: Dict[str, Any] = {}
-
-        element_keys = [
-            ("a",    r"A=\s*([-\d.E+]+)"),
-            ("e",    r"EC=\s*([-\d.E+]+)"),
-            ("i",    r"IN=\s*([-\d.E+]+)"),
-            ("node", r"OM=\s*([-\d.E+]+)"),
-            ("peri", r"W=\s*([-\d.E+]+)"),
-            ("M",    r"MA=\s*([-\d.E+]+)"),
-        ]
-
+        from ..epoch_evidence import horizons_header_epoch
+        rows=[];in_block=False;pending_epoch=None;pending_record={}
+        element_keys=[('a','A'),('e','EC'),('i','IN'),('node','OM'),('peri','W'),('M','MA')]
+        def flush():
+            if pending_epoch is not None and pending_record:
+                rows.append({'epoch':pending_epoch.label,'native_epoch':pending_epoch.to_dict(),**pending_record})
         for line in text.splitlines():
-            if "$$SOE" in line:
-                in_block = True
-                continue
-            if "$$EOE" in line:
-                break
-            if not in_block or not line.strip() or "!" in line:
-                continue
-
-            parsed = {}
-            for key, pattern in element_keys:
-                m = _re.search(pattern, line)
-                if m:
-                    try:
-                        parsed[key] = float(m.group(1))
-                    except ValueError:
-                        pass
-
+            if '$$SOE' in line:in_block=True;continue
+            if '$$EOE' in line:break
+            if not in_block or not line.strip() or line.lstrip().startswith('!'):continue
+            epoch=horizons_header_epoch(line)
+            if epoch is not None:
+                flush();pending_epoch=epoch;pending_record={};continue
+            parsed={}
+            for key,token in element_keys:
+                matches=re.findall(r'(?<![A-Za-z])'+token+r'\s*=\s*([-\d.Ee+]+)',line)
+                if len(matches)>1:raise ValueError('Duplicate element in one Horizons line')
+                if matches:
+                    value=float(matches[0])
+                    if not math.isfinite(value):raise ValueError('Nonfinite Horizons orbital element')
+                    parsed[key]=value
             if parsed:
-                # Accumulate element fields into the current record
+                if pending_epoch is None:
+                    raise ValueError('Unbound Horizons orbital elements without a recognized epoch header')
+                if set(parsed)&set(pending_record):raise ValueError('Duplicate element in one Horizons epoch')
                 pending_record.update(parsed)
-            elif "=" not in line:
-                # Non-element line with no "=" → epoch header for next record.
-                # Flush the previous record first.
-                if pending_epoch and pending_record:
-                    rows.append({"epoch": pending_epoch, **pending_record})
-                pending_epoch = line.strip()
-                pending_record = {}
-
-        # Flush final record
-        if pending_epoch and pending_record:
-            rows.append({"epoch": pending_epoch, **pending_record})
-
+        flush()
         return rows
 
     def _parse_ephemeris(self, text: str) -> List[Dict[str, Any]]:

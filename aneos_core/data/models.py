@@ -17,6 +17,7 @@ import json
 import logging
 import copy
 import math
+from .epoch_evidence import NativeEpoch, decimal_value
 from .orbit_evidence import OrbitModelParameter, OrbitalCovariance, AU_DAY2_TO_M_S2, finite_number
 from pathlib import Path
 
@@ -133,8 +134,8 @@ class NonGravitationalParameters:
                 'covariance': self.covariance.to_dict() if self.covariance else None,
                 'covariance_status': 'available' if self.covariance else 'not_available',
                 'covariance_applies_to_display_epoch': (
-                    finite_number(self.covariance.epoch_jd_tdb, 'covariance epoch') ==
-                    finite_number(self.solution['epoch_jd_tdb'], 'display epoch')
+                    decimal_value(self.covariance.epoch_jd_tdb) ==
+                    decimal_value(self.solution['epoch_jd_tdb'])
                     if self.covariance and self.solution.get('epoch_jd_tdb') is not None else None),
                 'origin_inference': 'not_assessed',
                 'interpretation': 'Orbit-fit coefficients; not direct propulsion or origin evidence'}
@@ -175,9 +176,14 @@ class OrbitalElements:
     argument_of_perihelion: Optional[float] = None  # degrees
     mean_anomaly: Optional[float] = None  # degrees
     epoch: Optional[datetime] = None
+    native_epoch: Optional[NativeEpoch] = None
     
     def __post_init__(self):
-        """Normalize alternate field names and validate values."""
+        """Normalize aliases/native evidence and validate orbital values."""
+        if isinstance(self.native_epoch, dict):
+            self.native_epoch = NativeEpoch.from_dict(self.native_epoch)
+        if self.native_epoch is not None and not isinstance(self.native_epoch, NativeEpoch):
+            raise ValueError('Invalid native orbital epoch')
         self._synchronize_aliases()
         self._validate()
 
@@ -228,14 +234,14 @@ class OrbitalElements:
         all_fields = [
             self.eccentricity, self.inclination, self.semi_major_axis,
             self.ascending_node, self.argument_of_perihelion, self.mean_anomaly,
-            self.epoch
+            self.native_epoch if self.native_epoch is not None else self.epoch
         ]
         present_count = sum(1 for field in all_fields if field is not None)
         return present_count / len(all_fields)
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary format for compatibility."""
-        return {
+        result = {
             "eccentricity": self.eccentricity,
             "inclination": self.inclination,
             "semi_major_axis": self.semi_major_axis,
@@ -246,7 +252,10 @@ class OrbitalElements:
             "mean_anomaly": self.mean_anomaly,
             "epoch": self.epoch.isoformat() if self.epoch else None,
         }
-    
+        if self.native_epoch is not None:
+            result['native_epoch'] = self.native_epoch.to_dict()
+        return result
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'OrbitalElements':
         """Create from dictionary data."""
@@ -278,6 +287,7 @@ class OrbitalElements:
             argument_of_perihelion=data.get("argument_of_perihelion"),
             mean_anomaly=data.get("mean_anomaly"),
             epoch=epoch,
+            native_epoch=NativeEpoch.from_dict(data["native_epoch"]) if data.get("native_epoch") is not None else None,
         )
 
 @dataclass
@@ -395,6 +405,8 @@ class NEOData:
         
         from .physical_evidence import verify_neo_physical
         verify_neo_physical(self)
+        from .epoch_evidence import verify_neo_epoch
+        verify_neo_epoch(self)
 
         # Predicted encounters are not observations of the fitted orbit.
         # Only source first_obs/last_obs may establish the observation arc.

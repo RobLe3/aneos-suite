@@ -1,0 +1,102 @@
+{
+  "schema_version": "object-detail-qa-v1",
+  "cases": {
+    "native-tdb": {
+      "review_id": "8836a66d03e7d97332f3aae946b52afa138e640fb3d12abcdfcc822a3b04eb3f",
+      "classification": "NOT_FLAGGED",
+      "widths": {
+        "80": {
+          "lines": 101,
+          "max_columns": 80
+        },
+        "120": {
+          "lines": 81,
+          "max_columns": 120
+        },
+        "160": {
+          "lines": 74,
+          "max_columns": 160
+        }
+      }
+    },
+    "unknown-scale": {
+      "review_id": "1b4b9371f9a2fb52d89f517eb7139d2ab95ce3ec35a736adfeab9ba5af57ea91",
+      "classification": "NOT_FLAGGED",
+      "widths": {
+        "80": {
+          "lines": 102,
+          "max_columns": 80
+        },
+        "120": {
+          "lines": 82,
+          "max_columns": 120
+        },
+        "160": {
+          "lines": 75,
+          "max_columns": 160
+        }
+      }
+    },
+    "different-covariance": {
+      "review_id": "4d280195a2a2e409bc62331473535c2f8402557b533c32f1587e8cb6a11958df",
+      "classification": "NOT_FLAGGED",
+      "widths": {
+        "80": {
+          "lines": 116,
+          "max_columns": 80
+        },
+        "120": {
+          "lines": 94,
+          "max_columns": 120
+        },
+        "160": {
+          "lines": 87,
+          "max_columns": 160
+        }
+      }
+    }
+  },
+  "artifact_sha256": {
+    "different-covariance-160.svg": "f0aed036bd9e006ed7cf116d17fb1aa28a828b150fd741060d5c274bdec33a3d",
+    "unknown-scale-120.svg": "268b0b0de8a48ed506729db42f4d5b88cb6bd8bd85e3b8028b8f3418d9ae16f3",
+    "different-covariance-160.txt": "60462bb6162103f4bf7aba58924a61111c10e4c0ed2d344101e003a981b0b94b",
+    "native-tdb-80.html": "6d737005c99897af5a5e15903a39a29ec029cdac56b99ea00fa687c3a69a642e",
+    "unknown-scale-120.txt": "202ceb60f10a6a8fdb752a6ae83bebd3c2c3b58de845251e2aeecb894c7be2a5",
+    "native-tdb-160.txt": "0e6580e531cda17719b87011fca7a5c409bf7b783d6f8b5997bb025d2059abe6",
+    "native-tdb-80.txt": "fbdb3b027ec18574e895ccdae75959d3a34d2bf2da02d9d3b90f2f55c9c43455",
+    "different-covariance-80.txt": "e8410907a6cdf9474353566542827c86ee905dad4d9c02c5efa903345d9ad394",
+    "different-covariance-80.html": "3edaaee5023887bd3e8a80d9667e329f0531736769575bdec5358ad16a215fe0",
+    "unknown-scale-80.svg": "268b0b0de8a48ed506729db42f4d5b88cb6bd8bd85e3b8028b8f3418d9ae16f3",
+    "unknown-scale-80.txt": "9fb28371d8dec221785523789a339f77f6cf1422e32d037d3f2e1694c5f61ac9",
+    "unknown-scale.json": "53179a124ade6ce0a242c29970bb943e51824329162218204647911c805576b6",
+    "native-tdb-80.svg": "daf02e9a62acf79956d64bd01bb34e9bdd0bd9efd4f42cd7e5389e10cd4bbaaf",
+    "native-tdb-160.svg": "daf02e9a62acf79956d64bd01bb34e9bdd0bd9efd4f42cd7e5389e10cd4bbaaf",
+    "different-covariance-80.svg": "f0aed036bd9e006ed7cf116d17fb1aa28a828b150fd741060d5c274bdec33a3d",
+    "unknown-scale-160.svg": "268b0b0de8a48ed506729db42f4d5b88cb6bd8bd85e3b8028b8f3418d9ae16f3",
+    "unknown-scale-160.html": "3a7f7d453384c9e53715da32745bbd3a15b6d5199562f595179496fe99408787",
+    "different-covariance-120.svg": "f0aed036bd9e006ed7cf116d17fb1aa28a828b150fd741060d5c274bdec33a3d",
+    "different-covariance-120.html": "3edaaee5023887bd3e8a80d9667e329f0531736769575bdec5358ad16a215fe0",
+    "unknown-scale-160.txt": "e5e0a5f47e61c89c057051b133e371ea491a868b257e3842617732cb8745c33b",
+    "different-covariance-160.html": "3edaaee5023887bd3e8a80d9667e329f0531736769575bdec5358ad16a215fe0",
+    "different-covariance.json": "faa860d061027fa8c51ece2fb87be89c9d9082f0dfee3f8d78cc0c359416b187",
+    "different-covariance-120.txt": "1cd2c2051f448123678b0306a7ea0a170a6b8e5537d8382e4302b566bf587baa",
+    "unknown-scale-120.html": "3a7f7d453384c9e53715da32745bbd3a15b6d5199562f595179496fe99408787",
+    "native-tdb.json": "e07c53ffa34b70af6f1668b238d182622600c896dbb79d1c940cf3d8a4ed3224",
+    "native-tdb-120.html": "6d737005c99897af5a5e15903a39a29ec029cdac56b99ea00fa687c3a69a642e",
+    "unknown-scale-80.html": "3a7f7d453384c9e53715da32745bbd3a15b6d5199562f595179496fe99408787",
+    "native-tdb-120.txt": "3047dd1b42a12b244622e9bd0dfd31c6ae9b6ce6a8e65ef54e10fe75a3bd6d82",
+    "native-tdb-120.svg": "daf02e9a62acf79956d64bd01bb34e9bdd0bd9efd4f42cd7e5389e10cd4bbaaf",
+    "native-tdb-160.html": "6d737005c99897af5a5e15903a39a29ec029cdac56b99ea00fa687c3a69a642e"
+  },
+  "source_sha256": {
+    "aneos_core/analysis/object_review.py": "e9b28d509b65bd29a00ed684e21c28e86211e2d7f60a1f922ac3c40f9ff744ff",
+    "aneos_core/analysis/screening.py": "f58ccdf05dfbd90bf440e2a77bc7c6f766d59f6120553230885cd44495622b7a",
+    "scripts/qa_object_review.py": "9beb769f468b196c534dac59fd72f674d42a1ecfb4851f0c931b6fa98d2a989c",
+    "aneos_core/data/epoch_evidence.py": "5ca2e443a536eeb0bffa220b69133f05c322cd65ed5fbb44df28d546abc473f5",
+    "aneos_core/data/models.py": "7d02ddea7e5a17bb90772b17887849f82fabdc1de9488bfd9f6c410bd1e9683f",
+    "aneos_core/data/sources/sbdb.py": "36ca34dd79448b16ada80db126f77cea9c894007fd7e9addff5028137712a8fe",
+    "aneos_core/data/sources/horizons.py": "4cb11e02bd4499df8c90a45970f487fa3ce8ca2cc8cd99d16ce64dd1b9a666ef",
+    "aneos_core/data/sources/neodys.py": "7a83f0118e1da344770e957b6d9b2e40aa577f839aa28f0cb879a9252dd9caeb"
+  },
+  "limits": "Synthetic illustrative controls only; no source acquisition, independent calibration, physical fits or all-menu certification."
+}

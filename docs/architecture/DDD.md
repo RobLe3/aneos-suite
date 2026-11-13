@@ -1365,3 +1365,16 @@ per-selection references remain authoritative only as catalogue assertions. No n
 bounded context, independent detector or database migration is required for this fix.
 Full multi-source object-ledger/history/pollability (#40), alternative spin coordinate
 models, observation likelihoods and calibrated uncertainty use remain unimplemented.
+
+## Native orbital time evidence — 2026-11-13 / ADR-082
+
+Acquisition preserves native astronomical representations/time-scale labels and binds
+computed element rows to their headers. OrbitalElements owns an optional NativeEpoch
+alongside, not silently replacing, the legacy datetime. Source reconciliation keeps
+an orbit solution and epoch atomic. Analysis checks source/projection consistency;
+it does not propagate covariance or convert scales. Presentation distinguishes orbital,
+covariance, computed-encounter and observation dates. Numeric epoch equality is not
+physical fit validity or frame compatibility. Existing acquisition, evidence and
+presentation boundaries suffice; no new bounded context is created. Full observational
+likelihoods, epoch/frame-aware propagation, source identity and operation-specific
+scientific readiness remain separate requirements.

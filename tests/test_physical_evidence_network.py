@@ -34,6 +34,12 @@ def test_real_ky26_physical_evidence_survives_acquisition_and_review(tmp_path):
     assert evidence["context"]["response_sha256"]
     assert evidence["context"]["retrieved_at"]
     assert any(r["native"]["name"] == "diameter" for r in evidence["records"])
+    assert neo.orbital_elements.native_epoch is not None
+    assert neo.orbital_elements.native_epoch.native_value == str(
+        evidence["context"]["container_orbit_epoch_jd_tdb"]
+    )
+    assert neo.orbital_elements.native_epoch.time_scale == "TDB"
+    assert neo.orbital_elements.epoch is None  # No invented UTC conversion.
     restored = NEOData.from_dict(neo.to_dict())
     review = verify_object_review(build_object_review(restored))
     assert review["scientific_status"] == "not_independently_validated"
@@ -66,3 +72,20 @@ def test_real_ky26_physical_evidence_survives_acquisition_and_review(tmp_path):
             indent=2,
         )
     )
+
+
+@pytest.mark.network
+def test_real_horizons_history_rows_have_native_epochs(tmp_path):
+    from datetime import datetime
+    from aneos_core.data.sources.horizons import HorizonsSource
+    from aneos_core.data.epoch_evidence import NativeEpoch
+
+    rows = HorizonsSource(APIConfig()).fetch_orbital_history(
+        "1998 KY26", years=2
+    )
+    assert rows, "Live Horizons unavailable or returned no usable bound history rows"
+    assert all(
+        NativeEpoch.from_dict(row["native_epoch"]).time_scale == "TDB" for row in rows
+    )
+    assert all({"a", "e", "i", "epoch", "native_epoch"}.issubset(row) for row in rows)
+    (tmp_path / "computed-native-history.json").write_text(json.dumps(rows, indent=2))

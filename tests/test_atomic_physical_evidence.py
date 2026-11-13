@@ -377,10 +377,10 @@ def test_new_fetch_cache_key_does_not_relabel_or_overwrite_old_snapshots():
     f._fetch_from_all_sources = Mock(return_value=n)
     assert f.fetch_neo_data("SYNTHETIC") == n
     assert (
-        f.cache_manager.get.call_args.args[0] == "neo_data:atomic-physical-v1:SYNTHETIC"
+        f.cache_manager.get.call_args.args[0] == "neo_data:atomic-physical-v1-native-epoch-v1:SYNTHETIC"
     )
     assert (
-        f.cache_manager.set.call_args.args[0] == "neo_data:atomic-physical-v1:SYNTHETIC"
+        f.cache_manager.set.call_args.args[0] == "neo_data:atomic-physical-v1-native-epoch-v1:SYNTHETIC"
     )
 
 

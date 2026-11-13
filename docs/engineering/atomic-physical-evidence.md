@@ -123,3 +123,11 @@ no calibrated artificial-origin probability or model-fit assessment follows.
 The same response supplies native orbital epoch2461200.5TDB in solution metadata;
 the old datetime-only orbit field remains empty. This is a known transport/view
 limitation, not missing source evidence or permission to relabel TDB as UTC.
+
+### Native epoch follow-up (ADR-082)
+
+The subsequent native-epoch increment carries explicit JD/time scale into the typed
+orbit and detailed views without UTC conversion. Its new cache key is
+`neo_data:atomic-physical-v1-native-epoch-v1:<designation>`; the earlier key and captures
+above remain historical evidence. See [native orbital epochs](native-orbital-epochs.md)
+for the current transport/view scope and remaining physical-propagation limits.
