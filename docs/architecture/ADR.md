@@ -3203,3 +3203,45 @@ administrator, encryption or backup. Administrative DDL, file replacement/deleti
 cleanup or explicit reset can remove data; preserve important research separately.
 The beta-2 tag and historical data are unchanged. Controller/enrichment budgeting,
 physical-field admission and broader source discovery remain subsequent work.
+
+## ADR-093 — Restore bounded root CAD polling through committed collection receipts
+
+Date: 2026-11-13. Status: Accepted for this incremental implementation; #84/#73.
+
+The root poller must not restore its old origin classifier or independent HTTP
+normalization. Delegate one explicitly bounded Earth/NEO/.05au candidate request to
+`CADCandidateService`, consume its committed readback, and use the existing canonical
+screening/read models. Empty, partial and failed collection outcomes remain in the
+query receipt, including exports with no object rows. No automatic paging.
+
+Add an **optional versioned object policy** to collection receipts. Absent policy
+replays the original raw-only packets exactly; `cad-physical-v1` additionally uses
+the existing atomic physical-evidence aggregate. Retain native labelled rows and
+row indices, same-row diameter/sigma and H (without invented H uncertainty), missing
+measurement dates and source-reference limits. Equal catalogue value/sigma/orbit
+references repeated across encounters share a projection representative, not an
+independent observation. Conflicting alternatives abstain, never average. Existing
+receipts/hashes are not rewritten. No incompatible schema or second ledger.
+
+A collection is not an orbit source. CAD-only objects may remain inconclusive.
+Optional per-object acquisition is an explicit separately bounded action using
+`DataFetcher` and its existing transactional receipts, before canonical analysis;
+it is never triggered by a renderer or silently enabled by default. Report object
+invocation budgets separately from provider requests/retries. Unsupported root
+SBDB/MPC/NEODyS discovery stays unavailable. Ordinary named-object acquisition remains
+available through its shared adapters; it is not proof of bulk discovery support.
+
+Replaying a collection does not re-ingest it or poll again. Scientific origin,
+calibration, historical authenticity and all-source completeness remain unavailable
+unless their own prerequisites are met. No threshold/model changes or beta2 retagging.
+
+ADR-093 acquisition clarification: an optional `candidate_query_id` source-plan
+profile replays the committed collection receipt before any named-object provider
+work or cache use. The CAD outcome embeds that frozen parent receipt and must bind
+to its exact designation/query; offline bundle validation replays it. No second CAD
+request, guessed new observation or fresh source read timestamp is created. Other
+providers retain their existing budgets/retry policy. Cache identity includes this
+reference. The ordinary default profile and historical envelopes are unchanged.
+The root analysis reads the existing verified combined ledger projection after
+acquisition; original discovery rows remain separately available. No new-source
+data is reported explicitly even when the reused CAD assertion is available.

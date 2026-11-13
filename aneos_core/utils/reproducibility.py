@@ -38,6 +38,7 @@ def software_metadata(source_files=None):
         'aneos_core/data/enrichment.py', 'aneos_core/data/cache.py',
         'aneos_api/enrichment_store.py', 'aneos_api/acquisition_repository.py',
         'aneos_core/detection/validated_sigma5_artificial_neo_detector.py',
+        'aneos_core/polling/root_candidate_controller.py', 'neo_poller.py',
         'aneos_core/utils/reproducibility.py']
     hashes = {name:sha256((root/name).read_bytes()).hexdigest() if (root/name).is_file() else None
         for name in modules}

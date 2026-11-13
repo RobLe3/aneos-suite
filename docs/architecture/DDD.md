@@ -1554,3 +1554,12 @@ Root/menu restoration #73 must consume committed receipts and explicitly budget
 further enrichment rather than multiplying provider calls or re-ingesting a source
 query as a fresh observation. This foundation does not establish full source coverage,
 alias resolution, scientific completeness or calibrated detection performance.
+
+### Root CAD collection integration — 2026-11-13 / ADR-093 / #84
+
+Data Acquisition owns bounded collection and explicit named-object enrichment;
+the existing evidence ledger owns receipts and original assertions. The physical
+anti-corruption layer admits only same-row native CAD assertions under an optional
+versioned receipt policy. Core shared screening owns all ranking decisions; the root
+controller and Rich/dashboard/export paths consume its result, not legacy origin
+scores. Receipt replay is read-only. No new bounded context is introduced.

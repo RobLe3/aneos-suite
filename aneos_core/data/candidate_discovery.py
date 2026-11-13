@@ -107,7 +107,9 @@ def _body(response):
     return raw
 
 
-def make_receipt(query_id, parameters, started_at, received_at, response, transport_error=None, *, software=None):
+def make_receipt(query_id, parameters, started_at, received_at, response, transport_error=None, *, software=None, object_policy=None):
+    if object_policy not in (None, 'cad-physical-v1'):
+        raise ValueError('Unsupported CAD object policy')
     if not isinstance(query_id, str) or not re.fullmatch(r'cad-[a-f0-9]{32}', query_id):
         raise ValueError('Candidate query id requires a canonical CAD UUID')
     _stamp(started_at)
@@ -144,6 +146,18 @@ def make_receipt(query_id, parameters, started_at, received_at, response, transp
                     raise ValueError('Distance/selection mismatch')
                 if row['close_approach']['body'] != 'Earth':
                     raise ValueError('Body/selection mismatch')
+                if object_policy == 'cad-physical-v1':
+                    # Compare native TDB JD to native requested calendar bounds.
+                    # This is calendar arithmetic, not conversion to UTC or an observation time.
+                    from decimal import Decimal
+                    epoch = dict(zip(row['cad_evidence']['raw_fields'], row['cad_evidence']['raw_row'])).get('jd')
+                    if epoch not in (None, ''):
+                        anchor = date(2000, 1, 1)
+                        lower = Decimal('2451544.5') + (date.fromisoformat(parameters['date-min']) - anchor).days
+                        upper = Decimal('2451544.5') + (date.fromisoformat(parameters['date-max']) - anchor).days
+                        if not lower <= Decimal(str(epoch)) <= upper:
+                            raise ValueError('Native epoch outside requested calendar selection')
+
             outcome = ('partial' if parsed['metadata']['completeness_status'] == 'partial' else
                        'missing' if not parsed['records'] else 'available')
             diagnostic = None
@@ -166,6 +180,21 @@ def make_receipt(query_id, parameters, started_at, received_at, response, transp
                           'evidence_basis': 'catalogue_prediction_not_observation',
                           'physical_projection_status': 'native_unit_labelled_catalogue_fields_retained_in_rows_not_promoted',
                       })
+        if object_policy == 'cad-physical-v1':
+            from .physical_evidence import build_cad_evidence, physical_projection
+            from .models import PhysicalProperties
+            native_records = [{'fields': r['cad_evidence']['raw_fields'],
+                               'row': r['cad_evidence']['raw_row'], 'field': field, 'row_index': i}
+                              for i, r in entries for field in ('h', 'diameter')
+                              if field in r['cad_evidence']['raw_fields']]
+            atomic = build_cad_evidence(native_records, {'designation': designation,
+                'candidate_query_id': query_id, 'response_sha256': response['body_sha256'],
+                'received_at': received_at, 'api_version': '1.5'})
+            projected = physical_projection(atomic)
+            neo.physical_properties = PhysicalProperties(**projected) if projected else None
+            neo.evidence_metadata['physical_evidence'] = atomic
+            neo.evidence_metadata['physical_projection_status'] = 'atomic_catalogue_assertions_not_independently_verified'
+            neo = NEOData.from_dict(neo.to_dict())
         packets.append({'designation': designation, 'data_source': 'CAD',
                         'snapshot_schema': 'neo-data-v1', 'neo_data': neo.to_dict(),
                         'candidate_query_id': query_id})
@@ -196,6 +225,9 @@ def make_receipt(query_id, parameters, started_at, received_at, response, transp
                    'Python float normalization retains native strings and response bytes; no origin inference.',
                    'Over-budget JSON is not normalized; its full buffered entity must be archived in SQL and checked on readback.'],
     }
+    if object_policy is not None:
+        receipt['object_policy'] = object_policy
+        receipt['limits'][3] = 'CAD physical projection uses native atomic assertions; dates/references not supplied remain missing.'
     if software is not None:
         if not isinstance(software, dict):
             raise ValueError('Software context must be finite JSON metadata')
@@ -209,7 +241,7 @@ def replay_receipt(receipt):
         raise ValueError('Unsupported candidate receipt')
     actual, packets = make_receipt(receipt['query_id'], receipt['request']['parameters'],
                                    receipt['started_at'], receipt['received_at'], receipt['response'],
-                                   receipt['transport_error'], software=receipt.get('software'))
+                                   receipt['transport_error'], software=receipt.get('software'), object_policy=receipt.get('object_policy'))
     if actual != receipt:
         raise ValueError('Candidate receipt does not reproduce')
     return actual, packets
@@ -220,7 +252,9 @@ class CADCandidateService:
     def __init__(self, repository=None):
         self.repository = repository
 
-    def poll(self, start, end, *, limit=100):
+    def poll(self, start, end, *, limit=100, object_policy=None):
+        if object_policy not in (None, 'cad-physical-v1'):
+            raise ValueError('Unsupported CAD object policy')
         parameters = query_parameters(start, end, limit)
         if self.repository is None:
             from aneos_api.candidate_repository import CandidateQueryRepository
@@ -234,6 +268,8 @@ class CADCandidateService:
             'aneos_core/data/models.py', 'aneos_core/data/enrichment.py',
             'aneos_core/data/reconciliation.py', 'aneos_core/data/physical_evidence.py',
             'aneos_core/data/epoch_evidence.py', 'aneos_core/data/orbit_evidence.py',
+            'aneos_core/polling/root_candidate_controller.py', 'neo_poller.py',
+            'aneos_core/data/fetcher.py', 'aneos_core/data/acquisition.py',
             'aneos_core/utils/reproducibility.py'])
         started = datetime.now(timezone.utc).isoformat()
         response, error = None, None
@@ -243,6 +279,6 @@ class CADCandidateService:
             response, error = getattr(exc, 'response', None), 'TRANSPORT_UNAVAILABLE'
         captured = capture_response(response)
         received = datetime.now(timezone.utc).isoformat()
-        receipt, _ = make_receipt('cad-'+uuid4().hex, parameters, started, received, captured, error, software=software)
+        receipt, _ = make_receipt('cad-'+uuid4().hex, parameters, started, received, captured, error, software=software, object_policy=object_policy)
         archive = response.content if response is not None and not captured['body_in_receipt_complete'] else None
         return self.repository.commit(receipt, native_body=archive)

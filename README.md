@@ -10,9 +10,13 @@ installation or its uncommitted work. This preview supports testing the unified
 per-object screening/reporting path. Known-bad root legacy candidate polling/inference is temporarily unavailable
 while source restoration #73 is completed; it cannot return synthetic scores in this preview.
 
-**Post-beta2 development:** the [bounded CAD query foundation](docs/engineering/candidate-acquisition.md)
-adds durable collection receipts and source-body archives. It does not yet restore
-the quarantined root/menu bulk route or establish complete scientific datasets.
+**Post-beta2 development:** the [root CAD workflow](docs/engineering/root-cad-workflow.md)
+now connects bounded collection to committed native evidence, atomic physical
+assertions and shared screening. Optional object enrichment reuses the committed CAD
+receipt without another CAD request. Other root bulk discovery paths remain unavailable
+(#73); this is not calibrated significance, origin confirmation or universal completeness.
+The [collection foundation](docs/engineering/candidate-acquisition.md) documents receipt
+retention and compatibility limits.
 
 aNEOS is a Python research platform for:
 
