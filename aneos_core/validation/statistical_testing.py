@@ -35,6 +35,8 @@ class StatisticalTestResult:
     five_sigma_claim_permitted: bool = False
     method_version: str = METHOD_VERSION
     assumptions: List[str] = field(default_factory=list)
+    input_statistic: Optional[float] = None
+    null_model: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -151,7 +153,10 @@ class StatisticalTesting:
                        if df is None else ['Estimated mean and supplied standard error obey a Student sampling model with the supplied df.'])
         return StatisticalTestResult(p, abs(statistic), interval, p <= alpha, statistic,
             degrees_of_freedom=df, test_type=kind, alpha_level=alpha, log_p_value=log_p,
-            p_value_underflow=p == 0., assumptions=assumptions + [
+            p_value_underflow=p == 0., input_statistic=score,
+            null_model={'mean':mean, **({'std':scale} if df is None else
+                        {'standard_error':scale,'degrees_of_freedom':df})},
+            assumptions=assumptions + [
                 'No population calibration, selection correction or origin inference is performed.'])
 
     def _z_test(self, indicator_score, null_distribution):
@@ -232,7 +237,7 @@ class StatisticalTesting:
             return min(1., max(0., value))
         observed = power(effect)
         target = .8
-        if power(0.) >= target:
+        if alpha >= target:
             mde = 0.
         else:
             # Solve in noncentrality units so large n does not collapse MDE to

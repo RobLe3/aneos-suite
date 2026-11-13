@@ -46,6 +46,7 @@ an uncertainty interval for an estimated parameter. Student input is an estimate
 mean with an actual standard error and positive degrees of freedom, not a single
 population draw divided by population standard deviation. See SciPy's
 [one-sample test definition](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_1samp.html).
+Results retain the input statistic and a copied normalized null model for replay.
 The retained `effect_size` is explicitly the absolute standardized test statistic,
 not Cohen's d, significance calibration or evidence of technological origin.
 
@@ -86,7 +87,7 @@ observations, not correlated features/providers. z assumes known variance; t use
 estimated variance with df=n-1. Student power uses the
 [noncentral t distribution](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.nct.html).
 Both tails are included. Minimum detectable effect solves the 80%-power target;
-when alpha already exceeds 80%, the minimum is zero. Signed effects have symmetric
+when alpha is at least 80%, the minimum is zero. Signed effects have symmetric
 power under this two-sided model. No unknown test silently falls back to normal.
 
 This calculation does not measure the power of aNEOS screening, survey completeness,

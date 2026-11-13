@@ -243,3 +243,18 @@ def test_positive_infinite_log_tail_is_an_error_not_precision_underflow(monkeypa
     monkeypatch.setattr(stats.norm,'logsf',lambda *a:float('inf'))
     with pytest.raises(ValueError,match='Log-tail'):
         StatisticalTesting().formal_hypothesis_test(1,{'mean':0,'std':1})
+
+
+def test_normal_and_student_results_preserve_replay_inputs_without_shared_mutation():
+    s=StatisticalTesting()
+    for kind,model in [('z_test',{'mean':1,'std':2}),
+                       ('t_test',{'mean':1,'standard_error':2,'degrees_of_freedom':4})]:
+        result=s.formal_hypothesis_test(3,model,kind)
+        assert result.input_statistic==3 and result.null_model==model
+        assert s.formal_hypothesis_test(result.input_statistic,result.null_model,kind)==result
+        model['mean']=900
+        assert result.null_model['mean']==1
+
+
+def test_planning_alpha_exactly_target_has_zero_mde():
+    assert StatisticalTesting(.8).calculate_power_analysis(.2,25).minimum_detectable_effect==0
