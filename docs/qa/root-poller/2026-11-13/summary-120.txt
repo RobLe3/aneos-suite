@@ -1,0 +1,17 @@
+╭─────────────────────────────────── aNEOS 2.2.0b2 — Candidate screening dashboard ────────────────────────────────────╮
+│ Input records: 2; distinct exact designation labels: 2; typed field inventories: 1. Repeated designations are not    │
+│ automatically independent evidence or fused observations.                                                            │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+Follow-up candidate: 1/2 records ━━━━━━━━━━
+Not flagged: 0/2 records 
+Inconclusive: 1/2 records ━━━━━━━━━━
+                                      Screening records — ranking units, not sigma                                      
+┏━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ID   ┃ Object                        ┃ Screening outcome            ┃ Raw rank          ┃ Catalogue presence         ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1    │ SYNTHETIC_FOLLOW_UP           │ Follow-up candidate          │ 20.077            │ 4/15 fields                │
+├──────┼───────────────────────────────┼──────────────────────────────┼───────────────────┼────────────────────────────┤
+│ 2    │ SYNTHETIC_LEGACY              │ Inconclusive                 │ Unavailable       │ Not assessed               │
+└──────┴───────────────────────────────┴──────────────────────────────┴───────────────────┴────────────────────────────┘
+Rank is an uncalibrated follow-up heuristic, not Gaussian significance or an origin probability. Not flagged does not 
+mean natural. Impact risk is not assessed here. Legacy unverified rows are retained, not promoted to measured evidence.

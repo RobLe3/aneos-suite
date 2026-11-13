@@ -10,6 +10,7 @@ and focused on the core mission of finding artificial NEOs.
 """
 
 from aneos_core.data.provider_http import session_get as provider_session_get
+from aneos_version import APPLICATION_VERSION
 import os
 import sys
 import json
@@ -72,7 +73,7 @@ class NEOPoller:
         self.console = console if HAS_RICH else None
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'aNEOS-Poller/1.0 (Artificial NEO Detection System)'
+            'User-Agent': f'aNEOS/{APPLICATION_VERSION} (NEO research screening)'
         })
         
         # API endpoints
@@ -134,8 +135,8 @@ class NEOPoller:
             'geographic_clustering': 0.7
         }
         
-        print("🚀 NEO Poller initialized")
-        print("Mission: Systematic polling and artificial NEO detection")
+        print(f"aNEOS {APPLICATION_VERSION} — NEO poller")
+        print("Bulk polling temporarily unavailable; shared per-object screening is available.")
     
     def parse_custom_time_period(self, input_str: str) -> Optional[relativedelta]:
         """
@@ -428,264 +429,37 @@ class NEOPoller:
         )
     
     async def launch_analysis_dashboard(self, results: List[Dict[str, Any]]):
-        """Launch the artificial NEO analysis dashboard after polling."""
-        try:
-            from aneos_core.analysis.artificial_neo_dashboard import create_dashboard_from_polling
-            
-            if self.console:
-                self.console.print("\n🚀 [bold cyan]Launching Artificial NEO Analysis Dashboard...[/bold cyan]")
-            else:
-                print("\n🚀 Launching Artificial NEO Analysis Dashboard...")
-            
-            # Create and display dashboard
-            dashboard = await create_dashboard_from_polling(
-                polling_results=results,
-                display=True,
-                save=True
-            )
-            
-            # Interactive menu for dashboard
-            if self.console:
-                from rich.prompt import Confirm
-                if Confirm.ask("\n🔍 Would you like to view detailed analysis for specific objects?"):
-                    self._interactive_object_explorer(dashboard)
-            
-        except ImportError as e:
-            if self.console:
-                self.console.print(f"⚠️ [yellow]Dashboard unavailable: {e}[/yellow]")
-                self.console.print("   Install required dependencies: pip install rich")
-            else:
-                print(f"⚠️ Dashboard unavailable: {e}")
-                print("   Install required dependencies: pip install rich")
-        except Exception as e:
-            import logging
-            logging.error(f"Dashboard launch failed: {e}")
-            if self.console:
-                self.console.print(f"❌ [red]Dashboard error: {e}[/red]")
-            else:
-                print(f"❌ Dashboard error: {e}")
-    
-    def _interactive_object_explorer(self, dashboard):
-        """Interactive explorer for detailed object analysis."""
-        from rich.prompt import Prompt
-        from rich.table import Table
-        
-        while True:
-            # Show available categories
-            categories = {}
-            for classification in dashboard.classifications:
-                cat = classification.category
-                if cat not in categories:
-                    categories[cat] = []
-                categories[cat].append(classification)
-            
-            self.console.print("\n📂 [bold]Available Categories:[/bold]")
-            cat_table = Table(show_header=True)
-            cat_table.add_column("Category")
-            cat_table.add_column("Count")
-            cat_table.add_column("Description")
-            
-            cat_table.add_row("artificial", str(len(categories.get('artificial', []))), "High confidence artificial objects")
-            cat_table.add_row("suspicious", str(len(categories.get('suspicious', []))), "Objects requiring investigation")
-            cat_table.add_row("edge_case", str(len(categories.get('edge_case', []))), "Borderline/unusual objects")
-            cat_table.add_row("natural", str(len(categories.get('natural', []))), "Confirmed natural objects")
-            cat_table.add_row("all", str(len(dashboard.classifications)), "All analyzed objects")
-            cat_table.add_row("exit", "", "Return to main menu")
-            
-            self.console.print(cat_table)
-            
-            category = Prompt.ask("Select category to explore", 
-                                choices=["artificial", "suspicious", "edge_case", "natural", "all", "exit"])
-            
-            if category == "exit":
-                break
-            
-            # Show objects in selected category
-            if category == "all":
-                objects = dashboard.classifications
-            else:
-                objects = categories.get(category, [])
-            
-            if not objects:
-                self.console.print(f"No objects found in category: {category}")
-                continue
-            
-            # Display detailed object information
-            obj_table = Table(show_header=True)
-            obj_table.add_column("ID", style="bold")
-            obj_table.add_column("Designation")
-            obj_table.add_column("Probability")
-            obj_table.add_column("Confidence")
-            obj_table.add_column("Top Risk Factor")
-            
-            for i, obj in enumerate(objects[:20]):  # Show first 20
-                risk_factor = obj.risk_factors[0] if obj.risk_factors else "None"
-                if len(risk_factor) > 30:
-                    risk_factor = risk_factor[:27] + "..."
-                
-                obj_table.add_row(
-                    str(i+1),
-                    obj.designation,
-                    f"{obj.artificial_probability:.3f}",
-                    f"{obj.confidence:.3f}",
-                    risk_factor
-                )
-            
-            self.console.print(f"\n📋 [bold]{category.upper()} OBJECTS[/bold]")
-            self.console.print(obj_table)
-            
-            if len(objects) > 20:
-                self.console.print(f"[dim]... and {len(objects) - 20} more objects[/dim]")
-            
-            # Allow detailed view of specific object
-            if Confirm.ask("View detailed analysis for a specific object?"):
-                try:
-                    obj_id = int(Prompt.ask("Enter object ID")) - 1
-                    if 0 <= obj_id < len(objects):
-                        self._show_detailed_analysis(objects[obj_id])
-                    else:
-                        self.console.print("❌ Invalid object ID")
-                except ValueError:
-                    self.console.print("❌ Please enter a valid number")
-    
-    def _show_detailed_analysis(self, classification):
-        """Show detailed analysis for a specific object."""
-        from rich.json import JSON
-        
-        # Create detailed info panel
-        detail_table = Table(show_header=False, box=None)
-        detail_table.add_column("Property", style="bold cyan")
-        detail_table.add_column("Value", style="white")
-        
-        detail_table.add_row("Designation", classification.designation)
-        detail_table.add_row("Category", classification.category.upper())
-        detail_table.add_row("Artificial Probability", f"{classification.artificial_probability:.3f}")
-        detail_table.add_row("Confidence", f"{classification.confidence:.3f}")
-        detail_table.add_row("Data Sources", ", ".join(classification.data_sources))
-        detail_table.add_row("Analysis Time", classification.analysis_timestamp.strftime("%Y-%m-%d %H:%M:%S"))
-        
-        panel = Panel(detail_table, title=f"[bold]🔍 Detailed Analysis: {classification.designation}[/bold]", 
-                     border_style="cyan")
-        self.console.print(panel)
-        
-        # Risk factors
-        if classification.risk_factors:
-            risk_table = Table(show_header=False)
-            risk_table.add_column("Risk Factor", style="yellow")
-            
-            for factor in classification.risk_factors:
-                risk_table.add_row(f"• {factor}")
-            
-            risk_panel = Panel(risk_table, title="[bold red]⚠️ Risk Factors[/bold red]", border_style="red")
-            self.console.print(risk_panel)
-        
-        # Orbital elements if available
-        if classification.orbital_elements:
-            self.console.print("\n[bold cyan]📊 Orbital Elements:[/bold cyan]")
-            orbital_json = JSON.from_data(classification.orbital_elements)
-            self.console.print(orbital_json)
-        
-        # Analysis details
-        if classification.analysis_details:
-            self.console.print("\n[bold cyan]🔬 Analysis Details:[/bold cyan]")
-            details_json = JSON.from_data(classification.analysis_details)
-            self.console.print(details_json)
-    
-    def display_results(self, results: List[Dict[str, Any]]):
-        """Display analysis results with statistics."""
-        if not results:
-            print("❌ No results to display")
-            return
-        
-        # Calculate statistics
-        total_objects = len(results)
-        suspicious_objects = [r for r in results if r.get('artificial_probability', r.get('artificial_score', 0)) >= 0.3]
-        highly_suspicious = [r for r in results if r.get('artificial_probability', r.get('artificial_score', 0)) >= 0.6]
-        
-        # Sort by artificial score (highest first)
-        sorted_results = sorted(results, key=lambda x: x.get('artificial_probability', x.get('artificial_score', 0)), reverse=True)
-        
+        """Display supplied records; opening a dashboard does not export or poll."""
+        dashboard = self.display_results(results)
         if self.console:
-            # Rich interface
-            console.print(f"\n📊 [bold green]ANALYSIS RESULTS[/bold green]")
-            console.print("=" * 60)
-            console.print(f"Total objects analyzed: [bold]{total_objects}[/bold]")
-            console.print(f"Suspicious objects (≥0.3): [bold red]{len(suspicious_objects)}[/bold red]")
-            console.print(f"Highly suspicious (≥0.6): [bold red]{len(highly_suspicious)}[/bold red]")
-            
-            if suspicious_objects:
-                console.print(f"\n🚨 [bold red]SUSPICIOUS OBJECTS REQUIRING INVESTIGATION:[/bold red]")
-                
-                table = Table(show_header=True, header_style="bold red")
-                table.add_column("Designation", style="cyan")
-                table.add_column("Score", style="red")
-                table.add_column("Classification", style="yellow")
-                table.add_column("Key Indicators", style="white")
-                
-                for obj in suspicious_objects[:20]:  # Show top 20
-                    indicators_str = "; ".join(obj['indicators'][:2]) if obj['indicators'] else "None"
-                    if len(indicators_str) > 50:
-                        indicators_str = indicators_str[:47] + "..."
-                    
-                    table.add_row(
-                        obj['designation'],
-                        f"{obj.get('artificial_probability', obj.get('artificial_score', 0)):.3f}",
-                        obj['classification'],
-                        indicators_str
-                    )
-                
-                console.print(table)
-                
-                if len(suspicious_objects) > 20:
-                    console.print(f"\n... and {len(suspicious_objects) - 20} more suspicious objects")
-        
-        else:
-            # Basic interface
-            print(f"\n📊 ANALYSIS RESULTS")
-            print("=" * 60)
-            print(f"Total objects analyzed: {total_objects}")
-            print(f"Suspicious objects (≥0.3): {len(suspicious_objects)}")
-            print(f"Highly suspicious (≥0.6): {len(highly_suspicious)}")
-            
-            if suspicious_objects:
-                print(f"\n🚨 SUSPICIOUS OBJECTS REQUIRING INVESTIGATION:")
-                print("-" * 60)
-                
-                for obj in suspicious_objects[:20]:  # Show top 20
-                    print(f"{obj['designation']:15} - Score: {obj.get('artificial_probability', obj.get('artificial_score', 0)):.3f} - {obj['classification']}")
-                    for indicator in obj.get('risk_factors', obj.get('indicators', []))[:2]:  # Show top 2 indicators
-                        print(f"  • {indicator}")
-                    print()
-                
-                if len(suspicious_objects) > 20:
-                    print(f"... and {len(suspicious_objects) - 20} more suspicious objects")
-    
+            from rich.prompt import Confirm
+            if Confirm.ask("Browse source-bound screening records?", console=self.console):
+                self._interactive_object_explorer(dashboard)
+        return dashboard
+
+    def _interactive_object_explorer(self, dashboard):
+        """Historical entrypoint delegating to the shared screening browser."""
+        from aneos_core.analysis.poller_presentation import explore
+        return explore(dashboard, self.console)
+
+    def _show_detailed_analysis(self, classification):
+        """Show the existing evidence review; unavailable origin stays unavailable."""
+        from aneos_core.analysis.dashboard_view import render_detail
+        return render_detail(classification, self.console)
+
+    def display_results(self, results: List[Dict[str, Any]]):
+        """Read-only screening summary; no independent origin thresholds."""
+        from aneos_core.analysis.poller_presentation import display
+        return display(results, self.console)
+
     def save_results(self, results: List[Dict[str, Any]], api_choice: str, time_period: str):
-        """Save results to JSON file."""
-        if not results:
-            return
-        
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"neo_poll_{api_choice.lower()}_{time_period}_{timestamp}.json"
-        
-        output_data = {
-            'metadata': {
-                'api_used': api_choice,
-                'time_period': time_period,
-                'analysis_date': datetime.datetime.now().isoformat(),
-                'total_objects': len(results),
-                'suspicious_count': len([r for r in results if r.get('artificial_probability', r.get('artificial_score', 0)) >= 0.3])
-            },
-            'results': results
-        }
-        
-        try:
-            with open(filename, 'w') as f:
-                json.dump(output_data, f, indent=2)
-            print(f"\n💾 Results saved to: {filename}")
-        except Exception as e:
-            print(f"❌ Error saving results: {e}")
-    
+        """Explicit exclusive JSON/Markdown export, preserving requested context."""
+        from aneos_core.analysis.poller_presentation import export
+        return export(results, self.console, {
+            'requested_source': api_choice, 'requested_period': time_period,
+            'semantics': 'Requested invocation context, not verified source/date coverage',
+        })
+
     def run_interactive_menu(self):
         """Run the interactive NEO polling menu."""
         if self.console:
@@ -814,7 +588,8 @@ Examples:
         print(f"🔄 Direct polling mode: {args.api} for period {args.period}")
         results = poller.poll_and_analyze(args.api, args.period, args.max_results)
         poller.display_results(results)
-        poller.save_results(results, args.api, args.period)
+        if poller.save_results(results, args.api, args.period) is None:
+            return 1
         
         # Launch dashboard if results are available
         if results:
@@ -830,7 +605,7 @@ Examples:
 
 if __name__ == "__main__":
     try:
-        main()
+        sys.exit(main())
     except NotImplementedError as exc:
         import sys
         print(f"Unavailable: {exc}", file=sys.stderr)

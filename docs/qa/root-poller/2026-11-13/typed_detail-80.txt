@@ -1,0 +1,120 @@
+SYNTHETIC_FOLLOW_UP — Follow-up candidate
+Input basis: Typed source snapshot — consistency checked, source not 
+authenticated
+Source-format consistency/replay is not provider authentication or independent 
+validation.
+╭──────────────────── Object review — SYNTHETIC_FOLLOW_UP ─────────────────────╮
+│                                                                              │
+│ Screening classification                                                     │
+│ FOLLOW_UP_CANDIDATE                                                          │
+│                                                                              │
+│ Interpretation                                                               │
+│ Uncalibrated rank 20.077007663295195 meets policy threshold 5.0 ranking      │
+│ units. This selects follow-up; it is not a physical-origin finding.          │
+│                                                                              │
+│ Scientific status                                                            │
+│ not independently validated; significance and origin probability unavailable │
+│                                                                              │
+│ Evidence binding                                                             │
+│ Review ID: bfed30614ceb3c8a4e4a89a85e825b63f91d4aa7d41c32a752fa865d17b7774f  │
+│ Evidence ID:                                                                 │
+│ 7fe9ff608c7ca5c4fba2526c09456f8a8e21e5e9fc9a4af98d0f52219a441125             │
+│ Policy ID: 7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37  │
+│                                                                              │
+│ Data coverage                                                                │
+│ Basic catalogue field presence: 4/15 (declared 15-field profile only).       │
+│ Screening orbital fields present: 3/3; domain eligibility is separate.       │
+│ Overall data completeness: not established. Eligible source coverage: not    │
+│ established.                                                                 │
+│                                                                              │
+│                           Recorded catalogue data                            │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃                      ┃ Recorded value /        ┃                         ┃ │
+│ ┃ Field                ┃ display conversion      ┃ Units / status          ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis      │ 2.5                     │ AU; present             │ │
+│ │ Eccentricity         │ 0.9                     │ dimensionless; present  │ │
+│ │ Inclination          │ 170                     │ degrees; present        │ │
+│ │ Ascending node       │ not available           │ degrees; not_available  │ │
+│ │ Periapsis argument   │ not available           │ degrees; not_available  │ │
+│ │ Mean anomaly         │ not available           │ degrees; not_available  │ │
+│ │ Orbit epoch          │ not available           │ model timestamp; native │ │
+│ │                      │                         │ solution retained;      │ │
+│ │                      │                         │ not_available           │ │
+│ │ Diameter             │ not available           │ km; not_available       │ │
+│ │ Absolute magnitude H │ not available           │ mag; not_available      │ │
+│ │ Albedo               │ not available           │ dimensionless;          │ │
+│ │                      │                         │ not_available           │ │
+│ │ Spectral label       │ not available           │ catalogue label;        │ │
+│ │                      │                         │ not_available           │ │
+│ │ Rotation period      │ not available           │ h; not_available        │ │
+│ │ First observation    │ not available           │ catalogue timestamp;    │ │
+│ │                      │                         │ source precision        │ │
+│ │                      │                         │ retained; not_available │ │
+│ │ Last observation     │ not available           │ catalogue timestamp;    │ │
+│ │                      │                         │ source precision        │ │
+│ │                      │                         │ retained; not_available │ │
+│ │ Retrieved at         │ 2026-11-13T08:00:00+00: │ retrieval timestamp;    │ │
+│ │                      │ 00; offset recorded not │ present                 │ │
+│ │                      │ time scale conversion   │                         │ │
+│ └──────────────────────┴─────────────────────────┴─────────────────────────┘ │
+│                                                                              │
+│              Squared-ranking decomposition — not probabilities               │
+│ ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Proxy channel    ┃ Effect / weight ┃ Weighted square / share             ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ orbital_dynamics │ 20.0770077 / 1  │ 403.086237; 100% of squared rank    │ │
+│ │                  │                 │ ━━━━━━━━━━━━━━━━━━━━                │ │
+│ └──────────────────┴─────────────────┴─────────────────────────────────────┘ │
+│                                                                              │
+│ Evidence-grounded explanation                                                │
+│ The rank uses fixed global prototype reference parameters, not a             │
+│ size/survey-conditioned population or calibrated null. Its proxy channels    │
+│ are not independent observations.                                            │
+│                                                                              │
+│ The largest squared-ranking term is orbital_dynamics. This is a              │
+│ decomposition of the heuristic, not the strongest physical evidence or a     │
+│ probability.                                                                 │
+│                                                                              │
+│ The displayed profile counts recorded fields, not complete knowledge or      │
+│ verified source coverage. Missing physical uncertainties, observations and   │
+│ unresolved sources still limit scientific use.                               │
+│                                                                              │
+│ Follow-up and limits                                                         │
+│ • Verify source identity, dated measurements, required uncertainty and       │
+│ compatible solutions.                                                        │
+│ • Use fitted natural/human-technology/artifact comparisons and withheld      │
+│ observations before physical-origin inference.                               │
+│ • Independent population calibration and search-wide error control are       │
+│ required before significance claims.                                         │
+│ • Binding/replay verifies consistency, not source authenticity or            │
+│ measurement accuracy.                                                        │
+│ • No natural/artificial origin, calibrated probability or five-sigma result  │
+│ is supplied.                                                                 │
+│ • Complete local enrichment and scientific operation readiness remain        │
+│ separate requirements.                                                       │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭────────────────── Object chronology — distinct date roles ───────────────────╮
+│ Discovery day: not available; not inferred from observations or local        │
+│ intake.                                                                      │
+│ No verified ledger receipt history supplied in this view; source timestamps  │
+│ are not a substitute.                                                        │
+│ UTC receipts may display Z instead of +00:00; original literals and complete │
+│ meanings remain in JSON.                                                     │
+│ Source labels, local receipts and dynamical epochs are different roles; no   │
+│ common UTC time axis is inferred.                                            │
+│ Consistency/replay does not authenticate sources, verify clock               │
+│ synchronization or establish scientific readiness.                           │
+│ ┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Role / source     ┃ Recorded value / scale ┃ Meaning                     ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Adapter receipt   │ 2026-11-13             │ Adapter read time; not an   │ │
+│ │ selected snapshot │ 08:00:00Z              │ observation.                │ │
+│ │                   │ UTC                    │                             │ │
+│ └───────────────────┴────────────────────────┴─────────────────────────────┘ │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Rank is an uncalibrated follow-up heuristic, not Gaussian significance or an 
+origin probability. Not flagged does not mean natural. Impact risk is not 
+assessed here. Legacy unverified rows are retained, not promoted to measured 
+evidence.
