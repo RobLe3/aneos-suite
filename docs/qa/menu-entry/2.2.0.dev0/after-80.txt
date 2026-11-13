@@ -1,0 +1,35 @@
+╭─────────────────────── aNEOS 2.2.0.dev0 | development ───────────────────────╮
+│                                                                              │
+│ Rank candidates. Trace evidence. Keep origin unresolved.                     │
+│ Research tool; not an operational warning service.                           │
+│                                                                              │
+│  Choice  Feature                     What this provides                      │
+│          Screening                                                           │
+│       1  Screen one object           Uncalibrated follow-up ranking          │
+│       2  Inspect screening evidence  Inputs, proxy contributions and         │
+│                                      limitations                             │
+│       3  Screen a batch              Designation file; per-object results    │
+│       4  Inspect orbital history     Catalogue history, not manoeuvre proof  │
+│          External evidence                                                   │
+│       5  Inspect impact evidence     Scoped JPL Sentry model results         │
+│       6  Inspect encounter history   Computed encounters, not observations   │
+│          Acquisition & research                                              │
+│       7  Run historical polling      Configured acquisition; verify          │
+│                                      coverage                                │
+│       8  Inspect population          Descriptive groups; significance        │
+│          patterns                    unavailable                             │
+│      15  Screen orbital proximity    Pairwise catalogue prefilter, not       │
+│                                      rendezvous proof                        │
+│          Results                                                             │
+│       9  Browse results              Session and persisted result views      │
+│      10  Export results              Machine-readable JSON or CSV            │
+│          System                                                              │
+│      11  Check components            Imports/reachability, not scientific    │
+│                                      certification                           │
+│      12  Start API server            Starts a local server process           │
+│      13  Inspect session analytics   Session summary and export              │
+│      14  Read scientific help        Method definitions and limits           │
+│          Navigation                                                          │
+│       0  Exit                        Return without starting a feature       │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯

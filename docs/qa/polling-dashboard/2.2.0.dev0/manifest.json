@@ -1,0 +1,246 @@
+{
+  "schema_version": "polling-dashboard-qa-v1",
+  "cases": [
+    "typed_follow_up",
+    "typed_partial",
+    "legacy_unverified"
+  ],
+  "views": [
+    "dashboard",
+    "browser",
+    "detail"
+  ],
+  "widths": {
+    "typed_follow_up-dashboard-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "typed_follow_up-dashboard-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "typed_follow_up-dashboard-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "typed_follow_up-browser-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "typed_follow_up-browser-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "typed_follow_up-browser-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "typed_follow_up-detail-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "typed_follow_up-detail-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "typed_follow_up-detail-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "typed_partial-dashboard-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "typed_partial-dashboard-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "typed_partial-dashboard-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "typed_partial-browser-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "typed_partial-browser-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "typed_partial-browser-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "typed_partial-detail-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "typed_partial-detail-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "typed_partial-detail-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "legacy_unverified-dashboard-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "legacy_unverified-dashboard-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "legacy_unverified-dashboard-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "legacy_unverified-browser-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 80,
+      "svg_viewbox_width": 994.0
+    },
+    "legacy_unverified-browser-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 120,
+      "svg_viewbox_width": 1482.0
+    },
+    "legacy_unverified-browser-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    },
+    "legacy_unverified-detail-80": {
+      "requested_columns": 80,
+      "actual_text_max_cells": 79,
+      "svg_viewbox_width": 994.0
+    },
+    "legacy_unverified-detail-120": {
+      "requested_columns": 120,
+      "actual_text_max_cells": 119,
+      "svg_viewbox_width": 1482.0
+    },
+    "legacy_unverified-detail-160": {
+      "requested_columns": 160,
+      "actual_text_max_cells": 160,
+      "svg_viewbox_width": 1970.0
+    }
+  },
+  "source_files_sha256": {
+    "aneos_core/analysis/artificial_neo_dashboard.py": "93974131b88786c46f92a6966bd607a304cddf81f4ceaf586c738c6e885f2ff9",
+    "aneos_core/analysis/dashboard_browser.py": "dd30f4381bc14e1e2c28b84484a328120c49bfea34a9190e33f09a4ddc7b23ac",
+    "aneos_core/analysis/dashboard_view.py": "567281eefeb43346f822bc5f739726d4d6a80483ee56f4f1924aa6de5978c1e9",
+    "aneos_menu.py": "4c7cff1cf54d623cb01b5d9b436fc978e87453b3632594d16ceee7e5eec8ceff",
+    "artificial_neo_dashboard_launcher.py": "c167bd4686b342c0767d4406ef4053b60ff175aaa398250d667902e46c37de58",
+    "scripts/qa_menu_entry.py": "cfdb36e3ed6dc8352c5b98af9410c2fc5d3b6cb5f3b3b810edc5485b83fb19f9",
+    "scripts/qa_polling_dashboard.py": "3fe960299fae0a410d7aaab5e01d4a963f3096cf300cb8bf49fe32fd094e264c"
+  },
+  "artifact_sha256": {
+    "typed_follow_up-detail-160.html": "3f521892d0c03c1237e3fb33094b77c4fa129c036517a0c11100bcbd312aa52b",
+    "legacy_unverified-detail-120.html": "dad3678408057bf274e898d6214db83909a90d1d40f5e33587238dc85d4693ef",
+    "typed_partial-dashboard-160.html": "3f949271ef6f4d98502e75802905ad2b598af6ee2d16e9e23368a44bdc9eac22",
+    "legacy_unverified-detail-160.txt": "471a2eaef73c9a98a70c6e421b12b0b35a35f31ef5681186a91107587c60827a",
+    "typed_partial-detail-160.html": "0e7c163350f4f1aee9f85e08eadcbcbebae919e4ba2102ecd713cb8f88447546",
+    "typed_partial-dashboard-80.html": "963dea2fd0210e9dab6905190ee7704432d64bf9dbac01207be28b4783ec8b3c",
+    "legacy_unverified-dashboard-160.svg": "8430fa85cbd523a12cf90789ff4e68288a60d04bf7aa38a499d74b8eacb88dfb",
+    "typed_partial-detail-160.svg": "2186180e790cc41967ee05814dee5edb76558ef321b2d17b70bd1ce3c471a582",
+    "legacy_unverified.json": "bf53ff1ebfc0411a0ff32cd33034c8352ebca38d554055ccf483592aff3b5920",
+    "typed_follow_up-browser-120.txt": "549fa2cfd29e665e1f76f4dcf8a1a8302b13c599c00021084a8de27bc2cbc0b2",
+    "typed_partial-browser-120.txt": "b06e2f7d03e67a05900170f9568101abd1dc3e1b43038dd29e694e51a0187038",
+    "typed_follow_up-detail-160.svg": "05117fed01a452e4042668afddb44efd83153baeb09bd38c1b59c40e390ce536",
+    "typed_follow_up-browser-120.html": "430df642317b71955bd466a12ee06e00d1e35d417a0c7cdea80caafbb4948bd3",
+    "typed_follow_up-detail-80.svg": "c85e6d9906c88d656ded4fcf1bd70e1c5827d649904de18feddbb95c8d59ba57",
+    "typed_follow_up-dashboard-80.svg": "fcca08120169f967fafdbcc58cd4b298ce6431f52c24d4aa84ade774f6414216",
+    "typed_follow_up-dashboard-80.html": "158754f4bc5e034fe42cb0712a666bba549598f5dd4413bc2d4c4936eea6f1b7",
+    "legacy_unverified-browser-120.svg": "28031f82cd11b0efd3b40716a5ab95fa5231599a581c48fdc36188eacc83a8d0",
+    "typed_follow_up-browser-120.svg": "d06a4ec79a5e904173f7394044df827ac9e8fc097589815a6805b557778f4588",
+    "typed_follow_up-browser-160.html": "1d7b87490bc68ada25ab315b66f0750b4164cd46a616168268eef28d8d2f3661",
+    "typed_partial-detail-160.txt": "a3e7973d0991ba752e628aaf6d6d0a7b4092da029b8948b307b39c9a8522a8c8",
+    "typed_follow_up-dashboard-80.txt": "1922c0fb06c35409598057dbd52d9a90c6b7e1efedf1959205fe584d8559080b",
+    "legacy_unverified-browser-120.txt": "0b636b02eee983a1ffb932e7b9a544ca9bbd7e2c79d92fc776182dd7f0c808b9",
+    "typed_partial-browser-120.svg": "bec4668086b8800cd211463d5882b7c473fe3e826af347e91a9505ce6a9e3466",
+    "typed_follow_up-detail-160.txt": "7f8cb46d47c149cf32847f0a39ed8b70e1a5434cfaf32b5b34deedd88ee2bfaf",
+    "typed_follow_up-detail-80.txt": "2006467f82da10cc509ab8a5bcbf079f34094301b0baf418ba798f3bda996868",
+    "typed_partial-dashboard-120.html": "4ae7dab6b7e82fd0043cf64695c07d53c8c0db41d23504403b9ba778ee327018",
+    "typed_partial-detail-120.html": "acc22659541cc596d669a85b18747c091de0842144c4234aeb84904076b46403",
+    "legacy_unverified-dashboard-160.txt": "14109fb7bfefa283c13f1f11333a528bb0120b0dc4c3ccc27a69629ed8e3ca24",
+    "typed_follow_up-detail-120.html": "e142afb447eb7af15bf9421be56828a02a5f82ef39913a5a461b9da34dd1e286",
+    "typed_partial.json": "5c8778de9621ad63a449e4c7986595146526f01b6253a8a8c82797fe5398456c",
+    "typed_follow_up.json": "444a6accd7280d49a7f9b1a8d8054d162feaaf551703387f971839ec7cfc9f08",
+    "legacy_unverified-detail-160.html": "c32a58090fc2525c2116fb65ce6bc66b96cf6d4a3e923d61c2c0f9d2c5b74099",
+    "legacy_unverified-detail-160.svg": "a87e281da55fbe45bbf5e826a6ce7179271d7f472448b700d7dd614558f9a1a9",
+    "legacy_unverified-dashboard-160.html": "e6ed1fdfcdacc911db7d00a92aab2cc949c8f3a07dc39174e9d1875bfc6d6d84",
+    "legacy_unverified-detail-80.txt": "0168d88b78c05a118495b800d0e12ed65114673432d3391ae6495c4e224d770e",
+    "typed_partial-dashboard-160.svg": "41a99fddc989913500643e7f744496d346745c38e87338f505514819a5f03d95",
+    "legacy_unverified-dashboard-80.html": "59d527f72ae9b7b1b0906b704bb79db9f2dfa03cac6ac5bf48d6228ed49a603f",
+    "typed_follow_up-detail-80.html": "3a4643453821a3f6b5609a5e4111c60c6c632339927ee8d7ae90b267658d20e8",
+    "legacy_unverified-dashboard-80.txt": "83c9a44f2c2fbc9f1e35a8f689a6091b6cfb92fcf6c9e170be9458a22732996d",
+    "typed_follow_up-dashboard-160.svg": "32d87bbb479b64b1d8050f0c270cb5df60bc2309f5e75262f90a0447de231271",
+    "legacy_unverified-browser-160.html": "95f9763ed4a8d7de5a683bdfd80c7bf9dfb971cc363c3d1af094df91b9e712d0",
+    "typed_partial-detail-80.html": "a53131dc8e57d6b39450808ca5c7f820c575bdc705e122df91203268a897d882",
+    "typed_follow_up-dashboard-160.txt": "664321cf4bbe383d32a10b445adf5306725e8cf0ba1d3e6690d0cd004c19bc38",
+    "legacy_unverified-browser-120.html": "105fafbf508485a0714f920c6690d4e98b25483e3245e97e8b2a6c332bf9b79f",
+    "legacy_unverified-dashboard-80.svg": "c4335716ccf13db55a231a36b001a5e1057a5d5e98c3782a50e6e9f626301416",
+    "typed_partial-dashboard-160.txt": "facc41b230c8ba955102360ba20211e93c1bdfca10856c27825b69b71ab40614",
+    "legacy_unverified-detail-80.svg": "b21636addb70a2447be6bad56d84c232141feaa2ed731fa03337e56f4671117a",
+    "legacy_unverified-detail-80.html": "e79c417339063935327b4c808b9248d535097958502cdad17cc1cf190122c3bf",
+    "legacy_unverified-dashboard-120.html": "4d294796a8fb1d52d90f29e90602c06337c45c66201f982bf797fa7940f0747b",
+    "legacy_unverified-browser-160.svg": "515677fe5cbd745c0373f56636656899532e88a90b679d7536505288a8998fdb",
+    "typed_partial-browser-80.txt": "6699a3502f32b162b9f571ea9fb20322013428cea7ba29702624fff1c84d246d",
+    "typed_partial-browser-160.txt": "f6b22e054115a21566c6277818887d293a0a653e3699acef8605b6fca70a4db5",
+    "typed_follow_up-detail-120.svg": "7c6f006719d81deec50f62611c2d5553a1fe74308cc7551e43d455b722eaddf4",
+    "typed_partial-browser-160.html": "98d8428adf71e64bd9c6ccfe7902e51510a4624567ac599a3f884ffe8c48d959",
+    "typed_follow_up-browser-160.txt": "7a030ea11f525902dfdba60a782971ce390db5232a12c30c09e3a549a46d97ed",
+    "typed_partial-dashboard-80.txt": "4d3bde76b9d7e202aa7ab54c0f737cd5b2b81911cc0034c36debefe1eba1aae0",
+    "typed_partial-detail-120.svg": "70b8e9aef0c1bcdb3562ac31bd40d328bef0814481ecdc0819b032e1472f843c",
+    "typed_follow_up-browser-80.txt": "589d411bd3c402ada6f936e115948ce5a22ea32f34d5793f5e632d2247caf5f7",
+    "typed_follow_up-dashboard-120.html": "0c92754f213a28941dfc9ccd6da50f712d8e8815fee2a7219ba1fd9f58691719",
+    "legacy_unverified-dashboard-120.svg": "18211933bfbddcda05acd8944366f7ce324ba3a7ba09e15970469417515aaccf",
+    "legacy_unverified-detail-120.txt": "cf46b99cdbbee451ec64812c32e15c32fcb1878fe1043ad4cb63e408cc87481d",
+    "legacy_unverified-browser-80.svg": "a5984a10c414a45ae707a482dfc02958bdc39d7d5fac48b8be381852f7a8501d",
+    "legacy_unverified-detail-120.svg": "25ddbef584473d18f078c04fbdc8b55c84f8f8b87c033f68414d47ee73df9b05",
+    "legacy_unverified-dashboard-120.txt": "17477a7035afdd229d4008eb6f7a1d2456fda6a60b7bf1dca8333c1015fd8ce4",
+    "typed_follow_up-dashboard-160.html": "bdc015f998d4de3a2a0567b44506404bc643399d65d544761504fcf3985fb1d2",
+    "legacy_unverified-browser-80.txt": "36aa770c69a62ce6d1c8215fb8238cd86cdaebf0982df200660aa230eb622333",
+    "typed_partial-browser-80.svg": "39e21f49373b71e953da9dc3d195273b9156d2373acfc772cd5475dbf6ff0b68",
+    "typed_partial-browser-160.svg": "cfe14b7b7550ad8e1f57c39171a78e499a6592c7fba4ab8b6d4f33c2c846d5fe",
+    "typed_follow_up-detail-120.txt": "933cb8899f83d9577531b845b8f5ad32ef59099aee0f860bf5be9879d1d6ee65",
+    "legacy_unverified-browser-160.txt": "7321f26d5bfaa184f9d5701dfac0ef15309b4ed9f17a37b6c2f30e9d5d736e55",
+    "typed_partial-dashboard-80.svg": "e1a3fcefb7175e8e1dbc8ef14ff4dee6d9a9358e3a135af03e169c73d1198dc3",
+    "typed_partial-detail-120.txt": "89014ddf16beed21f4efc7253f30d2815c53865eba10e1ea602017632214e097",
+    "typed_follow_up-browser-80.svg": "a3a071a8f19b3615ce856b3a4fa35a6fe2e962e8926f2d23f69ba00a0b0d19e4",
+    "typed_partial-browser-120.html": "3ed300a36ba8d099332fbb1de5c3d4086b5128ba8913b8aa4a868ca38d1c8ac9",
+    "typed_follow_up-browser-160.svg": "8ef53cf489740e8f99ced12f12e6c1e75aa6fbe00182dadb1efa91c5ae3843b1",
+    "typed_follow_up-dashboard-120.svg": "787e1d285f3566ace676b1466acf833d03c9aa0b1f324d39a1fa89eed7912aa6",
+    "legacy_unverified-browser-80.html": "a44e27a1c019c590f2fe905e261d4cd789e224bc59b747ffa1b9050792156d9c",
+    "typed_partial-dashboard-120.svg": "f7afc7b9ebb69f6a1f1ac2b4dbefcc4dd625108b319c4a2471a2cf1e52805cb0",
+    "typed_partial-detail-80.svg": "40cb1f9a0782a1033174825c54fd9604cd3e54acbb249c4c5a81569c8b3bb2ec",
+    "typed_partial-detail-80.txt": "8b3cd3a150e13c8c36daeb2ea52b3cbf6677dbf2b41d93df63130f800777d574",
+    "typed_partial-dashboard-120.txt": "e7f4262a64b6e8f336757a9d7fc83c875289517a9d3b7817fe60dfec1ab15dc3",
+    "typed_follow_up-browser-80.html": "5af6d9a1f2cd0501652e65e89a666f89ca485544cd237841fabdf02b7c232b9b",
+    "typed_partial-browser-80.html": "1015acdc707fe55ba75842483e768b3a5a48bcb8e53d6f2920e819d639ffaa9f",
+    "typed_follow_up-dashboard-120.txt": "a241be0177010d5336ca8b4ea582e0acdecc61fa5fe9f1205d6c9459bfe8c3f6"
+  },
+  "limits": "Synthetic typed computational positives and incomplete/legacy controls. Actual dashboard/browser/detail render paths, not provider acquisition, source authenticity, calibrated significance, physical model fitting or full-menu certification. Local screening receipt timestamps are generated during capture, not source observation dates."
+}

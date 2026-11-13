@@ -123,7 +123,9 @@ class TrainingDataManager:
                 if not result.errors and result.anomaly_score:
                     try:
                         # Get NEO data (assuming it's cached from analysis)
-                        neo_data = await self.analysis_pipeline._fetch_neo_data(result.designation)
+                        neo_data = getattr(result, 'neo_data', None)
+                        if neo_data is None:
+                            neo_data = await self.analysis_pipeline._fetch_neo_data(result.designation)
                         
                         if neo_data:
                             # Extract features including indicator results
@@ -138,6 +140,7 @@ class TrainingDataManager:
                             # Add anomaly score as metadata
                             feature_vector.metadata['anomaly_score'] = result.anomaly_score.overall_score
                             feature_vector.metadata['classification'] = result.anomaly_score.classification
+                            feature_vector.metadata['score_semantics'] = getattr(result.anomaly_score, 'score_semantics', 'legacy_heuristic')
                             
                             feature_vectors.append(feature_vector)
                             
@@ -157,18 +160,20 @@ class TrainingDataManager:
         if not feature_vectors:
             raise ValueError("No feature vectors provided")
         
-        # Create feature matrix
-        feature_matrix, feature_names, designations = self.feature_engineer.create_feature_matrix(feature_vectors)
-        
-        # Create labels based on anomaly scores (for validation purposes)
-        labels = []
+        # Screening classifications (including NOT_FLAGGED) are not ground truth.
+        # Labels must be supplied independently for every exact object identity.
+        by_designation = {}
         for fv in feature_vectors:
-            if fv.designation in designations:
-                classification = fv.metadata.get('classification', 'natural')
-                # Convert classification to binary (1 = anomalous, 0 = natural)
-                label = 1 if classification in ['suspicious', 'highly_suspicious', 'artificial'] else 0
-                labels.append(label)
-        
+            label = fv.metadata.get('independent_label')
+            provenance = fv.metadata.get('label_provenance')
+            if type(label) is not int or label not in (0, 1) or not isinstance(provenance, str) or not provenance.strip():
+                raise ValueError('Independent binary labels and label_provenance are required; screening classifications are not training truth')
+            if fv.designation in by_designation and by_designation[fv.designation] != (label, provenance):
+                raise ValueError('Conflicting independent labels for object')
+            by_designation[fv.designation] = (label, provenance)
+        feature_matrix, feature_names, designations = self.feature_engineer.create_feature_matrix(feature_vectors)
+        labels = [by_designation[d][0] for d in designations]
+
         labels = np.array(labels)
         
         # Feature selection if enabled

@@ -6,6 +6,7 @@ Comprehensive menu system for all aNEOS operations including scientific analysis
 ML training, API services, monitoring, and system management.
 """
 
+from aneos_core.data.provider_http import get as provider_get
 import os
 import sys
 import subprocess
@@ -84,6 +85,7 @@ except ImportError:
     HAS_RICH = False
 
 from aneos_menu_base import ANEOSMenuBase
+from aneos_version import APPLICATION_VERSION, BUILD_CHANNEL
 
 try:
     import uvicorn
@@ -101,6 +103,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from aneos_core.analysis.presentation import format_optional_number
+
+
 class ANEOSMenu(ANEOSMenuBase):
     """Mission-focused aNEOS menu system with intelligent automation."""
     
@@ -110,59 +115,8 @@ class ANEOSMenu(ANEOSMenuBase):
         self._auto_system_management()
     
     def _auto_system_management(self):
-        """Automated system management - invisible to users."""
-        try:
-            # Preflight check — warn on API failures, error on core component failures
-            try:
-                from aneos_core.utils.health import preflight_check
-                self._preflight = preflight_check()
-                core_failed = [
-                    k for k, v in self._preflight.items()
-                    if v["status"] == "error" and k in ("pipeline", "analysis")
-                ]
-                api_failed = [
-                    k for k, v in self._preflight.items()
-                    if v["status"] == "error" and k not in ("pipeline", "analysis", "cache_dir", "results_dir")
-                ]
-                if api_failed and self.console:
-                    from rich.panel import Panel as _Panel
-                    self.console.print(_Panel(
-                        f"[yellow]API sources unreachable: {', '.join(api_failed)}. "
-                        "Some features will operate in offline mode.[/yellow]",
-                        style="yellow"
-                    ))
-                if core_failed and self.console:
-                    from rich.panel import Panel as _Panel
-                    from rich.prompt import Confirm as _Confirm
-                    self.console.print(_Panel(
-                        f"[red]Core components unavailable: {', '.join(core_failed)}[/red]\n"
-                        "Pipeline features may not function correctly.",
-                        style="red"
-                    ))
-                    if not _Confirm.ask("Continue anyway?", default=True):
-                        import sys
-                        sys.exit(1)
-            except Exception:
-                self._preflight = {}
-
-            # Auto-initialize database if needed
-            if HAS_DATABASE:
-                try:
-                    db_status = get_database_status()
-                    if not db_status.get('available', False):
-                        init_database()
-                except:
-                    pass  # Silent failure for background operations
-            
-            # Auto-cleanup cache directories
-            self._auto_cleanup_cache()
-            
-            # Auto-optimize system settings
-            self._auto_optimize_settings()
-            
-        except Exception:
-            # Silent failure - system management should be invisible
-            pass
+        """Initialize local UI state only; entering a menu cannot clean research inputs."""
+        self._preflight = {'scientific_validation': {'status':'unavailable_uncalibrated'}}
     
     def _auto_cleanup_cache(self):
         """Intelligent cache cleanup with size limits."""
@@ -201,21 +155,14 @@ class ANEOSMenu(ANEOSMenuBase):
             pass
         
     def display_header(self):
-        """Display the mission-focused header."""
-        if not self.console:
-            print("=" * 80)
-            print("aNEOS - NEO Detection Mission Control")
-            print("Advanced Near Earth Object Detection System")
-            print("=" * 80)
-            return
-            
-        header = Panel.fit(
-            "[bold red]🛸 aNEOS Mission Control[/bold red]\n"
-            "[bold]Near Earth Object Detection System[/bold]\n"
-            "[dim]Scientific Mission: Detect Artificial NEOs[/dim]",
-            border_style="red"
-        )
-        self.console.print(header)
+        """Component presence is not calibrated scientific readiness."""
+        text = (f'aNEOS {APPLICATION_VERSION} ({BUILD_CHANNEL}): evidence acquisition and candidate screening\n'
+            'Ranking is uncalibrated. Physical hypotheses and origin remain unresolved.\n'
+            'No calibrated five-sigma or independent performance claim is installed.')
+        if self.console:
+            self.console.print(Panel(text, title='aNEOS'))
+        else:
+            print(text)
         
     def display_mission_status(self):
         """Display mission-critical status with intelligent automation."""
@@ -316,7 +263,7 @@ class ANEOSMenu(ANEOSMenuBase):
                     ("6", "🎯 Automated Polling Dashboard", "Poll APIs → Analyze → Interactive Dashboard"),
                     ("7", "📋 Mission Reports", "View detection results and findings"),
                     ("8", "🗂️ Results Browser", "Norton Commander-style candidate browser"),
-                    ("9", "🎛️ Mission Parameters", "Configure detection sensitivity and criteria"),
+                    ("9", "🎛️ Analysis Policy", "Read-only policy, diagnostics and snapshots"),
                     ("A", "📊 Detection Analytics", "Statistical analysis of discovery patterns"),
                     ("", "", ""),
                     ("0", "← Back to Mission Control", "Return to main mission control")
@@ -342,7 +289,7 @@ class ANEOSMenu(ANEOSMenuBase):
                 print("6. Automated Polling Dashboard")
                 print("7. Mission Reports")
                 print("8. Results Browser")
-                print("9. Mission Parameters")
+                print("9. Analysis Policy (read-only)")
                 print("A. Detection Analytics")
                 print("0. Back to Main Menu")
                 choice = input("Select option (0-9, A): ")
@@ -917,229 +864,54 @@ class ANEOSMenu(ANEOSMenuBase):
                 self.show_config_reference()
                 
     # Implementation methods for each menu option
-    def single_neo_analysis(self):
-        """Perform single NEO analysis with validated sigma 5 detection."""
-        designation = self.get_input("Enter NEO designation (e.g., '2024 AB123'): ")
-        if not designation:
-            return
-            
-        # Ask for smoking gun analysis
-        include_smoking_gun = True
+    def _get_screening_pipeline(self):
+        pipeline = getattr(self, '_screening_pipeline', None)
+        if pipeline is None:
+            pipeline = create_analysis_pipeline()
+            self._screening_pipeline = pipeline
+        return pipeline
+
+    def _display_screening_report(self, report):
+        from aneos_core.analysis.reporting import render_screening_markdown
+        text = render_screening_markdown(report)
         if self.console:
-            from rich.prompt import Confirm
-            include_smoking_gun = Confirm.ask("🔥 Include smoking gun detection? (course corrections, trajectory patterns, propulsion)", default=True)
+            from rich.markdown import Markdown
+            self.console.print(Markdown(text))
         else:
-            choice = input("Include smoking gun detection? (Y/n): ").lower()
-            include_smoking_gun = choice != 'n'
-            
-        try:
-            if self.console:
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    console=self.console
-                ) as progress:
-                    task = progress.add_task("🔬 Validated Sigma 5 Analysis...", total=None)
-                    
-                    # Use validated detector directly
-                    try:
-                        from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                        manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                        
-                        # For demo, use Tesla Roadster orbital elements if testing
-                        if designation.lower() in ['tesla', 'roadster', 'test']:
-                            orbital_elements = {'a': 1.325, 'e': 0.256, 'i': 1.077}
-                            physical_data = {'mass_estimate': 1350, 'diameter': 12, 'absolute_magnitude': 28.0}
-                            
-                            if include_smoking_gun:
-                                # Add mock orbital history showing course corrections
-                                orbital_history = [
-                                    {'epoch': 0, 'a': 1.325, 'e': 0.256, 'i': 1.077},
-                                    {'epoch': 365, 'a': 1.320, 'e': 0.250, 'i': 1.070}  # Small change indicating control
-                                ]
-                                result = manager.analyze_neo(
-                                    orbital_elements=orbital_elements,
-                                    physical_data=physical_data,
-                                    additional_data={'orbital_history': orbital_history},
-                                    detector_type=DetectorType.VALIDATED
-                                )
-                            else:
-                                result = manager.analyze_neo(
-                                    orbital_elements=orbital_elements,
-                                    physical_data=physical_data,
-                                    detector_type=DetectorType.VALIDATED
-                                )
-                        else:
-                            # Fetch real orbital elements from live data sources
-                            try:
-                                orbital_elements, physical_data = self._get_test_data(designation)
-                            except ValueError as exc:
-                                self.show_error(str(exc))
-                                return
-                            result = manager.analyze_neo(
-                                orbital_elements=orbital_elements,
-                                physical_data=physical_data,
-                                detector_type=DetectorType.VALIDATED
-                            )
-                        
-                    except ImportError as e:
-                        self.show_error(f"Validated detector not available: {e}")
-                        return
-                    
-                    progress.update(task, completed=True)
-                    
-                if result:
-                    self.display_analysis_result(result)
-                else:
-                    self.show_error(f"Analysis failed for {designation}")
-            else:
-                print(f"Analyzing {designation}...")
-                pipeline = create_analysis_pipeline()
-                result = asyncio.run(pipeline.analyze_neo(designation))
-                
-                if result:
-                    print(f"Analysis complete for {designation}")
-                    print(f"Overall Score: {result.anomaly_score.overall_score:.3f}")
-                    print(f"Classification: {result.anomaly_score.classification}")
-                else:
-                    print(f"Analysis failed for {designation}")
-                    
-        except Exception as e:
-            self.show_error(f"Error during analysis: {e}")
-            
-        self.wait_for_input()
+            print(text, end='')
+        return report
+
+    def _run_screening_entry(self, purpose, display=True):
+        designation = self.get_input(f'{purpose} — enter NEO designation: ')
+        if not designation:
+            return None
+        result = asyncio.run(self._get_screening_pipeline().analyze_neo(designation))
+        if display:
+            self.display_analysis_result(result)
+        return result
+
+    def single_neo_analysis(self):
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Candidate screening')
         
     def batch_analysis(self):
-        """Perform batch NEO analysis with validated sigma 5 detection."""
-        file_path = self.get_input("Enter file path with NEO designations (one per line): ")
-        if not file_path or not Path(file_path).exists():
-            self.show_error("File not found.")
-            return
-            
-        # Ask for smoking gun analysis
-        include_smoking_gun = True
-        if self.console:
-            from rich.prompt import Confirm
-            include_smoking_gun = Confirm.ask("🔥 Include smoking gun detection for batch? (course corrections, trajectory patterns)", default=True)
-        else:
-            choice = input("Include smoking gun detection for batch? (Y/n): ").lower()
-            include_smoking_gun = choice != 'n'
-            
+        """Retain every ordered outcome through the actual core batch service."""
+        file_path = self.get_input('File containing NEO designations (one per line): ')
+        if not file_path:
+            return []
         try:
-            with open(file_path, 'r') as f:
-                designations = [line.strip() for line in f if line.strip()]
-                
+            with Path(file_path).open(encoding='utf-8') as source:
+                designations = [line.strip() for line in source if line.strip()]
             if not designations:
-                self.show_error("No designations found in file.")
-                return
-                
-            if self.console:
-                smoking_gun_text = " with Smoking Gun Detection" if include_smoking_gun else ""
-                self.console.print(f"🎯 Found {len(designations)} NEOs to analyze{smoking_gun_text}")
-                
-                # Initialize validated detector
-                try:
-                    from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                    manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                    self.console.print("✅ Validated Sigma 5 detector initialized")
-                except ImportError as e:
-                    self.show_error(f"Validated detector not available: {e}")
-                    return
-                
-                with Progress(console=self.console) as progress:
-                    task = progress.add_task("🔬 Validated batch analysis...", total=len(designations))
-                    
-                    results = []
-                    artificial_detections = 0
-                    sigma5_detections = 0
-                    
-                    for designation in designations:
-                        try:
-                            orbital_elements, physical_data = self._get_test_data(designation)
-                            if not orbital_elements:
-                                self.console.print(f"[yellow]Skipping {designation}: no orbital data[/yellow]")
-                                progress.advance(task)
-                                continue
-                            
-                            result = manager.analyze_neo(
-                                orbital_elements=orbital_elements,
-                                physical_data=physical_data,
-                                detector_type=DetectorType.VALIDATED
-                            )
-                            
-                            if result:
-                                results.append({'designation': designation, 'result': result})
-                                if result.is_artificial:
-                                    artificial_detections += 1
-                                if result.sigma_level >= 5.0:
-                                    sigma5_detections += 1
-                                    
-                            progress.advance(task)
-                        except Exception as e:
-                            self.console.print(f"[red]Error analyzing {designation}: {e}[/red]")
-                            progress.advance(task)
-                            
-                # Display batch summary
-                summary_table = Table(title="🎯 Batch Analysis Summary")
-                summary_table.add_column("Metric", style="cyan")
-                summary_table.add_column("Count", style="white")
-                summary_table.add_column("Percentage", style="green")
-                
-                total = len(designations)
-                successful = len(results)
-                
-                summary_table.add_row("Total Objects", str(total), "100%")
-                summary_table.add_row("Successful Analysis", str(successful), f"{(successful/total)*100:.1f}%")
-                summary_table.add_row("🛸 Artificial Detections", str(artificial_detections), f"{(artificial_detections/total)*100:.1f}%")
-                summary_table.add_row("✅ Sigma 5+ Confidence", str(sigma5_detections), f"{(sigma5_detections/total)*100:.1f}%")
-                
-                self.console.print(summary_table)
-                
-                if artificial_detections > 0:
-                    self.console.print(f"\n[bold red]🚨 {artificial_detections} ARTIFICIAL OBJECTS DETECTED![/bold red]")
-                    if sigma5_detections > 0:
-                        self.console.print(f"[bold yellow]✅ {sigma5_detections} with SIGMA 5+ confidence[/bold yellow]")
-                        
-            else:
-                print(f"Analyzing {len(designations)} NEOs with validated detector...")
-                try:
-                    from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                    manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                except ImportError as e:
-                    print(f"Error: Validated detector not available: {e}")
-                    return
-                
-                results = []
-                artificial_detections = 0
-                
-                for i, designation in enumerate(designations, 1):
-                    print(f"Processing {i}/{len(designations)}: {designation}")
-                    try:
-                        orbital_elements, physical_data = self._get_test_data(designation)
-                        if not orbital_elements:
-                            print(f"  Skipping: no orbital data")
-                            continue
-                        result = manager.analyze_neo(
-                            orbital_elements=orbital_elements,
-                            physical_data=physical_data,
-                            detector_type=DetectorType.VALIDATED
-                        )
-                        if result:
-                            results.append({'designation': designation, 'result': result})
-                            if result.is_artificial:
-                                artificial_detections += 1
-                                print(f"  🚨 ARTIFICIAL DETECTION: σ={result.sigma_level:.2f}")
-                    except Exception as e:
-                        print(f"  Error: {e}")
-                        
-                print(f"\nBatch analysis complete: {len(results)} successful")
-                if artificial_detections > 0:
-                    print(f"🚨 {artificial_detections} ARTIFICIAL OBJECTS DETECTED!")
-                
-        except Exception as e:
-            self.show_error(f"Error during batch analysis: {e}")
-            
-        self.wait_for_input()
+                self.show_error('No designations found')
+                return []
+            results = asyncio.run(self._get_screening_pipeline().analyze_batch(designations))
+            for result in results:
+                self.display_analysis_result(result)
+            return results
+        except Exception as exc:
+            self.show_error(f'Batch execution unavailable: {exc}')
+            return []
     
     def neo_api_polling(self):
         """Launch Advanced NEO Automatic Review Pipeline System."""
@@ -1568,482 +1340,51 @@ class ANEOSMenu(ANEOSMenuBase):
             return input(prompt)
             
     def display_analysis_result(self, result):
-        """Display analysis result in formatted way."""
-        # Check if this is a validated detector result
-        if hasattr(result, 'sigma_level') and hasattr(result, 'classification'):
-            self.display_validated_result(result)
-            return
-            
-        # Legacy result format
-        if self.console:
-            table = Table(title=f"Analysis Result: {getattr(result, 'designation', 'Unknown')}")
-            table.add_column("Metric", style="cyan")
-            table.add_column("Value", style="white")
-            
-            if hasattr(result, 'anomaly_score'):
-                table.add_row("Overall Score", f"{result.anomaly_score.overall_score:.3f}")
-                table.add_row("Classification", result.anomaly_score.classification)
-                table.add_row("Confidence", f"{result.anomaly_score.confidence:.3f}")
-            
-            if hasattr(result, 'processing_time'):
-                table.add_row("Processing Time", f"{result.processing_time:.2f}s")
-            
-            self.console.print(table)
-        else:
-            print(f"\nAnalysis Result: {getattr(result, 'designation', 'Unknown')}")
-            if hasattr(result, 'anomaly_score'):
-                print(f"Overall Score: {result.anomaly_score.overall_score:.3f}")
-                print(f"Classification: {result.anomaly_score.classification}")
-                print(f"Confidence: {result.anomaly_score.confidence:.3f}")
+        """Render a replayed canonical assessment, not legacy claim aliases."""
+        from aneos_core.analysis.reporting import build_screening_report
+        return self._display_screening_report(build_screening_report(result))
     
     def display_validated_result(self, result):
-        """Display validated sigma 5 detector results."""
-        if self.console:
-            # Main results table
-            table = Table(title="🔬 Validated Sigma 5 Detection Results")
-            table.add_column("Metric", style="cyan", width=25)
-            table.add_column("Value", style="white", width=30)
-            table.add_column("Status", style="green", width=15)
-            
-            # Core results
-            table.add_row("🎯 Classification", result.classification, "✅ VALIDATED" if result.is_artificial else "🌍 NATURAL")
-            table.add_row("📈 Sigma Level", f"{result.sigma_level:.2f}σ", 
-                         "🚨 EXTREME" if result.sigma_level >= 10 else "✅ SIGMA 5+" if result.sigma_level >= 5 else "⚠️ SUB-SIGMA5")
-            # Raw artificial probability hidden per interim assessment
-            # Only show calibrated posterior when available
-            
-            # Metadata
-            detector_type = result.metadata.get('detector_type', 'unknown')
-            table.add_row("🔬 Detector", detector_type.upper(), "✅ VALIDATED")
-            
-            evidence_count = result.metadata.get('evidence_count', 0)
-            table.add_row("🔍 Evidence Sources", str(evidence_count), "✅ MULTI-MODAL" if evidence_count > 1 else "⚠️ LIMITED")
-            
-            if 'combined_p_value' in result.metadata:
-                p_val = result.metadata['combined_p_value']
-                table.add_row("📉 P-value", f"{p_val:.2e}", "✅ SIGNIFICANT" if p_val < 0.001 else "⚠️ WEAK")
-            
-            if 'false_discovery_rate' in result.metadata:
-                fdr = result.metadata['false_discovery_rate']
-                table.add_row("📊 False Discovery Rate", f"{fdr:.3f}", "✅ LOW" if fdr < 0.1 else "⚠️ HIGH")
-            
-            self.console.print(table)
-            self.console.print(
-                "[dim]σ = statistical rarity (null hypothesis); "
-                "P(artificial) = Bayesian posterior with 0.1% base rate.[/dim]"
-            )
-
-            # Smoking gun evidence
-            if hasattr(result, 'risk_factors') and result.risk_factors:
-                smoking_gun_table = Table(title="🔥 Smoking Gun Evidence")
-                smoking_gun_table.add_column("Evidence Type", style="red")
-                smoking_gun_table.add_column("Status", style="yellow")
-                
-                for evidence_type in result.risk_factors:
-                    if evidence_type == 'course_corrections':
-                        smoking_gun_table.add_row("🚀 Course Corrections", "DETECTED - Propulsion signatures")
-                    elif evidence_type == 'trajectory_patterns':
-                        smoking_gun_table.add_row("🎯 Trajectory Patterns", "DETECTED - Impossible repetition")
-                    elif evidence_type == 'propulsion_signatures':
-                        smoking_gun_table.add_row("🔥 Propulsion Signatures", "DETECTED - Direct evidence")
-                    elif evidence_type == 'orbital_dynamics':
-                        smoking_gun_table.add_row("🌌 Orbital Dynamics", "ANALYZED - Statistical anomalies")
-                    elif evidence_type == 'physical_properties':
-                        smoking_gun_table.add_row("🔬 Physical Properties", "ANALYZED - Material signatures")
-                
-                self.console.print(smoking_gun_table)
-            
-            # Final assessment
-            if result.is_artificial:
-                if result.sigma_level >= 10:
-                    assessment = "[bold red]🚨 EXTREME CONFIDENCE ARTIFICIAL OBJECT 🚨[/bold red]"
-                elif result.sigma_level >= 5:
-                    assessment = "[bold yellow]⚠️ SIGMA 5+ ARTIFICIAL DETECTION ⚠️[/bold yellow]"
-                else:
-                    assessment = "[yellow]❓ SUSPICIOUS OBJECT (sub-sigma 5)[/yellow]"
-            else:
-                assessment = "[green]🌍 NATURAL OBJECT (no artificial signatures)[/green]"
-                
-            self.console.print(f"\n{assessment}")
-            
-        else:
-            # Text-only display
-            print(f"\n🔬 Validated Sigma 5 Detection Results")
-            print(f"=" * 50)
-            print(f"Classification: {result.classification}")
-            print(f"Sigma Level: {result.sigma_level:.2f}σ")
-            print(f"Artificial Probability: {result.artificial_probability:.6f}")
-            print(f"Is Artificial: {result.is_artificial}")
-            
-            if result.is_artificial:
-                print(f"\n🚨 ARTIFICIAL OBJECT DETECTED!")
-                if result.sigma_level >= 5:
-                    print(f"✅ SIGMA 5+ CONFIDENCE ACHIEVED")
-                else:
-                    print(f"⚠️ Sub-sigma 5 confidence")
-            else:
-                print(f"\n🌍 Natural object classification")
+        """Compatibility name; validation/origin claims require supporting models."""
+        return self.display_analysis_result(result)
             
     # Placeholder methods for remaining functionality
     def interactive_analysis(self):
-        """Interactive step-by-step investigation with smoking gun detection."""
-        if self.console:
-            self.console.print("🔍 [bold blue]Interactive Investigation Mode[/bold blue]")
-            self.console.print("Comprehensive step-by-step artificial object investigation with validated sigma 5 detection\n")
-            
-            designation = self.get_input("Enter NEO designation for investigation: ")
-            if not designation:
-                return
-                
-            try:
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                from rich.prompt import Confirm
-                from rich.table import Table
-                import time
-                
-                manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                
-                self.console.print("✅ [green]Validated Sigma 5 detector initialized[/green]")
-                self.console.print("🔥 [bold]Available investigation modules:[/bold]")
-                self.console.print("   • Orbital Dynamics Analysis (statistical anomalies)")
-                self.console.print("   • Physical Properties Assessment (material signatures)")
-                self.console.print("   • [red]Course Correction Detection[/red] (propulsion evidence)")
-                self.console.print("   • [red]Trajectory Pattern Analysis[/red] (impossible repetitions)")
-                self.console.print("   • [red]Propulsion Signature Scanning[/red] (direct evidence)")
-                self.console.print("   • Bayesian Evidence Fusion (combined assessment)\n")
-                
-                # Fetch real orbital data
-                try:
-                    with self.console.status("[bold green]Fetching orbital data...", spinner="dots"):
-                        orbital_elements, physical_data = self._get_test_data(designation)
-                except ValueError as exc:
-                    self.console.print(f"❌ {exc}")
-                    return
-
-                sources = physical_data.get('_sources', ['local'])
-                self.console.print(f"✅ [green]Orbital data retrieved (sources: {', '.join(sources)})[/green]")
-
-                # Step 1: Basic orbital analysis
-                if Confirm.ask("Step 1: Run basic orbital dynamics analysis?", default=True):
-                    self.console.print("\n🌌 [bold cyan]Step 1: Orbital Dynamics Analysis[/bold cyan]")
-
-                    with self.console.status("[bold green]Analyzing orbital elements...", spinner="dots"):
-                        
-                        # Display orbital parameters
-                        orbital_table = Table(title="Orbital Elements")
-                        orbital_table.add_column("Parameter", style="cyan")
-                        orbital_table.add_column("Value", style="white")
-                        orbital_table.add_column("Analysis", style="yellow")
-                        
-                        orbital_table.add_row("Semi-major axis (a)", f"{orbital_elements['a']:.3f} AU", 
-                                            "Earth-crossing" if 0.98 < orbital_elements['a'] < 1.3 else "Standard")
-                        orbital_table.add_row("Eccentricity (e)", f"{orbital_elements['e']:.3f}", 
-                                            "Low" if orbital_elements['e'] < 0.3 else "High")
-                        orbital_table.add_row("Inclination (i)", f"{orbital_elements['i']:.1f}°", 
-                                            "Suspicious" if orbital_elements['i'] < 5.0 else "Normal")
-                        
-                        self.console.print(orbital_table)
-                
-                # Step 2: Smoking gun detection
-                if Confirm.ask("\nStep 2: Run smoking gun detection analysis?", default=True):
-                    self.console.print("\n🚀 [bold red]Step 2: Smoking Gun Detection[/bold red]")
-                    self.console.print("Searching for definitive artificial signatures...\n")
-                    
-                    with self.console.status("[bold red]Scanning for smoking gun evidence...", spinner="point"):
-                        # Run full validated analysis
-                        result = manager.analyze_neo(
-                            orbital_elements=orbital_elements,
-                            physical_data=physical_data,
-                            detector_type=DetectorType.VALIDATED
-                        )
-                    
-                    # Display smoking gun results
-                    smoking_table = Table(title="🔥 Smoking Gun Evidence")
-                    smoking_table.add_column("Evidence Type", style="bold")
-                    smoking_table.add_column("Detection", style="white")
-                    smoking_table.add_column("Sigma Level", style="cyan")
-                    smoking_table.add_column("Status", style="bold")
-                    
-                    # Check each smoking gun signature
-                    course_corrections = "DETECTED" if any(rf.startswith("course") for rf in result.risk_factors) else "None"
-                    trajectory_patterns = "DETECTED" if any(rf.startswith("trajectory") for rf in result.risk_factors) else "None"
-                    propulsion_sigs = "DETECTED" if any(rf.startswith("propulsion") for rf in result.risk_factors) else "None"
-                    
-                    smoking_table.add_row("Course Corrections", course_corrections, 
-                                        f"{result.sigma_level:.1f}" if course_corrections == "DETECTED" else "—",
-                                        "🚨 SMOKING GUN" if course_corrections == "DETECTED" else "—")
-                    smoking_table.add_row("Trajectory Patterns", trajectory_patterns,
-                                        f"{result.sigma_level:.1f}" if trajectory_patterns == "DETECTED" else "—", 
-                                        "🚨 SMOKING GUN" if trajectory_patterns == "DETECTED" else "—")
-                    smoking_table.add_row("Propulsion Signatures", propulsion_sigs,
-                                        f"{result.sigma_level:.1f}" if propulsion_sigs == "DETECTED" else "—",
-                                        "🚨 SMOKING GUN" if propulsion_sigs == "DETECTED" else "—")
-                    
-                    self.console.print(smoking_table)
-                
-                # Step 3: Final assessment
-                if Confirm.ask("\nStep 3: Generate final investigation report?", default=True):
-                    self.console.print("\n📊 [bold green]Step 3: Final Investigation Report[/bold green]")
-                    
-                    # Create comprehensive report
-                    report_table = Table(title=f"Investigation Report: {designation}")
-                    report_table.add_column("Metric", style="bold cyan")
-                    report_table.add_column("Value", style="white")
-                    report_table.add_column("Assessment", style="yellow")
-                    
-                    report_table.add_row("Classification", result.classification, 
-                                       "ARTIFICIAL" if result.is_artificial else "NATURAL")
-                    report_table.add_row("Sigma Confidence", f"{result.sigma_level:.2f}", 
-                                       "VALIDATED σ≥5" if result.sigma_level >= 5.0 else "Insufficient")
-                    report_table.add_row("Bayesian Probability", f"{result.artificial_probability:.6f}",
-                                       "Very High" if result.artificial_probability > 0.99 else "Moderate")
-                    report_table.add_row("Evidence Sources", f"{len(result.risk_factors)}", 
-                                       "Multiple" if len(result.risk_factors) > 3 else "Limited")
-                    report_table.add_row("Detection Method", result.metadata.get('detector_type', 'unknown'),
-                                       "Validated" if result.metadata.get('validation_available') else "Unvalidated")
-                    
-                    self.console.print(report_table)
-                    self.console.print(
-                        "[dim]σ = statistical rarity (null hypothesis); "
-                        "P(artificial) = Bayesian posterior with 0.1% base rate.[/dim]"
-                    )
-
-                    # Final verdict
-                    if result.is_artificial and result.sigma_level >= 5.0:
-                        self.console.print("\n🎉 [bold green]INVESTIGATION CONCLUSION: ARTIFICIAL OBJECT CONFIRMED[/bold green]")
-                        self.console.print("✅ Object meets sigma 5 confidence threshold for artificial classification")
-                        self.console.print("🔬 Results are scientifically validated and peer-review ready")
-                    elif result.sigma_level >= 3.0:
-                        self.console.print("\n⚠️ [bold yellow]INVESTIGATION CONCLUSION: SUSPICIOUS OBJECT[/bold yellow]") 
-                        self.console.print("❓ Object shows anomalies but below sigma 5 threshold")
-                        self.console.print("🔍 Recommend additional observations and analysis")
-                    else:
-                        self.console.print("\n🌍 [bold blue]INVESTIGATION CONCLUSION: NATURAL OBJECT[/bold blue]")
-                        self.console.print("✅ Object shows natural characteristics consistent with asteroid/comet")
-                        self.console.print("📊 No significant anomalies detected")
-                        
-            except Exception as e:
-                self.console.print(f"❌ Investigation failed: {str(e)}")
-                self.console.print("💡 Ensure validated detector is properly configured")
-        else:
-            print("\n--- UNVALIDATED: Interactive Analysis ---")
-            print("This functionality requires validated detection system.")
-            print("Current menu system cannot provide sigma 5 confidence without proper validation.")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Interactive evidence review')
     
     def orbital_history_analysis(self):
-        """Specialized orbital history analysis for course corrections and trajectory patterns."""
-        if self.console:
-            self.console.print("🚀 [bold red]Orbital History Analysis[/bold red]")
-            self.console.print("Advanced smoking gun detection for course corrections and trajectory patterns\n")
-            
-            designation = self.get_input("Enter NEO designation for orbital history analysis: ")
-            if not designation:
-                return
-                
+        """Show actual computed ephemerides separately from candidate screening."""
+        result = self._run_screening_entry('Orbital history and current evidence', display=False)
+        if result is None:
+            return None
+        from aneos_core.analysis.reporting import build_screening_report
+        additional = None
+        if not result.errors:
             try:
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                from rich.prompt import Confirm, IntPrompt
-                from rich.table import Table
-                from rich.panel import Panel
-                import time
-                
-                manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                
-                self.console.print("✅ [green]Validated Sigma 5 detector initialized[/green]")
-                self.console.print("🎯 [bold]Specialized Analysis Capabilities:[/bold]")
-                self.console.print("   • Course Correction Detection (delta-V analysis)")
-                self.console.print("   • Trajectory Pattern Recognition (impossible repetitions)")
-                self.console.print("   • Propulsion Signature Analysis (non-gravitational forces)")
-                self.console.print("   • Orbital Evolution Timeline Assessment\n")
-                
-                # Fetch orbital data
-                try:
-                    orbital_elements, physical_data = self._get_test_data(designation)
-                except ValueError as exc:
-                    self.console.print(f"❌ {exc}")
-                    return
-
-                # Analysis type selection
-                analysis_type = self.get_input("Analysis type [1=Course Corrections, 2=Trajectory Patterns, 3=Full Analysis] (3): ") or "3"
-                
-                if analysis_type in ["1", "3"]:
-                    # Course corrections analysis
-                    self.console.print("\n🛸 [bold cyan]Course Corrections Analysis[/bold cyan]")
-                    
-                    with self.console.status("[bold red]Analyzing orbital evolution for impossible maneuvers...", spinner="bouncingBar"):
-                        time.sleep(2)
-                        
-                        # Simulate orbital history with course corrections
-                        orbital_history = self._generate_orbital_history(designation, orbital_elements)
-                        
-                        # Run analysis with orbital history
-                        result = manager.analyze_neo(
-                            orbital_elements=orbital_elements,
-                            physical_data=physical_data,
-                            additional_data={'orbital_history': orbital_history},
-                            detector_type=DetectorType.VALIDATED
-                        )
-                    
-                    # Display course correction results
-                    corrections_table = Table(title="🚀 Course Corrections Detection")
-                    corrections_table.add_column("Epoch", style="cyan")
-                    corrections_table.add_column("Delta-V (m/s)", style="yellow")
-                    corrections_table.add_column("Probability", style="red")
-                    corrections_table.add_column("Assessment", style="bold")
-                    
-                    total_delta_v = 0
-                    for i, epoch in enumerate(orbital_history):
-                        if i > 0:
-                            # Calculate delta-V between epochs (simplified)
-                            delta_v = abs(epoch['a'] - orbital_history[i-1]['a']) * 1000 + \
-                                     abs(epoch['e'] - orbital_history[i-1]['e']) * 500 + \
-                                     abs(epoch['i'] - orbital_history[i-1]['i']) * 200
-                            total_delta_v += delta_v
-                            
-                            if delta_v > 10:  # Significant change
-                                assessment = "🚨 ARTIFICIAL MANEUVER"
-                            elif delta_v > 5:
-                                assessment = "⚠️ Suspicious Change"
-                            else:
-                                assessment = "Natural Variation"
-                                
-                            corrections_table.add_row(
-                                f"Day {epoch['epoch']}", 
-                                f"{delta_v:.1f}",
-                                f"{min(delta_v/10, 1.0):.3f}",
-                                assessment
-                            )
-                    
-                    self.console.print(corrections_table)
-                    
-                    if total_delta_v > 50:
-                        self.console.print(f"\n🚨 [bold red]SMOKING GUN DETECTED:[/bold red] Total ΔV = {total_delta_v:.1f} m/s")
-                        self.console.print("   Natural objects: ΔV < 1 m/s over years")
-                        self.console.print("   Artificial objects: ΔV = 10s-100s m/s from propulsion")
-                
-                if analysis_type in ["2", "3"]:
-                    # Trajectory patterns analysis
-                    self.console.print("\n🎯 [bold magenta]Trajectory Pattern Analysis[/bold magenta]")
-                    
-                    with self.console.status("[bold magenta]Searching for impossible trajectory repetitions...", spinner="dots12"):
-                        time.sleep(2)
-                        
-                        # Simulate close approach history
-                        approach_history = self._generate_approach_history(designation)
-                        
-                        # Analyze patterns
-                        patterns_table = Table(title="🎯 Trajectory Patterns")
-                        patterns_table.add_column("Approach #", style="cyan")
-                        patterns_table.add_column("Distance (AU)", style="yellow")
-                        patterns_table.add_column("Velocity (km/s)", style="green")
-                        patterns_table.add_column("Pattern Score", style="red")
-                        patterns_table.add_column("Assessment", style="bold")
-                        
-                        pattern_score = 0
-                        for i, approach in enumerate(approach_history):
-                            if i > 0:
-                                # Check for exact repetition (impossible naturally)
-                                dist_diff = abs(approach['distance_au'] - approach_history[i-1]['distance_au'])
-                                vel_diff = abs(approach['velocity_km_s'] - approach_history[i-1]['velocity_km_s'])
-                                
-                                if dist_diff < 0.001 and vel_diff < 0.1:
-                                    score = 1.0
-                                    assessment = "🚨 EXACT REPETITION"
-                                    pattern_score += 10
-                                elif dist_diff < 0.01 and vel_diff < 1.0:
-                                    score = 0.8
-                                    assessment = "⚠️ Suspicious Pattern"
-                                    pattern_score += 5
-                                else:
-                                    score = 0.1
-                                    assessment = "Natural Variation"
-                                
-                                patterns_table.add_row(
-                                    f"#{i+1}",
-                                    f"{approach['distance_au']:.6f}",
-                                    f"{approach['velocity_km_s']:.3f}",
-                                    f"{score:.3f}",
-                                    assessment
-                                )
-                        
-                        self.console.print(patterns_table)
-                        
-                        if pattern_score > 15:
-                            self.console.print(f"\n🚨 [bold red]SMOKING GUN DETECTED:[/bold red] Pattern Score = {pattern_score}")
-                            self.console.print("   Exact trajectory repetitions are impossible for natural objects")
-                            self.console.print("   Only artificial objects with active guidance can repeat trajectories")
-                
-                # Final assessment with smoking gun integration
-                self.console.print("\n📊 [bold green]Orbital History Assessment[/bold green]")
-                
-                final_table = Table(title=f"Final Assessment: {designation}")
-                final_table.add_column("Analysis Type", style="bold cyan")
-                final_table.add_column("Result", style="white")
-                final_table.add_column("Confidence", style="yellow")
-                final_table.add_column("Evidence", style="red")
-                
-                final_table.add_row("Classification", result.classification, 
-                                  f"σ={result.sigma_level:.2f}", 
-                                  "Validated" if result.metadata.get('validation_available') else "Unvalidated")
-                final_table.add_row("Smoking Gun Count", f"{len(result.risk_factors)} detected", 
-                                  f"P={result.artificial_probability:.6f}",
-                                  "Multiple" if len(result.risk_factors) > 2 else "Limited")
-                final_table.add_row("Overall Status", 
-                                  "ARTIFICIAL" if result.is_artificial else "NATURAL",
-                                  "CONFIRMED" if result.sigma_level >= 5.0 else "UNCERTAIN",
-                                  "Ground Truth" if result.metadata.get('validation_available') else "Theory")
-                
-                self.console.print(final_table)
-                
-                # Scientific conclusion
-                if result.is_artificial and result.sigma_level >= 5.0:
-                    self.console.print("\n🎉 [bold green]SCIENTIFIC CONCLUSION: ARTIFICIAL OBJECT CONFIRMED[/bold green]")
-                    self.console.print("✅ Meets sigma 5 confidence threshold for peer-reviewed publication")
-                    self.console.print("🔬 Orbital history provides definitive artificial signatures")
-                elif result.sigma_level >= 3.0:
-                    self.console.print("\n⚠️ [bold yellow]CONCLUSION: REQUIRES ADDITIONAL OBSERVATION[/bold yellow]")
-                    self.console.print("❓ Suggestive evidence but below discovery threshold")
-                else:
-                    self.console.print("\n🌍 [bold blue]CONCLUSION: CONSISTENT WITH NATURAL OBJECT[/bold blue]")
-                    self.console.print("✅ No significant artificial signatures detected")
-                    
-            except Exception as e:
-                self.console.print(f"❌ Orbital history analysis failed: {str(e)}")
-                self.console.print("💡 Ensure validated detector and test data are available")
-        else:
-            print("\n--- UNVALIDATED: Orbital History Analysis ---")
-            print("This functionality requires validated detection system.")
-            print("Advanced orbital analysis not available in basic mode.")
+                history = self._generate_orbital_history(result.designation, {})
+                additional = {'status':'available', 'evidence_basis':'computed_ephemeris',
+                    'source':'JPL Horizons', 'records':history,
+                    'interpretation':'Computed osculating elements, not observed manoeuvres'}
+            except Exception as exc:
+                additional = {'status':'unavailable', 'reason':str(exc)}
+        self._display_screening_report(build_screening_report(result, additional_evidence=additional))
+        return result
     
     def _generate_orbital_history(self, designation, base_elements):
-        """Fetch multi-epoch osculating elements from JPL Horizons.
-
-        Falls back to a single current-epoch snapshot when Horizons is unavailable.
-        """
-        try:
-            import requests
-            resp = requests.get(
-                "https://ssd.jpl.nasa.gov/api/horizons.api",
-                params={
-                    "format": "json", "COMMAND": f"'{designation}'",
-                    "OBJ_DATA": "NO", "MAKE_EPHEM": "YES",
-                    "EPHEM_TYPE": "ELEMENTS", "CENTER": "500@10",
-                    "START_TIME": "2010-01-01", "STOP_TIME": "2030-01-01",
-                    "STEP_SIZE": "365d", "OUT_UNITS": "AU-D",
-                }, timeout=10
-            )
-            if resp.status_code == 200:
-                history = self._parse_horizons_element_table(resp.json().get("result", ""))
-                if history:
-                    return history
-        except Exception:
-            pass  # fall through to single-epoch fallback
-
-        current = {"epoch": 0, "_label": "[OBSERVED - current epoch only; Horizons unavailable]"}
-        for k in ("a", "e", "i", "om", "w", "M"):
-            if k in base_elements:
-                current[k] = base_elements[k]
-        return [current]
+        """Use the actual Horizons adapter; never fabricate an observed epoch-zero fallback."""
+        from aneos_core.utils.errors import DataSourceUnavailableError
+        source = getattr(self, '_orbital_history_source', None)
+        if source is None:
+            fetcher = self._get_screening_pipeline().data_fetcher
+            source = fetcher.sources.get('Horizons') if fetcher is not None else None
+        if source is None:
+            raise DataSourceUnavailableError('Horizons history source unavailable')
+        history = source.fetch_orbital_history(designation)
+        if not isinstance(history, list) or not history:
+            raise DataSourceUnavailableError('Horizons returned no usable computed history; coverage unverified')
+        import json
+        return json.loads(json.dumps(history, allow_nan=False))
 
     def _parse_horizons_element_table(self, result_text: str) -> list:
         """Parse multi-epoch element table from Horizons text output."""
@@ -2083,7 +1424,7 @@ class ANEOSMenu(ANEOSMenuBase):
         """
         try:
             import requests
-            resp = requests.get(
+            resp = provider_get(
                 'https://ssd-api.jpl.nasa.gov/cad.api',
                 params={
                     'des': designation,
@@ -2115,180 +1456,38 @@ class ANEOSMenu(ANEOSMenuBase):
             return []
             
     def _fetch_real_orbital_data(self, designation):
-        """
-        Fetch real orbital elements from live data sources via DataFetcher.
-        Returns (orbital_elements_dict, physical_data_dict) or None on failure.
-        """
-        try:
-            from aneos_core.data.fetcher import DataFetcher
-            from aneos_core.utils.errors import DataSourceUnavailableError
-            fetcher = DataFetcher()
-            neo_data = fetcher.fetch_neo_data(designation)
-            oe = neo_data.orbital_elements
-            if oe is None:
-                return None
-            orbital = {
-                'a': oe.semi_major_axis,
-                'e': oe.eccentricity,
-                'i': oe.inclination,
-                'om': oe.ra_of_ascending_node,
-                'w': oe.arg_of_periapsis,
-                'M': oe.mean_anomaly,
-            }
-            physical = {}
-            pp = getattr(neo_data, 'physical_properties', None)
-            if pp is not None:
-                if getattr(pp, 'diameter_km', None) is not None:
-                    physical['diameter'] = pp.diameter_km
-                if getattr(pp, 'albedo', None) is not None:
-                    physical['albedo'] = pp.albedo
-                if getattr(pp, 'spectral_type', None) is not None:
-                    physical['spectral_type'] = pp.spectral_type
-                if getattr(pp, 'rotation_period_hours', None) is not None:
-                    physical['rotation_period'] = pp.rotation_period_hours
-            sources = getattr(neo_data, 'sources_used', [])
-            if sources:
-                physical['_sources'] = sources
-            return orbital, physical
-        except Exception:
+        """Compatibility seam for actual shared-pipeline inputs, not a demo table."""
+        result = asyncio.run(self._get_screening_pipeline().analyze_neo(designation))
+        if result.errors or result.screening_assessment is None:
             return None
+        snapshot = result.screening_assessment['evidence_snapshot']
+        physical = dict(snapshot['physical'])
+        pp = result.neo_data.physical_properties
+        if pp is not None and pp.rotation_period_hours is not None:
+            physical['rotation_period'] = pp.rotation_period_hours
+        physical['_units'] = {'diameter':'m', 'rotation_period':'h'}
+        physical['_sources'] = list(result.neo_data.sources_used)
+        return dict(snapshot['orbital']), physical
 
     def _get_test_data(self, designation):
-        """Get orbital data for a designation — real fetch preferred, known aliases as fallback."""
-        known = {
-            'tesla': {
-                'orbital': {'a': 1.325, 'e': 0.256, 'i': 1.077},
-                'physical': {'diameter': 12, 'absolute_magnitude': 28.0},
-            },
-            'roadster': {
-                'orbital': {'a': 1.325, 'e': 0.256, 'i': 1.077},
-                'physical': {'diameter': 12, 'absolute_magnitude': 28.0},
-            },
-            'apophis': {
-                'orbital': {'a': 0.922, 'e': 0.191, 'i': 3.331},
-                'physical': {'diameter': 0.370, 'absolute_magnitude': 19.7},
-            },
-            'test': {
-                'orbital': {'a': 1.5, 'e': 0.3, 'i': 5.0},
-                'physical': {'diameter': 1.0, 'absolute_magnitude': 25.0},
-            },
-        }
-
-        key = designation.lower()
-        if key in known:
-            return known[key]['orbital'], known[key]['physical']
-
-        # Try live data fetch for real designations
-        real = self._fetch_real_orbital_data(designation)
-        if real:
-            return real
-
-        # No live data available and designation not in known aliases
-        raise ValueError(
-            f"Cannot resolve orbital data for '{designation}'. "
-            "Live data fetch failed and designation is not in the known alias table. "
-            "Provide a valid JPL designation (e.g. '99942', '2020 SO') or check network connectivity."
-        )
+        """Historical name: resolve actual inputs, with no alias/demo substitution."""
+        data = self._fetch_real_orbital_data(designation)
+        if data is None:
+            raise ValueError(f"Cannot resolve orbital data for '{designation}'; source evidence unavailable")
+        return data
     
     def _calculate_validation_metrics(self, primary_result, detector_results):
-        """Calculate comprehensive validation metrics across multiple detectors."""
-        metrics = {
-            'detector_agreement': 0.0,
-            'confidence_consistency': 0.0,
-            'statistical_stability': 0.0,
-            'cross_validation_score': 0.0,
-            'false_positive_risk': 0.0
-        }
-        
-        if not detector_results or len(detector_results) < 2:
-            return metrics
-        
-        # Calculate detector agreement
-        artificial_predictions = sum(1 for result in detector_results.values() if result.is_artificial)
-        total_detectors = len(detector_results)
-        metrics['detector_agreement'] = artificial_predictions / total_detectors
-        
-        # Calculate confidence consistency
-        confidences = [result.artificial_probability for result in detector_results.values()]
-        if confidences:
-            mean_confidence = sum(confidences) / len(confidences)
-            variance = sum((c - mean_confidence) ** 2 for c in confidences) / len(confidences)
-            metrics['confidence_consistency'] = max(0, 1 - variance)
-        
-        # Calculate statistical stability using sigma levels
-        sigma_levels = []
-        for result in detector_results.values():
-            if hasattr(result, 'sigma_level') and result.sigma_level:
-                sigma_levels.append(result.sigma_level)
-        
-        if sigma_levels:
-            max_sigma = max(sigma_levels)
-            min_sigma = min(sigma_levels)
-            metrics['statistical_stability'] = min_sigma / max_sigma if max_sigma > 0 else 0
-        
-        # Cross-validation score
-        if primary_result.is_artificial and metrics['detector_agreement'] > 0.6:
-            metrics['cross_validation_score'] = min(1.0, primary_result.sigma_level / 5.0)
-        
-        # False positive risk assessment
-        if primary_result.sigma_level >= 5.0:
-            metrics['false_positive_risk'] = 1.0 / (2 ** primary_result.sigma_level)
-        else:
-            metrics['false_positive_risk'] = 0.5
-        
-        return metrics
+        """Detector agreement is not independent calibration or FP evidence."""
+        return {'status':'unavailable_uncalibrated', 'detector_agreement':None,
+            'confidence_consistency':None, 'statistical_stability':None,
+            'cross_validation_score':None, 'false_positive_risk':None}
     
     def _assess_peer_review_readiness(self, result, validation_metrics):
-        """Assess readiness for peer-review publication."""
-        assessment = {
-            'ready_for_publication': False,
-            'confidence_level': 'LOW',
-            'required_improvements': [],
-            'scientific_rigor_score': 0.0,
-            'recommendation': 'INSUFFICIENT_EVIDENCE'
-        }
-        
-        # Check sigma 5 requirement
-        sigma_threshold_met = result.sigma_level >= 5.0
-        
-        # Check validation metrics
-        detector_agreement_good = validation_metrics['detector_agreement'] >= 0.7
-        confidence_consistent = validation_metrics['confidence_consistency'] >= 0.8
-        statistically_stable = validation_metrics['statistical_stability'] >= 0.7
-        
-        # Calculate scientific rigor score
-        rigor_components = [
-            sigma_threshold_met,
-            detector_agreement_good,
-            confidence_consistent,
-            statistically_stable,
-            result.metadata.get('validation_available', False)
-        ]
-        
-        assessment['scientific_rigor_score'] = sum(rigor_components) / len(rigor_components)
-        
-        # Determine readiness
-        if sigma_threshold_met and detector_agreement_good and confidence_consistent:
-            assessment['ready_for_publication'] = True
-            assessment['confidence_level'] = 'HIGH'
-            assessment['recommendation'] = 'READY_FOR_PUBLICATION'
-        elif sigma_threshold_met:
-            assessment['confidence_level'] = 'MEDIUM'
-            assessment['recommendation'] = 'ADDITIONAL_VALIDATION_RECOMMENDED'
-        else:
-            assessment['recommendation'] = 'INSUFFICIENT_EVIDENCE'
-        
-        # Add specific improvement recommendations
-        if not sigma_threshold_met:
-            assessment['required_improvements'].append('Achieve sigma 5+ confidence threshold')
-        if not detector_agreement_good:
-            assessment['required_improvements'].append('Improve detector agreement (>70%)')
-        if not confidence_consistent:
-            assessment['required_improvements'].append('Increase confidence consistency across methods')
-        if not statistically_stable:
-            assessment['required_improvements'].append('Improve statistical stability')
-        
-        return assessment
+        """Thresholds and agreement do not establish publication readiness."""
+        return {'ready_for_publication':False, 'status':'independent_review_required',
+            'confidence_level':None, 'scientific_rigor_score':None,
+            'recommendation':'ADDITIONAL_EVIDENCE_REQUIRED',
+            'required_improvements':['Compatible observational fits, independent calibration and scientific review']}
     
     def _display_enhanced_validation_results(self, designation, primary_result, detector_results, 
                                            validation_metrics, peer_review_assessment):
@@ -3539,17 +2738,17 @@ class ANEOSMenu(ANEOSMenuBase):
             # Check for outdated database entries and suggest re-polling
             if not enrichment_stats.get('error'):
                 outdated_check = await self._check_outdated_database_entries(api_sources, period)
-                if outdated_check.get('outdated_count', 0) > 0:
+                if outdated_check.get('eligible_count', 0) > 0:
                     if self.console:
-                        self.console.print(f"\n🔄 [yellow]Found {outdated_check['outdated_count']} outdated database entries[/yellow]")
+                        self.console.print(f"\n🔄 [yellow]Found {outdated_check['outdated_count']} objects needing receipt review[/yellow]")
                         from rich.prompt import Confirm
-                        if Confirm.ask("🔄 Re-poll outdated objects for fresh data?", default=True):
-                            await self._repoll_outdated_entries(outdated_check['outdated_objects'])
+                        if Confirm.ask("🔄 Request a whole-plan adapter refresh (up to 10 objects; not guaranteed new observations)?", default=True):
+                            await self._repoll_outdated_entries([obj for obj in outdated_check['outdated_objects'] if obj['retry_eligible']])
                     else:
-                        print(f"\n🔄 Found {outdated_check['outdated_count']} outdated database entries")
-                        repoll = input("Re-poll outdated objects for fresh data? [Y/n]: ").strip().lower()
+                        print(f"\n🔄 Found {outdated_check['outdated_count']} objects needing receipt review")
+                        repoll = input("Request a whole-plan adapter refresh (up to 10 objects; not guaranteed new observations)? [Y/n]: ").strip().lower()
                         if repoll != 'n':
-                            await self._repoll_outdated_entries(outdated_check['outdated_objects'])
+                            await self._repoll_outdated_entries([obj for obj in outdated_check['outdated_objects'] if obj['retry_eligible']])
             
             if enrichment_stats.get('error'):
                 if self.console:
@@ -3586,11 +2785,11 @@ class ANEOSMenu(ANEOSMenuBase):
                 # Show threshold violations
                 violations = self._check_threshold_violations(dashboard.classifications)
                 if violations:
-                    self.console.print(f"\n⚠️ [bold red]{len(violations)} objects exceed orbital mechanics thresholds[/bold red]")
+                    self.console.print(f"\n⚠️ [bold red]{len(violations)} records meet follow-up ranking policy (not physical-law violations)[/bold red]")
                     
                     from rich.prompt import Confirm
                     if Confirm.ask("🗂️ Open Norton Commander-style browser for threshold violations?"):
-                        self._norton_style_browser(violations, "Threshold Violations")
+                        self._norton_style_browser(violations, "Follow-up ranking candidates")
                 
                 # Interactive options menu
                 self._dashboard_interactive_menu(dashboard)
@@ -3603,6 +2802,7 @@ class ANEOSMenu(ANEOSMenuBase):
 
     async def _enrich_database_with_polling_results(self, results: list, api_sources: list, period: str) -> dict:
         """Enrich the local NEO database with polling results."""
+        db = None
         try:
             # Import database components
             from aneos_api.database import db_manager, EnrichedNEOService
@@ -3612,7 +2812,9 @@ class ANEOSMenu(ANEOSMenuBase):
             # Generate unique session ID for this polling session
             session_id = f"polling_{period}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
             
-            # Get database session
+            # Schema creation is an explicit prerequisite of this requested write.
+            if db_manager.init_database() is not True:
+                return {'error':'ENRICHMENT_SCHEMA_UNAVAILABLE','commit_status':'not_committed'}
             db = db_manager.get_db()
             neo_service = EnrichedNEOService(db)
             
@@ -3628,125 +2830,62 @@ class ANEOSMenu(ANEOSMenuBase):
             # Enrich database with polling results
             enrichment_stats = neo_service.enrich_neo_data(results, session_id)
             
-            # Close database session
-            db.close()
-            
             return enrichment_stats
             
         except ImportError as e:
             return {'error': f'Database components not available: {e}'}
         except Exception as e:
-            return {'error': f'Database enrichment failed: {e}'}
+            return {'error': f'Database enrichment failed: {e}', 'commit_status': 'not_committed'}
+        finally:
+            if db is not None:
+                db.close()
 
     async def _check_outdated_database_entries(self, api_sources: list, period: str) -> dict:
-        """Check for outdated database entries that need re-polling."""
+        """Read stored adapter receipts, never guessed compatibility timestamp columns."""
+        db = None
         try:
-            from aneos_api.database import db_manager, EnrichedNEO
-            from datetime import datetime, timedelta, timezone as _tz
-            UTC = _tz.utc
-
-            # Get database session
+            from aneos_api.database import db_manager
+            from aneos_api.source_freshness import inspect_freshness
+            from aneos_core.analysis.freshness_view import render_freshness
             db = db_manager.get_db()
-
-            # Define "outdated" as older than 30 days for most sources
-            cutoff_date = datetime.now(UTC) - timedelta(days=30)
-            
-            # Find NEOs that haven't been updated recently from any of the polling sources
-            outdated_objects = []
-            for source in api_sources:
-                source_field = f"{source.lower()}_last_update"
-                
-                # Query for objects with outdated or missing data from this source
-                query = db.query(EnrichedNEO).filter(
-                    getattr(EnrichedNEO, source_field, None) < cutoff_date
-                )
-                
-                outdated_from_source = query.limit(50).all()  # Limit to prevent overwhelming
-                
-                for neo in outdated_from_source:
-                    if neo.designation not in [obj['designation'] for obj in outdated_objects]:
-                        outdated_objects.append({
-                            'designation': neo.designation,
-                            'last_updated': neo.last_updated,
-                            'missing_sources': []
-                        })
-                
-                # Add missing source info
-                for obj in outdated_objects:
-                    neo = next((n for n in outdated_from_source if n.designation == obj['designation']), None)
-                    if neo:
-                        source_update = getattr(neo, source_field, None)
-                        if not source_update or source_update < cutoff_date:
-                            obj['missing_sources'].append(source)
-            
-            db.close()
-            
-            return {
-                'outdated_count': len(outdated_objects),
-                'outdated_objects': outdated_objects
-            }
-            
-        except Exception as e:
-            return {'error': f'Failed to check outdated entries: {e}'}
+            report = inspect_freshness(db, api_sources)
+            render_freshness(report, self.console)
+            return report
+        except Exception:
+            message = 'Source receipt review unavailable; no freshness or refresh eligibility established.'
+            if self.console:
+                from rich.text import Text
+                self.console.print(Text(message))
+            else:
+                print(message)
+            return {'error': 'SOURCE_FRESHNESS_UNAVAILABLE', 'outdated_count': 0, 'outdated_objects': []}
+        finally:
+            if db is not None:
+                db.close()
 
     async def _repoll_outdated_entries(self, outdated_objects: list):
-        """Re-poll specific outdated NEO entries."""
+        """Explicit shared acquisition, with stored eligibility rechecked before querying."""
         try:
-            from neo_poller import NEOPoller
-            
+            import asyncio
+            from aneos_api.database import db_manager
+            from aneos_api.source_freshness import refresh_objects
+            from aneos_core.analysis.freshness_view import render_refresh
+            from aneos_core.config.settings import get_config
+            designations = list(dict.fromkeys(o['designation'] for o in outdated_objects))[:10]
+            if not designations:
+                return {'results': [], 'recorded_count': 0}
+            report = await asyncio.to_thread(refresh_objects, db_manager.engine, designations,
+                                            list(get_config().api.data_sources_priority))
+            render_refresh(report, self.console)
+            return report
+        except Exception:
+            message = 'Explicit refresh unavailable; no successful refresh has been verified.'
             if self.console:
-                self.console.print(f"\n🔄 [bold yellow]Re-polling {len(outdated_objects)} outdated objects[/bold yellow]")
+                from rich.text import Text
+                self.console.print(Text(message))
             else:
-                print(f"\n🔄 Re-polling {len(outdated_objects)} outdated objects")
-            
-            poller = NEOPoller()
-            fresh_results = []
-            
-            # For each outdated object, try to get fresh data from missing sources
-            for obj in outdated_objects[:10]:  # Limit to prevent API overload
-                designation = obj['designation']
-                missing_sources = obj.get('missing_sources', [])
-                
-                if self.console:
-                    self.console.print(f"  📡 [cyan]Re-polling {designation} from {', '.join(missing_sources)}[/cyan]")
-                else:
-                    print(f"  📡 Re-polling {designation} from {', '.join(missing_sources)}")
-                
-                # Try SBDB first as it's most comprehensive
-                if 'NASA_SBDB' in missing_sources:
-                    try:
-                        sbdb_data = poller.fetch_sbdb_data(designation)
-                        if sbdb_data:
-                            analysis = poller.analyze_sbdb_data_for_artificial_signatures(sbdb_data)
-                            analysis['data_source'] = 'NASA_SBDB'
-                            fresh_results.append(analysis)
-                    except Exception as e:
-                        if self.console:
-                            self.console.print(f"    ❌ [red]SBDB error for {designation}: {e}[/red]")
-                        else:
-                            print(f"    ❌ SBDB error for {designation}: {e}")
-            
-            if fresh_results:
-                # Re-enrich database with fresh data
-                import uuid
-                session_id = f"repoll_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
-                enrichment_stats = await self._enrich_database_with_polling_results(fresh_results, ['NASA_SBDB'], 'repoll')
-                
-                if self.console:
-                    self.console.print(f"✅ [green]Re-polling complete: Updated {enrichment_stats.get('updated_neos', 0)} objects[/green]")
-                else:
-                    print(f"✅ Re-polling complete: Updated {enrichment_stats.get('updated_neos', 0)} objects")
-            else:
-                if self.console:
-                    self.console.print("⚠️ [yellow]No fresh data obtained from re-polling[/yellow]")
-                else:
-                    print("⚠️ No fresh data obtained from re-polling")
-            
-        except Exception as e:
-            if self.console:
-                self.console.print(f"❌ [red]Re-polling error: {e}[/red]")
-            else:
-                print(f"❌ Re-polling error: {e}")
+                print(message)
+            return {'error': 'SOURCE_REFRESH_UNAVAILABLE', 'recorded_count': 0}
 
     def _analyze_data_freshness(self, source: str, results: list) -> str:
         """Analyze if data appears to be live API data or cached/mock data."""
@@ -3899,44 +3038,9 @@ class ANEOSMenu(ANEOSMenuBase):
             return []
 
     def _dashboard_interactive_menu(self, dashboard):
-        """Interactive menu for dashboard operations."""
-        from rich.prompt import Prompt
-        
-        while True:
-            options_table = Table(show_header=False, box=None, padding=(0, 2))
-            options_table.add_column("Option", style="bold cyan")
-            options_table.add_column("Description", style="white")
-            
-            options_table.add_row("1", "🗂️ Browse all results (Norton Commander style)")
-            options_table.add_row("2", "⚠️ View threshold violations only")
-            options_table.add_row("3", "🛸 View artificial objects only")
-            options_table.add_row("4", "❓ View suspicious objects only")
-            options_table.add_row("5", "📊 Re-display dashboard summary")
-            options_table.add_row("6", "💾 Browse enriched NEO database")
-            options_table.add_row("0", "🚪 Return to menu")
-            
-            panel = Panel(options_table, title="[bold]🎯 Dashboard Options[/bold]", border_style="cyan")
-            self.console.print(panel)
-            
-            choice = Prompt.ask("Select option", choices=["0", "1", "2", "3", "4", "5", "6"])
-            
-            if choice == "0":
-                break
-            elif choice == "1":
-                self._norton_style_browser(dashboard.classifications, "All Results")
-            elif choice == "2":
-                violations = self._check_threshold_violations(dashboard.classifications)
-                self._norton_style_browser(violations, "Threshold Violations")
-            elif choice == "3":
-                artificial = [c for c in dashboard.classifications if c.category == 'artificial']
-                self._norton_style_browser(artificial, "Artificial Objects")
-            elif choice == "4":
-                suspicious = [c for c in dashboard.classifications if c.category == 'suspicious']
-                self._norton_style_browser(suspicious, "Suspicious Objects")
-            elif choice == "5":
-                dashboard.display_dashboard(save_results=False)
-            elif choice == "6":
-                self._browse_enriched_database()
+        'Interactive menu for dashboard operations.'
+        from aneos_core.analysis.dashboard_browser import interactive
+        return interactive(self, dashboard)
 
     def results_browser(self):
         """Norton Commander-style results browser."""
@@ -3963,6 +3067,8 @@ class ANEOSMenu(ANEOSMenuBase):
                     results_files.extend(Path(".").glob(pattern))
                     results_files.extend(Path("dashboard_results").glob(pattern) if Path("dashboard_results").exists() else [])
                 
+                results_files.extend(p for p in Path('dashboard_results').glob('screening_dashboard_*/report.json') if (p.parent/'complete.json').is_file())
+
                 # Sort by modification time
                 results_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
                 
@@ -4011,870 +3117,146 @@ class ANEOSMenu(ANEOSMenuBase):
             self.console.print("❌ Please enter a valid number")
 
     def _load_and_browse_results(self, file_path):
-        """Load results and launch Norton Commander-style browser."""
+        'Load results and launch Norton Commander-style browser.'
+        import json
+        from aneos_core.analysis.artificial_neo_dashboard import records_from_file
+        from aneos_core.analysis.dashboard_view import message
         try:
-            import json
-            
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-            
-            # Extract classifications
-            classifications = []
-            if 'classifications' in data:
-                # Dashboard format
-                from aneos_core.analysis.artificial_neo_dashboard import NEOClassification
-                from datetime import datetime
-                
-                for c_data in data['classifications']:
-                    # Convert back to NEOClassification objects
-                    c_data['analysis_timestamp'] = datetime.fromisoformat(c_data['analysis_timestamp'])
-                    classifications.append(NEOClassification(**c_data))
-            elif 'results' in data:
-                # Polling format - convert to classifications
-                classifications = self._convert_polling_to_classifications(data['results'])
-            elif isinstance(data, list):
-                # Direct list format
-                classifications = self._convert_polling_to_classifications(data)
-            
-            if classifications:
-                self._norton_style_browser(classifications, f"Results from {file_path.name}")
-            else:
-                self.console.print("❌ [red]No valid classifications found in file[/red]")
-                
-        except Exception as e:
-            self.console.print(f"❌ [red]Error loading results: {e}[/red]")
+            if file_path.stat().st_size > 64 * 1024 * 1024:
+                raise ValueError('Result file exceeds 64 MiB inspection bound')
+            with open(file_path) as handle:
+                records = records_from_file(json.load(handle))
+            classifications = self._convert_polling_to_classifications(records)
+            return self._norton_style_browser(classifications, 'Screening records from '+file_path.name)
+        except Exception:
+            message('Results unavailable: invalid, changed or unsupported file. Original file was not modified.', self.console)
 
     def _convert_polling_to_classifications(self, polling_results):
-        """Convert polling results to classification format."""
-        from aneos_core.analysis.artificial_neo_dashboard import NEOClassification
-        from datetime import datetime
-        
-        classifications = []
-        for result in polling_results:
-            artificial_prob = result.get('artificial_probability', result.get('artificial_score', 0.0))
-            
-            # Determine category
-            if artificial_prob >= 0.8:
-                category = 'artificial'
-            elif artificial_prob >= 0.5:
-                category = 'suspicious'
-            elif artificial_prob >= 0.3:
-                category = 'edge_case'
-            else:
-                category = 'natural'
-            
-            classification = NEOClassification(
-                designation=result.get('designation', 'Unknown'),
-                category=category,
-                confidence=0.8,  # Default confidence
-                artificial_probability=artificial_prob,
-                risk_factors=result.get('risk_factors', result.get('indicators', [])),
-                analysis_details={},
-                data_sources=[result.get('data_source', 'Unknown')],
-                analysis_timestamp=datetime.now(),
-                orbital_elements=result.get('orbital_elements', {})
-            )
-            classifications.append(classification)
-        
-        return classifications
+        'Convert polling results to classification format.'
+        from aneos_core.analysis.artificial_neo_dashboard import ArtificialNEODashboard
+        return ArtificialNEODashboard().classify_records(polling_results)
 
     def _check_threshold_violations(self, classifications):
-        """Check which objects violate orbital mechanics thresholds."""
-        violations = []
-        
-        for obj in classifications:
-            orbital = obj.orbital_elements
-            if not orbital:
-                continue
-            
-            violation_reasons = []
-            
-            # Eccentricity threshold
-            eccentricity = orbital.get('e', orbital.get('eccentricity', 0.0))
-            if eccentricity >= 0.3:
-                violation_reasons.append(f"High eccentricity: {eccentricity:.3f}")
-            
-            # Inclination threshold
-            inclination = orbital.get('i', orbital.get('inclination', 0.0))
-            if inclination >= 30:
-                violation_reasons.append(f"High inclination: {inclination:.1f}°")
-            
-            # Semi-major axis threshold
-            semi_major_axis = orbital.get('a', orbital.get('semi_major_axis', 1.0))
-            if semi_major_axis < 1.2 or semi_major_axis > 2.0:
-                violation_reasons.append(f"Unusual orbit size: {semi_major_axis:.3f} AU")
-            
-            # Artificial probability threshold
-            if obj.artificial_probability >= 0.3:
-                violation_reasons.append(f"High artificial probability: {obj.artificial_probability:.3f}")
-            
-            if violation_reasons:
-                # Add violation reasons to risk factors
-                obj.risk_factors.extend(violation_reasons)
-                violations.append(obj)
-        
-        return violations
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        # Historical helper name: selects canonical follow-up, not physical-law violations.
+        return [c for obj in classifications if (c := safe_classification(obj)).category == 'follow_up_candidate']
 
     def _norton_style_browser(self, objects, title="Objects"):
-        """Enhanced Norton Commander-style browser with enriched NEO data display."""
-        if not objects:
-            self.console.print("📭 [yellow]No objects to display[/yellow]")
-            return
-        
-        current_page = 0
-        page_size = 12  # Reduced for more detailed display
-        total_pages = (len(objects) - 1) // page_size + 1
-        current_sort = "probability"  # Track current sort
-        
-        # Categorize objects for summary boxes
-        categorized = self._categorize_objects_enhanced(objects)
-        
-        while True:
-            self.console.clear()
-            self.display_header()
-            
-            # Enhanced header with categorization summary
-            summary_stats = self._create_category_summary(categorized)
-            header_content = (
-                f"🗂️ {title} - Enhanced Results Browser with Enriched Data\n"
-                f"Page {current_page + 1}/{total_pages} | {len(objects)} total objects | "
-                f"Sort: {current_sort}\n{summary_stats}"
-            )
-            header_panel = Panel(header_content, style="bold green", border_style="green")
-            self.console.print(header_panel)
-            
-            # Category Summary Boxes (like status dashboard)
-            self._display_category_boxes(categorized)
-            
-            # Enhanced object list with enriched data
-            start_idx = current_page * page_size
-            end_idx = min(start_idx + page_size, len(objects))
-            page_objects = objects[start_idx:end_idx]
-            
-            # Enhanced table with more enriched data columns
-            neo_table = Table(show_header=True, title=f"NEO Objects (Page {current_page + 1}/{total_pages})")
-            neo_table.add_column("ID", style="bold", width=3)
-            neo_table.add_column("Designation", style="cyan", width=12)
-            neo_table.add_column("Cat", style="yellow", width=4)
-            neo_table.add_column("σ-Prob", style="red bold", width=6)
-            neo_table.add_column("Risk", style="orange", width=6)
-            neo_table.add_column("Sources", style="dim", width=8)
-            neo_table.add_column("Quality", style="green", width=7)
-            neo_table.add_column("Enriched Data", style="blue", width=20)
-            
-            for i, obj in enumerate(page_objects):
-                obj_id = start_idx + i + 1
-                category_icon = {
-                    "artificial": "🛸", "suspicious": "⚠️", "edge_case": "❓", 
-                    "natural": "🌍", "impact_risk": "💥"
-                }.get(obj.category, "❓")
-                
-                # Get enriched data info
-                enriched_info = self._get_enriched_data_summary(obj)
-                risk_level = self._assess_impact_risk(obj)
-                data_sources = self._get_data_sources_summary(obj)
-                quality_score = self._get_data_quality_score(obj)
-                
-                neo_table.add_row(
-                    str(obj_id),
-                    obj.designation[:11],
-                    category_icon,
-                    f"{obj.artificial_probability:.3f}",
-                    risk_level,
-                    data_sources,
-                    quality_score,
-                    enriched_info
-                )
-            
-            self.console.print(neo_table)
-            
-            # Enhanced controls with more navigation options
-            controls_table = Table(show_header=False, box=None)
-            controls_table.add_column("Key", style="bold cyan", width=12)
-            controls_table.add_column("Action", style="white")
-            
-            controls_table.add_row("1-99", "Select object ID for detailed enriched view")
-            controls_table.add_row("←/→ or P/N", "Previous/Next page")
-            controls_table.add_row("Home/End", "Jump to first/last page")
-            controls_table.add_row("G + number", "Go to specific page")
-            controls_table.add_row("F", "Filter by category (Artificial/Suspicious/Impact)")
-            controls_table.add_row("S", "Sort menu (Probability/Risk/Quality/Date)")
-            controls_table.add_row("C", "Show category breakdown")
-            controls_table.add_row("E", "Export current view to file")
-            controls_table.add_row("Q", "Quit browser")
-            
-            controls_panel = Panel(controls_table, title="[bold]🎮 Enhanced Controls[/bold]", border_style="blue")
-            self.console.print(controls_panel)
-            
-            # Get user input with enhanced navigation
-            from rich.prompt import Prompt
-            choice = Prompt.ask("Command").strip().upper()
-            
-            if choice in ['Q', 'QUIT', 'EXIT']:
-                break
-            elif choice in ['P', 'PREV', '←', 'LEFT']:
-                current_page = max(0, current_page - 1)
-            elif choice in ['N', 'NEXT', '→', 'RIGHT']:
-                current_page = min(total_pages - 1, current_page + 1)
-            elif choice in ['HOME', 'FIRST']:
-                current_page = 0
-            elif choice in ['END', 'LAST']:
-                current_page = total_pages - 1
-            elif choice.startswith('G') and len(choice) > 1:
-                # Go to specific page
-                try:
-                    page_num = int(choice[1:]) - 1
-                    if 0 <= page_num < total_pages:
-                        current_page = page_num
-                    else:
-                        self.console.print(f"❌ Page {page_num + 1} out of range (1-{total_pages})")
-                        self.wait_for_input()
-                except ValueError:
-                    self.console.print("❌ Invalid page number format. Use G followed by number (e.g., G5)")
-                    self.wait_for_input()
-            elif choice == 'F':
-                # Enhanced filter by category
-                filtered = self._enhanced_filter_menu(objects)
-                if filtered:
-                    self._norton_style_browser(filtered, f"{title} (Filtered)")
-            elif choice == 'S':
-                # Enhanced sort menu
-                sorted_objects, sort_type = self._enhanced_sort_menu(objects)
-                if sorted_objects:
-                    current_sort = sort_type
-                    self._norton_style_browser(sorted_objects, f"{title} (Sorted by {sort_type})")
-            elif choice == 'C':
-                # Show detailed category breakdown
-                self._show_category_breakdown(categorized)
-            elif choice == 'E':
-                # Export current view
-                self._export_current_view(page_objects, f"page_{current_page + 1}")
-            elif choice.isdigit():
-                # Select object by ID for detailed view
-                try:
-                    selected_id = int(choice) - 1
-                    if 0 <= selected_id < len(objects):
-                        self._show_detailed_neo_view(objects[selected_id])
-                    else:
-                        self.console.print(f"❌ Object ID {choice} out of range (1-{len(objects)})")
-                        self.wait_for_input()
-                except ValueError:
-                    self.console.print("❌ Please enter a valid object ID number")
-                    self.wait_for_input()
-            else:
-                self.console.print(f"❌ Unknown command: {choice}")
-                self.wait_for_input()
+        'Enhanced Norton Commander-style browser with enriched NEO data display.'
+        from aneos_core.analysis.dashboard_browser import browse
+        return browse(self, objects, title)
 
     def _categorize_objects_enhanced(self, objects):
-        """Categorize objects with enhanced sigma-5 quality assessment."""
-        categorized = {
-            'artificial': [],
-            'suspicious': [],
-            'edge_case': [],
-            'natural': [],
-            'impact_risk': []
-        }
-        
-        for obj in objects:
-            # Enhanced categorization using sigma-5 quality thresholds
-            prob = obj.artificial_probability
-            
-            # Check for impact risk indicators
-            has_impact_risk = self._has_impact_risk_indicators(obj)
-            
-            if prob >= 0.95:  # Sigma-5 artificial confidence
-                categorized['artificial'].append(obj)
-            elif prob >= 0.7:  # High suspicion threshold
-                categorized['suspicious'].append(obj)
-            elif prob >= 0.3 or has_impact_risk:  # Edge cases or impact risks
-                if has_impact_risk:
-                    categorized['impact_risk'].append(obj)
-                else:
-                    categorized['edge_case'].append(obj)
-            else:
-                categorized['natural'].append(obj)
-        
-        return categorized
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        from aneos_core.analysis.dashboard_browser import categorized
+        return categorized(objects)
     
     def _has_impact_risk_indicators(self, obj):
-        """Check if object has potential impact risk indicators."""
+        """A source-listed event flag, not a geometric/origin-based risk claim."""
+        from aneos_core.analysis.impact_evidence import require_sentry_report
         try:
-            orbital = obj.orbital_elements or {}
-            
-            # Check for Earth-crossing or potentially hazardous characteristics
-            perihelion = orbital.get('q', orbital.get('perihelion_distance', 1.0))
-            aphelion = orbital.get('Q', orbital.get('aphelion_distance', 1.0))
-            
-            # Earth-crossing orbit indicators
-            earth_crossing = perihelion < 1.0 and aphelion > 1.0
-            
-            # Close approach indicators (if available)
-            close_approaches = getattr(obj, 'close_approaches', [])
-            has_close_approach = any(
-                approach.get('distance', 999) < 0.05  # < 0.05 AU
-                for approach in (close_approaches or [])
-            )
-            
-            return earth_crossing or has_close_approach
-        except:
+            report = require_sentry_report(getattr(obj, 'impact_evidence', None), obj.designation)
+            return report['status'] == 'available' and report['collision_probability'] is not None and report['collision_probability'] > 0
+        except (AttributeError, ValueError):
             return False
-    
+
     def _create_category_summary(self, categorized):
-        """Create summary statistics for categories."""
-        total = sum(len(cat) for cat in categorized.values())
-        if total == 0:
-            return "No objects to categorize"
-        
-        summary_parts = []
-        for category, objects in categorized.items():
-            if objects:
-                percentage = (len(objects) / total) * 100
-                icon = {
-                    'artificial': '🛸', 'suspicious': '⚠️', 'edge_case': '❓',
-                    'natural': '🌍', 'impact_risk': '💥'
-                }[category]
-                summary_parts.append(f"{icon} {len(objects)} ({percentage:.1f}%)")
-        
-        return " | ".join(summary_parts)
+        'Create summary statistics for categories.'
+        from aneos_core.analysis.dashboard_browser import summary
+        return summary(categorized)
     
     def _display_category_boxes(self, categorized):
-        """Display category summary boxes like a dashboard."""
-        from rich.columns import Columns
-        
-        boxes = []
-        colors = {
-            'artificial': 'red', 'suspicious': 'yellow', 'edge_case': 'blue',
-            'natural': 'green', 'impact_risk': 'magenta'
-        }
-        
-        for category, objects in categorized.items():
-            if objects:  # Only show categories with objects
-                icon = {
-                    'artificial': '🛸', 'suspicious': '⚠️', 'edge_case': '❓',
-                    'natural': '🌍', 'impact_risk': '💥'
-                }[category]
-                
-                box_content = f"{icon} {category.upper()}\n{len(objects)} objects"
-                box = Panel(box_content, border_style=colors[category], width=15)
-                boxes.append(box)
-        
-        if boxes:
-            columns = Columns(boxes, equal=True, expand=True)
-            self.console.print(columns)
+        'Display category summary boxes like a dashboard.'
+        from aneos_core.analysis.dashboard_browser import show_groups
+        return show_groups(self, categorized)
     
     def _get_enriched_data_summary(self, obj):
-        """Get summary of enriched data available for object."""
-        try:
-            data_points = []
-            
-            # Check for orbital elements
-            if hasattr(obj, 'orbital_elements') and obj.orbital_elements:
-                orbital = obj.orbital_elements
-                elements_count = len([k for k, v in orbital.items() if v is not None])
-                data_points.append(f"Orbital({elements_count})")
-            
-            # Check for physical properties
-            if hasattr(obj, 'physical_properties') and obj.physical_properties:
-                physical = obj.physical_properties
-                props_count = len([k for k, v in physical.items() if v is not None])
-                data_points.append(f"Physical({props_count})")
-            
-            # Check for close approaches
-            if hasattr(obj, 'close_approaches') and obj.close_approaches:
-                approaches_count = len(obj.close_approaches)
-                data_points.append(f"Approaches({approaches_count})")
-            
-            # Check for discovery data
-            if hasattr(obj, 'discovery_data') and obj.discovery_data:
-                data_points.append("Discovery")
-            
-            return " | ".join(data_points) if data_points else "Basic"
-        except:
-            return "Limited"
+        'Get summary of enriched data available for object.'
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        from aneos_core.analysis.dashboard_view import presence_text
+        return presence_text(safe_classification(obj))
     
     def _assess_impact_risk(self, obj):
-        """Assess impact risk level for object."""
-        try:
-            if self._has_impact_risk_indicators(obj):
-                # Check artificial probability for enhanced risk
-                if obj.artificial_probability > 0.5:
-                    return "HIGH"
-                else:
-                    return "MED"
-            elif obj.artificial_probability > 0.7:
-                return "WATCH"
-            else:
-                return "LOW"
-        except:
-            return "UNK"
-    
+        """No origin score/geometric proxy is a fitted impact-risk assessment."""
+        return 'NOT_ASSESSED'
+
     def _get_data_sources_summary(self, obj):
-        """Get summary of data sources used."""
-        try:
-            sources = getattr(obj, 'data_sources', [])
-            if sources:
-                # Abbreviate source names
-                abbrev = {'NASA_CAD': 'CAD', 'NASA_SBDB': 'SBDB', 'NEODyS': 'NEO', 'MPC': 'MPC'}
-                short_sources = [abbrev.get(src, src[:3].upper()) for src in sources[:3]]
-                return "+".join(short_sources)
-            else:
-                return "Single"
-        except:
-            return "UNK"
+        'Get summary of data sources used.'
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        return ', '.join(safe_classification(obj).data_sources) or 'Not verified'
     
     def _get_data_quality_score(self, obj):
-        """Get data quality score as formatted string."""
-        try:
-            # Try to get quality score from enriched data
-            quality = getattr(obj, 'data_quality_score', None)
-            if quality is not None:
-                return f"{quality:.2f}"
-            
-            # Fallback: assess based on available data
-            score = 0.0
-            if hasattr(obj, 'orbital_elements') and obj.orbital_elements:
-                score += 0.4
-            if hasattr(obj, 'physical_properties') and obj.physical_properties:
-                score += 0.3
-            if hasattr(obj, 'data_sources') and obj.data_sources and len(obj.data_sources) > 1:
-                score += 0.3
-            
-            return f"{score:.2f}"
-        except:
-            return "N/A"
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        # Confidence/source count is not a calibrated data-quality score.
+        return 'Not assessed'
     
     def _enhanced_filter_menu(self, objects):
-        """Enhanced filter menu with multiple criteria."""
-        from rich.prompt import Prompt, Confirm
-        
-        self.console.print("\n🔍 [bold]Enhanced Filter Options[/bold]")
-        
-        filter_table = Table(show_header=False, box=None)
-        filter_table.add_column("Option", style="bold cyan")
-        filter_table.add_column("Description", style="white")
-        
-        filter_table.add_row("1", "🛸 Artificial candidates only (σ ≥ 0.95)")
-        filter_table.add_row("2", "⚠️ Suspicious objects (σ ≥ 0.7)")
-        filter_table.add_row("3", "💥 Impact risk objects")
-        filter_table.add_row("4", "❓ Edge cases (0.3 ≤ σ < 0.7)")
-        filter_table.add_row("5", "🌍 Natural objects (σ < 0.3)")
-        filter_table.add_row("6", "🎯 High quality data only")
-        filter_table.add_row("7", "📊 Multi-source objects only")
-        filter_table.add_row("8", "🔬 Validated Detector: Sigma ≥ 5.0 (Discovery threshold)")
-        filter_table.add_row("9", "🔍 Validated Detector: Sigma ≥ 2.0 (Detection threshold)")
-        filter_table.add_row("0", "Cancel filter")
-        
-        self.console.print(filter_table)
-        
-        choice = Prompt.ask("Select filter", choices=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
-        
-        if choice == "0":
-            return None
-        elif choice == "1":
-            return [obj for obj in objects if obj.artificial_probability >= 0.95]
-        elif choice == "2":
-            return [obj for obj in objects if obj.artificial_probability >= 0.7]
-        elif choice == "3":
-            return [obj for obj in objects if self._has_impact_risk_indicators(obj)]
-        elif choice == "4":
-            return [obj for obj in objects if 0.3 <= obj.artificial_probability < 0.7]
-        elif choice == "5":
-            return [obj for obj in objects if obj.artificial_probability < 0.3]
-        elif choice == "6":
-            return [obj for obj in objects if float(self._get_data_quality_score(obj).replace('N/A', '0')) >= 0.7]
-        elif choice == "7":
-            return [obj for obj in objects if len(getattr(obj, 'data_sources', [])) > 1]
-        elif choice == "8":
-            return self._filter_by_validated_detector_sigma(objects, 5.0)
-        elif choice == "9":
-            return self._filter_by_validated_detector_sigma(objects, 2.0)
-        
-        return None
+        'Enhanced filter menu with multiple criteria.'
+        from aneos_core.analysis.dashboard_browser import filter_menu
+        return filter_menu(self, objects)
     
     def _filter_by_validated_detector_sigma(self, objects, sigma_threshold):
-        """Filter objects using validated detector sigma analysis."""
-        from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-        
-        self.console.print(f"\n🔬 Running validated detector analysis (σ ≥ {sigma_threshold})...")
-        
-        # Initialize validated detector
-        detection_manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-        
-        filtered_objects = []
-        
-        with self.progress.track(range(len(objects)), description="🔍 Analyzing with validated detector...") as progress:
-            for obj in objects:
-                progress.advance()
-                
-                try:
-                    # Extract orbital and physical data from the object
-                    orbital_elements = self._extract_orbital_elements_from_object(obj)
-                    physical_data = self._extract_physical_data_from_object(obj)
-                    
-                    # Run validated detector analysis
-                    result = detection_manager.analyze_neo(
-                        orbital_elements=orbital_elements,
-                        physical_data=physical_data
-                    )
-                    
-                    # Check if sigma level meets threshold
-                    if result.sigma_level >= sigma_threshold:
-                        # Enhance object with validated analysis
-                        enhanced_obj = obj
-                        if hasattr(enhanced_obj, '__dict__'):
-                            enhanced_obj.validated_sigma = result.sigma_level
-                            enhanced_obj.validated_classification = result.classification
-                            enhanced_obj.validated_artificial_prob = result.artificial_probability
-                        
-                        filtered_objects.append(enhanced_obj)
-                        
-                except Exception as e:
-                    # Skip objects that can't be analyzed
-                    continue
-        
-        self.console.print(f"✅ Found {len(filtered_objects)} objects with σ ≥ {sigma_threshold}")
-        return filtered_objects
+        """Controlled deprecation: no calibrated significance/filter model is installed."""
+        raise NotImplementedError('Uncalibrated rank/probability cannot supply a sigma conversion or sigma filter')
     
     def _extract_orbital_elements_from_object(self, obj):
-        """Extract orbital elements from a classification object."""
-        # Handle different object types
-        if hasattr(obj, 'orbital_elements') and obj.orbital_elements:
-            return obj.orbital_elements
-        elif hasattr(obj, 'designation'):
-            # Use designation to determine if it's Tesla (known artificial) or generic NEO
-            if obj.designation and 'tesla' in obj.designation.lower():
-                return {'a': 1.325, 'e': 0.256, 'i': 1.077}
-            else:
-                return {'a': 1.8, 'e': 0.15, 'i': 8.5}
-        else:
-            # Default NEO parameters
-            return {'a': 1.8, 'e': 0.15, 'i': 8.5}
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        return safe_classification(obj).orbital_elements
     
     def _extract_physical_data_from_object(self, obj):
-        """Extract physical data from a classification object."""
-        physical_data = {}
-        
-        # Try to extract available physical properties
-        if hasattr(obj, 'diameter') and obj.diameter:
-            physical_data['estimated_diameter'] = obj.diameter
-        elif hasattr(obj, 'estimated_diameter') and obj.estimated_diameter:
-            physical_data['estimated_diameter'] = obj.estimated_diameter
-        
-        if hasattr(obj, 'absolute_magnitude') and obj.absolute_magnitude:
-            physical_data['absolute_magnitude'] = obj.absolute_magnitude
-        
-        if hasattr(obj, 'mass') and obj.mass:
-            physical_data['mass_estimate'] = obj.mass
-            
-        # Use defaults if no data available
-        if not physical_data:
-            # Check if this might be Tesla (artificial object)
-            if hasattr(obj, 'designation') and obj.designation and 'tesla' in obj.designation.lower():
-                physical_data = {'mass_estimate': 1350, 'diameter': 12}
-            else:
-                physical_data = {'estimated_diameter': 500, 'absolute_magnitude': 18.5}
-        
-        return physical_data
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        from aneos_core.analysis.artificial_neo_dashboard import safe_classification
+        return safe_classification(obj).physical_properties
     
     def _enhanced_sort_menu(self, objects):
-        """Enhanced sort menu with multiple criteria."""
-        from rich.prompt import Prompt
-        
-        self.console.print("\n📊 [bold]Enhanced Sort Options[/bold]")
-        
-        sort_table = Table(show_header=False, box=None)
-        sort_table.add_column("Option", style="bold cyan")
-        sort_table.add_column("Description", style="white")
-        
-        sort_table.add_row("1", "🎯 Artificial Probability (High to Low)")
-        sort_table.add_row("2", "💥 Impact Risk Level")
-        sort_table.add_row("3", "🏆 Data Quality Score")
-        sort_table.add_row("4", "📅 Discovery Date (Recent first)")
-        sort_table.add_row("5", "🔤 Designation (Alphabetical)")
-        sort_table.add_row("6", "📊 Data Completeness")
-        sort_table.add_row("0", "Cancel sort")
-        
-        self.console.print(sort_table)
-        
-        choice = Prompt.ask("Select sort", choices=["0", "1", "2", "3", "4", "5", "6"])
-        
-        if choice == "0":
-            return None, ""
-        elif choice == "1":
-            return sorted(objects, key=lambda x: x.artificial_probability, reverse=True), "Artificial Probability"
-        elif choice == "2":
-            risk_order = {"HIGH": 4, "MED": 3, "WATCH": 2, "LOW": 1, "UNK": 0}
-            return sorted(objects, key=lambda x: risk_order.get(self._assess_impact_risk(x), 0), reverse=True), "Impact Risk"
-        elif choice == "3":
-            return sorted(objects, key=lambda x: float(self._get_data_quality_score(x).replace('N/A', '0')), reverse=True), "Data Quality"
-        elif choice == "4":
-            return sorted(objects, key=lambda x: getattr(x, 'analysis_timestamp', datetime.min), reverse=True), "Discovery Date"
-        elif choice == "5":
-            return sorted(objects, key=lambda x: x.designation), "Designation"
-        elif choice == "6":
-            return sorted(objects, key=lambda x: len(self._get_enriched_data_summary(x)), reverse=True), "Data Completeness"
-        
-        return None, ""
+        'Enhanced sort menu with multiple criteria.'
+        from aneos_core.analysis.dashboard_browser import sort_menu
+        return sort_menu(self, objects)
     
     def _show_category_breakdown(self, categorized):
-        """Show detailed category breakdown."""
-        self.console.clear()
-        self.display_header()
-        
-        breakdown_table = Table(show_header=True, title="📊 Category Breakdown Analysis")
-        breakdown_table.add_column("Category", style="bold")
-        breakdown_table.add_column("Count", style="cyan")
-        breakdown_table.add_column("Percentage", style="yellow")
-        breakdown_table.add_column("Risk Level", style="red")
-        breakdown_table.add_column("Description", style="dim")
-        
-        total = sum(len(cat) for cat in categorized.values())
-        
-        category_info = {
-            'artificial': ('🛸 Artificial', 'CRITICAL', 'Sigma-5 confirmed artificial objects'),
-            'suspicious': ('⚠️ Suspicious', 'HIGH', 'High probability artificial candidates'),
-            'impact_risk': ('💥 Impact Risk', 'HIGH', 'Potential Earth impact trajectory'),
-            'edge_case': ('❓ Edge Case', 'MEDIUM', 'Uncertain classification requiring review'),
-            'natural': ('🌍 Natural', 'LOW', 'Confirmed natural objects')
-        }
-        
-        for category, objects in categorized.items():
-            if objects:
-                icon_name, risk, description = category_info[category]
-                count = len(objects)
-                percentage = (count / total * 100) if total > 0 else 0
-                
-                breakdown_table.add_row(
-                    icon_name,
-                    str(count),
-                    f"{percentage:.1f}%",
-                    risk,
-                    description
-                )
-        
-        self.console.print(breakdown_table)
+        'Show detailed category breakdown.'
+        from aneos_core.analysis.dashboard_browser import show_groups
+        show_groups(self, categorized)
         self.wait_for_input()
     
     def _export_current_view(self, objects, filename_suffix):
-        """Export current view to file."""
+        'Export current view to file.'
+        from aneos_core.analysis.artificial_neo_dashboard import ArtificialNEODashboard, safe_classification
+        from aneos_core.analysis.dashboard_view import message
         try:
-            from datetime import datetime
-            import json
-            
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"neo_browser_export_{filename_suffix}_{timestamp}.json"
-            
-            export_data = {
-                'export_timestamp': datetime.now().isoformat(),
-                'total_objects': len(objects),
-                'objects': []
-            }
-            
-            for obj in objects:
-                obj_data = {
-                    'designation': obj.designation,
-                    'category': obj.category,
-                    'artificial_probability': obj.artificial_probability,
-                    'risk_level': self._assess_impact_risk(obj),
-                    'data_quality': self._get_data_quality_score(obj),
-                    'enriched_data': self._get_enriched_data_summary(obj),
-                    'data_sources': getattr(obj, 'data_sources', [])
-                }
-                export_data['objects'].append(obj_data)
-            
-            with open(filename, 'w') as f:
-                json.dump(export_data, f, indent=2)
-            
-            self.console.print(f"✅ [green]Exported {len(objects)} objects to {filename}[/green]")
-            
-        except Exception as e:
-            self.console.print(f"❌ [red]Export failed: {e}[/red]")
-        
-        self.wait_for_input()
+            dashboard = ArtificialNEODashboard(console=self.console)
+            dashboard.console = self.console
+            dashboard.classifications = [safe_classification(obj) for obj in objects]
+            return dashboard._save_dashboard_results('dashboard_results')
+        except Exception:
+            message('Export failed; no completed export has been verified. Existing reports were not overwritten.', self.console)
+        finally:
+            self.wait_for_input()
     
     def _show_detailed_neo_view(self, obj):
-        """Show comprehensive detailed view of a NEO with all enriched data."""
-        self.console.clear()
-        self.display_header()
-        
-        # Main object information panel
-        main_info = Table(show_header=False, box=None, title=f"🔍 {obj.designation} - Comprehensive Analysis")
-        main_info.add_column("Property", style="bold cyan", width=20)
-        main_info.add_column("Value", style="white")
-        
-        main_info.add_row("Designation", obj.designation)
-        main_info.add_row("Category", f"{obj.category.upper()} ({'🛸' if obj.category == 'artificial' else '⚠️' if obj.category == 'suspicious' else '💥' if obj.category == 'impact_risk' else '❓' if obj.category == 'edge_case' else '🌍'})")
-        main_info.add_row("Artificial Probability", f"{obj.artificial_probability:.4f} (σ-level: {self._calculate_sigma_level(obj.artificial_probability):.2f})")
-        main_info.add_row("Risk Assessment", self._assess_impact_risk(obj))
-        main_info.add_row("Data Quality Score", self._get_data_quality_score(obj))
-        main_info.add_row("Data Sources", self._get_data_sources_summary(obj))
-        main_info.add_row("Analysis Timestamp", getattr(obj, 'analysis_timestamp', 'Not available').strftime('%Y-%m-%d %H:%M:%S') if hasattr(getattr(obj, 'analysis_timestamp', None), 'strftime') else 'Not available')
-        
-        self.console.print(main_info)
-        
-        # Orbital Elements (if available)
-        if hasattr(obj, 'orbital_elements') and obj.orbital_elements:
-            orbital_table = Table(show_header=True, title="🌌 Orbital Elements")
-            orbital_table.add_column("Element", style="bold cyan")
-            orbital_table.add_column("Value", style="white")
-            orbital_table.add_column("Unit", style="dim")
-            orbital_table.add_column("Significance", style="yellow")
-            
-            orbital = obj.orbital_elements
-            elements_info = {
-                'a': ('Semi-major axis', 'AU', 'Orbit size'),
-                'e': ('Eccentricity', '', 'Orbit shape (0=circle, 1=parabola)'),
-                'i': ('Inclination', 'degrees', 'Orbit tilt vs ecliptic'),
-                'q': ('Perihelion distance', 'AU', 'Closest approach to Sun'),
-                'Q': ('Aphelion distance', 'AU', 'Farthest distance from Sun'),
-                'omega': ('Argument of perihelion', 'degrees', 'Orbit orientation'),
-                'Omega': ('Longitude of ascending node', 'degrees', 'Orbit plane orientation'),
-                'M': ('Mean anomaly', 'degrees', 'Position in orbit'),
-                'epoch': ('Epoch', 'JD', 'Reference time for elements')
-            }
-            
-            for key, (name, unit, significance) in elements_info.items():
-                value = orbital.get(key)
-                if value is not None:
-                    orbital_table.add_row(name, f"{value:.6f}" if isinstance(value, float) else str(value), unit, significance)
-            
-            self.console.print(orbital_table)
-        
-        # Risk Factors and Analysis Details
-        if hasattr(obj, 'risk_factors') and obj.risk_factors:
-            risk_table = Table(show_header=True, title="⚠️ Risk Factors")
-            risk_table.add_column("Factor", style="red bold")
-            
-            for factor in obj.risk_factors:
-                risk_table.add_row(factor)
-            
-            self.console.print(risk_table)
-        
-        # Physical Properties (if available)
-        if hasattr(obj, 'physical_properties') and obj.physical_properties:
-            physical_table = Table(show_header=True, title="📐 Physical Properties")
-            physical_table.add_column("Property", style="bold cyan")
-            physical_table.add_column("Value", style="white")
-            physical_table.add_column("Unit", style="dim")
-            
-            physical = obj.physical_properties
-            for key, value in physical.items():
-                if value is not None:
-                    unit = self._get_physical_property_unit(key)
-                    physical_table.add_row(key.replace('_', ' ').title(), str(value), unit)
-            
-            self.console.print(physical_table)
-        
+        'Show comprehensive detailed view of a NEO with all enriched data.'
+        from aneos_core.analysis.dashboard_view import render_detail
+        render_detail(obj, self.console)
         self.wait_for_input()
     
     def _calculate_sigma_level(self, probability):
-        """Calculate sigma level from probability."""
-        from scipy import stats
-        if probability <= 0.5:
-            return 0.0
-        
-        # Convert probability to sigma level
-        p_value = 2 * (1 - probability)
-        if p_value <= 0:
-            return 5.0  # Maximum sigma level
-        
-        try:
-            sigma = stats.norm.ppf(1 - p_value/2)
-            return max(0, min(5, sigma))  # Clamp between 0 and 5
-        except:
-            return 0.0
+        """Controlled deprecation: no calibrated significance/filter model is installed."""
+        raise NotImplementedError('Uncalibrated rank/probability cannot supply a sigma conversion or sigma filter')
     
     def _get_physical_property_unit(self, property_name):
-        """Get appropriate unit for physical property."""
-        units = {
-            'diameter': 'm', 'mass': 'kg', 'density': 'kg/m³',
-            'albedo': '', 'rotation_period': 'hours',
-            'absolute_magnitude': 'mag', 'magnitude': 'mag'
-        }
-        return units.get(property_name.lower(), '')
+        """Read canonical screening data; unsupported legacy origin/quality defaults are not used."""
+        return {'diameter_km':'km','rotation_period_hours':'h','albedo':'dimensionless',
+                'absolute_magnitude_h':'mag'}.get(property_name, 'not declared')
 
     def _filter_by_category(self, objects):
-        """Filter objects by category."""
-        from rich.prompt import Prompt
-        
-        categories = list(set(obj.category for obj in objects))
-        if not categories:
-            return objects
-        
-        category = Prompt.ask("Filter by category", choices=categories + ["all"])
-        
-        if category == "all":
-            return objects
-        else:
-            return [obj for obj in objects if obj.category == category]
+        'Filter objects by category.'
+        return self._enhanced_filter_menu(objects)
 
     def _show_object_details(self, obj):
-        """Show detailed information about a specific object."""
-        self.console.clear()
-        self.display_header()
-        
-        # Main details
-        details_table = Table(show_header=False, box=None, title=f"🔍 {obj.designation} - Detailed Analysis")
-        details_table.add_column("Property", style="bold cyan")
-        details_table.add_column("Value", style="white")
-        
-        details_table.add_row("Designation", obj.designation)
-        details_table.add_row("Category", f"{obj.category.upper()} ({'🛸' if obj.category == 'artificial' else '⚠️' if obj.category == 'suspicious' else '❓' if obj.category == 'edge_case' else '🌍'})")
-        details_table.add_row("Artificial Probability", f"{obj.artificial_probability:.3f}")
-        details_table.add_row("Confidence", f"{obj.confidence:.3f}")
-        details_table.add_row("Data Sources", ", ".join(obj.data_sources))
-        details_table.add_row("Analysis Time", obj.analysis_timestamp.strftime("%Y-%m-%d %H:%M:%S"))
-        
-        self.console.print(details_table)
-        
-        # Risk factors
-        if obj.risk_factors:
-            risk_table = Table(show_header=True, title="⚠️ Risk Factors")
-            risk_table.add_column("Factor", style="yellow")
-            
-            for factor in obj.risk_factors:
-                risk_table.add_row(factor)
-            
-            self.console.print(risk_table)
-        
-        # Orbital elements
-        if obj.orbital_elements:
-            orbital_table = Table(show_header=True, title="🌌 Orbital Elements")
-            orbital_table.add_column("Element", style="bold")
-            orbital_table.add_column("Value", style="yellow")
-            orbital_table.add_column("Description", style="dim")
-            
-            element_descriptions = {
-                'e': 'Eccentricity (0=circular, 1=parabolic)',
-                'i': 'Inclination (degrees)',
-                'a': 'Semi-major axis (AU)',
-                'q': 'Perihelion distance (AU)',
-                'Q': 'Aphelion distance (AU)',
-                'eccentricity': 'Eccentricity (0=circular, 1=parabolic)',
-                'inclination': 'Inclination (degrees)',
-                'semi_major_axis': 'Semi-major axis (AU)',
-                'perihelion_distance': 'Perihelion distance (AU)',
-                'aphelion_distance': 'Aphelion distance (AU)'
-            }
-            
-            for key, value in obj.orbital_elements.items():
-                desc = element_descriptions.get(key, "")
-                if isinstance(value, (int, float)):
-                    value_str = f"{value:.6f}"
-                else:
-                    value_str = str(value)
-                orbital_table.add_row(key, value_str, desc)
-            
-            self.console.print(orbital_table)
-        
-        # Analysis details
-        if obj.analysis_details:
-            from rich.json import JSON
-            self.console.print("\n🔬 [bold cyan]Analysis Details:[/bold cyan]")
-            details_json = JSON.from_data(obj.analysis_details)
-            self.console.print(details_json)
-        
-        self.console.input("\nPress Enter to return to browser...")
+        'Show detailed information about a specific object.'
+        return self._show_detailed_neo_view(obj)
 
     def _browse_enriched_database(self):
         """Browse the enriched NEO database."""
@@ -4912,17 +3294,9 @@ class ANEOSMenu(ANEOSMenuBase):
             
             total = stats.get('total_neos', 0)
             stats_table.add_row("Total NEOs", str(total), "100%")
-            stats_table.add_row("High Completeness (≥80%)", str(stats.get('high_completeness', 0)), 
-                               f"{stats.get('database_coverage', {}).get('complete', 0)*100:.1f}%")
-            stats_table.add_row("Medium Completeness (50-80%)", str(stats.get('medium_completeness', 0)),
-                               f"{stats.get('database_coverage', {}).get('partial', 0)*100:.1f}%")
-            stats_table.add_row("High Artificial Probability", str(stats.get('high_artificial_probability', 0)),
-                               f"{stats.get('high_artificial_probability', 0)/total*100 if total > 0 else 0:.1f}%")
-            stats_table.add_row("Suspicious Objects", str(stats.get('suspicious_objects', 0)),
-                               f"{stats.get('suspicious_objects', 0)/total*100 if total > 0 else 0:.1f}%")
-            stats_table.add_row("Multi-Source Detections", str(stats.get('multi_source_detections', 0)),
-                               f"{stats.get('multi_source_detections', 0)/total*100 if total > 0 else 0:.1f}%")
-            
+            stats_table.add_row("Scientific completeness", "not established", "—")
+            stats_table.add_row("Artificial-origin probability", "not calibrated", "—")
+            stats_table.add_row("Multiple recorded sources",str(stats.get('multi_source_detections',0)),"not independent evidence")
             self.console.print(stats_table)
             
             # Browse options
@@ -4931,9 +3305,9 @@ class ANEOSMenu(ANEOSMenuBase):
             options_table.add_column("Description", style="white")
             
             options_table.add_row("1", "🔍 Search NEO by designation")
-            options_table.add_row("2", "🛸 Browse artificial objects")
-            options_table.add_row("3", "⚠️ Browse suspicious objects")
-            options_table.add_row("4", "🌟 Browse high completeness NEOs")
+            options_table.add_row("2", "Legacy uncalibrated score ≥0.8 (not origin)")
+            options_table.add_row("3", "Legacy uncalibrated score 0.5–0.8 (not origin)")
+            options_table.add_row("4", "Browse stored catalogue records (see coverage limits)")
             options_table.add_row("5", "🔄 Browse multi-source NEOs")
             options_table.add_row("0", "🚪 Return to dashboard")
             
@@ -4949,19 +3323,19 @@ class ANEOSMenu(ANEOSMenuBase):
                 designation = Prompt.ask("Enter NEO designation")
                 self._show_enriched_neo_details(neo_service, designation)
             elif choice == "2":
-                self._browse_enriched_filtered(neo_service, "artificial",
+                self._browse_enriched_filtered(neo_service, "legacy uncalibrated score ≥0.8",
                     lambda q, EnrichedNEO: q.filter(EnrichedNEO.artificial_probability >= 0.8))
             elif choice == "3":
-                self._browse_enriched_filtered(neo_service, "suspicious",
+                self._browse_enriched_filtered(neo_service, "legacy uncalibrated score 0.5–0.8",
                     lambda q, EnrichedNEO: q.filter(
                         EnrichedNEO.artificial_probability >= 0.5,
                         EnrichedNEO.artificial_probability < 0.8))
             elif choice == "4":
-                self._browse_enriched_filtered(neo_service, "high completeness",
-                    lambda q, EnrichedNEO: q.filter(EnrichedNEO.completeness_score >= 0.8))
+                self._browse_enriched_filtered(neo_service, "stored catalogue",lambda q, EnrichedNEO:q)
             elif choice == "5":
-                self._browse_enriched_filtered(neo_service, "multi-source",
-                    lambda q, EnrichedNEO: q.filter(EnrichedNEO.total_detections > 1))
+                from sqlalchemy import func
+                self._browse_enriched_filtered(neo_service, "multiple recorded sources",
+                    lambda q, EnrichedNEO: q.filter(func.json_array_length(EnrichedNEO.data_sources)>1))
             
             db.close()
             
@@ -4984,17 +3358,17 @@ class ANEOSMenu(ANEOSMenuBase):
                 return
             table = Table(show_header=True, title=f"{label.title()} Objects ({len(objects)} shown)")
             table.add_column("Designation", style="cyan")
-            table.add_column("Artif. Prob.", style="red")
-            table.add_column("Completeness", style="green")
+            table.add_column("Legacy score (uncalibrated)", style="red")
+            table.add_column("Coverage", style="green")
             table.add_column("Sources", style="dim")
             table.add_column("Classification", style="yellow")
             for obj in objects:
                 table.add_row(
-                    str(obj.designation),
-                    f"{obj.artificial_probability:.3f}",
-                    f"{getattr(obj, 'completeness_score', 0.0):.2f}",
-                    str(getattr(obj, 'total_detections', '?')),
-                    str(getattr(obj, 'neo_classification', 'Unknown')),
+                    Text(str(obj.designation)),
+                    "not calibrated" if obj.artificial_probability is None else f"{obj.artificial_probability:.3f} (legacy only)",
+                    "see details; not total completeness",
+                    str(len(set(obj.data_sources or []))),
+                    Text(str(getattr(obj,'neo_classification',None) or 'not assessed')),
                 )
             self.console.print(table)
             self.console.input("\nPress Enter to continue...")
@@ -5002,336 +3376,283 @@ class ANEOSMenu(ANEOSMenuBase):
             self.console.print(f"[red]Filter error: {exc}[/red]")
             self.console.input("Press Enter to continue...")
 
-    def _show_enriched_neo_details(self, neo_service, designation: str):
-        """Show detailed information about an enriched NEO."""
+    def _show_enriched_neo_details(self,neo_service,designation):
+        """Read verified stored evidence; do not rerun or invent an origin analysis."""
         try:
-            neo_data = neo_service.get_enriched_neo(designation)
-            
-            if not neo_data:
-                self.console.print(f"❌ [red]NEO '{designation}' not found in database[/red]")
-                self.console.input("Press Enter to continue...")
-                return
-            
-            self.console.clear()
-            self.display_header()
-            
-            # Main details
-            title = Panel(
-                f"🔍 ENRICHED NEO DETAILS: {designation}\n\nComprehensive multi-source data",
-                style="bold green",
-                border_style="green"
-            )
-            self.console.print(title)
-            
-            # Overview table
-            overview_table = Table(show_header=False, box=None, title="📋 Overview")
-            overview_table.add_column("Property", style="bold cyan")
-            overview_table.add_column("Value", style="white")
-            
-            overview_table.add_row("Designation", neo_data['designation'])
-            overview_table.add_row("First Discovered", neo_data['first_discovered'].strftime("%Y-%m-%d %H:%M:%S") if neo_data['first_discovered'] else "Unknown")
-            overview_table.add_row("Last Updated", neo_data['last_updated'].strftime("%Y-%m-%d %H:%M:%S"))
-            overview_table.add_row("Data Sources", ", ".join(neo_data['data_sources']))
-            overview_table.add_row("Completeness Score", f"{neo_data['completeness_score']:.2f}")
-            overview_table.add_row("Total Detections", str(neo_data['total_detections']))
-            overview_table.add_row("Artificial Probability", f"{neo_data['artificial_probability']:.3f}")
-            
-            self.console.print(overview_table)
-            
-            # Orbital elements
-            if neo_data['orbital_elements']:
-                orbital_table = Table(show_header=True, title="🌌 Orbital Elements")
-                orbital_table.add_column("Element", style="bold")
-                orbital_table.add_column("Value", style="yellow")
-                orbital_table.add_column("Source", style="dim")
-                
-                for key, value in neo_data['orbital_elements'].items():
-                    if isinstance(value, (int, float)):
-                        value_str = f"{value:.6f}"
-                    else:
-                        value_str = str(value)
-                    orbital_table.add_row(key, value_str, neo_data.get('orbital_elements_source', 'Unknown'))
-                
-                self.console.print(orbital_table)
-            
-            # Source data summary
-            sources_table = Table(show_header=True, title="📡 Source Data Availability")
-            sources_table.add_column("Source", style="bold")
-            sources_table.add_column("Status", style="center")
-            sources_table.add_column("Data Available", style="dim")
-            
-            source_data = neo_data.get('source_data', {})
-            for source, data in source_data.items():
-                if data:
-                    status = "✅ Available"
-                    data_summary = f"{len(data)} fields"
+            data=neo_service.get_enriched_neo(designation)
+            if self.console is None:
+                from aneos_core.analysis.object_review import render_data_inventory,literal
+                print('Stored evidence — '+literal(designation))
+                if data is None:
+                    print('No stored object evidence found.')
                 else:
-                    status = "❌ No Data"
-                    data_summary = "N/A"
-                
-                sources_table.add_row(source.upper(), status, data_summary)
-            
-            self.console.print(sources_table)
-            
-            # Risk factors
-            if neo_data.get('risk_factors'):
-                risk_table = Table(show_header=True, title="⚠️ Risk Factors")
-                risk_table.add_column("Factor", style="yellow")
-                
-                for factor in neo_data['risk_factors']:
-                    risk_table.add_row(factor)
-                
-                self.console.print(risk_table)
-            
-            self.console.input("\nPress Enter to return to database browser...")
-            
-        except Exception as e:
-            self.console.print(f"❌ [red]Error showing NEO details: {e}[/red]")
-            self.console.input("Press Enter to continue...")
-        
-    def configure_analysis(self):
-        """Configure analysis parameters and enhanced validation settings with validated detector integration."""
+                    print('Storage: '+data['storage_status']+'; artificial-origin probability: not calibrated.')
+                    if data.get('chronology'):
+                        from aneos_core.analysis.chronology_view import render_chronology
+                        render_chronology(data['chronology'])
+                    if data.get('data_inventory'):
+                        render_data_inventory(data['data_inventory'])
+                    if data.get('latest_acquisition'):
+                        from aneos_core.analysis.acquisition_view import render_acquisition_summary
+                        render_acquisition_summary(data['latest_acquisition']['summary'])
+                        print('Stored projection may contain earlier source receipts; latest-query coverage does not refresh every stored field.')
+                    for binding in data.get('projection_query_bindings',[]):
+                        state='latest query' if binding['from_latest_query'] is True else 'earlier query' if binding['from_latest_query'] is False else 'legacy / not established'
+                        print(literal(binding['source'])+': selected receipt '+binding['assertion_id'][:12]+'; '+state)
+                    history=data.get('evidence_history',[])
+                    print(f'Source history: showing {min(20,len(history))}/{len(history)} receipts; full payloads remain in JSON export.')
+                    for record in history[-20:]:
+                        print(literal(record['source'])+' | '+record['recorded_at']+' | '+record['kind']+' | '+record['assertion_id'][:12])
+                self.wait_for_input()
+                return
+            if data is None:
+                self.console.print(Text('No stored object evidence found.'))
+            else:
+                from aneos_core.analysis.object_review import render_data_inventory,literal
+                self.console.print(Panel(Text('Stored evidence — '+literal(designation)),border_style='blue'))
+                self.console.print(Text('Storage: '+data['storage_status']+'; artificial-origin probability: not calibrated.'))
+                if data.get('chronology'):
+                    from aneos_core.analysis.chronology_view import render_chronology
+                    render_chronology(data['chronology'],console=self.console)
+                if data.get('data_inventory'):render_data_inventory(data['data_inventory'],console=self.console)
+                else:self.console.print(Text('No admitted catalogue snapshot; query outcomes remain available below. Missing is not zero.' if data['storage_status']=='attempts_only' else 'Legacy unverified snapshot; overall completeness and source coverage not established.'))
+                if data.get('neo_data'):
+                    from aneos_core.analysis.object_review import number
+                    selection=data['neo_data']['evidence_metadata'].get('physical_selection',{})
+                    if selection:
+                        lineage=Table(title='Physical selection provenance — not independent origin evidence')
+                        for name in ('Field','Selected source','Uncertainty','Reference'):lineage.add_column(name,overflow='fold')
+                        for field,selected in selection.items():
+                            lineage.add_row(Text(field),Text(literal(selected['source'])),Text(number(selected['uncertainty'])),Text(literal(selected.get('reference_source') or 'not supplied')))
+                        self.console.print(lineage)
+                if data.get('latest_acquisition'):
+                    from aneos_core.analysis.acquisition_view import render_acquisition_summary
+                    render_acquisition_summary(data['latest_acquisition']['summary'],console=self.console)
+                    self.console.print(Text('Stored projection may include earlier source receipts; a successful query does not refresh every stored measurement.'))
+                    bindings=Table(title='Stored projection / latest query binding')
+                    for label in ('Source','Selected receipt (short)','From latest query'):
+                        bindings.add_column(label,overflow='fold')
+                    for binding in data.get('projection_query_bindings',[]):
+                        state='yes' if binding['from_latest_query'] is True else 'earlier query' if binding['from_latest_query'] is False else 'legacy / not established'
+                        bindings.add_row(Text(literal(binding['source'])),Text(binding['assertion_id'][:12]),Text(state))
+                    self.console.print(bindings)
+                table=Table(title='Dated source assertion history — not independent observations')
+                for name in ('Source','Recorded at','Kind','Receipt (short)'):table.add_column(name,overflow='fold')
+                history=data.get('evidence_history',[])
+                self.console.print(Text(f'Showing {min(20,len(history))}/{len(history)} source receipts; full payloads remain in JSON export.'))
+                for record in history[-20:]:
+                    table.add_row(Text(literal(record['source'])),Text(record['recorded_at'].replace('T','\n',1)),Text(record['kind']),Text(record['assertion_id'][:12]))
+                if history:self.console.print(table)
+                self.console.print(Text('Full receipt IDs and unknown/alternative measurements remain in JSON source history. No source authentication, physical fit or calibrated origin inference is established.'))
+            self.console.input('Press Enter to return to database browser...')
+        except Exception:
+            if self.console is None:
+                print('Stored evidence could not be verified; no scientific assessment displayed.')
+                self.wait_for_input()
+            else:
+                self.console.print(Text('Stored evidence could not be verified; no scientific assessment displayed.'))
+                self.console.input('Press Enter to continue...')
+
+    def _policy_message(self, message):
+        """Literal output in Rich and plain terminals."""
         if self.console:
-            self.console.print("🔧 [bold blue]Analysis Configuration[/bold blue]")
-            self.console.print("Configure enhanced validation pipeline and validated detector settings\n")
-            
-            try:
-                from aneos_core.validation import MultiStageValidator
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                
-                # Display current configuration
-                validator = MultiStageValidator()
-                config = validator.config
-                
-                self.console.print("📋 [bold]Current Enhanced Validation Configuration:[/bold]")
-                self.console.print(f"   Alpha Level (significance): {config.get('alpha_level', 0.05)}")
-                self.console.print(f"   ΔBIC Analysis: {'Enabled' if config.get('enable_delta_bic', True) else 'Disabled'}")
-                self.console.print(f"   Spectral Analysis: {'Enabled' if config.get('enable_spectral_analysis', True) else 'Disabled'}")
-                self.console.print(f"   Radar Analysis: {'Enabled' if config.get('enable_radar_analysis', True) else 'Disabled'}")
-                self.console.print(f"   Thermal-IR Analysis: {'Enabled' if config.get('enable_thermal_ir_analysis', True) else 'Disabled'}")
-                self.console.print(f"   Gaia Astrometry: {'Enabled' if config.get('enable_gaia_astrometry', True) else 'Disabled'}")
-                
-                self.console.print(f"\n🎯 [bold]Validation Thresholds:[/bold]")
-                stage3_config = config.get('stage3_thresholds', {})
-                self.console.print(f"   Plausibility Threshold: {stage3_config.get('plausibility_threshold', 0.6)}")
-                self.console.print(f"   ΔBIC Threshold: {stage3_config.get('delta_bic_threshold', 10.0)}")
-                self.console.print(f"   Artificial Likelihood Threshold: {stage3_config.get('artificial_likelihood_threshold', 0.7)}")
-                
-                # Display validated detector configuration
-                self.console.print(f"\n🔬 [bold]Validated Detector Configuration:[/bold]")
-                detection_manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                
-                # Display detector status and thresholds
-                self.console.print(f"   Preferred Detector: Validated Sigma 5 (99.99994% confidence)")
-                self.console.print(f"   Discovery Threshold: σ ≥ 5.0 (artificial classification)")
-                self.console.print(f"   Detection Threshold: σ ≥ 2.0 (suspicious classification)")
-                self.console.print(f"   Background Threshold: σ < 2.0 (natural classification)")
-                
-                # Test detector status
-                try:
-                    test_result = detection_manager.analyze_neo(
-                        orbital_elements={'a': 1.0, 'e': 0.1, 'i': 0.1},
-                        physical_data={'mass_estimate': 1000, 'diameter': 10}
-                    )
-                    detector_status = "✅ Operational"
-                    sigma_test = f"σ = {test_result.sigma_level:.2f}"
-                except Exception as e:
-                    detector_status = f"⚠️ Error: {str(e)[:50]}"
-                    sigma_test = "N/A"
-                
-                self.console.print(f"   Detector Status: {detector_status}")
-                self.console.print(f"   Test Analysis: {sigma_test}")
-                
-                self.console.print(f"\n🎛️ [bold]Configuration Options:[/bold]")
-                from rich.table import Table
-                config_table = Table(show_header=True, header_style="bold magenta")
-                config_table.add_column("Option", style="cyan")
-                config_table.add_column("Description", style="white")
-                config_table.add_column("Current Value", style="green")
-                
-                config_table.add_row("1", "Modify Alpha Level", f"{config.get('alpha_level', 0.05)}")
-                config_table.add_row("2", "Toggle ΔBIC Analysis", f"{'Enabled' if config.get('enable_delta_bic', True) else 'Disabled'}")
-                config_table.add_row("3", "Configure Detection Thresholds", "σ ≥ 5.0 (discovery), σ ≥ 2.0 (detection)")
-                config_table.add_row("4", "Test Validated Detector", "Run diagnostic test")
-                config_table.add_row("5", "Export Configuration", "Save current settings")
-                config_table.add_row("6", "Import Configuration", "Load saved settings")
-                
-                self.console.print(config_table)
-                
-                from rich.prompt import Confirm, Prompt
-                if Confirm.ask("\nWould you like to modify these settings?"):
-                    choice = Prompt.ask("\nSelect configuration option", choices=["1", "2", "3", "4", "5", "6", "0"], default="0")
-                    
-                    if choice == "1":
-                        self._configure_alpha_level(config)
-                    elif choice == "2":
-                        self._toggle_delta_bic(config)
-                    elif choice == "3":
-                        self._configure_detection_thresholds()
-                    elif choice == "4":
-                        self._test_validated_detector()
-                    elif choice == "5":
-                        self._export_configuration(config)
-                    elif choice == "6":
-                        self._import_configuration()
-                    elif choice == "0":
-                        self.console.print("Configuration unchanged.")
-                    
-            except ImportError as e:
-                self.show_error(f"Enhanced validation configuration not available: {e}")
+            from rich.text import Text
+            self.console.print(Text(str(message)))
         else:
-            print("Analysis configuration requires enhanced terminal support")
-            
-        self.wait_for_input()
+            print(message)
+
+    def _render_policy_inspection(self, snapshot):
+        """Show actual canonical policy; no configuration or scientific validation."""
+        description = snapshot['policy_description']
+        policy = description['policy']
+        rows = [
+            ('Application', snapshot['application_version']),
+            ('Inspected at', snapshot['created_at'].replace('T', ' ').replace('+00:00', ' UTC')),
+            ('Ranking engine', description['engine_version']),
+            ('Policy version', policy['version']),
+            ('Follow-up threshold', f"{policy['candidate_threshold']:g} raw ranking units"),
+            ('Policy ID', description['policy_id']),
+            ('Significance / origin', 'Not calibrated / not assessed'),
+            ('Scientific FDR', 'Not reliably estimated'),
+            ('Required review', 'Separate required-review-v1 contract; not run by this view'),
+        ]
+        self._policy_message('Analysis policy and diagnostics — read-only')
+        if self.console:
+            from rich.table import Table
+            from rich.text import Text
+            table = Table(show_header=True, title='Active default canonical screening policy')
+            table.add_column('Setting', style='cyan', no_wrap=True)
+            table.add_column('Current contract', overflow='fold')
+            for key, value in rows:
+                table.add_row(Text(key), Text(str(value)))
+            self.console.print(table)
+        else:
+            for key, value in rows:
+                print(f'{key}: {value}')
+        self._policy_message(
+            'The score is an uncalibrated follow-up ranking, not Gaussian sigma. '
+            'A candidate is not confirmed artificial; NOT_FLAGGED does not establish natural origin. '
+            'The fixed reference population and dependent features still require scientific calibration.'
+        )
+        self._policy_message(
+            'This menu inspects the default canonical policy. Explicit custom service policies and '
+            'running jobs may have different recorded policy IDs. It does not audit every running process. '
+            'Alpha, legacy BIC and threshold mutation are unavailable here; no settings are applied. '
+            'Snapshot verification never imports a runtime policy or changes required validation.'
+        )
+
+    def configure_analysis(self):
+        """Compatibility entry: inspect policy, diagnostics and immutable snapshots."""
+        try:
+            from aneos_core.analysis.policy_inspection import build_policy_snapshot
+            snapshot = build_policy_snapshot()
+            self._render_policy_inspection(snapshot)
+            options = [
+                ('1', 'Significance controls', 'Read why alpha mutation is unavailable'),
+                ('2', 'Physical model comparison', 'Read legacy BIC limitations; no toggle'),
+                ('3', 'Follow-up threshold', 'Inspect actual policy; no mutation'),
+                ('4', 'Run synthetic controls', 'Positive / ordinary / missing; not scientific validation'),
+                ('5', 'Export policy snapshot', 'New JSON file only; no overwrite'),
+                ('6', 'Verify policy snapshot', 'Read / compare only; never apply'),
+                ('0', 'Return', 'No changes'),
+            ]
+            if self.console:
+                from rich.prompt import Prompt
+                from rich.table import Table
+                from rich.text import Text
+                table = Table(title='Policy inspection actions')
+                for column in ('Option', 'Action', 'Scope'):
+                    table.add_column(column, overflow='fold')
+                for row in options:
+                    table.add_row(*(Text(part) for part in row))
+                self.console.print(table)
+                choice = Prompt.ask('Select policy inspection action', choices=[r[0] for r in options], default='0')
+            else:
+                for row in options:
+                    print(f'{row[0]}. {row[1]} — {row[2]}')
+                choice = input('Select action [0]: ').strip() or '0'
+            actions = {
+                '1': lambda: self._configure_alpha_level(None),
+                '2': lambda: self._toggle_delta_bic(None),
+                '3': self._configure_detection_thresholds,
+                '4': self._test_validated_detector,
+                '5': lambda: self._export_configuration(None),
+                '6': self._import_configuration,
+            }
+            if choice in actions:
+                return actions[choice]()
+            if choice == '0':
+                return {'status': 'unchanged'}
+            self._policy_message('Unknown action; nothing changed.')
+            return {'status': 'invalid_action'}
+        except Exception:
+            self._policy_message('Policy inspection unavailable. No settings changed; no scientific assessment produced.')
+            return {'status': 'unavailable'}
+        finally:
+            self.wait_for_input()
 
     def _configure_alpha_level(self, config):
-        """Configure statistical significance alpha level."""
-        from rich.prompt import FloatPrompt
-        current_alpha = config.get('alpha_level', 0.05)
-        
-        self.console.print(f"\nCurrent alpha level: {current_alpha}")
-        self.console.print("Alpha level controls statistical significance (lower = more stringent)")
-        self.console.print("Common values: 0.05 (95% confidence), 0.01 (99% confidence), 0.001 (99.9% confidence)")
-        
-        new_alpha = FloatPrompt.ask("Enter new alpha level", default=current_alpha)
-        if 0.0001 <= new_alpha <= 0.1:
-            config['alpha_level'] = new_alpha
-            self.console.print(f"✅ Alpha level updated to {new_alpha}")
-        else:
-            self.console.print("❌ Alpha level must be between 0.0001 and 0.1")
+        """Controlled deprecation: a throwaway alpha is not an active model setting."""
+        self._policy_message(
+            'Alpha changes are not applied. No calibrated null model or search-wide '
+            'error-control procedure is installed. Changing an alpha value cannot '
+            'create discovery significance. The supplied legacy configuration is unchanged.'
+        )
+        return {'status': 'unsupported_not_applied', 'runtime_configuration_changed': False}
 
     def _toggle_delta_bic(self, config):
-        """Toggle ΔBIC analysis on/off."""
-        from rich.prompt import Confirm
-        current_state = config.get('enable_delta_bic', True)
-        
-        self.console.print(f"\nΔBIC Analysis is currently: {'Enabled' if current_state else 'Disabled'}")
-        self.console.print("ΔBIC helps distinguish between artificial and natural object models")
-        
-        new_state = not current_state
-        if Confirm.ask(f"{'Disable' if current_state else 'Enable'} ΔBIC analysis?"):
-            config['enable_delta_bic'] = new_state
-            self.console.print(f"✅ ΔBIC analysis {'enabled' if new_state else 'disabled'}")
+        """Controlled deprecation: no unsupported physical-fit switch."""
+        self._policy_message(
+            'BIC toggles are not applied. The legacy orbital-prior comparison is a '
+            'heuristic, not an observational physical-origin fit. Valid comparison '
+            'requires compatible observations, fitted likelihoods, covariance and '
+            'parameter counts. Required validation is unchanged.'
+        )
+        return {'status': 'unsupported_not_applied', 'runtime_configuration_changed': False}
 
     def _configure_detection_thresholds(self):
-        """Configure validated detector sigma thresholds."""
-        from rich.prompt import FloatPrompt, Confirm
-        
-        self.console.print("\n🔬 [bold]Validated Detector Threshold Configuration[/bold]")
-        self.console.print("Current thresholds:")
-        self.console.print("   Discovery (artificial): σ ≥ 5.0 (99.99994% confidence)")
-        self.console.print("   Detection (suspicious): σ ≥ 2.0 (95.4% confidence)")
-        self.console.print("   Background (natural): σ < 2.0")
-        
-        if Confirm.ask("\nThese are optimized thresholds. Modify anyway?"):
-            discovery_threshold = FloatPrompt.ask("Discovery threshold (current: 5.0)", default=5.0)
-            detection_threshold = FloatPrompt.ask("Detection threshold (current: 2.0)", default=2.0)
-            
-            if discovery_threshold >= detection_threshold >= 0:
-                self.console.print(f"✅ Thresholds updated:")
-                self.console.print(f"   Discovery: σ ≥ {discovery_threshold}")
-                self.console.print(f"   Detection: σ ≥ {detection_threshold}")
-                self.console.print("⚠️ Note: Custom thresholds may affect detection accuracy")
-            else:
-                self.console.print("❌ Invalid thresholds: discovery must be ≥ detection ≥ 0")
+        """Inspect the real default follow-up policy without pretending to edit it."""
+        from aneos_core.analysis.policy_inspection import build_policy_snapshot
+        snapshot = build_policy_snapshot()
+        self._render_policy_inspection(snapshot)
+        self._policy_message('Threshold changes are not applied. No discovery or natural-origin threshold is configured by this menu.')
+        return {'status': 'read_only_not_applied', 'policy_id': snapshot['policy_description']['policy_id'],
+                'runtime_configuration_changed': False}
 
     def _test_validated_detector(self):
-        """Run diagnostic test on validated detector."""
-        from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-        from rich.progress import Progress, SpinnerColumn, TextColumn
-        
-        self.console.print("\n🔬 [bold]Validated Detector Diagnostic Test[/bold]")
-        
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=self.console
-        ) as progress:
-            task = progress.add_task("Running detector diagnostics...", total=None)
-            
-            try:
-                detection_manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                
-                # Test with known artificial object (Tesla Roadster)
-                progress.update(task, description="Testing with artificial object...")
-                artificial_result = detection_manager.analyze_neo(
-                    orbital_elements={'a': 1.325, 'e': 0.256, 'i': 1.077},
-                    physical_data={'mass_estimate': 1350, 'diameter': 12}
-                )
-                
-                # Test with typical natural asteroid
-                progress.update(task, description="Testing with natural object...")
-                natural_result = detection_manager.analyze_neo(
-                    orbital_elements={'a': 2.1, 'e': 0.15, 'i': 5.2},
-                    physical_data={'mass_estimate': 1e15, 'diameter': 500}
-                )
-                
-                progress.update(task, description="Diagnostic complete!")
-                
-            except Exception as e:
-                self.console.print(f"❌ Detector test failed: {e}")
-                return
-        
-        # Display test results
-        self.console.print("\n📊 [bold]Diagnostic Results:[/bold]")
-        self.console.print(f"✅ Artificial test: σ = {artificial_result.sigma_level:.2f} ({artificial_result.classification})")
-        self.console.print(f"✅ Natural test: σ = {natural_result.sigma_level:.2f} ({natural_result.classification})")
-        
-        if artificial_result.sigma_level >= 5.0 and natural_result.sigma_level < 2.0:
-            self.console.print("🎉 Detector functioning correctly!")
+        """Compatibility name: actual synthetic rank controls, not scientific validation."""
+        from aneos_core.analysis.policy_inspection import synthetic_controls
+        try:
+            result = synthetic_controls()
+        except Exception:
+            self._policy_message('Synthetic controls unavailable; no validation status established.')
+            return {'control_passed': False, 'status': 'unavailable', 'scientific_validation_status': 'unavailable',
+                    'five_sigma_claim_permitted': False}
+        self._policy_message('Synthetic screening controls — not observations or independent scientific validation')
+        if self.console:
+            from rich.table import Table
+            from rich.text import Text
+            table = Table(title='Synthetic positive / ordinary / missing checks')
+            for name in ('Control', 'Screening result', 'Raw rank', 'Check'):
+                table.add_column(name, overflow='fold')
+            for row in result['controls']:
+                score = 'unavailable' if row['score'] is None else f"{row['score']:.6g}"
+                table.add_row(Text(row['control']), Text(row['classification']), Text(score), Text('passed' if row['passed'] else 'failed'))
+            self.console.print(table)
         else:
-            self.console.print("⚠️ Detector may need calibration")
+            for row in result['controls']:
+                score = 'unavailable' if row['score'] is None else f"{row['score']:.6g}"
+                self._policy_message(f"{row['control']}: {row['classification']}; raw score {score}; control {'passed' if row['passed'] else 'failed'}")
+        self._policy_message(f"Synthetic screening controls: {'passed' if result['control_passed'] else 'failed'}. Not independent scientific validation. Scientific validation remains unavailable.")
+        return result
 
-    def _export_configuration(self, config):
-        """Export current configuration to file."""
-        import json
+    def _export_configuration(self, config=None, *, path=None):
+        """Compatibility name: exclusive export of actual read-only policy, not config."""
+        import json, os
         from pathlib import Path
-        from datetime import datetime
-        
-        config_data = {
-            'exported': datetime.now().isoformat(),
-            'validation_config': config,
-            'detector_config': {
-                'discovery_threshold': 5.0,
-                'detection_threshold': 2.0,
-                'preferred_detector': 'VALIDATED'
-            }
-        }
-        
-        config_file = Path("aneos_configuration.json")
+        from aneos_core.analysis.policy_inspection import build_policy_snapshot
         try:
-            with open(config_file, 'w') as f:
-                json.dump(config_data, f, indent=2)
-            self.console.print(f"✅ Configuration exported to {config_file}")
-        except Exception as e:
-            self.console.print(f"❌ Export failed: {e}")
+            if path is None:
+                path = self.get_input('New policy snapshot path (blank cancels)').strip()
+            if not str(path).strip():
+                self._policy_message('Export cancelled; no file written.')
+                return {'status': 'cancelled'}
+            snapshot = build_policy_snapshot()
+            document = json.dumps(snapshot, sort_keys=True, indent=2, allow_nan=False)
+            with Path(path).open('x', encoding='utf-8') as stream:
+                stream.write(document + '\n')
+                stream.flush()
+                os.fsync(stream.fileno())
+            from aneos_core.analysis.object_review import literal
+            self._policy_message(f'Policy snapshot exported.\nFile: {literal(Path(path).name)}\nLocation: {literal(path)}\nRead-only record; no runtime settings changed.')
+            return {'status': 'exported', 'path': str(path), 'snapshot_id': snapshot['snapshot_id'],
+                    'runtime_configuration_changed': False}
+        except Exception:
+            self._policy_message('Snapshot export not completed. Existing files are not overwritten. Check the path and any partial new file; no settings changed.')
+            return {'status': 'not_exported', 'runtime_configuration_changed': False}
 
-    def _import_configuration(self):
-        """Import configuration from file."""
-        import json
+    def _import_configuration(self, *, path=None):
+        """Controlled deprecation: verify an archive, never pretend to apply config."""
         from pathlib import Path
-        from rich.prompt import Confirm
-        
-        config_file = Path("aneos_configuration.json")
-        if not config_file.exists():
-            self.console.print("❌ Configuration file not found")
-            return
-        
+        from aneos_core.analysis.policy_inspection import parse_snapshot_json, MAX_BYTES
         try:
-            with open(config_file, 'r') as f:
-                config_data = json.load(f)
-            
-            exported_date = config_data.get('exported', 'Unknown')
-            self.console.print(f"Configuration exported: {exported_date}")
-            
-            if Confirm.ask("Import this configuration?"):
-                # In a real implementation, would update the validator config
-                self.console.print("✅ Configuration imported (demonstration)")
-                self.console.print("Note: Configuration changes require restart in full implementation")
-            
-        except Exception as e:
-            self.console.print(f"❌ Import failed: {e}")
-        
+            if path is None:
+                path = self.get_input('Policy snapshot to verify (blank cancels)').strip()
+            if not str(path).strip():
+                self._policy_message('Verification cancelled; no settings changed.')
+                return {'status': 'cancelled'}
+            with Path(path).open('rb') as stream:
+                data = stream.read(MAX_BYTES + 1)
+            if len(data) > MAX_BYTES:
+                raise ValueError('Snapshot too large')
+            _, result = parse_snapshot_json(data.decode('utf-8'))
+            self._policy_message(f"Policy snapshot verified: {result['comparison']}. Not imported or applied. Checksum consistency is not source authenticity.")
+            self._policy_message(f"Recorded policy: {result['recorded_policy_id']}\nActive default policy: {result['active_policy_id']}")
+            return result
+        except Exception:
+            self._policy_message('Snapshot verification failed. Missing, invalid or legacy configuration is not applied; runtime policy and required validation are unchanged.')
+            return {'status': 'not_verified', 'runtime_configuration_changed': False}
+
     def generate_reports(self):
         """Generate comprehensive statistical analysis reports with validated detector integration."""
         if self.console:
@@ -6632,7 +4953,7 @@ class ANEOSMenu(ANEOSMenuBase):
         try:
             import requests
             # Try to check if API server is running
-            response = requests.get("http://localhost:8000/health", timeout=5)
+            response = provider_get("http://localhost:8000/health", timeout=5)
             if response.status_code == 200:
                 self.show_info("✅ API server is running and healthy")
             else:
@@ -7016,7 +5337,7 @@ class ANEOSMenu(ANEOSMenuBase):
         # Test if API is running
         try:
             import requests
-            response = requests.get("http://localhost:8000/health", timeout=5)
+            response = provider_get("http://localhost:8000/health", timeout=5)
             
             if response.status_code == 200:
                 self.show_info("✅ API server is running!")
@@ -7503,7 +5824,7 @@ class ANEOSMenu(ANEOSMenuBase):
                     ("", "", ""),
                     ("A", "🚀 ATLAS Advanced Scoring", "Multi-indicator anomaly scoring"),
                     ("B", "📦 Batch Processing", "Process multiple targets"),
-                    ("C", "⚙️ Advanced Configuration", "System parameters"),
+                    ("C", "⚙️ Analysis Policy", "Read-only policy and diagnostics"),
                     ("", "", ""),
                     ("0", "← Back to Scientific Tools", "Return to previous menu")
                 ]
@@ -7530,7 +5851,7 @@ class ANEOSMenu(ANEOSMenuBase):
                 print("6. Custom Analysis Workflows")
                 print("A. ATLAS Advanced Scoring")
                 print("B. Batch Processing")
-                print("C. Advanced Configuration")
+                print("C. Analysis Policy (read-only)")
                 print("0. Back to Scientific Tools")
                 choice = input("Select option: ").upper()
                 
@@ -7556,352 +5877,20 @@ class ANEOSMenu(ANEOSMenuBase):
                 self.configure_analysis()
     
     def enhanced_validation_pipeline(self):
-        """Enhanced multi-stage validation pipeline with comprehensive statistical analysis."""
-        if self.console:
-            self.console.print("🔬 [bold green]Enhanced Validation Pipeline[/bold green]")
-            self.console.print("Comprehensive multi-stage validation system with peer-review ready results\n")
-            
-            designation = self.get_input("Enter NEO designation for enhanced validation: ")
-            if not designation:
-                return
-                
-            try:
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
-                from rich.table import Table
-                from rich.panel import Panel
-                import time
-                
-                self.console.print("✅ [green]Initializing enhanced validation system...[/green]")
-                
-                # Initialize validated detector
-                manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                
-                # Fetch orbital data
-                try:
-                    orbital_elements, physical_data = self._get_test_data(designation)
-                except ValueError as exc:
-                    self.console.print(f"❌ {exc}")
-                    return
-
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    BarColumn(),
-                    TimeElapsedColumn(),
-                    console=self.console
-                ) as progress:
-
-                    # Stage 1: Basic Detection Analysis
-                    task1 = progress.add_task("Stage 1: Basic Detection Analysis", total=100)
-                    time.sleep(1)
-                    
-                    basic_result = manager.analyze_neo(
-                        orbital_elements=orbital_elements,
-                        physical_data=physical_data,
-                        detector_type=DetectorType.VALIDATED
-                    )
-                    progress.update(task1, completed=100)
-                    
-                    # Stage 2: Cross-Validation with Multiple Detectors
-                    task2 = progress.add_task("Stage 2: Cross-Validation Analysis", total=100)
-                    time.sleep(1)
-                    
-                    # Test with multiple detectors for comparison
-                    detector_results = {}
-                    available_detectors = [DetectorType.VALIDATED, DetectorType.MULTIMODAL, DetectorType.PRODUCTION]
-                    
-                    for detector_type in available_detectors:
-                        if detector_type in manager.get_available_detectors():
-                            try:
-                                result = manager.analyze_neo(
-                                    orbital_elements=orbital_elements,
-                                    physical_data=physical_data,
-                                    detector_type=detector_type
-                                )
-                                detector_results[detector_type.value] = result
-                            except:
-                                pass
-                    progress.update(task2, completed=100)
-                    
-                    # Stage 3: Statistical Validation
-                    task3 = progress.add_task("Stage 3: Statistical Validation", total=100)
-                    time.sleep(1)
-                    
-                    # Calculate validation metrics
-                    validation_metrics = self._calculate_validation_metrics(basic_result, detector_results)
-                    progress.update(task3, completed=100)
-                    
-                    # Stage 4: Peer-Review Readiness Assessment
-                    task4 = progress.add_task("Stage 4: Peer-Review Assessment", total=100)
-                    time.sleep(1)
-                    
-                    peer_review_assessment = self._assess_peer_review_readiness(basic_result, validation_metrics)
-                    progress.update(task4, completed=100)
-                
-                # Display comprehensive validation results
-                self._display_enhanced_validation_results(
-                    designation, basic_result, detector_results, 
-                    validation_metrics, peer_review_assessment
-                )
-                
-            except Exception as e:
-                self.console.print(f"❌ Enhanced validation failed: {str(e)}")
-                self.console.print("💡 Ensure validated detector system is properly configured")
-        else:
-            print("\n--- Enhanced Validation Pipeline ---")
-            print("This functionality requires rich terminal support.")
-            print("Use interactive_analysis() for basic validation.")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Required-review prerequisites')
     
     def spectral_analysis_suite(self):
-        """Advanced spectral analysis suite for material composition and artificial signature detection."""
-        if self.console:
-            self.console.print("🌈 [bold green]Spectral Analysis Suite[/bold green]")
-            self.console.print("Advanced spectroscopic analysis for material identification and artificial signatures\n")
-            
-            designation = self.get_input("Enter NEO designation for spectral analysis: ")
-            if not designation:
-                return
-                
-            try:
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-                from rich.table import Table
-                from rich.panel import Panel
-                import time
-
-                self.console.print("✅ [green]Initializing spectral analysis system...[/green]")
-                
-                # Initialize validated detector for integration
-                manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                
-                # Fetch orbital data
-                try:
-                    orbital_elements, physical_data = self._get_test_data(designation)
-                except ValueError as exc:
-                    self.console.print(f"❌ {exc}")
-                    return
-
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    BarColumn(),
-                    console=self.console
-                ) as progress:
-
-                    # Stage 1: Visible Spectrum Analysis
-                    task1 = progress.add_task("Analyzing visible spectrum (400-700nm)", total=100)
-                    time.sleep(1.5)
-                    visible_spectrum = self._analyze_visible_spectrum(designation)
-                    progress.update(task1, completed=100)
-                    
-                    # Stage 2: Near-Infrared Analysis
-                    task2 = progress.add_task("Analyzing near-infrared (700-2500nm)", total=100)
-                    time.sleep(1.5)
-                    nir_spectrum = self._analyze_near_infrared(designation)
-                    progress.update(task2, completed=100)
-                    
-                    # Stage 3: Material Composition Analysis
-                    task3 = progress.add_task("Determining material composition", total=100)
-                    time.sleep(1.5)
-                    composition = self._analyze_material_composition(visible_spectrum, nir_spectrum)
-                    progress.update(task3, completed=100)
-                    
-                    # Stage 4: Artificial Signature Detection
-                    task4 = progress.add_task("Detecting artificial material signatures", total=100)
-                    time.sleep(1.5)
-                    artificial_signatures = self._detect_artificial_signatures(composition, designation)
-                    progress.update(task4, completed=100)
-                    
-                    # Stage 5: Integration with Validated Detector
-                    task5 = progress.add_task("Integrating with detection system", total=100)
-                    time.sleep(1)
-                    
-                    # Add spectral data to physical data for enhanced detection
-                    enhanced_physical_data = physical_data.copy()
-                    enhanced_physical_data.update({
-                        'spectral_composition': composition,
-                        'artificial_signatures': artificial_signatures,
-                        'spectral_confidence': artificial_signatures.get('confidence', 0.0)
-                    })
-                    
-                    enhanced_result = manager.analyze_neo(
-                        orbital_elements=orbital_elements,
-                        physical_data=enhanced_physical_data,
-                        detector_type=DetectorType.VALIDATED
-                    )
-                    progress.update(task5, completed=100)
-                
-                # Display comprehensive spectral analysis results
-                self._display_spectral_analysis_results(
-                    designation, visible_spectrum, nir_spectrum, 
-                    composition, artificial_signatures, enhanced_result
-                )
-                
-            except Exception as e:
-                self.console.print(f"❌ Spectral analysis failed: {str(e)}")
-                self.console.print("💡 Spectral analysis requires observational data")
-        else:
-            print("\n--- Spectral Analysis Suite ---")
-            print("This functionality requires rich terminal support.")
-            print("Use single_neo_analysis() for basic detection.")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Spectral evidence inventory')
     
     def orbital_dynamics_modeling(self):
-        """Advanced orbital dynamics modeling with trajectory prediction and perturbation analysis."""
-        if self.console:
-            self.console.print("🌍 [bold green]Orbital Dynamics Modeling[/bold green]")
-            self.console.print("Advanced orbital mechanics with trajectory prediction and perturbation analysis\n")
-            
-            designation = self.get_input("Enter NEO designation for orbital dynamics modeling: ")
-            if not designation:
-                return
-                
-            try:
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-                from rich.table import Table
-                from rich.panel import Panel
-                import time
-                import math
-                
-                self.console.print("✅ [green]Initializing orbital dynamics system...[/green]")
-                
-                # Initialize validated detector for integration
-                manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                
-                # Fetch orbital data
-                try:
-                    orbital_elements, physical_data = self._get_test_data(designation)
-                except ValueError as exc:
-                    self.console.print(f"❌ {exc}")
-                    return
-
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    BarColumn(),
-                    console=self.console
-                ) as progress:
-
-                    # Stage 1: Orbital Element Analysis
-                    task1 = progress.add_task("Analyzing orbital elements and stability", total=100)
-                    time.sleep(1)
-                    orbital_analysis = self._analyze_orbital_elements(orbital_elements, designation)
-                    progress.update(task1, completed=100)
-                    
-                    # Stage 2: Trajectory Prediction
-                    task2 = progress.add_task("Computing future trajectory predictions", total=100)
-                    time.sleep(1.5)
-                    trajectory_prediction = self._predict_trajectory(orbital_elements, orbital_analysis)
-                    progress.update(task2, completed=100)
-                    
-                    # Stage 3: Perturbation Analysis
-                    task3 = progress.add_task("Analyzing gravitational perturbations", total=100)
-                    time.sleep(1.5)
-                    perturbation_analysis = self._analyze_perturbations(orbital_elements, trajectory_prediction)
-                    progress.update(task3, completed=100)
-                    
-                    # Stage 4: Non-Gravitational Forces Detection
-                    task4 = progress.add_task("Detecting non-gravitational forces", total=100)
-                    time.sleep(1.5)
-                    ng_forces = self._detect_non_gravitational_forces(orbital_elements, designation)
-                    progress.update(task4, completed=100)
-                    
-                    # Stage 5: Artificial Dynamics Assessment
-                    task5 = progress.add_task("Assessing artificial dynamics signatures", total=100)
-                    time.sleep(1)
-                    artificial_dynamics = self._assess_artificial_dynamics(
-                        orbital_analysis, perturbation_analysis, ng_forces, designation
-                    )
-                    progress.update(task5, completed=100)
-                    
-                    # Stage 6: Integration with Validated Detector
-                    task6 = progress.add_task("Integrating with detection system", total=100)
-                    time.sleep(1)
-                    
-                    # Add dynamics data to additional data for enhanced detection
-                    additional_data = {
-                        'orbital_analysis': orbital_analysis,
-                        'trajectory_prediction': trajectory_prediction,
-                        'perturbation_analysis': perturbation_analysis,
-                        'non_gravitational_forces': ng_forces,
-                        'artificial_dynamics': artificial_dynamics
-                    }
-                    
-                    enhanced_result = manager.analyze_neo(
-                        orbital_elements=orbital_elements,
-                        physical_data=physical_data,
-                        additional_data=additional_data,
-                        detector_type=DetectorType.VALIDATED
-                    )
-                    progress.update(task6, completed=100)
-                
-                # Display comprehensive orbital dynamics results
-                self._display_orbital_dynamics_results(
-                    designation, orbital_analysis, trajectory_prediction,
-                    perturbation_analysis, ng_forces, artificial_dynamics, enhanced_result
-                )
-                
-            except Exception as e:
-                self.console.print(f"❌ Orbital dynamics modeling failed: {str(e)}")
-                self.console.print("💡 Orbital modeling requires precise orbital elements")
-        else:
-            print("\n--- Orbital Dynamics Modeling ---")
-            print("This functionality requires rich terminal support.")
-            print("Use orbital_history_analysis() for basic orbital analysis.")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Orbital dynamics evidence inventory')
     
     def cross_reference_database(self):
-        """Advanced cross-reference database with multi-source object identification and validation."""
-        if self.console:
-            self.console.print("[bold green]🔗 Cross-Reference Database[/bold green]")
-            self.console.print("Multi-source intelligence correlation and object identification")
-            
-            designation = self.get_input("Enter NEO designation for cross-reference lookup: ")
-            
-            if not designation:
-                self.console.print("❌ No designation provided")
-                return
-            
-            try:
-                # Stage 1: Initialize Cross-Reference Analysis
-                with self.progress.track(range(6), description="🔍 Cross-referencing databases...") as progress:
-                    # Stage 1: Database Inventory
-                    progress.advance()
-                    database_inventory = self._inventory_available_databases()
-                    
-                    # Stage 2: Multi-source Data Collection
-                    progress.advance()
-                    collected_data = self._collect_multi_source_data(designation, database_inventory)
-                    
-                    # Stage 3: Data Correlation and Validation
-                    progress.advance()
-                    correlation_results = self._correlate_data_sources(collected_data, designation)
-                    
-                    # Stage 4: Cross-Validation Analysis
-                    progress.advance()
-                    cross_validation = self._perform_cross_validation(correlation_results, designation)
-                    
-                    # Stage 5: Unified Object Identification
-                    progress.advance()
-                    unified_identification = self._create_unified_identification(cross_validation, designation)
-                    
-                    # Stage 6: Enhanced Detector Integration
-                    progress.advance()
-                    enhanced_result = self._integrate_with_validated_detector(unified_identification, designation)
-                
-                # Display comprehensive cross-reference results
-                self._display_cross_reference_results(
-                    designation, database_inventory, collected_data, 
-                    correlation_results, cross_validation, unified_identification, enhanced_result
-                )
-                
-            except Exception as e:
-                self.console.print(f"❌ Cross-reference analysis failed: {str(e)}")
-                self.console.print("💡 Cross-reference requires network access and database connectivity")
-        else:
-            print("\n--- Cross-Reference Database ---")
-            print("This functionality requires rich terminal support.")
-            print("Use database_status() for basic database information.")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Source provenance review')
     
     def _inventory_available_databases(self):
         """Inventory all available databases and data sources."""
@@ -8111,64 +6100,8 @@ class ANEOSMenu(ANEOSMenuBase):
         return correlation
     
     def _perform_cross_validation(self, correlation_results, designation):
-        """Perform comprehensive cross-validation analysis."""
-        validation = {
-            'independent_confirmations': 0,
-            'source_reliability_weighted_score': 0.0,
-            'temporal_consistency_analysis': {},
-            'statistical_validation': {},
-            'peer_review_indicators': [],
-            'validation_confidence': 0.0
-        }
-        
-        if designation.lower() in ['tesla', 'roadster']:
-            validation.update({
-                'independent_confirmations': 5,  # Multiple independent observations
-                'source_reliability_weighted_score': 0.97,
-                'temporal_consistency_analysis': {
-                    'orbital_evolution': 'predictable_perturbations',
-                    'observation_consistency': 'highly_consistent',
-                    'data_quality_trend': 'improving_with_time'
-                },
-                'statistical_validation': {
-                    'chi_squared_test': 0.89,
-                    'consistency_p_value': 0.02,
-                    'outlier_detection': 'no_significant_outliers',
-                    'confidence_interval': '95%'
-                },
-                'peer_review_indicators': [
-                    'published_orbital_determination',
-                    'verified_launch_documentation',
-                    'multiple_independent_tracking',
-                    'radar_confirmation',
-                    'spectroscopic_analysis'
-                ],
-                'validation_confidence': 0.96
-            })
-        else:
-            validation.update({
-                'independent_confirmations': 3,
-                'source_reliability_weighted_score': 0.85,
-                'temporal_consistency_analysis': {
-                    'orbital_evolution': 'standard_gravitational_dynamics',
-                    'observation_consistency': 'good',
-                    'data_quality_trend': 'stable'
-                },
-                'statistical_validation': {
-                    'chi_squared_test': 0.75,
-                    'consistency_p_value': 0.15,
-                    'outlier_detection': 'within_normal_parameters',
-                    'confidence_interval': '90%'
-                },
-                'peer_review_indicators': [
-                    'standard_discovery_protocol',
-                    'mpc_confirmation',
-                    'follow_up_observations'
-                ],
-                'validation_confidence': 0.82
-            })
-        
-        return validation
+        """Controlled deprecation: catalogue proxies/demonstrations are not observed validation data."""
+        raise NotImplementedError('Prototype statistical/cross-validation inference withdrawn; compatible observations and calibrated models are required')
     
     def _create_unified_identification(self, cross_validation, designation):
         """Create unified object identification from all sources."""
@@ -8218,64 +6151,8 @@ class ANEOSMenu(ANEOSMenuBase):
         return unified_id
     
     def _integrate_with_validated_detector(self, unified_identification, designation):
-        """Integrate cross-reference results with validated sigma 5 detector."""
-        from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-        
-        # Extract orbital and physical data for detector analysis
-        if designation.lower() in ['tesla', 'roadster']:
-            orbital_elements = {'a': 1.325, 'e': 0.256, 'i': 1.077}
-            physical_data = {'mass_estimate': 1350, 'diameter': 12}
-        else:
-            orbital_elements = {'a': 1.8, 'e': 0.15, 'i': 8.5}
-            physical_data = {'estimated_diameter': 500, 'absolute_magnitude': 18.5}
-        
-        # Run validated detector analysis
-        detection_manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-        detector_result = detection_manager.analyze_neo(
-            orbital_elements=orbital_elements,
-            physical_data=physical_data
-        )
-        
-        # Combine cross-reference and detector results
-        integrated_result = {
-            'cross_reference_classification': unified_identification['object_classification'],
-            'cross_reference_confidence': unified_identification['confidence_level'],
-            'detector_classification': detector_result.classification,
-            'detector_sigma': detector_result.sigma_level,
-            'detector_probability': detector_result.artificial_probability,
-            'agreement_analysis': {},
-            'combined_confidence': 0.0,
-            'final_recommendation': ''
-        }
-        
-        # Analyze agreement between cross-reference and detector
-        cross_ref_artificial = 'artificial' in unified_identification['object_classification']
-        detector_artificial = detector_result.is_artificial
-        
-        if cross_ref_artificial == detector_artificial:
-            integrated_result['agreement_analysis'] = {
-                'classification_agreement': 'consistent',
-                'confidence_boost': 0.05,
-                'reliability_factor': 1.1
-            }
-            integrated_result['combined_confidence'] = min(0.99, 
-                (unified_identification['confidence_level'] + detector_result.artificial_probability) / 2 + 0.05)
-            
-            if cross_ref_artificial:
-                integrated_result['final_recommendation'] = 'high_confidence_artificial_classification'
-            else:
-                integrated_result['final_recommendation'] = 'high_confidence_natural_classification'
-        else:
-            integrated_result['agreement_analysis'] = {
-                'classification_agreement': 'discrepancy_detected',
-                'confidence_penalty': 0.1,
-                'requires_additional_analysis': True
-            }
-            integrated_result['combined_confidence'] = min(unified_identification['confidence_level'], 
-                                                         detector_result.artificial_probability) - 0.1
-            integrated_result['final_recommendation'] = 'requires_further_investigation'
-        
-        return integrated_result
+        """Controlled deprecation: catalogue proxies/demonstrations are not observed validation data."""
+        raise NotImplementedError('Prototype statistical/cross-validation inference withdrawn; compatible observations and calibrated models are required')
     
     def _display_cross_reference_results(self, designation, database_inventory, collected_data, 
                                        correlation_results, cross_validation, unified_identification, enhanced_result):
@@ -8409,142 +6286,12 @@ class ANEOSMenu(ANEOSMenuBase):
             self.console.print("🔍 Results provide valuable context for classification")
 
     def statistical_analysis_tools(self):
-        """Advanced statistical analysis tools for comprehensive validation and peer-review ready reporting."""
-        if self.console:
-            self.console.print("[bold green]📊 Statistical Analysis Tools[/bold green]")
-            self.console.print("Comprehensive statistical validation for scientific publication")
-            
-            designation = self.get_input("Enter NEO designation for statistical analysis: ")
-            
-            if not designation:
-                self.console.print("❌ No designation provided")
-                return
-            
-            try:
-                # Stage 1: Initialize Statistical Analysis
-                with self.progress.track(range(7), description="📈 Running statistical analysis...") as progress:
-                    # Stage 1: Data Collection and Preprocessing
-                    progress.advance()
-                    statistical_data = self._collect_statistical_data(designation)
-                    
-                    # Stage 2: Descriptive Statistics
-                    progress.advance()
-                    descriptive_stats = self._calculate_descriptive_statistics(statistical_data, designation)
-                    
-                    # Stage 3: Hypothesis Testing
-                    progress.advance()
-                    hypothesis_results = self._perform_hypothesis_testing(statistical_data, designation)
-                    
-                    # Stage 4: Confidence Interval Analysis
-                    progress.advance()
-                    confidence_intervals = self._calculate_confidence_intervals(statistical_data, designation)
-                    
-                    # Stage 5: Bayesian Analysis
-                    progress.advance()
-                    bayesian_analysis = self._perform_bayesian_analysis(statistical_data, designation)
-                    
-                    # Stage 6: Cross-Validation and Robustness Testing
-                    progress.advance()
-                    validation_results = self._perform_statistical_validation(statistical_data, designation)
-                    
-                    # Stage 7: Enhanced Detector Integration
-                    progress.advance()
-                    enhanced_result = self._integrate_statistical_with_detector(
-                        statistical_data, descriptive_stats, hypothesis_results, 
-                        confidence_intervals, bayesian_analysis, validation_results, designation
-                    )
-                
-                # Display comprehensive statistical results
-                self._display_statistical_analysis_results(
-                    designation, statistical_data, descriptive_stats, hypothesis_results,
-                    confidence_intervals, bayesian_analysis, validation_results, enhanced_result
-                )
-                
-            except Exception as e:
-                self.console.print(f"❌ Statistical analysis failed: {str(e)}")
-                self.console.print("💡 Statistical analysis requires sufficient data for meaningful results")
-        else:
-            print("\n--- Statistical Analysis Tools ---")
-            print("This functionality requires rich terminal support.")
-            print("Use generate_statistical_reports() for basic statistical information.")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Statistical capability review')
     
     def _collect_statistical_data(self, designation):
-        """Collect statistical data for analysis using real orbital data where available."""
-        import numpy as np
-
-        statistical_data = {
-            'designation': designation,
-            'observation_data': {},
-            'measurement_uncertainties': {},
-            'temporal_data': {},
-            'detection_history': {},
-            'comparative_dataset': {},
-            'sample_size': 0,
-        }
-
-        # Fetch real orbital/physical data — raises ValueError if unavailable
-        try:
-            orbital_elements, physical_data = self._get_test_data(designation)
-        except ValueError:
-            orbital_elements, physical_data = {}, {}
-        sources = physical_data.get('_sources', []) if physical_data else []
-        source_count = len(sources)
-
-        # Build observation quality from real data availability
-        has_diameter = physical_data and physical_data.get('diameter') is not None
-        has_albedo = physical_data and physical_data.get('albedo') is not None
-        has_spectral = physical_data and physical_data.get('spectral_type') is not None
-        data_fields_present = sum([True, True,  # a, e always present if we got data
-                                   orbital_elements.get('i') is not None,
-                                   has_diameter, has_albedo, has_spectral])
-        obs_quality = min(0.6 + 0.07 * data_fields_present + 0.04 * source_count, 1.0)
-
-        a = orbital_elements.get('a', 1.5) if orbital_elements else 1.5
-        e = orbital_elements.get('e', 0.3) if orbital_elements else 0.3
-
-        # Detector-based detection history
-        detection_history = {'artificial_indicators': [], 'sigma_levels': [], 'artificial_probability_history': []}
-        try:
-            from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-            manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-            result = manager.analyze_neo(orbital_elements=orbital_elements, physical_data=physical_data)
-            if result:
-                detection_history['sigma_levels'] = [getattr(result, 'sigma_level', 1.0)]
-                detection_history['artificial_probability_history'] = [getattr(result, 'artificial_probability', 0.1)]
-        except Exception:
-            pass
-
-        statistical_data.update({
-            'orbital_elements': orbital_elements,
-            'physical_data': physical_data,
-            'data_sources': sources,
-            'observation_data': {
-                'source_count': source_count,
-                'orbital_data_available': orbital_elements is not None,
-                'diameter_available': has_diameter,
-                'albedo_available': has_albedo,
-                'spectral_type_available': has_spectral,
-                'observation_quality': round(obs_quality, 2),
-                'note': 'Observation counts not available via API; quality derived from data completeness',
-            },
-            'measurement_uncertainties': {
-                'semi_major_axis_au': round(abs(a - round(a, 2)), 4) if a else None,
-                'eccentricity': round(abs(e - round(e, 2)), 4) if e else None,
-                'note': 'Uncertainties not available from current data sources',
-            },
-            'temporal_data': {
-                'data_freshness': 'current epoch',
-                'note': 'Historical time-series not available via public REST APIs',
-            },
-            'detection_history': detection_history,
-            'comparative_dataset': {
-                'natural_neo_comparisons': 'JPL SBDB catalogue',
-                'note': 'Population comparison uses detector statistical model',
-            },
-            'sample_size': source_count,
-        })
-
-        return statistical_data
+        """Controlled deprecation: catalogue proxies/demonstrations are not observed validation data."""
+        raise NotImplementedError('Prototype statistical/cross-validation inference withdrawn; compatible observations and calibrated models are required')
     
     def _calculate_descriptive_statistics(self, statistical_data, designation):
         """Calculate comprehensive descriptive statistics."""
@@ -8617,96 +6364,8 @@ class ANEOSMenu(ANEOSMenuBase):
         return descriptive_stats
     
     def _perform_hypothesis_testing(self, statistical_data, designation):
-        """Perform comprehensive hypothesis testing for artificial vs natural classification."""
-        import numpy as np
-        from scipy import stats
-        
-        hypothesis_results = {
-            'null_hypothesis': 'Object is natural (sigma <= 2.0)',
-            'alternative_hypothesis': 'Object is artificial (sigma > 5.0)',
-            'test_results': {},
-            'effect_sizes': {},
-            'power_analysis': {},
-            'multiple_comparisons': {}
-        }
-        
-        sigma_levels = np.array(statistical_data['detection_history']['sigma_levels'])
-        artificial_probs = np.array(statistical_data['detection_history']['artificial_probability_history'])
-        
-        # One-sample t-test: Is mean sigma significantly > 2.0 (natural threshold)?
-        natural_threshold = 2.0
-        t_stat_natural, p_value_natural = stats.ttest_1samp(sigma_levels, natural_threshold)
-        
-        # One-sample t-test: Is mean sigma significantly >= 5.0 (artificial threshold)?
-        artificial_threshold = 5.0
-        t_stat_artificial, p_value_artificial = stats.ttest_1samp(sigma_levels, artificial_threshold)
-        
-        # Wilcoxon signed-rank test (non-parametric alternative)
-        wilcoxon_stat, wilcoxon_p = stats.wilcoxon(sigma_levels - artificial_threshold) if len(sigma_levels) > 1 else (0, 1.0)
-        
-        hypothesis_results['test_results'] = {
-            'one_sample_t_test_natural': {
-                't_statistic': t_stat_natural,
-                'p_value': p_value_natural,
-                'reject_null': p_value_natural < 0.05,
-                'conclusion': 'Significantly different from natural threshold' if p_value_natural < 0.05 else 'Not significantly different'
-            },
-            'one_sample_t_test_artificial': {
-                't_statistic': t_stat_artificial,
-                'p_value': p_value_artificial,
-                'reject_null': p_value_artificial < 0.05 and t_stat_artificial > 0,
-                'conclusion': 'Meets artificial threshold' if (p_value_artificial < 0.05 and t_stat_artificial > 0) else 'Does not meet artificial threshold'
-            },
-            'wilcoxon_signed_rank': {
-                'statistic': wilcoxon_stat,
-                'p_value': wilcoxon_p,
-                'reject_null': wilcoxon_p < 0.05,
-                'conclusion': 'Non-parametric test supports artificial classification' if wilcoxon_p < 0.05 else 'Non-parametric test inconclusive'
-            }
-        }
-        
-        # Effect sizes (Cohen's d)
-        pooled_std = np.std(sigma_levels)
-        cohens_d_natural = (np.mean(sigma_levels) - natural_threshold) / pooled_std if pooled_std > 0 else 0
-        cohens_d_artificial = (np.mean(sigma_levels) - artificial_threshold) / pooled_std if pooled_std > 0 else 0
-        
-        hypothesis_results['effect_sizes'] = {
-            'cohens_d_vs_natural': cohens_d_natural,
-            'cohens_d_vs_artificial': cohens_d_artificial,
-            'effect_size_interpretation_natural': self._interpret_cohens_d(cohens_d_natural),
-            'effect_size_interpretation_artificial': self._interpret_cohens_d(cohens_d_artificial)
-        }
-        
-        # Power analysis (simplified)
-        from scipy.stats import norm
-        alpha = 0.05
-        n = len(sigma_levels)
-        effect_size = abs(cohens_d_artificial)
-        z_alpha = norm.ppf(1 - alpha/2)
-        z_beta = norm.ppf(0.8)  # 80% power target
-        
-        hypothesis_results['power_analysis'] = {
-            'achieved_power': 1 - norm.cdf(z_alpha - effect_size * np.sqrt(n)),
-            'required_sample_size_80_power': ((z_alpha + z_beta) / effect_size) ** 2 if effect_size > 0 else float('inf'),
-            'current_sample_size': n,
-            'power_adequate': (1 - norm.cdf(z_alpha - effect_size * np.sqrt(n))) >= 0.8
-        }
-        
-        # Multiple comparisons correction (Bonferroni)
-        num_tests = 3  # Three main tests performed
-        bonferroni_alpha = alpha / num_tests
-        
-        hypothesis_results['multiple_comparisons'] = {
-            'original_alpha': alpha,
-            'bonferroni_corrected_alpha': bonferroni_alpha,
-            'significant_after_correction': {
-                'natural_threshold': p_value_natural < bonferroni_alpha,
-                'artificial_threshold': p_value_artificial < bonferroni_alpha and t_stat_artificial > 0,
-                'wilcoxon_test': wilcoxon_p < bonferroni_alpha
-            }
-        }
-        
-        return hypothesis_results
+        """Controlled deprecation: catalogue proxies/demonstrations are not observed validation data."""
+        raise NotImplementedError('Prototype statistical/cross-validation inference withdrawn; compatible observations and calibrated models are required')
     
     def _interpret_cohens_d(self, cohens_d):
         """Interpret Cohen's d effect size."""
@@ -8721,195 +6380,12 @@ class ANEOSMenu(ANEOSMenuBase):
             return "large"
     
     def _calculate_confidence_intervals(self, statistical_data, designation):
-        """Calculate confidence intervals for key parameters."""
-        import numpy as np
-        from scipy import stats
-        
-        confidence_intervals = {
-            'confidence_level': 0.95,
-            'sigma_intervals': {},
-            'artificial_probability_intervals': {},
-            'detection_rate_intervals': {},
-            'prediction_intervals': {}
-        }
-        
-        sigma_levels = np.array(statistical_data['detection_history']['sigma_levels'])
-        artificial_probs = np.array(statistical_data['detection_history']['artificial_probability_history'])
-        
-        # Confidence intervals for sigma levels
-        n = len(sigma_levels)
-        sigma_mean = np.mean(sigma_levels)
-        sigma_std = np.std(sigma_levels, ddof=1)
-        sigma_se = sigma_std / np.sqrt(n)
-        
-        # 95% confidence interval using t-distribution
-        t_critical = stats.t.ppf(0.975, df=n-1)
-        sigma_ci_lower = sigma_mean - t_critical * sigma_se
-        sigma_ci_upper = sigma_mean + t_critical * sigma_se
-        
-        confidence_intervals['sigma_intervals'] = {
-            'mean': sigma_mean,
-            'standard_error': sigma_se,
-            'ci_lower': sigma_ci_lower,
-            'ci_upper': sigma_ci_upper,
-            'margin_of_error': t_critical * sigma_se,
-            'contains_artificial_threshold': sigma_ci_lower >= 5.0,
-            'excludes_natural_threshold': sigma_ci_lower > 2.0
-        }
-        
-        # Confidence intervals for artificial probability
-        prob_mean = np.mean(artificial_probs)
-        prob_std = np.std(artificial_probs, ddof=1)
-        prob_se = prob_std / np.sqrt(n)
-        prob_ci_lower = prob_mean - t_critical * prob_se
-        prob_ci_upper = prob_mean + t_critical * prob_se
-        
-        # Ensure probability bounds are valid [0, 1]
-        prob_ci_lower = max(0.0, prob_ci_lower)
-        prob_ci_upper = min(1.0, prob_ci_upper)
-        
-        confidence_intervals['artificial_probability_intervals'] = {
-            'mean': prob_mean,
-            'standard_error': prob_se,
-            'ci_lower': prob_ci_lower,
-            'ci_upper': prob_ci_upper,
-            'margin_of_error': t_critical * prob_se,
-            'high_confidence_artificial': prob_ci_lower > 0.7,
-            'excludes_natural_probability': prob_ci_upper < 0.3
-        }
-        
-        # Detection rate confidence intervals
-        total_observations = statistical_data['observation_data']['orbital_observations']
-        artificial_detections = len([x for x in sigma_levels if x >= 5.0])
-        detection_rate = artificial_detections / total_observations
-        
-        # Binomial proportion confidence interval (Wilson method)
-        z = stats.norm.ppf(0.975)  # 95% CI
-        n_obs = total_observations
-        p_hat = detection_rate
-        
-        denominator = 1 + z**2 / n_obs
-        center = (p_hat + z**2 / (2 * n_obs)) / denominator
-        margin = z * np.sqrt((p_hat * (1 - p_hat) + z**2 / (4 * n_obs)) / n_obs) / denominator
-        
-        dr_ci_lower = max(0, center - margin)
-        dr_ci_upper = min(1, center + margin)
-        
-        confidence_intervals['detection_rate_intervals'] = {
-            'detection_rate': detection_rate,
-            'ci_lower': dr_ci_lower,
-            'ci_upper': dr_ci_upper,
-            'total_observations': total_observations,
-            'artificial_detections': artificial_detections,
-            'high_detection_rate': dr_ci_lower > 0.1
-        }
-        
-        # Prediction intervals for future observations
-        # Using t-distribution for prediction intervals
-        t_pred = stats.t.ppf(0.975, df=n-1)
-        pred_se = sigma_std * np.sqrt(1 + 1/n)
-        
-        confidence_intervals['prediction_intervals'] = {
-            'next_sigma_prediction_lower': sigma_mean - t_pred * pred_se,
-            'next_sigma_prediction_upper': sigma_mean + t_pred * pred_se,
-            'prediction_standard_error': pred_se,
-            'future_artificial_probability': prob_mean,
-            'prediction_interval_width': 2 * t_pred * pred_se
-        }
-        
-        return confidence_intervals
+        """Controlled deprecation: catalogue proxies/demonstrations are not observed validation data."""
+        raise NotImplementedError('Prototype statistical/cross-validation inference withdrawn; compatible observations and calibrated models are required')
     
     def _perform_bayesian_analysis(self, statistical_data, designation):
-        """Perform Bayesian analysis for artificial vs natural classification."""
-        import numpy as np
-        from scipy import stats
-        
-        bayesian_analysis = {
-            'prior_information': {},
-            'likelihood_analysis': {},
-            'posterior_analysis': {},
-            'bayes_factors': {},
-            'model_comparison': {}
-        }
-        
-        sigma_levels = np.array(statistical_data['detection_history']['sigma_levels'])
-        artificial_probs = np.array(statistical_data['detection_history']['artificial_probability_history'])
-        
-        # Prior probabilities based on known population statistics
-        # Approximately 0.1% of NEOs might be artificial based on current knowledge
-        prior_artificial = 0.001
-        prior_natural = 1 - prior_artificial
-        
-        bayesian_analysis['prior_information'] = {
-            'prior_artificial': prior_artificial,
-            'prior_natural': prior_natural,
-            'prior_reasoning': 'Based on estimated artificial object population in NEO space',
-            'prior_source': 'Space situational awareness databases and launch records'
-        }
-        
-        # Likelihood analysis
-        # P(Data | Artificial) vs P(Data | Natural)
-        mean_sigma = np.mean(sigma_levels)
-        
-        # For artificial objects, expect sigma >= 5.0 with high probability
-        # For natural objects, expect sigma <= 2.0 with high probability
-        
-        # Using normal distributions as approximations
-        likelihood_artificial = stats.norm.pdf(mean_sigma, loc=6.0, scale=1.0)  # Expected artificial: μ=6, σ=1
-        likelihood_natural = stats.norm.pdf(mean_sigma, loc=1.5, scale=0.5)     # Expected natural: μ=1.5, σ=0.5
-        
-        bayesian_analysis['likelihood_analysis'] = {
-            'likelihood_given_artificial': likelihood_artificial,
-            'likelihood_given_natural': likelihood_natural,
-            'likelihood_ratio': likelihood_artificial / likelihood_natural if likelihood_natural > 0 else float('inf'),
-            'mean_observed_sigma': mean_sigma,
-            'likelihood_interpretation': 'Strong evidence for artificial' if likelihood_artificial > likelihood_natural * 10 else 'Moderate evidence'
-        }
-        
-        # Posterior analysis using Bayes' theorem
-        # P(Artificial | Data) = P(Data | Artificial) * P(Artificial) / P(Data)
-        marginal_likelihood = likelihood_artificial * prior_artificial + likelihood_natural * prior_natural
-        
-        posterior_artificial = (likelihood_artificial * prior_artificial) / marginal_likelihood if marginal_likelihood > 0 else 0
-        posterior_natural = (likelihood_natural * prior_natural) / marginal_likelihood if marginal_likelihood > 0 else 1
-        
-        bayesian_analysis['posterior_analysis'] = {
-            'posterior_artificial': posterior_artificial,
-            'posterior_natural': posterior_natural,
-            'marginal_likelihood': marginal_likelihood,
-            'posterior_odds': posterior_artificial / posterior_natural if posterior_natural > 0 else float('inf'),
-            'credible_interval_artificial': [max(0, posterior_artificial - 0.1), min(1, posterior_artificial + 0.1)],
-            'classification_threshold': 0.5,
-            'bayesian_classification': 'artificial' if posterior_artificial > 0.5 else 'natural'
-        }
-        
-        # Bayes factors for model comparison
-        # BF = P(Data | H1) / P(Data | H0)
-        bayes_factor = likelihood_artificial / likelihood_natural if likelihood_natural > 0 else float('inf')
-        
-        bayesian_analysis['bayes_factors'] = {
-            'bayes_factor_artificial_vs_natural': bayes_factor,
-            'log_bayes_factor': np.log10(bayes_factor) if bayes_factor > 0 and bayes_factor != float('inf') else float('inf'),
-            'evidence_strength': self._interpret_bayes_factor(bayes_factor),
-            'jeffreys_scale_interpretation': self._jeffreys_scale(bayes_factor)
-        }
-        
-        # Model comparison using information criteria (simplified)
-        n = len(sigma_levels)
-        
-        # Artificial model: Higher complexity (more parameters)
-        artificial_model_aic = -2 * np.log(likelihood_artificial) + 2 * 3  # 3 parameters
-        natural_model_aic = -2 * np.log(likelihood_natural) + 2 * 2       # 2 parameters
-        
-        bayesian_analysis['model_comparison'] = {
-            'artificial_model_aic': artificial_model_aic,
-            'natural_model_aic': natural_model_aic,
-            'delta_aic': artificial_model_aic - natural_model_aic,
-            'preferred_model': 'artificial' if artificial_model_aic < natural_model_aic else 'natural',
-            'aic_evidence_ratio': np.exp((natural_model_aic - artificial_model_aic) / 2)
-        }
-        
-        return bayesian_analysis
+        """Controlled deprecation: catalogue proxies/demonstrations are not observed validation data."""
+        raise NotImplementedError('Prototype statistical/cross-validation inference withdrawn; compatible observations and calibrated models are required')
     
     def _interpret_bayes_factor(self, bf):
         """Interpret Bayes factor according to Jeffreys' scale."""
@@ -8942,215 +6418,13 @@ class ANEOSMenu(ANEOSMenuBase):
             return "Decisive"
     
     def _perform_statistical_validation(self, statistical_data, designation):
-        """Perform cross-validation and robustness testing."""
-        import numpy as np
-        from scipy import stats
-        
-        validation_results = {
-            'cross_validation': {},
-            'robustness_tests': {},
-            'bootstrap_analysis': {},
-            'sensitivity_analysis': {},
-            'outlier_impact': {}
-        }
-        
-        sigma_levels = np.array(statistical_data['detection_history']['sigma_levels'])
-        
-        # Cross-validation using leave-one-out
-        loo_predictions = []
-        loo_errors = []
-        
-        for i in range(len(sigma_levels)):
-            # Leave one out
-            train_data = np.concatenate([sigma_levels[:i], sigma_levels[i+1:]])
-            test_point = sigma_levels[i]
-            
-            # Simple prediction: use mean of training data
-            prediction = np.mean(train_data)
-            error = abs(prediction - test_point)
-            
-            loo_predictions.append(prediction)
-            loo_errors.append(error)
-        
-        validation_results['cross_validation'] = {
-            'loo_mean_error': np.mean(loo_errors),
-            'loo_std_error': np.std(loo_errors),
-            'loo_max_error': np.max(loo_errors),
-            'loo_predictions': loo_predictions,
-            'cross_validation_score': 1 - np.mean(loo_errors) / np.std(sigma_levels) if np.std(sigma_levels) > 0 else 0
-        }
-        
-        # Bootstrap analysis
-        n_bootstrap = 1000
-        bootstrap_means = []
-        bootstrap_stds = []
-        
-        np.random.seed(42)  # Reproducible results
-        for _ in range(n_bootstrap):
-            bootstrap_sample = np.random.choice(sigma_levels, size=len(sigma_levels), replace=True)
-            bootstrap_means.append(np.mean(bootstrap_sample))
-            bootstrap_stds.append(np.std(bootstrap_sample))
-        
-        validation_results['bootstrap_analysis'] = {
-            'bootstrap_mean_ci': [np.percentile(bootstrap_means, 2.5), np.percentile(bootstrap_means, 97.5)],
-            'bootstrap_std_ci': [np.percentile(bootstrap_stds, 2.5), np.percentile(bootstrap_stds, 97.5)],
-            'bootstrap_mean_estimate': np.mean(bootstrap_means),
-            'bootstrap_bias': np.mean(bootstrap_means) - np.mean(sigma_levels),
-            'bootstrap_iterations': n_bootstrap
-        }
-        
-        # Robustness tests
-        # Test with different distributional assumptions
-        shapiro_stat, shapiro_p = stats.shapiro(sigma_levels) if len(sigma_levels) >= 3 else (0, 1)
-        
-        validation_results['robustness_tests'] = {
-            'normality_test': {
-                'shapiro_statistic': shapiro_stat,
-                'shapiro_p_value': shapiro_p,
-                'is_normal': shapiro_p > 0.05,
-                'distribution_assumption': 'normal' if shapiro_p > 0.05 else 'non_normal'
-            },
-            'non_parametric_tests': {
-                'median_test': np.median(sigma_levels),
-                'iqr_robust_estimate': np.percentile(sigma_levels, 75) - np.percentile(sigma_levels, 25),
-                'mad_robust_std': np.median(np.abs(sigma_levels - np.median(sigma_levels))) * 1.4826
-            }
-        }
-        
-        # Sensitivity analysis - impact of extreme values
-        sorted_sigma = np.sort(sigma_levels)
-        
-        # Remove highest and lowest 10% (or 1 value if small sample)
-        trim_amount = max(1, int(0.1 * len(sigma_levels)))
-        trimmed_sigma = sorted_sigma[trim_amount:-trim_amount] if len(sorted_sigma) > 2*trim_amount else sorted_sigma
-        
-        validation_results['sensitivity_analysis'] = {
-            'original_mean': np.mean(sigma_levels),
-            'trimmed_mean': np.mean(trimmed_sigma) if len(trimmed_sigma) > 0 else np.mean(sigma_levels),
-            'mean_difference': np.mean(sigma_levels) - (np.mean(trimmed_sigma) if len(trimmed_sigma) > 0 else np.mean(sigma_levels)),
-            'sensitivity_score': abs(np.mean(sigma_levels) - (np.mean(trimmed_sigma) if len(trimmed_sigma) > 0 else np.mean(sigma_levels))),
-            'robust_to_outliers': abs(np.mean(sigma_levels) - (np.mean(trimmed_sigma) if len(trimmed_sigma) > 0 else np.mean(sigma_levels))) < 0.5
-        }
-        
-        # Outlier impact analysis
-        # Remove one potential outlier and see impact
-        if len(sigma_levels) > 3:
-            # Find most extreme value
-            mean_sigma = np.mean(sigma_levels)
-            distances = np.abs(sigma_levels - mean_sigma)
-            outlier_idx = np.argmax(distances)
-            
-            without_outlier = np.concatenate([sigma_levels[:outlier_idx], sigma_levels[outlier_idx+1:]])
-            
-            validation_results['outlier_impact'] = {
-                'potential_outlier_value': sigma_levels[outlier_idx],
-                'outlier_distance_from_mean': distances[outlier_idx],
-                'mean_without_outlier': np.mean(without_outlier),
-                'mean_change': np.mean(sigma_levels) - np.mean(without_outlier),
-                'outlier_impact_magnitude': abs(np.mean(sigma_levels) - np.mean(without_outlier)),
-                'significant_outlier_impact': abs(np.mean(sigma_levels) - np.mean(without_outlier)) > 0.5
-            }
-        else:
-            validation_results['outlier_impact'] = {
-                'potential_outlier_value': None,
-                'outlier_impact_magnitude': 0,
-                'significant_outlier_impact': False,
-                'note': 'Sample too small for outlier analysis'
-            }
-        
-        return validation_results
+        """Controlled deprecation: catalogue proxies/demonstrations are not observed validation data."""
+        raise NotImplementedError('Prototype statistical/cross-validation inference withdrawn; compatible observations and calibrated models are required')
     
     def _integrate_statistical_with_detector(self, statistical_data, descriptive_stats, hypothesis_results, 
                                            confidence_intervals, bayesian_analysis, validation_results, designation):
-        """Integrate statistical analysis with validated sigma 5 detector."""
-        from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-        
-        # Extract orbital and physical data for detector analysis
-        if designation.lower() in ['tesla', 'roadster']:
-            orbital_elements = {'a': 1.325, 'e': 0.256, 'i': 1.077}
-            physical_data = {'mass_estimate': 1350, 'diameter': 12}
-        else:
-            orbital_elements = {'a': 1.8, 'e': 0.15, 'i': 8.5}
-            physical_data = {'estimated_diameter': 500, 'absolute_magnitude': 18.5}
-        
-        # Run validated detector analysis
-        detection_manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-        detector_result = detection_manager.analyze_neo(
-            orbital_elements=orbital_elements,
-            physical_data=physical_data
-        )
-        
-        # Create comprehensive integration
-        integrated_result = {
-            'statistical_summary': {
-                'mean_sigma': descriptive_stats['central_tendency']['sigma_mean'],
-                'sigma_confidence_interval': [confidence_intervals['sigma_intervals']['ci_lower'],
-                                            confidence_intervals['sigma_intervals']['ci_upper']],
-                'hypothesis_test_result': hypothesis_results['test_results']['one_sample_t_test_artificial']['conclusion'],
-                'bayesian_classification': bayesian_analysis['posterior_analysis']['bayesian_classification'],
-                'statistical_power': hypothesis_results['power_analysis']['achieved_power']
-            },
-            'detector_results': {
-                'classification': detector_result.classification,
-                'sigma_level': detector_result.sigma_level,
-                'artificial_probability': detector_result.artificial_probability,
-                'is_artificial': detector_result.is_artificial
-            },
-            'integrated_analysis': {},
-            'confidence_assessment': {},
-            'publication_readiness': {}
-        }
-        
-        # Integrated analysis
-        statistical_artificial = bayesian_analysis['posterior_analysis']['posterior_artificial'] > 0.5
-        detector_artificial = detector_result.is_artificial
-        
-        statistical_confidence = bayesian_analysis['posterior_analysis']['posterior_artificial']
-        detector_confidence = detector_result.artificial_probability
-        
-        integrated_result['integrated_analysis'] = {
-            'classification_agreement': statistical_artificial == detector_artificial,
-            'statistical_confidence': statistical_confidence,
-            'detector_confidence': detector_confidence,
-            'combined_confidence': (statistical_confidence + detector_confidence) / 2,
-            'confidence_variance': abs(statistical_confidence - detector_confidence),
-            'consistency_score': 1 - abs(statistical_confidence - detector_confidence),
-            'integrated_classification': 'artificial' if (statistical_artificial and detector_artificial) else 'natural'
-        }
-        
-        # Confidence assessment
-        meets_sigma_5 = confidence_intervals['sigma_intervals']['contains_artificial_threshold']
-        bayesian_decisive = bayesian_analysis['bayes_factors']['bayes_factor_artificial_vs_natural'] > 30
-        detector_sigma_5 = detector_result.sigma_level >= 5.0
-        
-        integrated_result['confidence_assessment'] = {
-            'statistical_sigma_5': meets_sigma_5,
-            'detector_sigma_5': detector_sigma_5,
-            'bayesian_decisive_evidence': bayesian_decisive,
-            'hypothesis_test_significant': hypothesis_results['test_results']['one_sample_t_test_artificial']['reject_null'],
-            'cross_validation_reliable': validation_results['cross_validation']['cross_validation_score'] > 0.7,
-            'overall_confidence_level': 'high' if all([meets_sigma_5, detector_sigma_5, bayesian_decisive]) else 'moderate'
-        }
-        
-        # Publication readiness assessment
-        sample_adequate = descriptive_stats['summary_statistics']['sample_size'] >= 30
-        power_adequate = hypothesis_results['power_analysis']['power_adequate']
-        effect_size_meaningful = hypothesis_results['effect_sizes']['cohens_d_vs_artificial'] > 0.5
-        
-        integrated_result['publication_readiness'] = {
-            'adequate_sample_size': sample_adequate,
-            'adequate_statistical_power': power_adequate,
-            'meaningful_effect_size': effect_size_meaningful,
-            'robust_to_outliers': validation_results['sensitivity_analysis']['robust_to_outliers'],
-            'bayesian_analysis_complete': True,
-            'confidence_intervals_calculated': True,
-            'peer_review_score': sum([sample_adequate, power_adequate, effect_size_meaningful, 
-                                    validation_results['sensitivity_analysis']['robust_to_outliers']]) / 4,
-            'publication_recommendation': 'ready' if sum([sample_adequate, power_adequate, 
-                                                        effect_size_meaningful]) >= 2 else 'needs_more_data'
-        }
-        
-        return integrated_result
+        """Controlled deprecation: catalogue proxies/demonstrations are not observed validation data."""
+        raise NotImplementedError('Prototype statistical/cross-validation inference withdrawn; compatible observations and calibrated models are required')
     
     def _display_statistical_analysis_results(self, designation, statistical_data, descriptive_stats, 
                                              hypothesis_results, confidence_intervals, bayesian_analysis, 
@@ -9409,7 +6683,7 @@ class ANEOSMenu(ANEOSMenuBase):
         else:
             print("\n--- Custom Analysis Workflows ---")
             print("This functionality requires rich terminal support.")
-            print("Use configure_analysis() for basic configuration.")
+            print("Use configure_analysis() for read-only policy inspection; it does not apply settings.")
     
     def _display_workflow_menu(self):
         """Display the workflow selection menu."""
@@ -9437,216 +6711,36 @@ class ANEOSMenu(ANEOSMenuBase):
         return choice
     
     def _execute_comprehensive_workflow(self):
-        """Execute the comprehensive analysis workflow."""
-        self.console.print(f"\n🔬 [bold blue]Comprehensive Analysis Workflow[/bold blue]")
-        self.console.print("Running complete scientific analysis suite...")
-        
-        designation = self.get_input("Enter NEO designation for comprehensive analysis: ")
-        if not designation:
-            self.console.print("❌ No designation provided")
-            return
-        
-        try:
-            # Stage 1-5: Run all scientific tools in sequence
-            with self.progress.track(range(5), description="🔬 Executing comprehensive workflow...") as progress:
-                # Stage 1: Enhanced Validation Pipeline
-                progress.advance()
-                self.console.print("  🔍 Running Enhanced Validation Pipeline...")
-                validation_result = self._run_validation_pipeline_workflow(designation)
-                
-                # Stage 2: Spectral Analysis Suite
-                progress.advance() 
-                self.console.print("  🌈 Running Spectral Analysis Suite...")
-                spectral_result = self._run_spectral_analysis_workflow(designation)
-                
-                # Stage 3: Orbital Dynamics Modeling
-                progress.advance()
-                self.console.print("  🚀 Running Orbital Dynamics Modeling...")
-                orbital_result = self._run_orbital_dynamics_workflow(designation)
-                
-                # Stage 4: Cross-Reference Database
-                progress.advance()
-                self.console.print("  🔗 Running Cross-Reference Database...")
-                crossref_result = self._run_crossref_workflow(designation)
-                
-                # Stage 5: Statistical Analysis Tools
-                progress.advance()
-                self.console.print("  📊 Running Statistical Analysis...")
-                stats_result = self._run_statistical_workflow(designation)
-            
-            # Generate comprehensive report
-            self._generate_comprehensive_report(designation, validation_result, spectral_result, 
-                                              orbital_result, crossref_result, stats_result)
-                                              
-        except Exception as e:
-            self.console.print(f"❌ Comprehensive workflow failed: {str(e)}")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Comprehensive evidence inventory')
     
     def _execute_rapid_screening_workflow(self):
-        """Execute the rapid screening workflow."""
-        self.console.print(f"\n⚡ [bold yellow]Rapid Screening Workflow[/bold yellow]")
-        self.console.print("Quick artificial vs natural classification...")
-        
-        designation = self.get_input("Enter NEO designation for rapid screening: ")
-        if not designation:
-            self.console.print("❌ No designation provided")
-            return
-        
-        try:
-            with self.progress.track(range(3), description="⚡ Running rapid screening...") as progress:
-                # Quick validation check
-                progress.advance()
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                detection_manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-                
-                # Simple orbital data
-                if designation.lower() in ['tesla', 'roadster']:
-                    orbital_elements = {'a': 1.325, 'e': 0.256, 'i': 1.077}
-                    physical_data = {'mass_estimate': 1350, 'diameter': 12}
-                else:
-                    orbital_elements = {'a': 1.8, 'e': 0.15, 'i': 8.5}
-                    physical_data = {'estimated_diameter': 500, 'absolute_magnitude': 18.5}
-                
-                # Rapid detection
-                progress.advance()
-                result = detection_manager.analyze_neo(orbital_elements=orbital_elements, physical_data=physical_data)
-                
-                # Quick smoking gun check
-                progress.advance()
-                smoking_gun_indicators = self._quick_smoking_gun_check(designation, orbital_elements)
-            
-            # Display rapid results
-            self._display_rapid_screening_results(designation, result, smoking_gun_indicators)
-            
-        except Exception as e:
-            self.console.print(f"❌ Rapid screening failed: {str(e)}")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Candidate screening')
     
     def _execute_deep_investigation_workflow(self):
-        """Execute the deep investigation workflow."""
-        self.console.print(f"\n🕳️ [bold red]Deep Investigation Workflow[/bold red]")
-        self.console.print("Intensive analysis for high-priority objects...")
-        
-        designation = self.get_input("Enter NEO designation for deep investigation: ")
-        if not designation:
-            self.console.print("❌ No designation provided")
-            return
-        
-        try:
-            with self.progress.track(range(8), description="🕳️ Running deep investigation...") as progress:
-                # Extended analysis sequence
-                progress.advance()
-                validation_result = self._run_validation_pipeline_workflow(designation)
-                
-                progress.advance()
-                spectral_result = self._run_spectral_analysis_workflow(designation)
-                
-                progress.advance()
-                orbital_result = self._run_orbital_dynamics_workflow(designation)
-                
-                progress.advance()
-                crossref_result = self._run_crossref_workflow(designation)
-                
-                progress.advance()
-                stats_result = self._run_statistical_workflow(designation)
-                
-                # Additional deep analysis components
-                progress.advance()
-                temporal_analysis = self._run_temporal_analysis(designation)
-                
-                progress.advance()
-                anomaly_detection = self._run_anomaly_detection(designation)
-                
-                progress.advance()
-                threat_assessment = self._run_threat_assessment(designation, validation_result)
-            
-            # Generate deep investigation report
-            self._generate_deep_investigation_report(designation, validation_result, spectral_result, 
-                                                   orbital_result, crossref_result, stats_result,
-                                                   temporal_analysis, anomaly_detection, threat_assessment)
-            
-        except Exception as e:
-            self.console.print(f"❌ Deep investigation failed: {str(e)}")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Investigation evidence inventory')
     
     def _execute_comparative_analysis_workflow(self):
-        """Execute the comparative analysis workflow."""
-        self.console.print(f"\n📊 [bold magenta]Comparative Analysis Workflow[/bold magenta]")
-        self.console.print("Multi-object comparison and ranking...")
-        
-        # Get multiple objects for comparison
-        objects = []
-        self.console.print("Enter NEO designations for comparison (enter empty line to finish):")
-        
-        while True:
-            designation = self.get_input(f"Object {len(objects)+1} (or press Enter to finish): ")
-            if not designation:
+        """Compare actual candidate screening, not invented origin/risk probabilities."""
+        designations = []
+        while len(designations) < 10:
+            value = self.get_input('NEO designation for comparison (blank to finish): ')
+            if not value:
                 break
-            objects.append(designation)
-            if len(objects) >= 10:  # Reasonable limit
-                self.console.print("Maximum 10 objects reached.")
-                break
-        
-        if len(objects) < 2:
-            self.console.print("❌ Need at least 2 objects for comparison")
-            return
-        
-        try:
-            comparison_results = []
-            
-            with self.progress.track(range(len(objects)), description="📊 Analyzing objects...") as progress:
-                for obj in objects:
-                    progress.advance()
-                    # Run rapid analysis on each object
-                    result = self._run_comparative_object_analysis(obj)
-                    comparison_results.append(result)
-            
-            # Generate comparative report
-            self._generate_comparative_report(objects, comparison_results)
-            
-        except Exception as e:
-            self.console.print(f"❌ Comparative analysis failed: {str(e)}")
+            designations.append(value)
+        if len(designations) < 2:
+            self.show_error('At least two designations are required')
+            return []
+        results = asyncio.run(self._get_screening_pipeline().analyze_batch(designations))
+        for result in results:
+            self.display_analysis_result(result)
+        return results
     
     def _execute_publication_ready_workflow(self):
-        """Execute the publication ready workflow."""
-        self.console.print(f"\n📝 [bold green]Publication Ready Workflow[/bold green]")
-        self.console.print("Complete analysis with peer-review documentation...")
-        
-        designation = self.get_input("Enter NEO designation for publication analysis: ")
-        if not designation:
-            self.console.print("❌ No designation provided")
-            return
-        
-        try:
-            # Run comprehensive analysis with publication focus
-            with self.progress.track(range(7), description="📝 Preparing publication analysis...") as progress:
-                progress.advance()
-                validation_result = self._run_validation_pipeline_workflow(designation)
-                
-                progress.advance()
-                spectral_result = self._run_spectral_analysis_workflow(designation)
-                
-                progress.advance()
-                orbital_result = self._run_orbital_dynamics_workflow(designation)
-                
-                progress.advance()
-                crossref_result = self._run_crossref_workflow(designation)
-                
-                progress.advance()
-                stats_result = self._run_statistical_workflow(designation)
-                
-                # Publication-specific components
-                progress.advance()
-                methodology_doc = self._generate_methodology_documentation(designation)
-                
-                progress.advance()
-                peer_review_checklist = self._generate_peer_review_checklist(validation_result, spectral_result,
-                                                                           orbital_result, crossref_result, stats_result)
-            
-            # Generate publication-ready report
-            self._generate_publication_report(designation, validation_result, spectral_result,
-                                            orbital_result, crossref_result, stats_result,
-                                            methodology_doc, peer_review_checklist)
-            
-        except Exception as e:
-            self.console.print(f"❌ Publication workflow failed: {str(e)}")
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Research readiness review')
     
     def _create_custom_workflow(self):
         """Create a custom workflow pipeline."""
@@ -9745,122 +6839,44 @@ class ANEOSMenu(ANEOSMenuBase):
     
     # Workflow execution helper methods
     def _run_validation_pipeline_workflow(self, designation):
-        """Run validation pipeline for workflow."""
-        return {
-            'designation': designation,
-            'validation_status': 'completed',
-            'sigma_level': 6.2 if designation.lower() in ['tesla', 'roadster'] else 1.8,
-            'artificial_probability': 0.92 if designation.lower() in ['tesla', 'roadster'] else 0.15,
-            'confidence_level': 'high' if designation.lower() in ['tesla', 'roadster'] else 'low'
-        }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     def _run_spectral_analysis_workflow(self, designation):
-        """Run spectral analysis for workflow."""
-        return {
-            'designation': designation,
-            'spectral_signatures': 3 if designation.lower() in ['tesla', 'roadster'] else 0,
-            'material_composition': 'artificial_materials' if designation.lower() in ['tesla', 'roadster'] else 'rocky_minerals',
-            'artificial_indicators': True if designation.lower() in ['tesla', 'roadster'] else False
-        }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     def _run_orbital_dynamics_workflow(self, designation):
-        """Run orbital dynamics for workflow."""
-        return {
-            'designation': designation,
-            'trajectory_anomalies': 2 if designation.lower() in ['tesla', 'roadster'] else 0,
-            'perturbation_analysis': 'artificial_signatures' if designation.lower() in ['tesla', 'roadster'] else 'natural_dynamics',
-            'propulsion_indicators': True if designation.lower() in ['tesla', 'roadster'] else False
-        }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     def _run_crossref_workflow(self, designation):
-        """Run cross-reference analysis for workflow."""
-        return {
-            'designation': designation,
-            'database_matches': 5 if designation.lower() in ['tesla', 'roadster'] else 3,
-            'validation_sources': 'multiple_confirmed' if designation.lower() in ['tesla', 'roadster'] else 'standard_surveys',
-            'agreement_score': 0.96 if designation.lower() in ['tesla', 'roadster'] else 0.82
-        }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     def _run_statistical_workflow(self, designation):
-        """Run statistical analysis for workflow."""
-        return {
-            'designation': designation,
-            'hypothesis_test': 'artificial_threshold_met' if designation.lower() in ['tesla', 'roadster'] else 'natural_classification',
-            'bayesian_evidence': 'decisive' if designation.lower() in ['tesla', 'roadster'] else 'supports_natural',
-            'publication_ready': True if designation.lower() in ['tesla', 'roadster'] else False
-        }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     def _quick_smoking_gun_check(self, designation, orbital_elements):
-        """Quick smoking gun indicator check."""
-        if designation.lower() in ['tesla', 'roadster']:
-            return {
-                'course_corrections': True,
-                'trajectory_patterns': True,
-                'propulsion_signatures': True,
-                'smoking_gun_count': 3,
-                'confidence': 'high'
-            }
-        else:
-            return {
-                'course_corrections': False,
-                'trajectory_patterns': False,
-                'propulsion_signatures': False,
-                'smoking_gun_count': 0,
-                'confidence': 'natural'
-            }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     def _run_temporal_analysis(self, designation):
-        """Run temporal analysis for deep investigation."""
-        return {
-            'designation': designation,
-            'observation_span': '5.3 years' if designation.lower() in ['tesla', 'roadster'] else '3.0 years',
-            'temporal_consistency': 0.95 if designation.lower() in ['tesla', 'roadster'] else 0.88,
-            'evolution_patterns': 'artificial_degradation' if designation.lower() in ['tesla', 'roadster'] else 'natural_stability'
-        }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     def _run_anomaly_detection(self, designation):
-        """Run anomaly detection analysis."""
-        return {
-            'designation': designation,
-            'anomaly_score': 3.2 if designation.lower() in ['tesla', 'roadster'] else 0.3,
-            'statistical_outlier': True if designation.lower() in ['tesla', 'roadster'] else False,
-            'population_percentile': 99.2 if designation.lower() in ['tesla', 'roadster'] else 45.2
-        }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     def _run_threat_assessment(self, designation, validation_result):
-        """Run threat assessment analysis."""
-        is_artificial = validation_result['artificial_probability'] > 0.5
-        
-        return {
-            'designation': designation,
-            'threat_level': 'monitoring_required' if is_artificial else 'standard',
-            'collision_probability': 'negligible',
-            'strategic_importance': 'high' if is_artificial else 'routine'
-        }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     def _run_comparative_object_analysis(self, designation):
-        """Run analysis for comparative workflow."""
-        from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-        
-        # Quick analysis for comparison
-        detection_manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-        
-        if designation.lower() in ['tesla', 'roadster']:
-            orbital_elements = {'a': 1.325, 'e': 0.256, 'i': 1.077}
-            physical_data = {'mass_estimate': 1350, 'diameter': 12}
-        else:
-            orbital_elements = {'a': 1.8, 'e': 0.15, 'i': 8.5}
-            physical_data = {'estimated_diameter': 500, 'absolute_magnitude': 18.5}
-        
-        result = detection_manager.analyze_neo(orbital_elements=orbital_elements, physical_data=physical_data)
-        
-        return {
-            'designation': designation,
-            'classification': result.classification,
-            'sigma_level': result.sigma_level,
-            'artificial_probability': result.artificial_probability,
-            'risk_score': result.sigma_level * result.artificial_probability
-        }
+        """Controlled deprecation of fabricated workflow outputs; use actual screening/review."""
+        raise NotImplementedError('Legacy placeholder workflow withdrawn; use the shared screening pipeline and explicit unavailable models')
     
     # Report generation methods
     def _generate_comprehensive_report(self, designation, validation_result, spectral_result, 
@@ -10550,147 +7566,8 @@ class ANEOSMenu(ANEOSMenuBase):
         self.wait_for_input()
     
     def xviii_swarm_advanced_scoring(self):
-        """ATLAS Advanced Anomaly Scoring System."""
-        if self.console:
-            self.console.clear()
-            self.console.print("[bold green]🚀 ATLAS Advanced Anomaly Scoring[/bold green]\n")
-            
-            # System description
-            description = Panel(
-                "[bold white]Advanced Multi-Indicator Scoring System[/bold white]\n\n"
-                "[white]The ATLAS implements sophisticated per-object anomaly scoring:\n\n"
-                "🔬 [bold]Multi-Indicator Blend:[/bold] 6 core clue categories\n"
-                "   • Encounter geometry (distance & velocity)\n"
-                "   • Orbit behavior (repeat passes, accelerations)\n"
-                "   • Physical traits (area-to-mass, radar, thermal)\n"
-                "   • Spectral identity (color curve anomalies)\n"
-                "   • Dynamical sanity (Yarkovsky drift)\n"
-                "   • Human origin (space debris correlation)\n\n"
-                "📊 [bold]Continuous Scoring:[/bold] Smooth 0→1 scores, not binary\n"
-                "⚖️ [bold]Weighted Importance:[/bold] Each clue weighted by diagnostic power\n"
-                "🚨 [bold]Recalibrated Thresholds:[/bold] 0.08 first-stage, 0.20 validation, 0.35 expert\n"
-                "🗑️ [bold]Debris Penalty:[/bold] Automatic penalty for space junk matches\n"
-                "🏷️ [bold]Human-Readable Flags:[/bold] Compact flag strings (e.g., d,v,Δ,μc)[/white]",
-                border_style="green"
-            )
-            self.console.print(description)
-            
-            # Get NEO designation for analysis
-            designation = Prompt.ask("\nEnter NEO designation for advanced scoring")
-            
-            if designation:
-                try:
-                    # Use enhanced analysis pipeline with advanced scoring
-                    from aneos_core.analysis.pipeline import create_analysis_pipeline
-                    from aneos_core.analysis.enhanced_pipeline import EnhancedAnalysisPipeline
-                    
-                    self.console.print(f"\n[yellow]🔄 Running ATLAS Advanced Scoring for {designation}...[/yellow]")
-                    
-                    with Progress() as progress:
-                        task = progress.add_task("Analyzing with advanced scoring...", total=None)
-                        
-                        # Create enhanced pipeline
-                        base_pipeline = create_analysis_pipeline()
-                        enhanced_pipeline = EnhancedAnalysisPipeline(base_pipeline)
-                        
-                        # Run advanced scoring analysis
-                        import asyncio
-                        result = asyncio.run(enhanced_pipeline.analyze_neo_with_advanced_scoring(designation))
-                        
-                        progress.update(task, completed=True)
-                    
-                    if result:
-                        self.console.print(f"\n✅ [bold green]ATLAS Analysis Complete for {designation}[/bold green]\n")
-                        
-                        # Display advanced score results
-                        advanced_score = result['advanced_score']
-                        
-                        # Score summary table
-                        score_table = Table(show_header=True, header_style="bold green")
-                        score_table.add_column("Metric", style="white")
-                        score_table.add_column("Value", style="cyan")
-                        score_table.add_column("Interpretation", style="dim")
-                        
-                        score_table.add_row("Overall Score", f"{advanced_score['overall_score']:.3f}", 
-                                          f"Range: 0.0 (natural) → 1.0 (artificial)")
-                        score_table.add_row("Classification", advanced_score['classification'].title(), 
-                                          "ordinary < 0.30 < suspicious < 0.60 < highly suspicious")
-                        score_table.add_row("Confidence", f"{advanced_score['confidence']:.3f}", 
-                                          "Reliability of this assessment")
-                        score_table.add_row("Flag String", advanced_score['flag_string'] or "none", 
-                                          "Contributing anomaly indicators")
-                        
-                        if advanced_score['debris_penalty_applied'] > 0:
-                            score_table.add_row("Debris Penalty", f"-{advanced_score['debris_penalty_applied']:.3f}", 
-                                              "Space debris correlation detected")
-                        
-                        self.console.print(score_table)
-                        
-                        # Show detailed explanation
-                        self.console.print(f"\n[bold green]📋 Detailed Analysis:[/bold green]")
-                        explanation = result['scoring_explanation']
-                        self.console.print(Panel(explanation, border_style="dim"))
-                        
-                        # Category breakdown if available
-                        if 'category_scores' in advanced_score:
-                            self.console.print(f"\n[bold green]📊 Category Breakdown:[/bold green]")
-                            category_table = Table(show_header=True, header_style="bold yellow")
-                            category_table.add_column("Category", style="white")
-                            category_table.add_column("Score", style="cyan")
-                            category_table.add_column("Weight", style="dim")
-                            
-                            for category, score in advanced_score['category_scores'].items():
-                                category_table.add_row(
-                                    category.replace('_', ' ').title(),
-                                    f"{score:.3f}",
-                                    "Varies by category"
-                                )
-                            
-                            self.console.print(category_table)
-                        
-                    else:
-                        self.console.print("[red]❌ Analysis failed or returned no results[/red]")
-                        
-                except ImportError as e:
-                    self.console.print(f"[red]❌ ATLAS system not available: {e}[/red]")
-                    self.console.print("[yellow]Make sure the enhanced analysis pipeline is properly installed[/yellow]")
-                except Exception as e:
-                    self.console.print(f"[red]❌ ATLAS analysis failed: {e}[/red]")
-            
-        else:
-            print("\n--- ATLAS Advanced Scoring ---")
-            print("Multi-indicator anomaly scoring system")
-            designation = input("Enter NEO designation: ")
-            
-            if designation:
-                print(f"Running advanced scoring for {designation}...")
-                # Basic fallback for non-rich console
-                try:
-                    from aneos_core.analysis.pipeline import create_analysis_pipeline
-                    from aneos_core.analysis.enhanced_pipeline import EnhancedAnalysisPipeline
-                    
-                    base_pipeline = create_analysis_pipeline()
-                    enhanced_pipeline = EnhancedAnalysisPipeline(base_pipeline)
-                    
-                    import asyncio
-                    result = asyncio.run(enhanced_pipeline.analyze_neo_with_advanced_scoring(designation))
-                    
-                    if result:
-                        advanced_score = result['advanced_score']
-                        print(f"\n✅ ATLAS Analysis Results:")
-                        print(f"Designation: {designation}")
-                        print(f"Overall Score: {advanced_score['overall_score']:.3f}")
-                        print(f"Classification: {advanced_score['classification']}")
-                        print(f"Confidence: {advanced_score['confidence']:.3f}")
-                        print(f"Flags: {advanced_score['flag_string']}")
-                        print(f"\nExplanation:\n{result['scoring_explanation']}")
-                    else:
-                        print("❌ Analysis failed")
-                        
-                except Exception as e:
-                    print(f"❌ ATLAS analysis failed: {e}")
-        
-        self.wait_for_input()
+        """Use real acquisition/shared screening; unavailable models cannot be implied."""
+        return self._run_screening_entry('Ranking and evidence review')
     
     def database_status(self):
         """Display live data source health status."""
@@ -10714,7 +7591,7 @@ class ANEOSMenu(ANEOSMenuBase):
 
         for name, url, params in sources:
             try:
-                r = _req.get(url, params=params, timeout=5)
+                r = provider_get(url, params=params, timeout=5)
                 ok = r.status_code == 200
                 status = "[green]✅ Available[/green]" if ok else f"[red]✗ HTTP {r.status_code}[/red]"
                 status_plain = "Available" if ok else f"HTTP {r.status_code}"
@@ -10734,54 +7611,13 @@ class ANEOSMenu(ANEOSMenuBase):
         self.wait_for_input()
     
     def generate_statistical_reports(self):
-        """Generate comprehensive statistical analysis reports."""
+        """Do not claim a saved report or accuracy without a real evaluation artifact."""
+        message = 'Independent performance report unavailable: no verified evaluation artifact loaded. No report was saved.'
         if self.console:
-            self.console.print("[bold green]📊 Statistical Analysis Reports[/bold green]\n")
-            
-            with Progress() as progress:
-                task = progress.add_task("Generating statistical reports...", total=100)
-                
-                # Simulate report generation
-                progress.update(task, advance=20)
-                self.console.print("• Analyzing detection confidence intervals...")
-                
-                progress.update(task, advance=25)
-                self.console.print("• Computing false positive rates...")
-                
-                progress.update(task, advance=25) 
-                self.console.print("• Calculating spectral analysis statistics...")
-                
-                progress.update(task, advance=20)
-                self.console.print("• Generating validation metrics...")
-                
-                progress.update(task, advance=10)
-                
-            # Display sample statistical results
-            table = Table(show_header=True, header_style="bold green")
-            table.add_column("Metric", style="white")
-            table.add_column("Value", style="cyan")
-            table.add_column("Confidence", style="green")
-            
-            table.add_row("Detection Accuracy", "UNVALIDATED", "N/A")
-            table.add_row("False Positive Rate", "UNKNOWN", "N/A")
-            table.add_row("Spectral Analysis", "NOT IMPLEMENTED", "N/A")
-            table.add_row("Orbital Analysis", "Z-SCORE EXPERIMENTAL", "N/A")
-            table.add_row("Validation Status", "RESEARCH-GRADE", "N/A")
-            
-            self.console.print("\n[bold green]Key Statistical Metrics:[/bold green]")
-            self.console.print(table)
-            
-            self.console.print("\n[dim]Full statistical reports saved to: reports/statistical_analysis_[timestamp].json[/dim]")
+            self.console.print(message)
         else:
-            print("\n--- Statistical Analysis Reports ---")
-            print("Generating statistical reports...")
-            print("• Detection Accuracy: UNVALIDATED (no ground truth data)")
-            print("• False Positive Rate: UNKNOWN (validation pending)")
-            print("• Spectral Analysis: NOT IMPLEMENTED")
-            print("• Orbital Analysis: Z-score calculations (experimental)")
-            print("• Validation Status: RESEARCH-GRADE (not production-ready)")
-            
-        self.wait_for_input()
+            print(message)
+        return {'status':'unavailable', 'saved':False, 'reason':message}
     
     def display_system_status(self):
         """Display live system status from preflight_check()."""

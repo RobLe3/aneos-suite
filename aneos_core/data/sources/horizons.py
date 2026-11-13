@@ -6,7 +6,10 @@ fetch high-precision osculating orbital elements, physical parameters,
 and ephemeris data for Near-Earth Objects.
 """
 
+from aneos_core.data.provider_http import get as provider_get
 import re
+import hashlib
+import math
 import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
@@ -25,6 +28,16 @@ from ..cache import CacheManager
 logger = logging.getLogger(__name__)
 
 _HORIZONS_URL = "https://ssd.jpl.nasa.gov/api/horizons.api"
+
+
+class OrbitalHistoryQuery(list):
+    """List-compatible computed history plus explicit bounded query outcome."""
+
+    def __init__(self, records, metadata):
+        super().__init__(records)
+        import copy
+
+        self.query_metadata = copy.deepcopy(metadata)
 
 
 class HorizonsSource(HTTPDataSource):
@@ -84,7 +97,7 @@ class HorizonsSource(HTTPDataSource):
     def _fetch_orbital_elements_sync(self, designation: str) -> Optional[Dict[str, Any]]:
         """Fetch orbital elements from Horizons using OBJ_DATA mode."""
         try:
-            resp = requests.get(
+            resp = provider_get(
                 _HORIZONS_URL,
                 params={
                     "format":     "json",
@@ -109,11 +122,9 @@ class HorizonsSource(HTTPDataSource):
             if not elements:
                 return None
 
-            # Metadata
-            elements["_source"] = self.name
-            elements["_designation"] = designation
-            elements["_fetched_at"] = datetime.now(UTC).isoformat()
-            return elements
+            result = self._attach_orbit_metadata(elements,result_text,designation,data.get('signature'))
+            result['_native_response'] = data
+            return result
 
         except requests.HTTPError as e:
             self.logger.error(f"Horizons HTTP error for {designation}: {e}")
@@ -125,7 +136,7 @@ class HorizonsSource(HTTPDataSource):
     def _fetch_as_smallbody(self, designation: str) -> Optional[Dict[str, Any]]:
         """Re-query using DES= prefix to force small-body (asteroid/comet) resolution."""
         try:
-            resp = requests.get(
+            resp = provider_get(
                 _HORIZONS_URL,
                 params={
                     "format":     "json",
@@ -136,16 +147,29 @@ class HorizonsSource(HTTPDataSource):
                 timeout=self.config.request_timeout,
             )
             resp.raise_for_status()
-            result_text = resp.json().get("result", "")
+            data=resp.json()
+            result_text = data.get("result", "")
             if not result_text or "No matches found" in result_text:
                 return None
             elements = self._parse_obj_data(result_text)
-            if elements:
-                elements["_source"] = self.name
-            return elements
+            if not elements:
+                return None
+            result = self._attach_orbit_metadata(elements,result_text,designation,data.get('signature'))
+            result['_native_response'] = data
+            return result
         except Exception as e:
             self.logger.error(f"Horizons DES fetch error for {designation}: {e}")
             return None
+
+    def _attach_orbit_metadata(self,elements,text,designation,signature=None):
+        retrieved=datetime.now(UTC).isoformat()
+        elements.update(_source=self.name,_designation=designation,_fetched_at=retrieved,
+            _evidence_metadata={'schema_version':'horizons-object-evidence-v1','solution':{
+                'source':'JPL Horizons','native_epoch':elements.get('native_epoch'),
+                'retrieved_at':retrieved,'result_text_sha256':hashlib.sha256(text.encode()).hexdigest(),
+                'signature':signature,'designation_requested':designation,
+                'basis':'catalogue_object_data_not_observation'}})
+        return elements
 
     # ------------------------------------------------------------------ #
     # Text parser for OBJ_DATA output                                     #
@@ -178,6 +202,15 @@ class HorizonsSource(HTTPDataSource):
                 except ValueError:
                     pass
             return None
+
+        # The object-data epoch is native TDB/TT/etc only when explicitly labeled.
+        from ..epoch_evidence import NativeEpoch
+        match = re.search(r'(?m)^\s*EPOCH\s*=\s*([+\-\d.Ee]+)([^\n]*)', text)
+        if match:
+            label=match.group(0).strip()
+            scale_match=re.search(r'\b(TDB|TDT|TT|UTC|UT1|UT)\b',match.group(2))
+            scale=scale_match.group(1) if scale_match else 'UNKNOWN'
+            elements['native_epoch']=NativeEpoch(match.group(1),'JD',scale,'Horizons','osculating_elements',label).to_dict()
 
         # Orbital elements
         ec   = _find("EC")
@@ -237,7 +270,7 @@ class HorizonsSource(HTTPDataSource):
     ) -> Optional[List[Dict[str, Any]]]:
         """Fetch observer ephemeris from Horizons."""
         try:
-            resp = requests.get(
+            resp = provider_get(
                 _HORIZONS_URL,
                 params={
                     "format":     "json",
@@ -259,94 +292,137 @@ class HorizonsSource(HTTPDataSource):
             self.logger.error(f"Horizons ephemeris error for {designation}: {e}")
             return None
 
-    def fetch_orbital_history(self, designation: str, years: int = 10) -> List[Dict[str, Any]]:
+    def fetch_orbital_history(
+        self, designation: str, years: int = 10
+    ) -> List[Dict[str, Any]]:
+        """Bounded computed samples, with request scope/outage metadata.
+
+        List compatibility is retained for existing callers; an outage is NOT an
+        empty observed history. HTTP consumers must inspect query_metadata.status.
         """
-        Fetch a time-series of osculating orbital elements from Horizons ELEMENTS ephemeris.
-        Returns one entry per year over `years` years centred on today.
-        """
+        if type(years) is not int or not 1 <= years <= 1000:
+            raise ValueError("History years must be a positive bounded integer")
         today = datetime.now(UTC)
         start = (today - timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
         stop = (today + timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
+        params = {
+            "format": "json",
+            "COMMAND": self._horizons_command(designation),
+            "OBJ_DATA": "NO",
+            "MAKE_EPHEM": "YES",
+            "EPHEM_TYPE": "ELEMENTS",
+            "CENTER": "500@10",
+            "START_TIME": start,
+            "STOP_TIME": stop,
+            "STEP_SIZE": "365d",
+            "OUT_UNITS": "AU-D",
+            "REF_SYSTEM": "ICRF",
+            "REF_PLANE": "ECLIPTIC",
+            "TIME_TYPE": "TDB",
+            "ELM_LABELS": "YES",
+        }
+        metadata = {
+            "schema_version": "orbital-history-query-v1",
+            "designation_requested": designation,
+            "requested_years": years,
+            "request_parameters": params,
+            "attempted_at": today.isoformat(),
+            "retrieved_at": None,
+            "status": "unavailable",
+            "returned_points": 0,
+            "result_text_sha256": None,
+            "signature": None,
+            "schema_status": "not_available",
+            "evidence_basis": "computed_ephemeris_not_observations",
+            "coverage": "bounded_computed_samples_not_observation_coverage",
+        }
+        response = None
         try:
-            resp = requests.get(
-                _HORIZONS_URL,
-                params={
-                    "format": "json",
-                    "COMMAND": self._horizons_command(designation),
-                    "OBJ_DATA": "NO",
-                    "MAKE_EPHEM": "YES",
-                    "EPHEM_TYPE": "ELEMENTS",
-                    "CENTER": "500@10",
-                    "START_TIME": start,
-                    "STOP_TIME": stop,
-                    "STEP_SIZE": "365d",
-                    "OUT_UNITS": "AU-D",
-                },
-                timeout=self.config.request_timeout,
+            response = provider_get(
+                _HORIZONS_URL, params=params, timeout=self.config.request_timeout
             )
-            resp.raise_for_status()
-            result_text = resp.json().get("result", "")
-            return self._parse_elements_table(result_text)
-        except Exception as e:
-            self.logger.error(f"Horizons orbital history failed for {designation}: {e}")
-            return []
+            response.raise_for_status()
+            metadata["retrieved_at"] = datetime.now(UTC).isoformat()
+            data = response.json()
+            if not isinstance(data, dict):
+                raise ValueError("Invalid Horizons response")
+            signature = data.get("signature")
+            metadata["signature"] = signature
+            if signature is not None:
+                if not isinstance(signature, dict) or signature.get("version") not in (
+                    "1.2",
+                    "1.3",
+                ):
+                    metadata["schema_status"] = "unsupported"
+                    raise ValueError("Unsupported Horizons API schema")
+                metadata["schema_status"] = "supported_elements_1.2_1.3"
+            else:
+                metadata["schema_status"] = "unverified_missing_signature"
+            metadata["signature"] = signature
+            text = data.get("result")
+            if (
+                data.get("error")
+                or not isinstance(text, str)
+                or "$$SOE" not in text
+                or "$$EOE" not in text
+            ):
+                raise ValueError("Horizons did not return a bounded elements block")
+            metadata["result_text_sha256"] = hashlib.sha256(text.encode()).hexdigest()
+            rows = self._parse_elements_table(text)
+            metadata.update(
+                status="available" if rows else "empty", returned_points=len(rows)
+            )
+            return OrbitalHistoryQuery(rows, metadata)
+        except (ValueError, TypeError) as exc:
+            metadata.update(
+                status="invalid_evidence", error_code="UNSUPPORTED_HISTORY_EVIDENCE"
+            )
+            self.logger.warning("Horizons history evidence invalid for %s", designation)
+        except Exception:
+            metadata.update(
+                status="unavailable", error_code="HISTORY_SOURCE_UNAVAILABLE"
+            )
+            self.logger.warning(
+                "Horizons history source unavailable for %s", designation
+            )
+        finally:
+            if response is not None:
+                response.close()
+        return OrbitalHistoryQuery([], metadata)
 
     def _parse_elements_table(self, text: str) -> List[Dict[str, Any]]:
-        """Parse the $$SOE ... $$EOE block from a Horizons ELEMENTS ephemeris.
+        """Keep complete computed element rows bound to their native epoch header.
 
-        Horizons ELEMENTS output emits multiple lines per epoch (one element per
-        line).  This version accumulates all element keys into a single record and
-        flushes only when the next epoch header (a non-element, non-comment line)
-        is encountered, preventing duplicate/partial rows.
+        A real Horizons header contains JD = calendar TDB, unlike an element line.
+        Its equals sign must not cause the entire history to be discarded.
         """
-        import re as _re
-        rows: List[Dict[str, Any]] = []
-        in_block = False
-        pending_epoch: Optional[str] = None
-        pending_record: Dict[str, Any] = {}
-
-        element_keys = [
-            ("a",    r"A=\s*([-\d.E+]+)"),
-            ("e",    r"EC=\s*([-\d.E+]+)"),
-            ("i",    r"IN=\s*([-\d.E+]+)"),
-            ("node", r"OM=\s*([-\d.E+]+)"),
-            ("peri", r"W=\s*([-\d.E+]+)"),
-            ("M",    r"MA=\s*([-\d.E+]+)"),
-        ]
-
+        from ..epoch_evidence import horizons_header_epoch
+        rows=[];in_block=False;pending_epoch=None;pending_record={}
+        element_keys=[('a','A'),('e','EC'),('i','IN'),('node','OM'),('peri','W'),('M','MA')]
+        def flush():
+            if pending_epoch is not None and pending_record:
+                rows.append({'epoch':pending_epoch.label,'native_epoch':pending_epoch.to_dict(),**pending_record})
         for line in text.splitlines():
-            if "$$SOE" in line:
-                in_block = True
-                continue
-            if "$$EOE" in line:
-                break
-            if not in_block or not line.strip() or "!" in line:
-                continue
-
-            parsed = {}
-            for key, pattern in element_keys:
-                m = _re.search(pattern, line)
-                if m:
-                    try:
-                        parsed[key] = float(m.group(1))
-                    except ValueError:
-                        pass
-
+            if '$$SOE' in line:in_block=True;continue
+            if '$$EOE' in line:break
+            if not in_block or not line.strip() or line.lstrip().startswith('!'):continue
+            epoch=horizons_header_epoch(line)
+            if epoch is not None:
+                flush();pending_epoch=epoch;pending_record={};continue
+            parsed={}
+            for key,token in element_keys:
+                matches=re.findall(r'(?<![A-Za-z])'+token+r'\s*=\s*([-\d.Ee+]+)',line)
+                if len(matches)>1:raise ValueError('Duplicate element in one Horizons line')
+                if matches:
+                    value=float(matches[0])
+                    if not math.isfinite(value):raise ValueError('Nonfinite Horizons orbital element')
+                    parsed[key]=value
             if parsed:
-                # Accumulate element fields into the current record
+                if pending_epoch is None:
+                    raise ValueError('Unbound Horizons orbital elements without a recognized epoch header')
+                if set(parsed)&set(pending_record):raise ValueError('Duplicate element in one Horizons epoch')
                 pending_record.update(parsed)
-            elif "=" not in line:
-                # Non-element line with no "=" → epoch header for next record.
-                # Flush the previous record first.
-                if pending_epoch and pending_record:
-                    rows.append({"epoch": pending_epoch, **pending_record})
-                pending_epoch = line.strip()
-                pending_record = {}
-
-        # Flush final record
-        if pending_epoch and pending_record:
-            rows.append({"epoch": pending_epoch, **pending_record})
-
+        flush()
         return rows
 
     def _parse_ephemeris(self, text: str) -> List[Dict[str, Any]]:

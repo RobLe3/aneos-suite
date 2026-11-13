@@ -1,0 +1,14 @@
+{
+  "designation": "1998 KY26",
+  "purpose": "separate current Sentry source transaction, not historical screening baseline",
+  "base_commit": "e9b3c54f655e115941cce5a30e075308e682e0e8",
+  "source_code_sha256": {
+    "aneos_core/data/provider_http.py": "d63e15f61009836799eb2d004818ed6a02c864bd6aaccc6a89f343980b3b8895",
+    "aneos_core/data/sources/sentry.py": "a33a58409d446ab1676fdcac3362a9d0251837e66194e9693a9b32edb35319ab",
+    "aneos_core/analysis/impact_evidence.py": "1bb6b82faf4ca062231e8095ee99944616351572fdfc2effd3a7fe690baaa8ce"
+  },
+  "status": "not_listed",
+  "retrieved_at": "2026-11-12T21:19:13.177037+00:00",
+  "raw_response_sha256": "722bec8de705159e59e00f6be8592e1233b0301370c65a786e2a0072cfeba2b9",
+  "report_sha256": "7b7de1592593fc476c895b2ad429f7bb8db05f306640d2f7242be40ea15fe947"
+}

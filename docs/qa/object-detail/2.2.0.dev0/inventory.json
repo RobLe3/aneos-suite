@@ -1,0 +1,97 @@
+{
+  "schema_version": "object-detail-qa-v1",
+  "cases": {
+    "small": {
+      "review_id": "7e1750acd0ca5a9b66c853cc9bac5e22d199b92bf050d4ce9e645037b6509c91",
+      "classification": "NOT_FLAGGED",
+      "widths": {
+        "80": {
+          "lines": 105,
+          "max_columns": 80
+        },
+        "120": {
+          "lines": 83,
+          "max_columns": 120
+        },
+        "160": {
+          "lines": 76,
+          "max_columns": 160
+        }
+      }
+    },
+    "candidate": {
+      "review_id": "c929ce8307d81cff19625df2a6fc69f6efbe51f98b969e71dfd0b13c1800e880",
+      "classification": "FOLLOW_UP_CANDIDATE",
+      "widths": {
+        "80": {
+          "lines": 91,
+          "max_columns": 80
+        },
+        "120": {
+          "lines": 73,
+          "max_columns": 120
+        },
+        "160": {
+          "lines": 67,
+          "max_columns": 160
+        }
+      }
+    },
+    "missing": {
+      "review_id": "21c785e3ed0f5acc4ef4b90d27191fe391f126b48b47fb8d46f2284cd3dca2c0",
+      "classification": "INCONCLUSIVE",
+      "widths": {
+        "80": {
+          "lines": 82,
+          "max_columns": 80
+        },
+        "120": {
+          "lines": 65,
+          "max_columns": 120
+        },
+        "160": {
+          "lines": 60,
+          "max_columns": 160
+        }
+      }
+    }
+  },
+  "artifact_sha256": {
+    "candidate-80.txt": "5f110df79f4d98140fab712488b9148c26e2274ec5d8c2b001d1c6ba97570dfc",
+    "missing-80.html": "d17ac770ea3cf6b4b85f6a2c7374ed39fa7f6981fe6dc5912f1b13ad8ff8a4a5",
+    "missing-80.txt": "0737aef6d3094e1c27b9e061bce6a130955679bbd12e5c17b856584c7c93b74e",
+    "missing-80.svg": "0390f564bba23d31fb8c7f2c00149481fe678c3ed7cdf481124a03800e44daeb",
+    "candidate-80.html": "7030a31ed3e099ccd0deec10a90b72bbdc5f50d9e58b50d254dd9569201d1956",
+    "candidate-80.svg": "d259b657eb511c0ec727dde70476e59e6bf892fe096a63797b5d51825cce9e42",
+    "small.json": "2f15504ff57d3451b5e3844d5d5543c20b18e72f52e18aed7c0fc2d8f45b8ef8",
+    "candidate.json": "bd2d3dfc8e663a236ed0dd4921a40748c4978c38b71c4fdcc9db712dac2ebab6",
+    "missing-160.svg": "0390f564bba23d31fb8c7f2c00149481fe678c3ed7cdf481124a03800e44daeb",
+    "small-120.svg": "44014e39f1c11f04fb45ba56e8475c118a5a5465f02eb4affa86c8227ca7c69a",
+    "small-80.svg": "44014e39f1c11f04fb45ba56e8475c118a5a5465f02eb4affa86c8227ca7c69a",
+    "candidate-160.txt": "53cf36cab6df90f9925e069b949e61a99bb0745c47631ab7eb1576ebd027b086",
+    "small-160.html": "41bf9131b5a1eaa800c032269b7d26154121e29dec5bf02a1840478d996c4058",
+    "small-120.html": "41bf9131b5a1eaa800c032269b7d26154121e29dec5bf02a1840478d996c4058",
+    "small-80.txt": "120355654bd5f1206714fecfc816cb08459e4dac2d3e6522df4fefdbc958b4ad",
+    "candidate-160.svg": "d259b657eb511c0ec727dde70476e59e6bf892fe096a63797b5d51825cce9e42",
+    "missing-160.txt": "c584b10ebe185d1a1ed36fe651d2cb370359b9ac55875d3885abbf1f28f5c798",
+    "small-120.txt": "35757d795a67384fd1cbfdc9db9ac804d23519059dac7fe1896e81ed0543b5ec",
+    "missing.json": "1d51f34e0ba01ce43bb1572cc15fb9b5368469885745084681d7171571f36df2",
+    "missing-120.html": "d17ac770ea3cf6b4b85f6a2c7374ed39fa7f6981fe6dc5912f1b13ad8ff8a4a5",
+    "small-80.html": "41bf9131b5a1eaa800c032269b7d26154121e29dec5bf02a1840478d996c4058",
+    "missing-160.html": "d17ac770ea3cf6b4b85f6a2c7374ed39fa7f6981fe6dc5912f1b13ad8ff8a4a5",
+    "candidate-120.txt": "5a7c2021217c3d6f5d77372bb03518357c38a84d29f28ad0719cd324717408d3",
+    "candidate-160.html": "7030a31ed3e099ccd0deec10a90b72bbdc5f50d9e58b50d254dd9569201d1956",
+    "small-160.svg": "44014e39f1c11f04fb45ba56e8475c118a5a5465f02eb4affa86c8227ca7c69a",
+    "missing-120.svg": "0390f564bba23d31fb8c7f2c00149481fe678c3ed7cdf481124a03800e44daeb",
+    "small-160.txt": "bc8d1a53f0cfa8a66fdca3ccaba792efdec4494ebcebed90ae663ee63b56812e",
+    "missing-120.txt": "691f52be49ddf59b5da87056d2895a3200eacdaf2ba737205c93443711ef74b4",
+    "candidate-120.svg": "d259b657eb511c0ec727dde70476e59e6bf892fe096a63797b5d51825cce9e42",
+    "candidate-120.html": "7030a31ed3e099ccd0deec10a90b72bbdc5f50d9e58b50d254dd9569201d1956"
+  },
+  "source_sha256": {
+    "aneos_core/analysis/object_review.py": "51c2782dd3178d537e441a65ba78843c969d63b51cfafe5f2d1e851e073aecdb",
+    "aneos_core/analysis/screening.py": "416daa665310031cfd3e071d6b23cc67abd0eef45482d944b977a1c62ece3eec",
+    "scripts/qa_object_review.py": "88bbeadc9f0cc5cc7383a561c8b4443dd30e891088eb824b481a5492aaba248e"
+  },
+  "limits": "Synthetic illustrative controls only; no source acquisition, independent calibration, physical fits or all-menu certification."
+}

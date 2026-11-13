@@ -103,21 +103,15 @@ class PipelineIntegration:
                 )
                 self.logger.info("Enhanced NEO poller initialized for real data access")
             except ImportError:
-                self.logger.warning("Enhanced NEO poller not available - using fallback data simulation")
+                self.logger.warning("Enhanced NEO poller not available - using direct CAD acquisition with explicit failures")
                 self.enhanced_neo_poller = None
             
             # Try to initialize enhanced analysis components
             try:
-                # Mock original pipeline for enhanced wrapper
-                class MockOriginalPipeline:
-                    async def analyze_neo(self, designation, neo_data=None):
-                        return type('MockResult', (), {'overall_score': 0.5})()
-                
+                from ..analysis.screening import CanonicalAnalysisAdapter
                 self.enhanced_pipeline = EnhancedAnalysisPipeline(
-                    MockOriginalPipeline(),
-                    enable_validation=True
-                )
-                
+                    CanonicalAnalysisAdapter(), enable_validation=True)
+
                 # Initialize ATLAS scorer
                 config_path = Path("aneos_core/config/advanced_scoring_weights.json")
                 if config_path.exists():
@@ -173,6 +167,7 @@ class PipelineIntegration:
         """
         return {
             'pipeline_components_available': True,
+            'status_semantics': 'component_initialization_not_scientific_validation',
             'components_initialized': self.components_initialized,
             'automatic_pipeline_ready': self.automatic_pipeline is not None,
             'chunked_poller_ready': self.chunked_poller is not None,
@@ -226,8 +221,15 @@ class PipelineIntegration:
                     years_back=years_back
                 )
 
+                error = result.pipeline_metrics.get('error')
+                stages = list(getattr(result, 'stage_results', {}).values())
+                partial = any(not stage.success or
+                    stage.stage_metrics.get('source_coverage', {}).get('source_coverage_status') in ('partial', 'unavailable')
+                    for stage in stages)
                 return {
-                    'status': 'success',
+                    'status': 'error' if error else 'partial' if partial else 'success',
+                    'error_message': error,
+                    'scientific_validation_status': 'not_established',
                     'pipeline_result': result,
                     'total_objects': result.total_input_objects,
                     'final_candidates': result.final_candidates,
@@ -242,7 +244,8 @@ class PipelineIntegration:
             return {
                 'status': 'error',
                 'error_message': str(e),
-                'fallback_available': True
+                'fallback_available': False,
+                'scientific_validation_status': 'not_established'
             }
     
     def _display_component_status(self):

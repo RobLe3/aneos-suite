@@ -1,0 +1,668 @@
+{
+  "acquisition_history": [
+    {
+      "bundle": {
+        "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
+        "coverage": {
+          "contributing_fraction": 0.0,
+          "contributing_sources": 0,
+          "network_request_count": null,
+          "planned_sources": 5,
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "scientific_completeness": null,
+          "semantics": "fixed planned adapters; empty validated responses differ from data contributions; not scientific readiness or independent evidence",
+          "status_counts": {
+            "ambiguous": 0,
+            "available": 0,
+            "invalid": 0,
+            "missing": 0,
+            "not_supported": 0,
+            "unavailable": 5
+          },
+          "validated_response_fraction": 0.0,
+          "validated_response_sources": 0
+        },
+        "designation": "SYNTHETIC",
+        "neo_data": null,
+        "outcomes": [
+          {
+            "adapter_payload": null,
+            "basis": "adapter_result",
+            "completed_at": "2026-11-13T05:09:08.845178+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": null,
+            "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+            "source": "SBDB",
+            "started_at": "2026-11-13T05:09:08.845169+00:00",
+            "status": "unavailable"
+          },
+          {
+            "adapter_payload": null,
+            "basis": "adapter_result",
+            "completed_at": "2026-11-13T05:09:08.845262+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": null,
+            "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+            "source": "NEODyS",
+            "started_at": "2026-11-13T05:09:08.845258+00:00",
+            "status": "unavailable"
+          },
+          {
+            "adapter_payload": null,
+            "basis": "adapter_result",
+            "completed_at": "2026-11-13T05:09:08.845281+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": null,
+            "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+            "source": "MPC",
+            "started_at": "2026-11-13T05:09:08.845279+00:00",
+            "status": "unavailable"
+          },
+          {
+            "adapter_payload": null,
+            "basis": "adapter_result",
+            "completed_at": "2026-11-13T05:09:08.845371+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": null,
+            "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+            "source": "Horizons",
+            "started_at": "2026-11-13T05:09:08.845366+00:00",
+            "status": "unavailable"
+          },
+          {
+            "adapter_payload": null,
+            "basis": "adapter_result",
+            "completed_at": "2026-11-13T05:09:08.845472+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": null,
+            "reason_code": "CAD_QUERY_UNAVAILABLE",
+            "source": "CAD",
+            "started_at": "2026-11-13T05:09:08.845445+00:00",
+            "status": "unavailable"
+          }
+        ],
+        "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+        "schema_version": "object-acquisition-v1",
+        "software": {
+          "application_version": "2.2.0.dev0",
+          "build_channel": "development",
+          "float_epsilon": 2.220446049250313e-16,
+          "float_mantissa_bits": 53,
+          "limitations": "Source-file hashes describe files at report time, not loaded bytecode, authentication or a complete environment lock. Dirty code must be preserved separately to reproduce it.",
+          "package_versions": {
+            "SQLAlchemy": "2.1.8",
+            "astroquery": "0.4.9.post1",
+            "numpy": "2.2.2",
+            "pydantic": "2.11.10",
+            "requests": "2.32.3",
+            "scipy": "1.15.1"
+          },
+          "python_version": "3.11.9",
+          "repository_commit": "64f5fd0a18957224fc12a0034bb9ab50093694a6",
+          "source_hashes_at_report_time": {
+            "aneos_api/acquisition_repository.py": "9ca4cdb889e2738744913999eb529de4c4c9a7cf11c63bc2898a670dce246751",
+            "aneos_api/enrichment_store.py": "c9f1936ba89442fe22fcde2198ba53a17ffa12bd08a184a1d52dfcf267d44085",
+            "aneos_core/analysis/advanced_aneos_analyzer.py": "ecfd7b43db434d990bae486f28904c0c7e95a60052d5299e4daa795abc7f10a0",
+            "aneos_core/analysis/impact_evidence.py": "ecf8820b8ecb5f87d45fdb22e71bbfca2bcba6b51217f8152452903462010552",
+            "aneos_core/analysis/object_review.py": "e56818d1e58bd11198b88ff050e43c4bd79e3728b865a11ed57190bc2bfe8e35",
+            "aneos_core/analysis/pipeline.py": "effb2fe26d1734b7c8b8cfdc1e458ed3a556c8d2dc6851d0e23e80c622600aa9",
+            "aneos_core/analysis/reporting.py": "987db2390d001d36482c1141d965ff5abd5aac4e014854913bc0dfa754f6ee30",
+            "aneos_core/analysis/screening.py": "f442ec4ef601f7cb432fdb6c230eeefb63c75519afd11afa298d2e18d62c8345",
+            "aneos_core/data/acquisition.py": "50148c4c43d70f788b2605cfea0467495f7b65191e6c31a94cbe4302a1c88e94",
+            "aneos_core/data/cache.py": "7e4b6d40f9a9c1b1bb1fc7ffdbcec479b3d3f2f622dfc1fafb4373899bc0e1a3",
+            "aneos_core/data/enrichment.py": "500ec6b89f7f225cd815a46f0720bc36e7e771c2bcff1d63cb3c5fae25b4017a",
+            "aneos_core/data/epoch_evidence.py": "5ca2e443a536eeb0bffa220b69133f05c322cd65ed5fbb44df28d546abc473f5",
+            "aneos_core/data/fetcher.py": "325c621f6d0f4eb959933116755551d53a3ae2045a0b9e665aaa36e8c76743d0",
+            "aneos_core/data/models.py": "2fd137c793a104b44a4c7b3384daa7fc6c8accb84d81cfd7c555d040ed7ab752",
+            "aneos_core/data/orbit_evidence.py": "5498738f9879c53ec3712e41da267fdf5652b1b36c883f697a33d4a3f3567e4b",
+            "aneos_core/data/physical_evidence.py": "1ddd0d83ad44c49b48cdd1823e153d021a511179cbd305e59aeec4a695af27ef",
+            "aneos_core/data/reconciliation.py": "68d674619778cca17cc8d45d201a35daa2fc58a827001bd2021118613c1f80cb",
+            "aneos_core/data/sources/horizons.py": "2dac6abb39d21866426674d0a3dee3835d01183e936ec9f86589c0d1368dbd3a",
+            "aneos_core/data/sources/mpc.py": "7a86211cbf4a2adc618fc098057e786f14534d85eac186adb11fb3dd314277f0",
+            "aneos_core/data/sources/neodys.py": "76bc6521efb9c1abecc4f7e2ab9b690942a7db7ad44cd389be6bfdfcd51ee62d",
+            "aneos_core/data/sources/sbdb.py": "29e74ae3b455180697b97533569d04f058bf38cd8d1985f9d80338c7db39b05a",
+            "aneos_core/detection/validated_sigma5_artificial_neo_detector.py": "f0eea68f79dc1f672314e2dbb422387d842ed33fbd6055ca738e1c0dde8e1a06",
+            "aneos_core/interfaces/unified_analysis.py": "4a399420f42d19bf11c28eb2ee664631a591d0c090c7041c2d0d6eb310ee5687",
+            "aneos_version.py": "1ad0b715d491c5d2a2cd53c41be2283df34164c1b4b98b1f935a4b5c0b3ea3fd",
+            "simple_neo_analyzer.py": "6d98166232b34290631ce1868da2e9e91ea8b09854976ade5341f85cc6bdcab6"
+          },
+          "working_tree_dirty": true
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "started_at": "2026-11-13T05:09:08.845043+00:00"
+      },
+      "native_response_repeat_checks": [],
+      "receipt": {
+        "assertion_count": 5,
+        "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
+        "commit_status": "committed",
+        "committed_at": "2026-11-13T05:09:08.887161+00:00",
+        "consistency_status": "replayed_not_authenticated",
+        "projection_id": null,
+        "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+        "query_sequence": 1,
+        "schema_version": "acquisition-storage-receipt-v1"
+      }
+    }
+  ],
+  "artificial_probability": null,
+  "close_approaches": [],
+  "completeness_score": null,
+  "completeness_semantics": "legacy heuristic, not validated completeness",
+  "data_quality_score": null,
+  "data_sources": [],
+  "designation": "SYNTHETIC",
+  "discovery_data": null,
+  "evidence_history": [
+    {
+      "assertion_id": "bd215ffb7981a6fda305d736164d91491eb9e2355ba40f41232561bef81997f5",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "unavailable"
+      },
+      "payload": {
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+        "data_source": "SBDB",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": null,
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845178+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": null,
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "SBDB",
+          "started_at": "2026-11-13T05:09:08.845169+00:00",
+          "status": "unavailable"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "unavailable"
+      },
+      "payload_sha256": "ea13a3c07c1ccdf77abd8013ffa9db1360f0961ddb7e09423e9d18c44aba4418",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
+      "sequence": 1,
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
+      "source": "SBDB"
+    },
+    {
+      "assertion_id": "84a79bb15153ec04aa4ef6ea9026eecbc27bd231b2e6077abc73bca6c26721ca",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "unavailable"
+      },
+      "payload": {
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+        "data_source": "NEODyS",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": null,
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845262+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": null,
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "NEODyS",
+          "started_at": "2026-11-13T05:09:08.845258+00:00",
+          "status": "unavailable"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "unavailable"
+      },
+      "payload_sha256": "1d9b5828a35cb65ad2570f0659fbea5fd9ab34fff8d5e91f29962863c22f2b26",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
+      "sequence": 2,
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
+      "source": "NEODyS"
+    },
+    {
+      "assertion_id": "e32f5bcef5190907af46e5bb86bf276413d5c0ae43d7cb8e50bb8f73afd59908",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "unavailable"
+      },
+      "payload": {
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+        "data_source": "MPC",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": null,
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845281+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": null,
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "MPC",
+          "started_at": "2026-11-13T05:09:08.845279+00:00",
+          "status": "unavailable"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "unavailable"
+      },
+      "payload_sha256": "f3bca7688fffedeffe4da98da4ad5f9ea526ce3b64ad7b3adc410e8f09ae3222",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
+      "sequence": 3,
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
+      "source": "MPC"
+    },
+    {
+      "assertion_id": "c756369f8dfb7f2756e54a8cbfe31131cddb81ddffa55a9d25e5a55235ef0945",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "unavailable"
+      },
+      "payload": {
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+        "data_source": "Horizons",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": null,
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845371+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": null,
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "Horizons",
+          "started_at": "2026-11-13T05:09:08.845366+00:00",
+          "status": "unavailable"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "unavailable"
+      },
+      "payload_sha256": "bb3225130938f8bf0e1df7d0bb42517794659ecdfed8e8b649f52b4d19385720",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
+      "sequence": 4,
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
+      "source": "Horizons"
+    },
+    {
+      "assertion_id": "624df2681fe1814f28e058fa60e98b7de361ec30e5818363e20165867ad29ee3",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "unavailable"
+      },
+      "payload": {
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+        "data_source": "CAD",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": null,
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845472+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": null,
+          "reason_code": "CAD_QUERY_UNAVAILABLE",
+          "source": "CAD",
+          "started_at": "2026-11-13T05:09:08.845445+00:00",
+          "status": "unavailable"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "unavailable"
+      },
+      "payload_sha256": "7abc1fcde79e41268079cd21dc8604530f55576f3ae5c2bf8ea3c30c3ac2a30f",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
+      "sequence": 5,
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
+      "source": "CAD"
+    }
+  ],
+  "first_discovered": null,
+  "last_updated": null,
+  "latest_acquisition": {
+    "assertion_count": 5,
+    "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
+    "commit_status": "committed",
+    "committed_at": "2026-11-13T05:09:08.887161+00:00",
+    "consistency_status": "replayed_not_authenticated",
+    "coverage": {
+      "contributing_fraction": 0.0,
+      "contributing_sources": 0,
+      "network_request_count": null,
+      "planned_sources": 5,
+      "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+      "scientific_completeness": null,
+      "semantics": "fixed planned adapters; empty validated responses differ from data contributions; not scientific readiness or independent evidence",
+      "status_counts": {
+        "ambiguous": 0,
+        "available": 0,
+        "invalid": 0,
+        "missing": 0,
+        "not_supported": 0,
+        "unavailable": 5
+      },
+      "validated_response_fraction": 0.0,
+      "validated_response_sources": 0
+    },
+    "projection_id": null,
+    "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+    "query_sequence": 1,
+    "schema_version": "acquisition-storage-receipt-v1",
+    "source_plan": {
+      "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+      "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+      "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+      "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+      "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+      "roles": {
+        "CAD": "computed_earth_encounters_bounded_10_rows",
+        "Horizons": "catalogue_orbit_and_available_physical_fields",
+        "MPC": "catalogue_orbit_and_available_physical_fields",
+        "NEODyS": "catalogue_orbit_and_available_physical_fields",
+        "SBDB": "catalogue_orbit_and_available_physical_fields"
+      },
+      "schema_version": "object-source-plan-v1",
+      "source_priority": [
+        "SBDB",
+        "NEODyS",
+        "MPC",
+        "Horizons"
+      ],
+      "sources": [
+        "SBDB",
+        "NEODyS",
+        "MPC",
+        "Horizons",
+        "CAD"
+      ]
+    },
+    "summary": {
+      "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
+      "coverage": {
+        "contributing_fraction": 0.0,
+        "contributing_sources": 0,
+        "network_request_count": null,
+        "planned_sources": 5,
+        "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+        "scientific_completeness": null,
+        "semantics": "fixed planned adapters; empty validated responses differ from data contributions; not scientific readiness or independent evidence",
+        "status_counts": {
+          "ambiguous": 0,
+          "available": 0,
+          "invalid": 0,
+          "missing": 0,
+          "not_supported": 0,
+          "unavailable": 5
+        },
+        "validated_response_fraction": 0.0,
+        "validated_response_sources": 0
+      },
+      "outcomes": [
+        {
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845178+00:00",
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "SBDB",
+          "started_at": "2026-11-13T05:09:08.845169+00:00",
+          "status": "unavailable"
+        },
+        {
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845262+00:00",
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "NEODyS",
+          "started_at": "2026-11-13T05:09:08.845258+00:00",
+          "status": "unavailable"
+        },
+        {
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845281+00:00",
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "MPC",
+          "started_at": "2026-11-13T05:09:08.845279+00:00",
+          "status": "unavailable"
+        },
+        {
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845371+00:00",
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "Horizons",
+          "started_at": "2026-11-13T05:09:08.845366+00:00",
+          "status": "unavailable"
+        },
+        {
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:09:08.845472+00:00",
+          "reason_code": "CAD_QUERY_UNAVAILABLE",
+          "source": "CAD",
+          "started_at": "2026-11-13T05:09:08.845445+00:00",
+          "status": "unavailable"
+        }
+      ],
+      "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+      "schema_version": "object-acquisition-v1",
+      "source_plan": {
+        "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+        "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+        "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+        "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+        "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+        "roles": {
+          "CAD": "computed_earth_encounters_bounded_10_rows",
+          "Horizons": "catalogue_orbit_and_available_physical_fields",
+          "MPC": "catalogue_orbit_and_available_physical_fields",
+          "NEODyS": "catalogue_orbit_and_available_physical_fields",
+          "SBDB": "catalogue_orbit_and_available_physical_fields"
+        },
+        "schema_version": "object-source-plan-v1",
+        "source_priority": [
+          "SBDB",
+          "NEODyS",
+          "MPC",
+          "Horizons"
+        ],
+        "sources": [
+          "SBDB",
+          "NEODyS",
+          "MPC",
+          "Horizons",
+          "CAD"
+        ]
+      },
+      "storage_receipt": {
+        "assertion_count": 5,
+        "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
+        "commit_status": "committed",
+        "committed_at": "2026-11-13T05:09:08.887161+00:00",
+        "consistency_status": "replayed_not_authenticated",
+        "projection_id": null,
+        "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
+        "query_sequence": 1,
+        "schema_version": "acquisition-storage-receipt-v1"
+      }
+    }
+  },
+  "legacy_origin_output": null,
+  "orbital_elements": null,
+  "orbital_elements_source": null,
+  "origin_status": "not_assessed",
+  "overall_data_completeness": null,
+  "physical_properties": null,
+  "projection_query_bindings": [],
+  "projection_receipt": null,
+  "source_acquisition_coverage": null,
+  "source_data": {},
+  "storage_status": "attempts_only",
+  "total_detections": 0,
+  "total_detections_semantics": "distinct stored source assertions, not observations or artificial detections"
+}

@@ -1,16 +1,8 @@
-"""
-Enhanced Analysis Pipeline for aNEOS Scientific Rigor Enhancement.
+"""Review-prerequisite wrapper around shared candidate screening.
 
-This module provides a wrapper around the existing analysis pipeline that
-adds scientific rigor validation without modifying the original analysis logic.
-Uses additive architecture principles to preserve all existing functionality.
-
-Key Features:
-- Wraps existing AnalysisPipeline without modification
-- Adds 5-stage validation pipeline for false positive prevention
-- Provides statistical testing and uncertainty quantification
-- Maintains backward compatibility with all existing code
-- Optional enhanced functionality that gracefully degrades
+Component availability is not scientific validation. Uninstalled physical/null
+models, uncertainty calculations and origin inference remain explicitly unavailable.
+Standalone research utilities do not provide an automatic validation pass.
 """
 
 import logging
@@ -31,13 +23,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 class EnhancedAnalysisPipeline:
-    """
-    Enhanced wrapper around existing AnalysisPipeline with scientific rigor validation.
-    
-    This class wraps the original analysis pipeline and adds comprehensive
-    validation capabilities while preserving all original functionality.
-    The enhanced features are additive and fail gracefully if unavailable.
-    """
+    """Keep canonical screening and explicit required-review outcomes together."""
     
     def __init__(
         self, 
@@ -79,13 +65,14 @@ class EnhancedAnalysisPipeline:
         self, 
         designation: str, 
         neo_data: Optional[Any] = None,
-        enhanced: bool = True
+        enhanced: bool = True,
+        force_refresh: bool = False
     ) -> Union[Any, EnhancedAnalysisResult]:
         """
         Analyze NEO with optional enhanced validation.
         
-        This method preserves the exact signature and behavior of the original
-        analyze_neo method while optionally adding enhanced validation.
+        The underlying analysis result remains accessible separately. Review
+        availability does not imply that physical or statistical models ran.
         
         Args:
             designation: NEO designation (same as original)
@@ -96,16 +83,22 @@ class EnhancedAnalysisPipeline:
             Original analysis result OR EnhancedAnalysisResult if validation enabled
         """
         try:
-            # Step 1: Run original analysis (COMPLETELY UNCHANGED)
+            # Underlying analysis owns acquisition and the shared screening decision.
             self.logger.info(f"Running original analysis for {designation}")
-            original_result = await self.original_pipeline.analyze_neo(designation, neo_data)
+            if force_refresh:
+                original_result = await self.original_pipeline.analyze_neo(designation, neo_data,
+                    force_refresh=True)
+            else:
+                original_result = await self.original_pipeline.analyze_neo(designation, neo_data)
+            if neo_data is None:
+                neo_data = getattr(original_result, 'neo_data', None)
             
             # Step 2: Apply enhanced validation if enabled and requested
             if enhanced and self.validation_available and original_result:
                 try:
                     self.logger.info(f"Applying enhanced validation for {designation}")
                     enhanced_result = await self.validator.validate_analysis_result(
-                        neo_data, original_result
+                        neo_data if neo_data is not None else getattr(original_result, 'neo_data', None), original_result
                     )
                     
                     # Log validation results
@@ -113,18 +106,20 @@ class EnhancedAnalysisPipeline:
                     recommendation = enhanced_result.validation_result.recommendation
                     self.logger.info(
                         f"Validation complete for {designation}: "
-                        f"FP probability: {fp_prob:.3f}, Recommendation: {recommendation}"
+                        f"FP probability: {fp_prob if fp_prob is not None else 'unavailable'}, Recommendation: {recommendation}"
                     )
                     
                     return enhanced_result
                     
                 except Exception as e:
                     self.logger.warning(f"Enhanced validation failed for {designation}: {e}")
-                    self.logger.warning("Returning original result without enhancement")
-                    # Graceful degradation - return original result on validation failure
-                    return original_result
+                    self.logger.warning("Returning explicit unavailable validation with original result preserved")
+                    # Preserve explicit unavailability; absence is never a successful gate.
+                    return self._create_basic_enhanced_result(original_result)
             else:
-                # Return original result if enhancement not requested or unavailable
+                # Explicitly disabled/unrequested enhancement preserves original behavior.
+                if enhanced and self.enable_validation:
+                    return self._create_basic_enhanced_result(original_result)
                 return original_result
                 
         except Exception as e:
@@ -133,31 +128,22 @@ class EnhancedAnalysisPipeline:
             raise
     
     async def analyze_neo_with_validation(
-        self, 
-        designation: str, 
-        neo_data: Optional[Any] = None
+        self, designation: str, neo_data: Optional[Any] = None,
+        force_refresh: bool = False, enable_validation: bool = True
     ) -> EnhancedAnalysisResult:
+        """Retain screening and explicit review availability for every request.
+
+        Disabling a request's optional review never mutates the shared validator
+        or grants the required scientific prerequisites.
         """
-        Convenience method that always applies enhanced validation.
-        
-        This method guarantees enhanced validation will be applied,
-        falling back to basic enhancement if full validation fails.
-        
-        Args:
-            designation: NEO designation
-            neo_data: Optional NEO data
-            
-        Returns:
-            EnhancedAnalysisResult with validation data
-        """
-        result = await self.analyze_neo(designation, neo_data, enhanced=True)
-        
-        if isinstance(result, EnhancedAnalysisResult):
-            return result
-        else:
-            # Create basic enhanced result if validation wasn't applied
-            return self._create_basic_enhanced_result(result)
-    
+        result = await self.analyze_neo(designation, neo_data, enhanced=enable_validation,
+            force_refresh=force_refresh)
+        if not isinstance(result, EnhancedAnalysisResult):
+            result = self._create_basic_enhanced_result(result)
+        if not enable_validation:
+            result.validation_result.validation_status = 'not_requested'
+        return result
+
     async def analyze_neo_original(
         self, 
         designation: str, 
@@ -166,8 +152,8 @@ class EnhancedAnalysisPipeline:
         """
         Run original analysis without any enhancement.
         
-        This method provides access to the original analysis behavior
-        exactly as it was before enhancement.
+        This delegates directly to the underlying pipeline without additional
+        review. Its current scientific contract still applies.
         
         Args:
             designation: NEO designation
@@ -188,6 +174,8 @@ class EnhancedAnalysisPipeline:
         return {
             'validation_enabled': self.enable_validation,
             'validation_available': self.validation_available,
+            'availability_semantics': 'component_initialized_not_scientific_validation',
+            'scientific_validation_status': 'unavailable_uncalibrated',
             'components': {
                 'multi_stage_validator': hasattr(self, 'validator') and self.validator is not None,
                 'statistical_testing': hasattr(self, 'statistical_testing') and self.statistical_testing is not None,
@@ -205,16 +193,28 @@ class EnhancedAnalysisPipeline:
         from ..validation.multi_stage_validator import ValidationResult, ValidationStageResult
         from ..validation.statistical_testing import MultipleTestingResult
         
+        assessment = None
+        original_payload = getattr(original_result, 'screening_assessment', None) or (getattr(original_result, 'analysis', {}) or {}).get('assessment')
+        if isinstance(original_payload, dict) and original_payload.get('schema_version') == 'screening-assessment-v1':
+            try:
+                from .screening import ScreeningAnalysisService
+                replay = ScreeningAnalysisService().replay(original_payload['evidence_snapshot'], original_payload['evidence_id'])
+                if replay.policy_id == original_payload['policy_id']:
+                    assessment = replay.to_payload()
+            except (KeyError, TypeError, ValueError):
+                pass  # Preserve unavailable inference; never trust a malformed legacy claim.
+
         # Create minimal validation result
         minimal_validation = ValidationResult(
-            overall_validation_passed=True,  # Assume passed if we can't validate
-            overall_false_positive_probability=0.5,  # Neutral probability
-            overall_confidence=0.0,  # No confidence without validation
+            overall_validation_passed=False,  # Unavailable validation cannot grant a pass
+            overall_false_positive_probability=None,  # Not estimated
+            overall_confidence=None,  # Not estimated
             stage_results=[],
             space_debris_matches=[],
-            synthetic_population_percentile=50.0,
-            statistical_significance_summary=MultipleTestingResult([], [], [], "unavailable", 1.0, 1.0),
-            recommendation='unknown',
+            synthetic_population_percentile=None,
+            statistical_significance_summary=None,
+            recommendation='additional_evidence_required',
+            contract_version='required-review-v1', validation_status='unavailable',
             expert_review_priority='medium',
             total_processing_time_ms=0.0,
             validation_timestamp=datetime.now()
@@ -226,7 +226,7 @@ class EnhancedAnalysisPipeline:
             statistical_tests={},
             uncertainty_analysis={'status': 'unavailable'},
             enhancement_timestamp=datetime.now(),
-            enhancement_version="minimal"
+            enhancement_version="minimal", screening_assessment=assessment
         )
     
     # Proxy all other methods to original pipeline
@@ -240,111 +240,15 @@ class EnhancedAnalysisPipeline:
         """
         return getattr(self.original_pipeline, name)
     
-    async def analyze_neo_with_advanced_scoring(
-        self,
-        designation: str,
-        neo_data: Optional[Any] = None
-    ) -> Dict[str, Any]:
-        """
-        Analyze NEO with XVIII SWARM advanced anomaly scoring.
-        
-        This method applies the new multi-indicator scoring system with:
-        - Continuous scoring (0→1) instead of binary classification
-        - Human-readable flag strings 
-        - Transparent threshold system
-        - Space debris penalty system
-        
-        Args:
-            designation: NEO designation
-            neo_data: Optional NEO data
-            
-        Returns:
-            Dictionary containing original results plus advanced scoring
-        """
-        if not self.validation_available:
-            raise ValueError("Advanced scoring requires validation system to be enabled")
-        
-        try:
-            # Step 1: Run enhanced analysis to get indicator results
-            enhanced_result = await self.analyze_neo_with_validation(designation, neo_data)
-            
-            # Step 2: Extract data for advanced scoring
-            if hasattr(enhanced_result, 'original_result'):
-                original_data = enhanced_result.original_result
-            else:
-                original_data = enhanced_result
-                
-            # Convert enhanced result indicators to format expected by advanced scorer
-            indicator_results = {}
-            if hasattr(enhanced_result, 'validation_result') and enhanced_result.validation_result:
-                validation_result = enhanced_result.validation_result
-                
-                # Extract validation results for scoring
-                if hasattr(validation_result, 'stage_results'):
-                    # Handle both list and dict formats for stage_results
-                    stage_results = validation_result.stage_results
-                    
-                    if isinstance(stage_results, list):
-                        # Handle list format: iterate through ValidationStageResult objects
-                        for stage_result in stage_results:
-                            if hasattr(stage_result, 'stage_name'):
-                                stage_name = stage_result.stage_name
-                                if hasattr(stage_result, 'confidence') and hasattr(stage_result, 'score'):
-                                    indicator_results[stage_name] = {
-                                        'raw_score': getattr(stage_result, 'score', 0.0),
-                                        'weighted_score': getattr(stage_result, 'score', 0.0),
-                                        'confidence': getattr(stage_result, 'confidence', 0.5)
-                                    }
-                    elif isinstance(stage_results, dict):
-                        # Handle dict format: iterate through key-value pairs
-                        for stage_name, stage_result in stage_results.items():
-                            if hasattr(stage_result, 'confidence') and hasattr(stage_result, 'score'):
-                                indicator_results[stage_name] = {
-                                    'raw_score': getattr(stage_result, 'score', 0.0),
-                                    'weighted_score': getattr(stage_result, 'score', 0.0),
-                                    'confidence': getattr(stage_result, 'confidence', 0.5)
-                                }
-            
-            # Step 3: Convert NEO data to expected format
-            neo_data_dict = {}
-            if neo_data:
-                if hasattr(neo_data, '__dict__'):
-                    neo_data_dict = vars(neo_data)
-                elif isinstance(neo_data, dict):
-                    neo_data_dict = neo_data
-                else:
-                    neo_data_dict = {'designation': designation}
-            else:
-                neo_data_dict = {'designation': designation}
-            
-            # Step 4: Calculate advanced score
-            self.logger.info(f"Calculating XVIII SWARM advanced score for {designation}")
-            advanced_score = self.advanced_scorer.calculate_score(neo_data_dict, indicator_results)
-            
-            # Step 5: Generate explanation
-            explanation = self.advanced_scorer.explain_score(advanced_score)
-            
-            # Step 6: Combine results
-            result = {
-                'designation': designation,
-                'enhanced_analysis': enhanced_result,
-                'advanced_score': advanced_score.to_dict(),
-                'scoring_explanation': explanation,
-                'xviii_swarm_version': '1.0'
-            }
-            
-            self.logger.info(
-                f"Advanced scoring complete for {designation}: "
-                f"Score: {advanced_score.overall_score:.3f} ({advanced_score.classification}), "
-                f"Flags: {advanced_score.flag_string}"
-            )
-            
-            return result
-            
-        except Exception as e:
-            self.logger.error(f"Advanced scoring failed for {designation}: {e}")
-            raise
-    
+    async def analyze_neo_with_advanced_scoring(self, designation, neo_data=None):
+        """Compatibility wrapper: unavailable stages cannot become measured clues."""
+        enhanced = await self.analyze_neo_with_validation(designation, neo_data)
+        return {'designation': designation, 'enhanced_analysis': enhanced,
+            'screening_assessment': enhanced.screening_assessment,
+            'advanced_score': None, 'advanced_scoring_status': 'unavailable_scientific_prerequisites',
+            'scoring_explanation': 'Legacy stage-to-clue fusion withdrawn: observational and calibration prerequisites unavailable',
+            'xviii_swarm_version': 'legacy_fusion_withdrawn'}
+
     # Additional convenience methods for enhanced functionality
     
     async def bulk_analyze_with_validation(
@@ -418,7 +322,8 @@ class EnhancedAnalysisPipeline:
                     fp_prob = result.validation_result.overall_false_positive_probability
                     recommendation = result.validation_result.recommendation
                     
-                    fp_probabilities.append(fp_prob)
+                    if fp_prob is not None:
+                        fp_probabilities.append(fp_prob)
                     recommendations[recommendation] = recommendations.get(recommendation, 0) + 1
                     
                     if hasattr(result, 'overall_score'):
@@ -428,8 +333,10 @@ class EnhancedAnalysisPipeline:
             summary = {
                 'total_analyses': len(enhanced_results),
                 'false_positive_statistics': {
-                    'mean_probability': sum(fp_probabilities) / len(fp_probabilities) if fp_probabilities else 0.0,
-                    'median_probability': sorted(fp_probabilities)[len(fp_probabilities)//2] if fp_probabilities else 0.0,
+                    'available_count': len(fp_probabilities),
+                    'unavailable_count': len(enhanced_results) - len(fp_probabilities),
+                    'mean_probability': sum(fp_probabilities) / len(fp_probabilities) if fp_probabilities else None,
+                    'median_probability': sorted(fp_probabilities)[len(fp_probabilities)//2] if fp_probabilities else None,
                     'high_fp_risk_count': sum(1 for fp in fp_probabilities if fp > 0.5),
                     'low_fp_risk_count': sum(1 for fp in fp_probabilities if fp < 0.1)
                 },

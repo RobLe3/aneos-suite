@@ -117,7 +117,6 @@
           "max_score": {
             "anyOf": [
               {
-                "maximum": 1.0,
                 "minimum": 0.0,
                 "type": "number"
               },
@@ -125,12 +124,12 @@
                 "type": "null"
               }
             ],
+            "description": "Maximum uncalibrated ranking units",
             "title": "Max Score"
           },
           "min_score": {
             "anyOf": [
               {
-                "maximum": 1.0,
                 "minimum": 0.0,
                 "type": "number"
               },
@@ -138,6 +137,7 @@
                 "type": "null"
               }
             ],
+            "description": "Minimum uncalibrated ranking units",
             "title": "Min Score"
           }
         },
@@ -193,7 +193,9 @@
         "description": "Request model for NEO analysis.",
         "properties": {
           "designation": {
-            "description": "NEO designation (e.g., '2024 AB123')",
+            "description": "NEO designation, e.g. '99942 Apophis'",
+            "maxLength": 50,
+            "minLength": 1,
             "title": "Designation",
             "type": "string"
           },
@@ -225,6 +227,11 @@
       "AnalysisResponse": {
         "description": "Complete analysis response model.",
         "properties": {
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "title": "Analysis Metadata",
+            "type": "object"
+          },
           "anomaly_score": {
             "$ref": "#/components/schemas/AnomalyScoreResponse"
           },
@@ -244,6 +251,13 @@
           "designation": {
             "title": "Designation",
             "type": "string"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
           },
           "execution_time_ms": {
             "anyOf": [
@@ -282,6 +296,15 @@
             ],
             "title": "Raw Neo Data"
           },
+          "screening_assessment": {
+            "additionalProperties": true,
+            "title": "Screening Assessment",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
           "success": {
             "default": true,
             "title": "Success",
@@ -291,13 +314,22 @@
             "format": "date-time",
             "title": "Timestamp",
             "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
           }
         },
         "required": [
           "designation",
           "anomaly_score",
           "processing_time",
-          "data_quality"
+          "data_quality",
+          "screening_assessment",
+          "status"
         ],
         "title": "AnalysisResponse",
         "type": "object"
@@ -306,13 +338,20 @@
         "description": "Anomaly score response model.",
         "properties": {
           "classification": {
-            "description": "natural, suspicious, highly_suspicious, or artificial",
+            "description": "FOLLOW_UP_CANDIDATE, NOT_FLAGGED, or INCONCLUSIVE; not origin",
             "title": "Classification",
             "type": "string"
           },
           "confidence": {
-            "title": "Confidence",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
           },
           "indicator_scores": {
             "additionalProperties": {
@@ -323,8 +362,16 @@
             "type": "object"
           },
           "overall_score": {
-            "title": "Overall Score",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Uncalibrated ranking units, not sigma or probability",
+            "title": "Overall Score"
           },
           "risk_factors": {
             "default": [],
@@ -334,6 +381,11 @@
             "title": "Risk Factors",
             "type": "array"
           },
+          "score_semantics": {
+            "default": "uncalibrated_screening_rank",
+            "title": "Score Semantics",
+            "type": "string"
+          },
           "statistical_summary": {
             "additionalProperties": true,
             "default": {},
@@ -342,8 +394,6 @@
           }
         },
         "required": [
-          "overall_score",
-          "confidence",
           "classification"
         ],
         "title": "AnomalyScoreResponse",
@@ -451,6 +501,17 @@
       "CloseApproachResponse": {
         "description": "Close approach response model.",
         "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
           "close_approach_date": {
             "anyOf": [
               {
@@ -485,6 +546,22 @@
             ],
             "title": "Distance Km"
           },
+          "epoch_jd_tdb": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epoch Jd Tdb"
+          },
+          "evidence_metadata": {
+            "additionalProperties": true,
+            "title": "Evidence Metadata",
+            "type": "object"
+          },
           "infinity_velocity_km_s": {
             "anyOf": [
               {
@@ -495,6 +572,17 @@
               }
             ],
             "title": "Infinity Velocity Km S"
+          },
+          "native_calendar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Native Calendar"
           },
           "relative_velocity_km_s": {
             "anyOf": [
@@ -521,6 +609,17 @@
             ],
             "description": "[latitude, longitude]",
             "title": "Subpoint"
+          },
+          "time_scale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Scale"
           }
         },
         "title": "CloseApproachResponse",
@@ -607,8 +706,20 @@
             "type": "object"
           },
           "artificial_probability": {
-            "title": "Artificial Probability",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artificial Probability"
+          },
+          "candidate": {
+            "default": false,
+            "title": "Candidate",
+            "type": "boolean"
           },
           "classification": {
             "title": "Classification",
@@ -626,8 +737,15 @@
             "title": "Combined P Value"
           },
           "confidence": {
-            "title": "Confidence",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
           },
           "data_freshness": {
             "anyOf": [
@@ -655,10 +773,25 @@
             "title": "Designation",
             "type": "string"
           },
+          "engine_version": {
+            "default": "catalogue-ranking-v1",
+            "title": "Engine Version",
+            "type": "string"
+          },
           "evidence_count": {
             "default": 0,
             "title": "Evidence Count",
             "type": "integer"
+          },
+          "evidence_id": {
+            "default": "",
+            "title": "Evidence Id",
+            "type": "string"
+          },
+          "evidence_snapshot": {
+            "additionalProperties": true,
+            "title": "Evidence Snapshot",
+            "type": "object"
           },
           "evidence_sources": {
             "default": [],
@@ -679,22 +812,91 @@
             ],
             "title": "False Discovery Rate"
           },
+          "human_origin_status": {
+            "default": "not_assessed",
+            "title": "Human Origin Status",
+            "type": "string"
+          },
           "interpretation": {
             "default": "",
             "title": "Interpretation",
             "type": "string"
           },
           "is_artificial": {
-            "title": "Is Artificial",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Artificial"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "non_gravitational_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Non Gravitational Evidence"
+          },
+          "origin_status": {
+            "default": "inconclusive",
+            "title": "Origin Status",
+            "type": "string"
+          },
+          "policy_id": {
+            "default": "",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": "screening-assessment-v1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "screening_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screening Score"
           },
           "sigma_confidence": {
-            "title": "Sigma Confidence",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sigma Confidence"
           },
           "sigma_tier": {
-            "default": "ROUTINE",
+            "default": "UNAVAILABLE",
             "title": "Sigma Tier",
+            "type": "string"
+          },
+          "significance_status": {
+            "default": "unavailable_uncalibrated_model",
+            "title": "Significance Status",
             "type": "string"
           },
           "spacecraft_veto": {
@@ -716,13 +918,261 @@
         },
         "required": [
           "designation",
-          "is_artificial",
-          "artificial_probability",
-          "sigma_confidence",
-          "classification",
-          "confidence"
+          "classification"
         ],
         "title": "DetectionResponse",
+        "type": "object"
+      },
+      "EnhancedAnalysisRequest": {
+        "properties": {
+          "designation": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Designation",
+            "type": "string"
+          },
+          "enable_validation": {
+            "default": true,
+            "title": "Enable Validation",
+            "type": "boolean"
+          },
+          "force_refresh": {
+            "default": false,
+            "title": "Force Refresh",
+            "type": "boolean"
+          },
+          "include_indicators": {
+            "default": true,
+            "title": "Include Indicators",
+            "type": "boolean"
+          },
+          "include_raw_data": {
+            "default": false,
+            "title": "Include Raw Data",
+            "type": "boolean"
+          },
+          "monte_carlo_samples": {
+            "anyOf": [
+              {
+                "maximum": 50000.0,
+                "minimum": 100.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monte Carlo Samples"
+          },
+          "uncertainty_method": {
+            "default": "monte_carlo",
+            "pattern": "^(monte_carlo|bootstrap|analytical)$",
+            "title": "Uncertainty Method",
+            "type": "string"
+          },
+          "validation_method": {
+            "default": "full",
+            "pattern": "^(full|fast|statistical_only)$",
+            "title": "Validation Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "designation"
+        ],
+        "title": "EnhancedAnalysisRequest",
+        "type": "object"
+      },
+      "EnhancedAnalysisResponse": {
+        "properties": {
+          "analysis_metadata": {
+            "additionalProperties": true,
+            "title": "Analysis Metadata",
+            "type": "object"
+          },
+          "classification": {
+            "title": "Classification",
+            "type": "string"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "designation": {
+            "title": "Designation",
+            "type": "string"
+          },
+          "enhancement_timestamp": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enhancement Timestamp"
+          },
+          "enhancement_version": {
+            "default": "enhanced-rest-v1",
+            "title": "Enhancement Version",
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "execution_options": {
+            "additionalProperties": true,
+            "title": "Execution Options",
+            "type": "object"
+          },
+          "indicator_scores": {
+            "additionalProperties": true,
+            "title": "Indicator Scores",
+            "type": "object"
+          },
+          "overall_score": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Uncalibrated ranking units, not sigma or probability",
+            "title": "Overall Score"
+          },
+          "processing_time_ms": {
+            "title": "Processing Time Ms",
+            "type": "number"
+          },
+          "raw_neo_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Neo Data"
+          },
+          "score_semantics": {
+            "default": "uncalibrated_screening_rank",
+            "title": "Score Semantics",
+            "type": "string"
+          },
+          "screening_assessment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screening Assessment"
+          },
+          "statistical_tests": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/StatisticalTestResultModel"
+            },
+            "title": "Statistical Tests",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "uncertainty_analysis": {
+            "$ref": "#/components/schemas/UncertaintyAnalysisModel"
+          },
+          "validation_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ValidationResultModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "designation",
+          "classification",
+          "status",
+          "processing_time_ms",
+          "timestamp"
+        ],
+        "title": "EnhancedAnalysisResponse",
+        "type": "object"
+      },
+      "EnhancedBatchAnalysisResponse": {
+        "properties": {
+          "batch_id": {
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/EnhancedAnalysisResponse"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "summary_statistics": {
+            "additionalProperties": true,
+            "title": "Summary Statistics",
+            "type": "object"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "total_processing_time_ms": {
+            "title": "Total Processing Time Ms",
+            "type": "number"
+          }
+        },
+        "required": [
+          "batch_id",
+          "results",
+          "total_processing_time_ms",
+          "timestamp"
+        ],
+        "title": "EnhancedBatchAnalysisResponse",
         "type": "object"
       },
       "ErrorResponse": {
@@ -769,8 +1219,15 @@
             "type": "boolean"
           },
           "anomaly_score": {
-            "title": "Anomaly Score",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anomaly Score"
           },
           "confidence_interval": {
             "default": [],
@@ -785,26 +1242,79 @@
             "title": "Data Available",
             "type": "boolean"
           },
+          "dependency_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dependency Group"
+          },
           "effect_size": {
-            "title": "Effect Size",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect Size"
+          },
+          "evidence_basis": {
+            "default": "heuristic_proxy",
+            "title": "Evidence Basis",
+            "type": "string"
           },
           "p_value": {
-            "title": "P Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
           },
           "quality_score": {
-            "title": "Quality Score",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality Score"
           },
           "sample_size": {
             "default": 0,
             "title": "Sample Size",
             "type": "integer"
           },
+          "score_semantics": {
+            "default": "uncalibrated_ranking_heuristic",
+            "title": "Score Semantics",
+            "type": "string"
+          },
           "type": {
             "title": "Type",
             "type": "string"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
           }
         },
         "required": [
@@ -1021,6 +1531,16 @@
       },
       "HealthResponse": {
         "properties": {
+          "api_contract_version": {
+            "default": "2.0.0",
+            "title": "Api Contract Version",
+            "type": "string"
+          },
+          "application_version": {
+            "default": "2.2.0b1",
+            "title": "Application Version",
+            "type": "string"
+          },
           "checks": {
             "additionalProperties": {
               "$ref": "#/components/schemas/CheckResult"
@@ -1038,7 +1558,7 @@
             "type": "string"
           },
           "version": {
-            "default": "0.7.0",
+            "default": "2.0.0",
             "title": "Version",
             "type": "string"
           }
@@ -1050,7 +1570,12 @@
         "type": "object"
       },
       "ImpactResponse": {
+        "description": "Scoped external model evidence, not a local probability calculation.\n\nLegacy numeric keys remain nullable; absent evidence is never zero risk.\nComplete source snapshots and hashes permit deterministic report replay.",
         "properties": {
+          "assessment_basis": {
+            "title": "Assessment Basis",
+            "type": "string"
+          },
           "calculation_confidence": {
             "anyOf": [
               {
@@ -1063,8 +1588,26 @@
             "title": "Calculation Confidence"
           },
           "collision_probability": {
-            "title": "Collision Probability",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collision Probability"
+          },
+          "collision_probability_per_year": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Collision Probability Per Year"
           },
           "comparative_risk": {
             "anyOf": [
@@ -1103,6 +1646,11 @@
             "title": "Designation",
             "type": "string"
           },
+          "identity": {
+            "additionalProperties": true,
+            "title": "Identity",
+            "type": "object"
+          },
           "impact_energy_mt": {
             "anyOf": [
               {
@@ -1115,20 +1663,39 @@
             "title": "Impact Energy Mt"
           },
           "impact_probability_by_decade": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "default": {},
-            "title": "Impact Probability By Decade",
-            "type": "object"
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Impact Probability By Decade"
           },
           "keyhole_passages": {
-            "default": [],
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keyhole Passages"
+          },
+          "limitations": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "type": "string"
             },
-            "title": "Keyhole Passages",
+            "title": "Limitations",
             "type": "array"
           },
           "moon_collision_probability": {
@@ -1167,25 +1734,105 @@
             ],
             "title": "Peak Risk Period"
           },
+          "physical_estimate_basis": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Physical Estimate Basis"
+          },
           "primary_risk_factors": {
-            "default": [],
-            "items": {
-              "type": "string"
-            },
-            "title": "Primary Risk Factors",
-            "type": "array"
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Risk Factors"
           },
           "probability_uncertainty": {
-            "default": [],
-            "items": {
-              "type": "number"
-            },
-            "title": "Probability Uncertainty",
-            "type": "array"
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability Uncertainty"
+          },
+          "report_sha256": {
+            "title": "Report Sha256",
+            "type": "string"
           },
           "risk_level": {
             "title": "Risk Level",
             "type": "string"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "source": {
+            "additionalProperties": true,
+            "title": "Source",
+            "type": "object"
+          },
+          "source_palermo_cumulative": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Palermo Cumulative"
+          },
+          "source_snapshot": {
+            "additionalProperties": true,
+            "title": "Source Snapshot",
+            "type": "object"
+          },
+          "source_torino_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Torino Max"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "time_scope": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Scope"
           },
           "time_to_impact_years": {
             "anyOf": [
@@ -1197,12 +1844,27 @@
               }
             ],
             "title": "Time To Impact Years"
+          },
+          "virtual_impactors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Virtual Impactors",
+            "type": "array"
           }
         },
         "required": [
+          "schema_version",
           "designation",
-          "collision_probability",
-          "risk_level"
+          "status",
+          "assessment_basis",
+          "identity",
+          "risk_level",
+          "source",
+          "source_snapshot",
+          "report_sha256",
+          "limitations"
         ],
         "title": "ImpactResponse",
         "type": "object"
@@ -1211,8 +1873,15 @@
         "description": "Indicator result response model.",
         "properties": {
           "confidence": {
-            "title": "Confidence",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
           },
           "contributing_factors": {
             "default": [],
@@ -1233,19 +1902,30 @@
             "type": "object"
           },
           "raw_score": {
-            "title": "Raw Score",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Score"
           },
           "weighted_score": {
-            "title": "Weighted Score",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Score"
           }
         },
         "required": [
-          "indicator_name",
-          "raw_score",
-          "weighted_score",
-          "confidence"
+          "indicator_name"
         ],
         "title": "IndicatorResultResponse",
         "type": "object"
@@ -1362,7 +2042,101 @@
         "title": "MetricsResponse",
         "type": "object"
       },
+      "NativeEpochResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "conversion": {
+            "const": "representation_only_no_time_scale_conversion",
+            "title": "Conversion",
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "JD",
+              "MJD",
+              "calendar"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "julian_day_same_scale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Julian Day Same Scale"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "native_value": {
+            "title": "Native Value",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "native-epoch-v1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "time_scale": {
+            "enum": [
+              "TDB",
+              "TT",
+              "TDT",
+              "UTC",
+              "UT1",
+              "UT",
+              "UNKNOWN"
+            ],
+            "title": "Time Scale",
+            "type": "string"
+          },
+          "time_scale_status": {
+            "enum": [
+              "not_provided",
+              "declared_not_independently_verified"
+            ],
+            "title": "Time Scale Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "native_value",
+          "format",
+          "time_scale",
+          "source",
+          "role",
+          "label",
+          "julian_day_same_scale",
+          "conversion",
+          "time_scale_status"
+        ],
+        "title": "NativeEpochResponse",
+        "type": "object"
+      },
       "NetworkRequest": {
+        "additionalProperties": false,
         "properties": {
           "clustering": {
             "default": true,
@@ -1391,7 +2165,7 @@
           },
           "historical_years": {
             "default": 30,
-            "description": "Years of historical close-approach data to fetch (1\u2013100)",
+            "description": "Fixed years-times-365-day CAD window anchored at first submission; bounded row coverage remains explicit",
             "maximum": 100.0,
             "minimum": 1.0,
             "title": "Historical Years",
@@ -1411,11 +2185,29 @@
       },
       "NetworkStatusResponse": {
         "properties": {
+          "acquisition_outcomes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Acquisition Outcomes",
+            "type": "array"
+          },
           "analysis_metadata": {
             "additionalProperties": true,
             "default": {},
             "title": "Analysis Metadata",
             "type": "object"
+          },
+          "attempts": {
+            "default": 0,
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "checkpoint_count": {
+            "default": 0,
+            "title": "Checkpoint Count",
+            "type": "integer"
           },
           "clusters": {
             "default": [],
@@ -1426,9 +2218,15 @@
             "type": "array"
           },
           "combined_p_value": {
-            "default": 1.0,
-            "title": "Combined P Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Combined P Value"
           },
           "correlation_matrix": {
             "anyOf": [
@@ -1456,6 +2254,23 @@
             ],
             "title": "Error"
           },
+          "execution_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Result"
+          },
+          "execution_status": {
+            "default": "queued",
+            "title": "Execution Status",
+            "type": "string"
+          },
           "harmonic_signals": {
             "default": [],
             "items": {
@@ -1469,14 +2284,37 @@
             "type": "string"
           },
           "network_sigma": {
-            "default": 0.0,
-            "title": "Network Sigma",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network Sigma"
           },
           "network_tier": {
-            "default": "NETWORK_ROUTINE",
+            "default": "UNAVAILABLE",
             "title": "Network Tier",
             "type": "string"
+          },
+          "revision": {
+            "default": 0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "scientific_report": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scientific Report"
           },
           "status": {
             "title": "Status",
@@ -1519,8 +2357,37 @@
             "type": "string"
           },
           "density_sigma": {
-            "title": "Density Sigma",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Density Sigma"
+          },
+          "evidence_basis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Basis"
+          },
+          "interpretation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interpretation"
           },
           "known_family": {
             "anyOf": [
@@ -1545,22 +2412,28 @@
             "type": "integer"
           },
           "p_value": {
-            "title": "P Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
           }
         },
         "required": [
           "cluster_id",
           "members",
           "n_members",
-          "centroid",
-          "density_sigma",
-          "p_value"
+          "centroid"
         ],
         "title": "OrbitalClusterResult",
         "type": "object"
       },
       "OrbitalElementPoint": {
+        "additionalProperties": false,
         "properties": {
           "M": {
             "anyOf": [
@@ -1587,6 +2460,7 @@
           "e": {
             "anyOf": [
               {
+                "minimum": 0.0,
                 "type": "number"
               },
               {
@@ -1604,11 +2478,14 @@
                 "type": "null"
               }
             ],
+            "description": "Native header label, not a UTC observation timestamp",
             "title": "Epoch"
           },
           "i": {
             "anyOf": [
               {
+                "maximum": 180.0,
+                "minimum": 0.0,
                 "type": "number"
               },
               {
@@ -1616,6 +2493,16 @@
               }
             ],
             "title": "I"
+          },
+          "native_epoch": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeEpochResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "node": {
             "anyOf": [
@@ -1740,8 +2627,16 @@
         "type": "object"
       },
       "OrbitalHistoryResponse": {
+        "additionalProperties": false,
         "properties": {
+          "coverage_status": {
+            "const": "bounded_computed_samples_not_observation_coverage",
+            "default": "bounded_computed_samples_not_observation_coverage",
+            "title": "Coverage Status",
+            "type": "string"
+          },
           "data_source": {
+            "const": "JPL Horizons",
             "default": "JPL Horizons",
             "title": "Data Source",
             "type": "string"
@@ -1750,12 +2645,64 @@
             "title": "Designation",
             "type": "string"
           },
+          "epoch_status": {
+            "default": "legacy_unbound",
+            "title": "Epoch Status",
+            "type": "string"
+          },
+          "evidence_basis": {
+            "const": "computed_ephemeris_not_observations",
+            "default": "computed_ephemeris_not_observations",
+            "title": "Evidence Basis",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
           "points": {
             "items": {
               "$ref": "#/components/schemas/OrbitalElementPoint"
             },
             "title": "Points",
             "type": "array"
+          },
+          "query_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query Evidence"
+          },
+          "returned_points": {
+            "default": 0,
+            "title": "Returned Points",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": "orbital-history-v2",
+            "default": "orbital-history-v2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "scientific_status": {
+            "const": "not_independently_validated",
+            "default": "not_independently_validated",
+            "title": "Scientific Status",
+            "type": "string"
+          },
+          "time_axis_status": {
+            "default": "unavailable_unbound_or_incompatible_epochs",
+            "title": "Time Axis Status",
+            "type": "string"
           },
           "years": {
             "title": "Years",
@@ -1773,10 +2720,11 @@
       "OrbitalInput": {
         "properties": {
           "a": {
+            "description": "Semi-major axis (AU)",
             "title": "A",
             "type": "number"
           },
-          "albedo": {
+          "absolute_magnitude": {
             "anyOf": [
               {
                 "type": "number"
@@ -1785,11 +2733,38 @@
                 "type": "null"
               }
             ],
+            "title": "Absolute Magnitude"
+          },
+          "additional_data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Additional Data"
+          },
+          "albedo": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Catalogue albedo; geometric albedo can exceed one. Not an origin probability.",
             "title": "Albedo"
           },
           "designation": {
             "anyOf": [
               {
+                "maxLength": 50,
+                "minLength": 1,
                 "type": "string"
               },
               {
@@ -1801,6 +2776,7 @@
           "diameter_km": {
             "anyOf": [
               {
+                "exclusiveMinimum": 0.0,
                 "type": "number"
               },
               {
@@ -1810,10 +2786,27 @@
             "title": "Diameter Km"
           },
           "e": {
+            "description": "Nonnegative eccentricity; hyperbolic inputs remain outside the prototype ranking domain",
+            "minimum": 0.0,
             "title": "E",
             "type": "number"
           },
+          "evidence_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Metadata"
+          },
           "i": {
+            "description": "Inclination (degrees)",
+            "maximum": 180.0,
+            "minimum": 0.0,
             "title": "I",
             "type": "number"
           },
@@ -1831,6 +2824,17 @@
               }
             ],
             "title": "Orbital History"
+          },
+          "spectral_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spectral Type"
           }
         },
         "required": [
@@ -2000,6 +3004,155 @@
         ],
         "title": "SortOrder",
         "type": "string"
+      },
+      "SpaceDebrisMatchModel": {
+        "properties": {
+          "catalog": {
+            "title": "Catalog",
+            "type": "string"
+          },
+          "delta_v": {
+            "title": "Delta V",
+            "type": "number"
+          },
+          "epoch_difference": {
+            "title": "Epoch Difference",
+            "type": "number"
+          },
+          "match_confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Match Confidence",
+            "type": "number"
+          },
+          "match_criteria": {
+            "additionalProperties": true,
+            "title": "Match Criteria",
+            "type": "object"
+          },
+          "object_id": {
+            "title": "Object Id",
+            "type": "string"
+          },
+          "object_name": {
+            "title": "Object Name",
+            "type": "string"
+          },
+          "orbital_similarity": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Orbital Similarity",
+            "type": "number"
+          }
+        },
+        "required": [
+          "catalog",
+          "object_id",
+          "object_name",
+          "match_confidence",
+          "delta_v",
+          "orbital_similarity",
+          "epoch_difference"
+        ],
+        "title": "SpaceDebrisMatchModel",
+        "type": "object"
+      },
+      "StatisticalTestResultModel": {
+        "properties": {
+          "alpha_level": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alpha Level"
+          },
+          "confidence_interval": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Interval"
+          },
+          "effect_size": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect Size"
+          },
+          "is_significant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Significant"
+          },
+          "p_value": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Value"
+          },
+          "test_statistic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Statistic"
+          },
+          "test_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Type"
+          }
+        },
+        "title": "StatisticalTestResultModel",
+        "type": "object"
       },
       "SystemMetricsResponse": {
         "description": "System metrics response model.",
@@ -2274,6 +3427,115 @@
         "title": "TrainingResponse",
         "type": "object"
       },
+      "UncertaintyAnalysisModel": {
+        "properties": {
+          "analysis_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Method"
+          },
+          "confidence_interval_95": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Interval 95"
+          },
+          "confidence_interval_99": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Interval 99"
+          },
+          "indicator_uncertainties": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Indicator Uncertainties",
+            "type": "object"
+          },
+          "overall_uncertainty": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Uncertainty"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "sensitivity_analysis": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Sensitivity Analysis",
+            "type": "object"
+          },
+          "status": {
+            "default": "unavailable",
+            "title": "Status",
+            "type": "string"
+          },
+          "uncertainty_breakdown": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Uncertainty Breakdown",
+            "type": "object"
+          }
+        },
+        "title": "UncertaintyAnalysisModel",
+        "type": "object"
+      },
       "UserResponse": {
         "description": "User response model.",
         "properties": {
@@ -2337,6 +3599,13 @@
       },
       "ValidationError": {
         "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
           "loc": {
             "items": {
               "anyOf": [
@@ -2367,6 +3636,359 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "ValidationResultModel": {
+        "properties": {
+          "contract_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Version"
+          },
+          "evidence_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Id"
+          },
+          "expert_review_priority": {
+            "pattern": "^(low|medium|high|urgent)$",
+            "title": "Expert Review Priority",
+            "type": "string"
+          },
+          "non_gravitational_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Non Gravitational Evidence"
+          },
+          "overall_confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Confidence"
+          },
+          "overall_false_positive_probability": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall False Positive Probability"
+          },
+          "overall_validation_passed": {
+            "title": "Overall Validation Passed",
+            "type": "boolean"
+          },
+          "policy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Id"
+          },
+          "recommendation": {
+            "title": "Recommendation",
+            "type": "string"
+          },
+          "screening_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screening Score"
+          },
+          "space_debris_matches": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceDebrisMatchModel"
+            },
+            "title": "Space Debris Matches",
+            "type": "array"
+          },
+          "stage_results": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationStageResultModel"
+            },
+            "title": "Stage Results",
+            "type": "array"
+          },
+          "statistical_significance_summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statistical Significance Summary"
+          },
+          "synthetic_population_percentile": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synthetic Population Percentile"
+          },
+          "timing_status": {
+            "default": "unavailable_not_instrumented",
+            "title": "Timing Status",
+            "type": "string"
+          },
+          "total_processing_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Processing Time Ms"
+          },
+          "transport_limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Transport Limitations",
+            "type": "array"
+          },
+          "validation_evidence_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Evidence Id"
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          },
+          "validation_timestamp": {
+            "format": "date-time",
+            "title": "Validation Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "overall_validation_passed",
+          "recommendation",
+          "expert_review_priority",
+          "validation_timestamp"
+        ],
+        "title": "ValidationResultModel",
+        "type": "object"
+      },
+      "ValidationStageResultModel": {
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "false_positive_reduction": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "False Positive Reduction"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "processing_time_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processing Time Ms"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "stage_name": {
+            "title": "Stage Name",
+            "type": "string"
+          },
+          "stage_number": {
+            "title": "Stage Number",
+            "type": "integer"
+          },
+          "timing_status": {
+            "default": "unavailable_not_instrumented",
+            "title": "Timing Status",
+            "type": "string"
+          },
+          "validation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Status"
+          }
+        },
+        "required": [
+          "stage_number",
+          "stage_name",
+          "passed"
+        ],
+        "title": "ValidationStageResultModel",
+        "type": "object"
+      },
+      "ValidationSummaryResponse": {
+        "properties": {
+          "excluded_rows": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Excluded Rows",
+            "type": "object"
+          },
+          "false_positive_statistics": {
+            "additionalProperties": true,
+            "title": "False Positive Statistics",
+            "type": "object"
+          },
+          "included_screening_assessments": {
+            "default": 0,
+            "title": "Included Screening Assessments",
+            "type": "integer"
+          },
+          "overall_score_statistics": {
+            "additionalProperties": true,
+            "title": "Overall Score Statistics",
+            "type": "object"
+          },
+          "policy_groups": {
+            "additionalProperties": true,
+            "title": "Policy Groups",
+            "type": "object"
+          },
+          "recommendations": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Recommendations",
+            "type": "object"
+          },
+          "screening_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Screening Counts",
+            "type": "object"
+          },
+          "total_analyses": {
+            "title": "Total Analyses",
+            "type": "integer"
+          },
+          "validation_system_status": {
+            "additionalProperties": true,
+            "title": "Validation System Status",
+            "type": "object"
+          }
+        },
+        "required": [
+          "total_analyses",
+          "false_positive_statistics",
+          "recommendations",
+          "overall_score_statistics",
+          "validation_system_status"
+        ],
+        "title": "ValidationSummaryResponse",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -2382,12 +4004,11 @@
     }
   },
   "info": {
-    "description": "Advanced Near Earth Object detection System - RESTful API for artificial NEO detection",
+    "description": "Uncalibrated NEO screening and scoped research evidence. Persistent network jobs require verified API credentials or scoped JWTs; development mock tokens do not authorize them. Authentication on other routes varies; see their documented contracts.",
     "title": "aNEOS API",
     "version": "2.0.0",
-    "x-logo": {
-      "url": "https://example.com/aneos-logo.png"
-    }
+    "x-application-version": "2.2.0b1",
+    "x-build-channel": "beta"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -3036,7 +4657,7 @@
     },
     "/api/v1/analysis/analyze": {
       "post": {
-        "description": "Analyze a single NEO for anomaly indicators.\n\nPerforms comprehensive analysis including orbital mechanics,\napproach patterns, and anomaly detection.",
+        "description": "Acquire current evidence and return the shared uncalibrated screening result.",
         "operationId": "analyze_neo_api_v1_analysis_analyze_post",
         "requestBody": {
           "content": {
@@ -3086,7 +4707,7 @@
     },
     "/api/v1/analysis/analyze/batch": {
       "post": {
-        "description": "Analyze multiple NEOs for artificial signatures (batch mode).\nUses the same DataFetcher + ValidatedSigma5 path as GET /detect.",
+        "description": "Screen multiple NEOs using the same DataFetcher + shared service as GET /detect.\nResults remain in-memory; restart durability is tracked separately.",
         "operationId": "analyze_batch_api_v1_analysis_analyze_batch_post",
         "requestBody": {
           "content": {
@@ -3138,8 +4759,25 @@
     },
     "/api/v1/analysis/analyze/network": {
       "post": {
-        "description": "Submit a batch for population-level pattern analysis. Returns a job_id immediately.",
-        "operationId": "start_network_analysis_api_v1_analysis_analyze_network_post",
+        "operationId": "submit_network_api_v1_analysis_analyze_network_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -3170,16 +4808,23 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Start population pattern analysis",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Submit authenticated durable population analysis",
         "tags": [
           "Analysis"
         ]
       }
     },
-    "/api/v1/analysis/analyze/network/{job_id}/status": {
-      "get": {
-        "description": "Return current status / results for a network analysis job.",
-        "operationId": "get_network_status_api_v1_analysis_analyze_network__job_id__status_get",
+    "/api/v1/analysis/analyze/network/{job_id}": {
+      "delete": {
+        "operationId": "cancel_network_api_v1_analysis_analyze_network__job_id__delete",
         "parameters": [
           {
             "in": "path",
@@ -3213,7 +4858,65 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Poll population pattern analysis status",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel an owned persistent population job",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/analyze/network/{job_id}/status": {
+      "get": {
+        "operationId": "network_status_api_v1_analysis_analyze_network__job_id__status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read an owned persistent population job",
         "tags": [
           "Analysis"
         ]
@@ -3274,7 +4977,7 @@
     },
     "/api/v1/analysis/detect": {
       "get": {
-        "description": "Run the canonical ValidatedSigma5 artificial-NEO detector on a named object.\n\nFetches orbital elements from the data pipeline and returns a typed\nDetectionResponse with sigma_confidence and artificial_probability.",
+        "description": "Screen a named object; unavailable significance/origin remain null.",
         "operationId": "detect_neo_api_v1_analysis_detect_get",
         "parameters": [
           {
@@ -3312,7 +5015,7 @@
             },
             "description": "Successful Response"
           },
-          "404": {
+          "422": {
             "content": {
               "application/json": {
                 "schema": {
@@ -3320,17 +5023,7 @@
                 }
               }
             },
-            "description": "No orbital data for designation"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
+            "description": "Invalid source measurements"
           },
           "500": {
             "content": {
@@ -3341,6 +5034,16 @@
               }
             },
             "description": "Detection pipeline failure"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Source data unavailable"
           }
         },
         "security": [
@@ -3357,7 +5060,7 @@
         ]
       },
       "post": {
-        "description": "Run ValidatedSigma5 detector on caller-supplied orbital elements.\nNo data source lookup \u2014 use when you have elements from your own reduction.",
+        "description": "Screen supplied measurements; a name alone is not origin evidence.",
         "operationId": "detect_neo_raw_api_v1_analysis_detect_post",
         "requestBody": {
           "content": {
@@ -3402,6 +5105,188 @@
         "summary": "Detect Neo Raw",
         "tags": [
           "Analysis"
+        ]
+      }
+    },
+    "/api/v1/analysis/enhanced": {
+      "post": {
+        "description": "Shared screening plus explicit required-review status, not calibrated science.",
+        "operationId": "analyze_neo_enhanced_api_v1_analysis_enhanced_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnhancedAnalysisRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnhancedAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Analyze Neo Enhanced",
+        "tags": [
+          "Scientific review"
+        ]
+      }
+    },
+    "/api/v1/analysis/enhanced/batch": {
+      "post": {
+        "description": "Ordered outcomes for every object, including source failures and abstentions.",
+        "operationId": "batch_analyze_enhanced_api_v1_analysis_enhanced_batch_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "force_refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Force Refresh",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "enable_validation",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Enable Validation",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "minItems": 1,
+                "title": "Designations",
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnhancedBatchAnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Batch Analyze Enhanced",
+        "tags": [
+          "Scientific review"
+        ]
+      }
+    },
+    "/api/v1/analysis/enhanced/summary": {
+      "get": {
+        "description": "Descriptive stored screening counts, never inferred FDR or acceptance.",
+        "operationId": "get_validation_summary_api_v1_analysis_enhanced_summary_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 7,
+              "maximum": 365,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationSummaryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Validation Summary",
+        "tags": [
+          "Scientific review"
         ]
       }
     },
@@ -3557,7 +5442,7 @@
     },
     "/api/v1/analysis/history": {
       "get": {
-        "description": "Fetch time-series Keplerian orbital elements from JPL Horizons.\nReturns one data point per year over the requested span.",
+        "description": "Fetch time-series Keplerian orbital elements from JPL Horizons.\nReturns bounded computed samples with native epochs, never observation coverage.",
         "operationId": "orbital_history_api_v1_analysis_history_get",
         "parameters": [
           {
@@ -3567,6 +5452,9 @@
             "required": true,
             "schema": {
               "description": "NEO designation, e.g. 'Apophis'",
+              "maxLength": 100,
+              "minLength": 1,
+              "pattern": "^[^\\x00-\\x1f\\x7f]+$",
               "title": "Designation",
               "type": "string"
             }
@@ -3624,18 +5512,30 @@
     },
     "/api/v1/analysis/impact": {
       "get": {
-        "description": "Calculate Earth/Moon impact probability for a named NEO.\n\nReturns collision_probability, moon_collision_probability, risk_level,\nimpact_energy_mt, and crater_diameter_km.",
+        "description": "Return replayable JPL Sentry evidence for its tabulated Earth-impact events.\n\nNot listed/removed is not zero risk. No lunar probability, local fitted\nprobability, calibrated confidence, damage prediction or origin inference.\nSource method, dates, uncertainty limits and complete input snapshot accompany\nevery result. This endpoint does not use the legacy heuristic calculator.",
         "operationId": "impact_neo_api_v1_analysis_impact_get",
         "parameters": [
           {
-            "description": "NEO designation, e.g. '99942'",
+            "description": "Primary asteroid number or unpacked provisional designation; names/aliases are not resolved",
             "in": "query",
             "name": "designation",
             "required": true,
             "schema": {
-              "description": "NEO designation, e.g. '99942'",
+              "description": "Primary asteroid number or unpacked provisional designation; names/aliases are not resolved",
               "title": "Designation",
               "type": "string"
+            }
+          },
+          {
+            "description": "Explicitly bypass the per-process Sentry TTL cache",
+            "in": "query",
+            "name": "force_refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Explicitly bypass the per-process Sentry TTL cache",
+              "title": "Force Refresh",
+              "type": "boolean"
             }
           }
         ],
@@ -3650,27 +5550,17 @@
             },
             "description": "Successful Response"
           },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "No orbital data for designation"
-          },
           "422": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "Use a primary number or provisional designation"
           },
-          "500": {
+          "502": {
             "content": {
               "application/json": {
                 "schema": {
@@ -3678,7 +5568,17 @@
                 }
               }
             },
-            "description": "Impact calculation failure"
+            "description": "Invalid or unsupported Sentry response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Authoritative impact source unavailable"
           }
         },
         "security": [
@@ -3897,6 +5797,24 @@
       "post": {
         "description": "Exchange a valid X-API-Key for a signed JWT bearer token.\n\nSet ANEOS_SECRET_KEY in your environment before using this endpoint.\nGenerate a key with::\n\n    python -c \"import secrets; print(secrets.token_hex(32))\"",
         "operationId": "get_token_api_v1_auth_token_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "audience",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Audience"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3907,6 +5825,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [

@@ -2,6 +2,55 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0b1] - 2026-11-13
+
+Engineering beta for testing, integrating the incremental reliability review stack.
+The application/CLI/menus/API application metadata now share2.2.0b1; the API contract
+remains2.0.0. This is not a calibrated scientific or production-readiness declaration.
+See [installation, tested workflows and known limitations](docs/releases/2.2.0b1.md).
+
+- Canonical nullable screening, source/uncertainty/epoch provenance, append-only local
+  evidence, durable screening jobs, role-separated dates and truthful reports.
+- Legacy dashboard/browser now delegates to the same screening/object-review contract.
+- Core installation includes the Uvicorn runtime used by the documented API command.
+- Known-bad root legacy candidate polling/inference is quarantined with explicit
+  controlled deprecations pending#73; it returns no synthetic or missing-as-zero results.
+- Historical source/results and prior development-version labels remain unchanged.
+- Remaining release limitations include legacy candidate polling/data retention#71/#73,
+  all-menu QA, independent physical fits/calibration and scientific five-sigma claims.
+
+## [2.2.0.dev0] - Unreleased
+
+Development review, 2026-11-13. This advances beyond the existingv2.1.6 repository
+tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is created.
+
+- Central application identity across core/API/dashboard exports, launcher/menu
+  banners, active defaults, HTTP headers/root/health and reproduction metadata.
+- REST contract2.0.0 and independent scientific model/schema/provider versions are
+  not relabelled. Historical changelog/case/source versions remain unchanged.
+- Existing reliability review stack adds evidence integrity, truthful uncalibrated
+  screening, scoped impact evidence and recoverable owned network execution; see
+  programme#2 and ADR065–079 for exact scope, tests and unresolved requirements.
+- Menu/version presentation is under active QA, not proof all features or science
+  are ready. Independent calibration, fullKY26 fits and whole-menu/source/docs
+  audits remain open. No calibrated origin/five-sigma claim is introduced.
+
+- Native orbital epochs, atomic physical assertions and computed-history HTTP
+  transport now preserve source values/units/scales and expose uncertainty/coverage
+  limits (ADR080–083). Raw HTTP inputs require actual finite numbers; geometric
+  albedo is not clipped to a probability bound. Invalid request errors stay422
+  without echoing raw inputs. These repairs are not independent scientific validation.
+
+- Transactional file-SQLite enrichment now retains dated source assertions, atomic
+  correlated projections, legacy history and verified detail/export (ADR084, #54).
+  Ordinary all-source query persistence and source coverage remain pending (#40).
+
+- Analysis Policy now inspects the actual default ranking contract, runs explicitly
+  synthetic controls and exports/verifies read-only snapshots without pretending to
+  apply scientific settings. Explicit configuration-file errors fail closed; rejected
+  ConfigManager updates/reloads retain prior state (ADR085, #56/#57). No calibration
+  claim or hidden global policy store is introduced.
+
 ## [v1.2.2] - 2026-03-11 (Phase 24)
 ### Fixed
 - `DetectionResult.__init__`: falsy-zero bug — `artificial_probability=0.0` was replaced
@@ -84,3 +133,44 @@ All notable changes to this project will be documented in this file.
 
 *(Future versions will be added here as development progresses.)*
 
+
+- Ordinary object queries now commit a fixed-profile source/outcome history and
+  correlated local evidence before returning results. Detail/export distinguish
+  source coverage from scientific completeness and expose stale-source bindings.
+  MPC native identity/ambiguity and missing-value defects, whole-key cache
+  collisions and constructor pickle deletion are corrected (ADR086, #59/#60).
+  Partial-cache backfill and full source/menu/scientific readiness remain open.
+
+- NEODyS now queries valid provisional OEF filenames directly, binds native object
+  identity/frame/state, retains explicit outcomes and normalizes source-native H
+  assertions without discarding the native H/G pair. Alternatives/duplicates,
+  missing values and matrix/model records retain their distinct meanings.
+  Legacy HTTP projection no longer manufactures zeroes. ADR087 documents limits;
+  G fitting, covariance conversion, global aliases and scientific calibration remain open.
+
+- Object chronology now distinguishes sourced discovery days, observation-window
+  labels/partial dates, native epochs, fit-production labels, adapter receipts and
+  UTC ledger receipts. Local intake no longer populates discovery. Ambiguous
+  exported timestamps are deprecated with old values/history retained. SBDB
+  discovery metadata is requested where available; no missing date, UTC offset
+  or mixed-scale timeline is invented (ADR088, #65). Source freshness/backfill
+  remains separate work (#66/#40).
+
+- Source receipt review no longer guesses ORM timestamp columns or treats naive
+  legacy times as UTC. All installed adapters and failed-query-only objects use
+  replay-checked history. Explicit bounded refresh delegates to the existing
+  acquisition/repository path and verifies a new commit before reporting recorded
+  data; partial/empty/deferred/failed outcomes stay distinct. ADR089 documents
+  operational cooldown, cache, completeness and remaining backfill limits (#66/#40).
+
+- Polling dashboard/browser origin thresholds, invented confidence/completeness and
+  null-score crashes are replaced with shared canonical screening and object-review
+  views. Legacy raw assertions remain unverified; not flagged is not natural.
+  Filters, sorts, details, standalone file loading and versioned JSON/Markdown exports
+  use the same contract and preserve frozen per-record policies. Controlled helper
+  deprecations, source-listed impact checks and actual-width QA are documented in
+  ADR090. Root legacy polling/source-retention defects remain #73/#71.
+
+Beta startup correction: the V2 script now actually starts its existing menu loop.
+The launcher preserves the active interpreter and propagates menu/API child failures;
+real executable-path help/exit and failure-code regressions cover this (#77).

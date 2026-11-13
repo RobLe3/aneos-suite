@@ -1,0 +1,14 @@
+{
+  "source": "NASA/JPL Sentry Data API",
+  "api_version": "2.0",
+  "endpoint": "https://ssd-api.jpl.nasa.gov/sentry.api",
+  "query": {"des": "101955"},
+  "acquisition_date_utc": "2026-11-12",
+  "acquisition_run_directory_timestamp_utc": "2026-11-12T21:24:50Z",
+  "exact_response_retrieval_timestamp": null,
+  "timestamp_limitation": "Diagnostic acquisition retained exact raw bytes but did not persist its precise retrieval timestamp; directory timestamp preceded the request. No exact retrieval time is inferred from source computation dates.",
+  "raw_response_sha256": "bec024c1c716605e5d9a5fa48aa32e6f9df99ac3d832965060aa8b396ebe83f5",
+  "purpose": "Real source-format integration fixture and available-MC positive control, not aNEOS scientific calibration, current warning or origin evidence",
+  "initial_parser_outcome": "Rejected native fractional-day first/last observation dates; fixed and replayed offline from these same bytes without another source request",
+  "test_retrieval_timestamp": "Synthetic test input only; not a reconstruction of capture time"
+}

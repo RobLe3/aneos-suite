@@ -21,10 +21,10 @@ Architecture:
 - Authentication integration for secure access
 
 Author: NU SWARM - Real-Time Validation Dashboard Team
-Version: 1.0.0
+Application identity: aneos_version.py
 """
 
-__version__ = "1.0.0"
+from aneos_version import APPLICATION_VERSION as __version__
 __author__ = "NU SWARM - Real-Time Validation Dashboard Team"
 
 from .api.dashboard_endpoints import router as dashboard_router

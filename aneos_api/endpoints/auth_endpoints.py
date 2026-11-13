@@ -8,7 +8,7 @@ bearer token.  Requires ANEOS_SECRET_KEY to be set in the environment; see auth.
 from typing import Optional
 
 try:
-    from fastapi import APIRouter, HTTPException, Security
+    from fastapi import APIRouter, HTTPException, Security, Request, Query
     from fastapi.security.api_key import APIKeyHeader
     from pydantic import BaseModel
     HAS_FASTAPI = True
@@ -29,7 +29,9 @@ if HAS_FASTAPI:
     @router.post('/token', response_model=TokenResponse,
                  summary='Exchange API key for JWT bearer token')
     async def get_token(
+        request: Request,
         api_key: Optional[str] = Security(_api_key_header),
+        audience: Optional[str] = Query(None),
     ) -> TokenResponse:
         """Exchange a valid X-API-Key for a signed JWT bearer token.
 
@@ -38,6 +40,11 @@ if HAS_FASTAPI:
 
             python -c "import secrets; print(secrets.token_hex(32))"
         """
+        if audience is not None:
+            from ..network_access import AUDIENCE, get_runtime, issue_token
+            if audience != AUDIENCE:raise HTTPException(422,'Unsupported token audience')
+            runtime=get_runtime(request)
+            return TokenResponse(access_token=issue_token(runtime.store.sessions,api_key))
         if not api_key:
             raise HTTPException(status_code=401, detail='X-API-Key header required')
         user = API_KEY_MAP.get(api_key)

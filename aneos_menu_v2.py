@@ -1,44 +1,8 @@
-"""
-ANEOSMenuV2 — Redesigned interactive menu for the aNEOS platform.
+"""Primary grouped menu for aNEOS research workflows.
 
-Covers the full feature set of the legacy 121-option menu, organized into
-15 real options across 5 groups. No theater: every option invokes real backend
-code with honest result labelling.
-
-GROUP A — Detection & Classification
-  1  Detect NEO (single)           — validated σ-5 artificial-NEO classifier
-  2  Multi-Evidence Analysis        — same detector + per-source evidence breakdown
-  3  Batch Detection               — concurrent file-driven classification
-  4  Orbital History Analysis      — course corrections / smoking-gun via Horizons
-
-GROUP B — Impact Assessment
-  5  Impact Probability            — planetary-defence collision calculation
-  6  Close Approach History        — historical Earth close-approaches (CAD API)
-
-GROUP C — Monitoring & Polling
-  7  Live Pipeline Dashboard       — 200-year historical polling via pipeline
-  8  Population Pattern Analysis   — BC11 network-sigma clustering / harmonics
- 15  Rendezvous Scan               — PA-6 MOID-based pairwise scan of all PHAs
-
-GROUP D — Results & Reports
-  9  Browse Results                — in-session + DB-persisted results
- 10  Export Results                — JSON / CSV via Exporter
-
-GROUP E — System
- 11  Health Check                  — component imports + API reachability
- 12  Start API Server              — uvicorn :8000 subprocess
- 13  Detection Analytics           — session stats, σ-tier breakdown, JSON export
- 14  Scientific Help               — methodology + σ thresholds from docs
-
-  0  Exit
-
-Design principles
------------------
-- Every option calls real, tested backend code (no fake progress bars)
-- σ < 2 → INCONCLUSIVE (not "natural")
-- Data failures are hard errors shown to the user, not silent fallbacks
-- Results from options 1–5 are persisted to DB in background threads
-- Inherits only stateless UI helpers from ANEOSMenuBase
+Navigation is declared in aneos_menu_catalog. Backend presence or an attractive
+screen does not establish scientific validity; complete per-option prerequisite,
+behavior and rendering QA remains tracked in #41. Legacy coverage is not assumed.
 """
 
 import json
@@ -49,10 +13,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from aneos_menu_base import ANEOSMenuBase
+from aneos_version import APPLICATION_VERSION, BUILD_CHANNEL
+from aneos_menu_catalog import MENU_OPTIONS
 
 
 class ANEOSMenuV2(ANEOSMenuBase):
-    """Full-featured 15-option menu for the aNEOS research platform."""
+    """Primary grouped research menu; per-feature QA coverage is recorded separately."""
 
     # ------------------------------------------------------------------
     # Construction
@@ -75,23 +41,8 @@ class ANEOSMenuV2(ANEOSMenuBase):
             if choice == "0":
                 self.show_info("Exiting aNEOS. Goodbye.")
                 break
-            handlers = {
-                "1": self._detect_single,
-                "2": self._detect_multi_evidence,
-                "3": self._detect_batch,
-                "4": self._orbital_history_analysis,
-                "5": self._impact_assessment,
-                "6": self._close_approach_history,
-                "7": self._live_pipeline,
-                "8": self._population_pattern_analysis,
-                "9": self._results_browser,
-                "10": self._export_results,
-                "11": self._system_health,
-                "12": self._start_api_server,
-                "13": self._detection_analytics,
-                "14": self._show_help,
-                "15": self._rendezvous_scan,
-            }
+            handlers = {item.choice: getattr(self,item.handler)
+                        for item in MENU_OPTIONS if item.handler is not None}
             handler = handlers.get(choice)
             if handler:
                 handler()
@@ -104,33 +55,34 @@ class ANEOSMenuV2(ANEOSMenuBase):
     # ------------------------------------------------------------------
 
     def _print_banner(self) -> None:
-        content = (
-            "\n"
-            "  [bold]aNEOS — Artificial NEO Analysis Platform[/bold]\n"
-            "  [dim]Research tool — not an operational warning system[/dim]\n\n"
-            "  [bold cyan]── Detection & Classification ──────────────────[/bold cyan]\n"
-            "  [cyan] 1[/cyan]  Detect NEO (single)          [σ-5 validated]\n"
-            "  [cyan] 2[/cyan]  Multi-Evidence Analysis       [per-source breakdown]\n"
-            "  [cyan] 3[/cyan]  Batch Detection               [concurrent, from file]\n"
-            "  [cyan] 4[/cyan]  Orbital History Analysis      [smoking gun / course corrections]\n\n"
-            "  [bold cyan]── Impact Assessment ───────────────────────────[/bold cyan]\n"
-            "  [cyan] 5[/cyan]  Impact Probability            [planetary defence]\n"
-            "  [cyan] 6[/cyan]  Close Approach History        [historical CAD data]\n\n"
-            "  [bold cyan]── Monitoring & Polling ─────────────────────────[/bold cyan]\n"
-            "  [cyan] 7[/cyan]  Live Pipeline Dashboard       [200-year historical poll]\n"
-            "  [cyan] 8[/cyan]  Population Pattern Analysis   [BC11 network sigma]\n"
-            "  [cyan]15[/cyan]  Rendezvous Scan               [PA-6 MOID pairwise, all PHAs]\n\n"
-            "  [bold cyan]── Results & Reports ───────────────────────────[/bold cyan]\n"
-            "  [cyan] 9[/cyan]  Browse Results                [in-session + DB]\n"
-            "  [cyan]10[/cyan]  Export Results                [JSON / CSV]\n\n"
-            "  [bold cyan]── System ─────────────────────────────────────[/bold cyan]\n"
-            "  [cyan]11[/cyan]  Health Check                  [component status]\n"
-            "  [cyan]12[/cyan]  Start API Server              [uvicorn :8000]\n"
-            "  [cyan]13[/cyan]  Detection Analytics           [session stats + export]\n"
-            "  [cyan]14[/cyan]  Scientific Help               [methodology + σ thresholds]\n\n"
-            "  [cyan] 0[/cyan]  Exit\n"
-        )
-        self.display_panel(content, title="aNEOS v2", style="blue")
+        title = f'aNEOS {APPLICATION_VERSION} | {BUILD_CHANNEL}'
+        subtitle = 'Rank candidates. Trace evidence. Keep origin unresolved.'
+        limits = 'Research tool; not an operational warning service.'
+        if self.console:
+            from rich.console import Group
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.text import Text
+            table = Table(box=None, padding=(0,1), expand=True, show_header=True)
+            table.add_column('Choice',justify='right',width=6,style='cyan',no_wrap=True)
+            table.add_column('Feature',ratio=2,overflow='fold')
+            table.add_column('What this provides',ratio=3,overflow='fold')
+            group = None
+            for item in MENU_OPTIONS:
+                if item.group != group:
+                    if group is not None:table.add_section()
+                    table.add_row('',Text(item.group,style='bold cyan'),'')
+                    group = item.group
+                table.add_row(item.choice,Text(item.label),Text(item.basis))
+            self.console.print(Panel(Group(Text(subtitle),Text(limits),Text(''),table),
+                                     title=Text(title),border_style='blue',padding=(1,1)))
+        else:
+            print(f'\n{title}\n{subtitle}\n{limits}')
+            group = None
+            for item in MENU_OPTIONS:
+                if item.group != group:
+                    print(f'\n{item.group}');group = item.group
+                print(f'{item.choice:>2}  {item.label}\n    {item.basis}')
 
     def _prompt_choice(self) -> str:
         if self.console:
@@ -143,7 +95,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
     # ==================================================================
 
     def _detect_single(self) -> None:
-        """Option 1: Run validated σ-5 detector on one designation (brief summary)."""
+        """Option 1: Screen one designation without calibrated origin inference."""
         designation = self._ask("NEO designation (e.g. '99942', '2020 SO', 'tesla')").strip()
         if not designation:
             self.show_error("No designation provided.")
@@ -207,9 +159,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
         self.show_info(f"Fetching {len(lines)} designations concurrently…")
         try:
             from aneos_core.data.fetcher import DataFetcher
-            from aneos_core.detection.detection_manager import DetectionManager, DetectorType
+            from aneos_core.analysis.screening import ScreeningAnalysisService
             fetcher = DataFetcher()
-            manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
+            manager = ScreeningAnalysisService()
         except Exception as exc:
             self.show_error(f"Failed to initialise detector: {exc}")
             return
@@ -241,14 +193,14 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 sigma = getattr(result, "sigma_level", 0.0)
                 prob = getattr(result, "artificial_probability", 0.0)
                 cls = getattr(result, "classification", "—")
-                rows.append([designation, f"{sigma:.2f}", f"{prob:.4f}", cls])
+                rows.append([designation, self._format_score(getattr(result, "screening_score", None)), self.format_probability(prob), cls])
                 self._persist_detection_result_async(designation, result)
             except Exception as exc:
                 self.show_error(f"{designation}: {exc}")
 
         if rows:
             self.display_table(
-                headers=["Designation", "σ", "P(artificial)", "Classification"],
+                headers=["Designation", "Legacy ranking score", "Origin probability", "Classification"],
                 rows=rows,
                 title=f"Batch Results — {len(rows)}/{len(lines)} processed",
             )
@@ -327,69 +279,22 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 self._persist_detection_result_async(designation, result)
 
     # ==================================================================
-    # GROUP B — Impact Assessment
+    # GROUP B — Scoped Impact Evidence
     # ==================================================================
 
     def _impact_assessment(self) -> None:
-        """Option 5: Calculate impact probability for one NEO."""
-        designation = self._ask("NEO designation").strip()
+        """Option 5: scoped Sentry evidence, not a heuristic impact calculation."""
+        designation = self._ask("Primary asteroid number or provisional designation").strip()
         if not designation:
             self.show_error("No designation provided.")
             return
-
-        neo_data = self._fetch_neo_data(designation)
-        if neo_data is None:
-            return
-
-        oe = neo_data.orbital_elements
-        if oe is None:
-            self.show_error(f"No orbital elements for {designation!r}.")
-            return
-
-        close_approaches = getattr(neo_data, "close_approaches", None) or []
-        pp = getattr(neo_data, "physical_properties", None)
-
-        # Derive observation arc from actual SBDB first/last observation dates
-        from datetime import datetime as _dt
-        arc_days = 30.0  # default
-        first_obs = getattr(neo_data, "first_observation", None)
-        last_obs  = getattr(neo_data, "last_observation", None)
-        if isinstance(first_obs, _dt) and isinstance(last_obs, _dt):
-            arc_days = max(1.0, (last_obs - first_obs).days)
-        _dates_available = isinstance(first_obs, _dt) and isinstance(last_obs, _dt)
-        arc_note = (
-            f"Arc: {arc_days:.0f} days ({arc_days/365.25:.1f} yr)"
-            if _dates_available
-            else "Arc: 30-day default (observation dates unavailable)"
-        )
-
         try:
-            from aneos_core.analysis.impact_probability import ImpactProbabilityCalculator
-            calc = ImpactProbabilityCalculator()
-            if self.console:
-                with self.console.status("[green]Computing impact probability…", spinner="dots"):
-                    impact = calc.calculate_comprehensive_impact_probability(
-                        orbital_elements=oe,
-                        close_approaches=close_approaches or None,
-                        observation_arc_days=arc_days,
-                        physical_properties=pp,
-                    )
-            else:
-                impact = calc.calculate_comprehensive_impact_probability(
-                    orbital_elements=oe,
-                    close_approaches=close_approaches or None,
-                    observation_arc_days=arc_days,
-                    physical_properties=pp,
-                )
-            if self.console:
-                self.console.print(f"[dim]{arc_note}[/dim]")
-            else:
-                print(arc_note)
-        except Exception as exc:
-            self.show_error(f"Impact calculation failed: {exc}")
+            from aneos_core.analysis.impact_evidence import get_sentry_impact_service, require_sentry_report
+            impact = require_sentry_report(get_sentry_impact_service().assess(designation), designation)
+        except Exception:
+            self.show_error("Impact source unavailable, invalid or identity unresolved; no probability assessment.")
             return
-
-        self._impact_results[designation.upper()] = impact
+        self._impact_results[impact['designation'].upper()] = impact
         self._display_impact_result(designation, impact)
         self._persist_impact_result_async(designation, impact)
 
@@ -427,13 +332,18 @@ class ANEOSMenuV2(ANEOSMenuBase):
             )
             return
 
+        coverage = getattr(approaches, 'query_metadata', {})
+        if isinstance(coverage, dict) and coverage:
+            self.show_info(f"CAD query coverage: {coverage.get('completeness_status', 'unverified')}; "
+                f"returned {coverage.get('count', '?')} of {coverage.get('total', '?')} matching encounters. "
+                "Computed encounters are not an observation history; dates retain their native time scale.")
         rows = []
         for ca in approaches:
             dist = getattr(ca, "distance_au", None) or getattr(ca, "dist", None)
             vel = getattr(ca, "relative_velocity_km_s", None) or getattr(ca, "v_rel", None)
             date = getattr(ca, "close_approach_date", None) or getattr(ca, "date", None) or getattr(ca, "t_ca", "?")
             rows.append([
-                str(date)[:10],
+                str(date)[:10] + (f" [{getattr(ca, 'time_scale', None)}]" if getattr(ca, 'time_scale', None) else ""),
                 f"{dist:.5f} AU" if dist is not None else "?",
                 f"{vel:.2f} km/s" if vel is not None else "?",
             ])
@@ -559,14 +469,22 @@ class ANEOSMenuV2(ANEOSMenuBase):
         else:
             neo_map = fetcher.fetch_multiple(lines)
 
-        neo_objects = [v for v in neo_map.values() if v is not None]
+        from aneos_core.data.models import NEOData
+        accepted = {d for d in lines if isinstance(neo_map.get(d), NEOData) and neo_map[d].designation == d}
+        neo_objects = [neo_map[d] for d in lines if d in accepted]
+        unavailable = [d for d in lines if d not in accepted]
+        if unavailable:
+            self.show_info(f'Unavailable requested inputs ({len(unavailable)}): {unavailable}')
+        if not neo_objects:
+            self.show_error('No acquired population inputs; analysis not performed.')
+            return
         self.show_info(f"Running BC11 pattern analysis on {len(neo_objects)} objects…")
 
         try:
             cfg = PatternAnalysisConfig(clustering=True, harmonics=True, correlation=False)
             session = NetworkAnalysisSession(config=cfg, fetcher=fetcher)
             if self.console:
-                with self.console.status("[green]Running clustering + network sigma…", spinner="dots"):
+                with self.console.status("[green]Running screening + descriptive population patterns…", spinner="dots"):
                     result = session.run(neo_objects)
             else:
                 result = session.run(neo_objects)
@@ -595,9 +513,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 sigma = getattr(result, "sigma_level", 0.0)
                 prob = getattr(result, "artificial_probability", 0.0)
                 cls = getattr(result, "classification", "—")
-                rows.append([str(i), desg, f"{sigma:.2f}", f"{prob:.4f}", cls])
+                rows.append([str(i), desg, self._format_score(getattr(result, "screening_score", None)), self.format_probability(prob), cls])
             self.display_table(
-                headers=["#", "Designation", "σ", "P(artificial)", "Classification"],
+                headers=["#", "Designation", "Legacy ranking score", "Origin probability", "Classification"],
                 rows=rows,
                 title=f"Detection Results — {len(det_items)} objects",
             )
@@ -617,16 +535,16 @@ class ANEOSMenuV2(ANEOSMenuBase):
             imp_items = list(self._impact_results.items())
             rows = []
             for i, (desg, impact) in enumerate(imp_items, 1):
-                prob = getattr(impact, "collision_probability", 0.0)
-                energy = getattr(impact, "impact_energy_mt", None)
-                method = getattr(impact, "calculation_method", "—")
-                rows.append([
-                    str(i), desg, f"{prob:.2e}",
-                    f"{energy:.1f} MT" if energy is not None else "N/A",
-                    method,
-                ])
+                from aneos_core.analysis.impact_evidence import require_sentry_report
+                try:
+                    report = require_sentry_report(impact, desg)
+                    prob = report['collision_probability']
+                    rows.append([str(i), desg, f"{prob:.3e}" if prob is not None else "not available",
+                                 report['status'], report['source']['method'] or "not available"])
+                except ValueError:
+                    rows.append([str(i), desg, "not available", "invalid_or_legacy", "not available"])
             self.display_table(
-                headers=["#", "Designation", "P(impact)", "Energy", "Method"],
+                headers=["#", "Designation", "P(listed events)", "Source status", "Source method"],
                 rows=rows,
                 title=f"Impact Results — {len(imp_items)} objects",
             )
@@ -657,39 +575,52 @@ class ANEOSMenuV2(ANEOSMenuBase):
         # Build flat records list
         records = []
         for desg, result in self._detection_results.items():
+            from aneos_core.analysis.object_review import verify_object_review
+            review=getattr(result,'object_review',None)
+            if review is not None:
+                try:
+                    review=verify_object_review(review)
+                    if review['designation']!=desg and review['designation'].upper()!=desg:
+                        raise ValueError('Object identity mismatch')
+                except (ValueError,TypeError,KeyError):
+                    self.show_error('Export refused: modified or unbound object review.');return
+            assessment=review['assessment'] if review else None
+            metadata=(getattr(result,'metadata',{}) or {})
             records.append({
-                "designation": desg,
-                "type": "detection",
-                "sigma_level": getattr(result, "sigma_level", None),
-                "artificial_probability": getattr(result, "artificial_probability", None),
-                "classification": getattr(result, "classification", None),
-                "evidence_count": (getattr(result, "metadata", {}) or {}).get("evidence_count"),
-                "combined_p_value": (getattr(result, "metadata", {}) or {}).get("combined_p_value"),
+                'object_review':review,
+                'object_review_json':json.dumps(review,sort_keys=True,allow_nan=False) if review else None,
+                'evidence_basis':'replayed_screening_review' if review else 'legacy_unverified_export',
+                'designation':desg,'type':'detection',
+                'sigma_level':None,'artificial_probability':None,'combined_p_value':None,
+                'screening_score':assessment['screening_score'] if assessment else getattr(result,'screening_score',None),
+                'evidence_id':assessment['evidence_id'] if assessment else metadata.get('evidence_id'),
+                'classification':assessment['classification'] if assessment else 'LEGACY_UNVERIFIED',
+                'evidence_count':len(assessment['evidence_sources']) if assessment else None,
+                'non_gravitational_evidence':review['inventory']['non_gravitational'] if review and review['inventory'] else metadata.get('non_gravitational_evidence'),
             })
         for desg, impact in self._impact_results.items():
-            records.append({
-                "designation": desg,
-                "type": "impact",
-                "collision_probability": getattr(impact, "collision_probability", None),
-                "impact_energy_mt": getattr(impact, "impact_energy_mt", None),
-                "crater_diameter_km": getattr(impact, "crater_diameter_km", None),
-                "calculation_method": getattr(impact, "calculation_method", None),
-            })
+            from aneos_core.analysis.impact_evidence import require_sentry_report
+            try:
+                report = require_sentry_report(impact, desg)
+            except ValueError:
+                self.show_error(f"Export refused: invalid or legacy impact evidence for {desg}.")
+                return
+            records.append({'designation': desg, 'type': 'impact', 'evidence_basis':'authoritative_external_model_output',
+                            'impact_evidence': report,
+                            'impact_evidence_json': json.dumps(report, sort_keys=True, allow_nan=False)})
 
         try:
             from aneos_core.reporting.exporters import Exporter
             exporter = Exporter()
             if fmt == "1":
-                path = exporter.export_to_json(records, output_file=out_path or None)
+                path = exporter.export_to_json(records, output_file=out_path or None, exclusive=True)
             else:
-                path = exporter.export_to_csv(records, output_file=out_path or None)
+                path = exporter.export_to_csv(records, output_file=out_path or None, exclusive=True)
             self.show_success(f"Exported {len(records)} records to: {path}")
         except Exception as exc:
             self.show_error(f"Export failed: {exc}")
-            # Fallback: write manually
-            fallback = Path(out_path or "aneos_results_export.json")
-            fallback.write_text(json.dumps(records, indent=2, default=str))
-            self.show_success(f"Fallback JSON written to: {fallback}")
+            # No fallback write: it could overwrite historical evidence after an
+            # exclusive-create refusal or hide a partial export failure.
 
     # ==================================================================
     # GROUP E — System
@@ -731,9 +662,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
         )
         self.display_panel(
             "[yellow]aNEOS is a research prototype.[/yellow]\n"
-            "σ < 2 → INCONCLUSIVE, not evidence of natural origin.\n"
-            "Bayesian posterior ceiling ≈ 3–5% from orbital+physical data alone.\n"
-            "F1=1.000 reported in validation is based on N=4 objects — NOT a generalisation estimate.\n"
+            "Screening ranks are heuristics, not discovery significance.\n"
+            "Artificial-origin probability and FDR are not reliably estimated.\n"
+            "No independently evaluated calibration is installed.\n"
             "Real discrimination from propulsion/manoeuvre data is deferred until such a corpus exists.",
             title="Scientific Caveats",
             style="yellow",
@@ -750,32 +681,26 @@ class ANEOSMenuV2(ANEOSMenuBase):
         manager=None,
         extra_additional: Optional[Dict] = None,
     ):
-        """Run the validated detector; return DetectionResult or None on error."""
-        oe = neo_data.orbital_elements
-        if oe is None:
-            self.show_error(f"No orbital elements available for {designation!r}.")
-            return None
-
-        orbital = {
-            "a": oe.semi_major_axis, "e": oe.eccentricity, "i": oe.inclination,
-            "om": oe.ra_of_ascending_node, "w": oe.arg_of_periapsis, "M": oe.mean_anomaly,
-        }
-        physical = self._build_physical_dict(neo_data)
-        additional = self._build_additional_dict(neo_data)
-        if extra_additional:
-            additional.update(extra_additional)
-
+        """Screen the complete snapshot through the shared application service."""
+        from aneos_core.analysis.screening import ScreeningAnalysisService
         try:
-            if manager is None:
-                from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-                manager = DetectionManager(preferred_detector=DetectorType.VALIDATED)
-            return manager.analyze_neo(
-                orbital_elements=orbital,
-                physical_data=physical,
-                additional_data=additional,
-            )
+            service = manager if isinstance(manager, ScreeningAnalysisService) else ScreeningAnalysisService()
+            from aneos_core.data.models import NEOData
+            from aneos_core.analysis.object_review import build_object_review
+            from dataclasses import asdict
+            if not isinstance(neo_data,NEOData) or neo_data.designation!=designation:
+                raise ValueError('Typed source data/object identity unavailable')
+            review=build_object_review(neo_data,policy=service.policy,additional_data=extra_additional)
+            result=service.analyze_neo(neo_data,extra_additional).to_detection_result()
+            if result.analysis['assessment']!=review['assessment']:
+                raise ValueError('Source changed during screening')
+            result.object_review=review
+            result.screening_policy=asdict(service.policy)
+            result.neo_data=NEOData.from_dict(review['inventory']['source_snapshot'])
+            result.analysis['object_review']=review
+            return result
         except Exception as exc:
-            self.show_error(f"Detection failed for {designation!r}: {exc}")
+            self.show_error(f"Screening failed for {designation!r}: {exc}")
             return None
 
     def _ask(self, prompt: str) -> str:
@@ -829,6 +754,10 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     def _build_additional_dict(self, neo_data) -> dict:
         additional = {}
+        from aneos_core.data.models import NonGravitationalParameters
+        ng = getattr(neo_data, 'nongrav', None)
+        if isinstance(ng, NonGravitationalParameters):
+            additional['non_gravitational_evidence'] = ng.evidence_report()
         history = getattr(neo_data, "orbital_history", None)
         if history:
             additional["orbital_history"] = history
@@ -859,8 +788,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 result_data = {
                     "designation": designation,
                     "classification": getattr(result, "classification", None),
-                    "overall_score": getattr(result, "artificial_probability", 0.0),
-                    "confidence": getattr(result, "artificial_probability", 0.0),
+                    "overall_score": getattr(result, "screening_score", None),
+                    "confidence": None,
+                    "anomaly_score_data": (getattr(result, "analysis", {}) or {}).get('assessment', {}),
                 }
                 db = SessionLocal()
                 try:
@@ -873,206 +803,66 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
         threading.Thread(target=_write, daemon=True).start()
 
-    def _persist_impact_result_async(self, designation: str, impact) -> None:
-        """Write impact result to DB in a background thread."""
-        def _write():
-            try:
-                from aneos_api.database import SessionLocal, HAS_SQLALCHEMY
-                if not HAS_SQLALCHEMY:
-                    return
-                from aneos_api.database import AnalysisService
-                result_data = {
-                    "designation": designation,
-                    "classification": "impact_assessment",
-                    "overall_score": getattr(impact, "collision_probability", 0.0),
-                    "confidence": getattr(impact, "calculation_confidence", 0.0),
-                }
-                db = SessionLocal()
-                try:
-                    service = AnalysisService(db)
-                    service.save_analysis_result(result_data)
-                finally:
-                    db.close()
-            except Exception:
-                pass
+    def _persist_impact_result_async(self, designation: str, impact):
+        """Compatibility name; synchronous verified archive, never a daemon write.
 
-        threading.Thread(target=_write, daemon=True).start()
+        No origin-score DB column is used for an impact probability. Failures are
+        visible and in-session evidence remains available for a later explicit save.
+        """
+        try:
+            from aneos_core.analysis.impact_evidence import require_sentry_report
+            from aneos_core.reporting.evidence_archive import EvidenceArchive
+            report = require_sentry_report(impact, designation)
+            path = EvidenceArchive().put(report)
+            self.show_success(f"Evidence archived and verified: {path}")
+            return path
+        except Exception:
+            self.show_error("Evidence was NOT confirmed saved; the in-session report remains available.")
+            return None
 
     # ==================================================================
     # Display helpers
     # ==================================================================
 
     def _display_neo_data(self, designation: str, neo_data) -> None:
-        """Show a summary panel of fetched NEO data before running detection."""
-        lines = []
-
-        # Orbital elements
-        oe = getattr(neo_data, "orbital_elements", None)
-        if oe is not None:
-            a = getattr(oe, "semi_major_axis", None)
-            e = getattr(oe, "eccentricity", None)
-            i = getattr(oe, "inclination", None)
-            om = getattr(oe, "ra_of_ascending_node", None)
-            w = getattr(oe, "arg_of_periapsis", None)
-            m = getattr(oe, "mean_anomaly", None)
-            parts = []
-            if a is not None:
-                parts.append(f"a={a:.3f} AU")
-            if e is not None:
-                parts.append(f"e={e:.4f}")
-            if i is not None:
-                parts.append(f"i={i:.2f}°")
-            if om is not None:
-                parts.append(f"Ω={om:.1f}°")
-            if w is not None:
-                parts.append(f"ω={w:.1f}°")
-            if m is not None:
-                parts.append(f"M={m:.2f}°")
-            if parts:
-                lines.append(f"[bold]Orbital elements:[/bold]   {  '  '.join(parts)}")
-
-        # Physical properties
-        pp = getattr(neo_data, "physical_properties", None)
-        if pp is not None:
-            phys_parts = []
-            diam = getattr(pp, "diameter_km", None)
-            albedo = getattr(pp, "albedo", None)
-            stype = getattr(pp, "spectral_type", None)
-            rot = getattr(pp, "rotation_period_hours", None)
-            h = getattr(pp, "absolute_magnitude_h", None)
-            if diam is not None:
-                phys_parts.append(f"diameter={diam:.3f} km")
-            if albedo is not None:
-                phys_parts.append(f"albedo={albedo:.3f}")
-            if stype is not None:
-                phys_parts.append(f"type={stype}")
-            if rot is not None:
-                phys_parts.append(f"rot={rot:.2f} h")
-            if h is not None:
-                phys_parts.append(f"H={h:.1f}")
-            if phys_parts:
-                lines.append(f"[bold]Physical:[/bold]            {'  '.join(phys_parts)}")
-
-        # Observation arc
-        first_obs = getattr(neo_data, "first_observation", None)
-        last_obs = getattr(neo_data, "last_observation", None)
-        if first_obs is not None or last_obs is not None:
-            from datetime import datetime as _dt
-            f_str = str(first_obs)[:10] if first_obs else "?"
-            l_str = str(last_obs)[:10] if last_obs else "?"
-            arc_note = ""
-            if isinstance(first_obs, _dt) and isinstance(last_obs, _dt):
-                arc_yr = (last_obs - first_obs).days / 365.25
-                arc_note = f"  ({arc_yr:.1f} yr)"
-            lines.append(f"[bold]Observation arc:[/bold]     {f_str} → {l_str}{arc_note}")
-
-        # Data completeness
-        completeness = getattr(neo_data, "completeness", None)
-        if completeness is not None:
-            try:
-                pct = int(float(completeness) * 100) if float(completeness) <= 1.0 else int(float(completeness))
-                lines.append(f"[bold]Data completeness:[/bold]   {pct}%")
-            except (TypeError, ValueError):
-                pass
-
-        # Close approaches
-        close_approaches = getattr(neo_data, "close_approaches", None)
-        if close_approaches:
-            n_ca = len(close_approaches)
-            # Find nearest by distance_au
-            try:
-                nearest = min(
-                    close_approaches,
-                    key=lambda ca: getattr(ca, "distance_au", float("inf"))
-                    or float("inf"),
-                )
-                nd = getattr(nearest, "distance_au", None)
-                nd_date = getattr(nearest, "close_approach_date", None) or getattr(nearest, "date", None)
-                nd_str = (
-                    f"  |  nearest: {nd:.4f} AU"
-                    + (f" ({str(nd_date)[:10]})" if nd_date else "")
-                    if nd is not None
-                    else ""
-                )
-            except Exception:
-                nd_str = ""
-            lines.append(f"[bold]Close approaches:[/bold]    {n_ca} recorded{nd_str}")
-
-        # Sources used
-        sources = getattr(neo_data, "sources_used", None)
-        if sources:
-            lines.append(f"[bold]Sources:[/bold]             {', '.join(sources)}")
-
-        # Non-gravitational parameters
-        nongrav = getattr(neo_data, "nongrav", None)
-        if nongrav is not None:
-            a2 = getattr(nongrav, "A2", None)
-            if a2 is not None:
-                lines.append(f"[bold]Non-grav A2:[/bold]         {a2:.3e} AU/day²")
-
-        if lines:
-            self.display_panel(
-                "\n".join(lines),
-                title=f"Object Data — {designation}",
-                style="blue",
-            )
+        """Render a typed, source-bound inventory; no broad completeness claim."""
+        from aneos_core.analysis.object_review import build_data_inventory, render_data_inventory
+        try:
+            if neo_data.designation!=designation:raise ValueError('Source identity mismatch')
+            inventory=build_data_inventory(neo_data)
+            render_data_inventory(inventory,console=self.console)
+        except (ValueError,TypeError,AttributeError):
+            self.show_error('Object data cannot be bound to a valid typed snapshot; no completeness claim is available.')
 
     def _display_detection_result(self, designation: str, result, verbose: bool = False) -> None:
-        cls = getattr(result, "classification", "UNKNOWN")
-
-        # Pipeline candidates have rich ATLAS data — show it instead of the σ-5 panel
-        if cls.startswith("PIPELINE:"):
+        cls = getattr(result, 'classification', 'INCONCLUSIVE')
+        if cls.startswith('PIPELINE:'):
             self._display_pipeline_candidate_detail(designation, result)
             return
+        from aneos_core.analysis.object_review import build_assessment_review, verify_object_review, render_object_review
+        from aneos_core.analysis.screening import ScreeningPolicy
+        try:
+            payload=(getattr(result,'analysis',{}) or {}).get('assessment')
+            if not isinstance(payload,dict) or str(payload.get('designation','')).casefold()!=designation.casefold():
+                raise ValueError('Canonical assessment or object binding unavailable')
+            review=getattr(result,'object_review',None)
+            if review is None:
+                policy=ScreeningPolicy(**(getattr(result,'screening_policy',None) or {}))
+                review=build_assessment_review(payload,policy=policy)
+            else:
+                review=verify_object_review(review)
+                if review['assessment']!=payload:raise ValueError('Assessment changed after review')
+            if (getattr(result,'classification',None)!=payload['classification'] or
+                getattr(result,'screening_score',None)!=payload['screening_score']):
+                raise ValueError('Displayed legacy result differs from canonical assessment')
+            render_object_review(review,console=self.console,verbose=verbose)
+        except (ValueError,TypeError,KeyError,AttributeError):
+            self.show_error('Result is legacy, modified or unbound; a verified object explanation is unavailable.')
 
-        sigma = getattr(result, "sigma_level", 0.0)
-        prob = getattr(result, "artificial_probability", 0.0)
-        risk_factors = getattr(result, "risk_factors", [])
-        meta = getattr(result, "metadata", {}) or {}
-
-        lines = [
-            f"[bold]Designation:[/bold]          {self.format_designation(designation)}",
-            f"[bold]Classification:[/bold]       {cls}",
-            f"[bold]σ confidence:[/bold]         {self.format_sigma(sigma)} ({sigma:.3f}σ)",
-            f"[bold]P(artificial):[/bold]        {self.format_probability(prob)}",
-            f"[bold]Evidence sources:[/bold]     {meta.get('evidence_count', len(risk_factors))}",
-            f"[bold]Combined p-value:[/bold]     {meta.get('combined_p_value', 'N/A')}",
-            f"[bold]False discovery rate:[/bold] {meta.get('false_discovery_rate', 'N/A')}",
-        ]
-
-        if risk_factors:
-            lines.append(f"[bold]Evidence types:[/bold]      {', '.join(risk_factors)}")
-
-        if verbose:
-            analysis = getattr(result, "analysis", {}) or {}
-            evidence_detail = analysis.get("evidence_breakdown") or analysis.get("evidence_sources")
-            if evidence_detail:
-                lines.append("\n[bold]Per-source breakdown:[/bold]")
-                for ev in (evidence_detail if isinstance(evidence_detail, list) else []):
-                    etype = getattr(ev, "evidence_type", None) or ev.get("evidence_type", "?")
-                    pval = getattr(ev, "p_value", None) or ev.get("p_value", "?")
-                    eff = getattr(ev, "effect_size", None) or ev.get("effect_size", "?")
-                    qi = getattr(ev, "quality_score", None) or ev.get("quality_score", "?")
-                    lines.append(
-                        f"  {str(etype):<30}  p={pval!s:<10}  effect={eff!s:<8}  quality={qi!s}"
-                    )
-
-        if sigma < 2.0:
-            lines.append(
-                "\n[dim]NOTE: σ < 2 = INCONCLUSIVE (not evidence of natural origin). "
-                "Bayesian posterior ≈ 3–5% max from orbital+physical data alone.[/dim]"
-            )
-        elif sigma < 5.0:
-            lines.append(
-                f"\n[dim]NOTE: σ={sigma:.2f} is statistically interesting but below the σ=5 threshold "
-                "for confirmed artificial classification. Independent verification required.[/dim]"
-            )
-        else:
-            lines.append(
-                f"\n[bold red]NOTE: σ={sigma:.2f} exceeds the σ=5 threshold. "
-                "This is a high-confidence artificial NEO candidate requiring expert review.[/bold red]"
-            )
-        self.display_panel("\n".join(lines), title=f"Detection — {designation}", style="cyan")
+    @staticmethod
+    def _format_score(value):
+        from aneos_core.analysis.object_review import number
+        return 'unavailable' if value is None else number(value,exact=True)+' (heuristic)'
 
     def _display_pipeline_candidate_detail(self, designation: str, result) -> None:
         """Detailed ATLAS breakdown for a pipeline candidate (stored proxy object)."""
@@ -1089,7 +879,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
         lines = [
             f"[bold]Designation:[/bold]      {self.format_designation(designation)}",
-            f"[bold]ATLAS score:[/bold]      {overall:.4f}  (flags: {flags})",
+            f"[bold]Encounter triage:[/bold] {self._format_score(overall)}  (flags: {flags})",
             f"[bold]Scoring stage:[/bold]    {stage}",
         ]
         if dist is not None:
@@ -1098,9 +888,9 @@ class ANEOSMenuV2(ANEOSMenuBase):
             lines.append(f"[bold]Rel. velocity:[/bold]    {vel:.2f} km/s")
 
         # Validation scores
-        v_score = ms.get("validation_score", 0.0)
         v_method = ms.get("validation_method", "—")
-        lines.append(f"[bold]Validation score:[/bold] {v_score:.4f}  ({v_method})")
+        lines.append(f"[bold]Required validation:[/bold] {ms.get('validation_status', 'legacy_unverified')}  ({v_method})")
+        lines.append(f"[bold]Validation probability:[/bold] unavailable")
 
         # Category breakdown
         if cat_scores:
@@ -1144,52 +934,22 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 "anomaly signal. Dark comets are a known class of NEOs with non-gravitational "
                 "acceleration from sublimation without a visible coma or tail. 1998 KY26 is a "
                 "candidate dark comet. A Δ flag alone is insufficient to classify an object as "
-                "artificial; dedicated A2 measurement is required.[/dim]"
+                "artificial; measured A1/A2/A3 and comparative physical fits are required.[/dim]"
             )
         lines.append(
-            "\n[dim]σ-5 detection requires full orbital elements — use options 1–3.[/dim]"
+            "\n[dim]Options 1–3 provide screening ranks, not calibrated sigma significance.[/dim]"
         )
         self.display_panel("\n".join(lines), title=f"ATLAS Detail — {designation}", style="yellow")
 
     def _display_impact_result(self, designation: str, impact) -> None:
-        prob = getattr(impact, "collision_probability", 0.0)
-        annual = getattr(impact, "collision_probability_per_year", 0.0)
-        energy = getattr(impact, "impact_energy_mt", None)
-        crater = getattr(impact, "crater_diameter_km", None)
-        velocity = getattr(impact, "impact_velocity_km_s", None)
-        method = getattr(impact, "calculation_method", "—")
-        confidence = getattr(impact, "calculation_confidence", None)
-        uncertainty = getattr(impact, "probability_uncertainty", (None, None))
-        arc = getattr(impact, "data_arc_years", None)
-
-        lines = [
-            f"[bold]Designation:[/bold]           {self.format_designation(designation)}",
-            f"[bold]Method:[/bold]                {method}",
-            f"[bold]Collision probability:[/bold]  {prob:.3e}",
-            f"[bold]Annual rate:[/bold]           {annual:.3e} /yr",
-        ]
-        if arc is not None:
-            lines.append(f"[bold]Observation arc:[/bold]       {arc:.1f} yr")
-        if uncertainty and uncertainty[0] is not None:
-            lines.append(f"[bold]95% CI:[/bold]                [{uncertainty[0]:.3e}, {uncertainty[1]:.3e}]")
-        if confidence is not None:
-            lines.append(f"[bold]Calc confidence:[/bold]       {confidence:.2f}")
-        if energy is not None:
-            lines.append(f"[bold]Impact energy:[/bold]         {energy:.1f} MT TNT")
-        if velocity is not None:
-            lines.append(f"[bold]Impact velocity:[/bold]       {velocity:.1f} km/s")
-        if crater is not None:
-            lines.append(f"[bold]Crater diameter:[/bold]       {crater:.2f} km")
-
-        torino = self._rough_torino(prob, energy)
-        lines.append(f"[bold]Torino scale (est):[/bold]    {torino}")
-
-        lines.append(
-            "\n[dim]NOTE: Impact probability depends critically on observation arc and "
-            "orbital uncertainty. Short-arc objects have high uncertainty.[/dim]"
-        )
-        colour = "red" if prob > 1e-4 else "yellow" if prob > 1e-6 else "green"
-        self.display_panel("\n".join(lines), title=f"Impact Assessment — {designation}", style=colour)
+        from aneos_core.analysis.impact_evidence import require_sentry_report, render_sentry_markdown
+        try:
+            report = require_sentry_report(impact, designation)
+            text = render_sentry_markdown(report)
+        except ValueError:
+            self.show_error("Legacy, modified or unbound impact record: scientific evidence unavailable.")
+            return
+        self.display_panel(text, title=f"Scoped Sentry Evidence — {report['designation']}", style="cyan")
 
     def _display_pipeline_result(self, result: dict) -> None:
         status = result.get("status", "unknown")
@@ -1224,7 +984,7 @@ class ANEOSMenuV2(ANEOSMenuBase):
                 desg = c.get("designation", "?")
                 ms = c.get("multi_stage_validation", {})
                 fs = c.get("first_stage_score", {})
-                score = f"{ms.get('validation_score', 0.0):.3f}"
+                score = self._format_score(c.get("required_validation_assessment", {}).get("screening_score"))
                 method = ms.get("validation_method", "—")
                 flags = fs.get("flag_string", "—")
                 dist = c.get("miss_distance_au")
@@ -1247,9 +1007,10 @@ class ANEOSMenuV2(ANEOSMenuBase):
             desg = c.get("designation", "UNKNOWN")
             ms = c.get("multi_stage_validation", {})
             proxy = types.SimpleNamespace(
-                sigma_level=ms.get("sigma_level", 0.0),
-                artificial_probability=ms.get("statistical_certainty", 0.0),
-                confidence=ms.get("confidence", 0.0),
+                sigma_level=None,
+                artificial_probability=None,
+                screening_score=c.get("required_validation_assessment", {}).get("screening_score"),
+                confidence=ms.get("confidence"),
                 classification=f"PIPELINE:{ms.get('validation_method', '?')}",
                 analysis=c.get("first_stage_score", {}),
                 # Extra fields for rich detail view
@@ -1264,32 +1025,32 @@ class ANEOSMenuV2(ANEOSMenuBase):
     def _display_pattern_result(self, result: dict) -> None:
         n = result.get("designations_analyzed", 0)
         clusters = result.get("clusters", [])
-        network_sigma = result.get("network_sigma", None)
-        network_tier = result.get("network_tier", None)
-
         lines = [
             f"[bold]Objects analysed:[/bold]  {n}",
-            f"[bold]Clusters found:[/bold]    {len(clusters)}",
+            f"[bold]Descriptive groups:[/bold] {len(clusters)}",
+            "Statistical significance: not calibrated. Origin: unresolved.",
         ]
-        if network_sigma is not None:
-            lines.append(f"[bold]Network sigma:[/bold]     {network_sigma:.2f}σ")
-        if network_tier:
-            lines.append(f"[bold]Network tier:[/bold]      {network_tier}")
-
+        if result.get('schema_version') != 'network-evidence-report-v1':
+            lines.append('Unverified legacy/prototype output: no significance or origin claim accepted.')
+            clusters = []
+        else:
+            from aneos_core.pattern_analysis.session import verify_network_report
+            try:
+                verify_network_report(result)
+            except (ValueError, TypeError):
+                self.show_error('Population report failed reproducibility validation.')
+                return
+            for module, info in result.get('modules', {}).items():
+                lines.append(f"{module}: {info['status']}")
+            candidates = sum(item['assessment']['candidate'] for item in result['object_assessments'])
+            lines.append(f'Follow-up candidates (ranking, not origin): {candidates}')
+            if result['excluded_by_cap']:
+                lines.append(f"Excluded by configured cap: {len(result['excluded_by_cap'])}")
         if clusters:
-            rows = []
-            for c in clusters[:10]:
-                rows.append([
-                    str(c.get("cluster_id", "?")),
-                    str(c.get("n_members", "?")),
-                    f"{c.get('sigma', 0.0):.2f}",
-                    str(c.get("cluster_type", "?")),
-                ])
-            self.display_table(
-                headers=["Cluster ID", "Members", "σ", "Type"],
-                rows=rows,
-                title=f"Clusters (top {len(rows)} of {len(clusters)})",
-            )
+            rows = [[str(c['cluster_id']), str(c['n_members']), 'Catalogue neighbourhood']
+                    for c in clusters[:10]]
+            self.display_table(headers=['Group ID', 'Members', 'Basis'], rows=rows,
+                title=f'Descriptive groups (first {len(rows)} of {len(clusters)})')
         self.display_panel("\n".join(lines), title="Population Pattern Analysis", style="cyan")
 
     def _show_db_result_for(self, designation: str) -> None:
@@ -1378,121 +1139,42 @@ class ANEOSMenuV2(ANEOSMenuBase):
             self.show_error(f"Failed to start API server: {exc}")
 
     def _detection_analytics(self) -> None:
-        """Option 13: Session detection statistics and JSON export."""
+        """Session candidate counts; never pool unavailable sigma as zero."""
         if not self._detection_results:
-            self.show_info("No detection results this session. Run options 1–3 first.")
+            self.show_info('No screening results this session.')
             return
-
-        tiers = {
-            "EXCEPTIONAL (σ≥5)": 0,
-            "ANOMALOUS (σ≥4)": 0,
-            "SIGNIFICANT (σ≥3)": 0,
-            "INTERESTING (σ≥2)": 0,
-            "INCONCLUSIVE (σ<2)": 0,
-        }
-        sigmas = []
-        suspicious_rows = []
-
-        for desg, result in self._detection_results.items():
-            sigma = getattr(result, "sigma_level", 0.0) or 0.0
-            sigmas.append(sigma)
-            label = self.format_sigma(sigma)
-            if label in tiers:
-                tiers[label] += 1
-            if sigma >= 3.0:
-                cls = getattr(result, "classification", "?")
-                suspicious_rows.append([desg, f"{sigma:.2f}", cls])
-
-        mean_sigma = sum(sigmas) / len(sigmas) if sigmas else 0.0
-        tier_rows = [[tier, str(count)] for tier, count in tiers.items() if count > 0]
-
-        self.display_table(
-            headers=["Tier", "Count"],
-            rows=tier_rows,
-            title=f"Session Statistics — {len(self._detection_results)} objects, mean σ={mean_sigma:.2f}",
-        )
-        if suspicious_rows:
-            self.display_table(
-                headers=["Designation", "σ", "Classification"],
-                rows=suspicious_rows,
-                title="Suspicious / Significant Objects (σ≥3)",
-            )
-
-        # ATLAS score tiers for pipeline candidates
-        atlas_rows = []
-        for desg, result in self._detection_results.items():
-            cls = getattr(result, "classification", "") or ""
-            if cls.startswith("PIPELINE:"):
-                analysis = getattr(result, "analysis", {}) or {}
-                score = analysis.get("overall_score", 0.0) or 0.0
-                if score > 0.3:
-                    tier = (
-                        "exceptional" if score > 0.7
-                        else "significant" if score > 0.5
-                        else "notable"
-                    )
-                    atlas_rows.append([desg, f"{score:.4f}", tier])
-
-        if atlas_rows:
-            atlas_rows.sort(key=lambda r: float(r[1]), reverse=True)
-            self.display_table(
-                headers=["Designation", "ATLAS Score", "Tier"],
-                rows=atlas_rows,
-                title="ATLAS Score Tiers — Pipeline Candidates (score > 0.3)",
-            )
-            self.show_info(
-                "ATLAS Score Tiers: > 0.3 = notable | > 0.5 = significant | > 0.7 = exceptional"
-            )
-
-        export_choice = self._ask("Export summary to JSON? [y/N]").strip().lower()
-        if export_choice == "y":
-            summary = {
-                "session_count": len(self._detection_results),
-                "mean_sigma": mean_sigma,
-                "tier_counts": tiers,
-                "suspicious_objects": [
-                    {"designation": r[0], "sigma": float(r[1]), "classification": r[2]}
-                    for r in suspicious_rows
-                ],
-                "atlas_notable": [
-                    {"designation": r[0], "score": float(r[1]), "tier": r[2]}
-                    for r in atlas_rows
-                ],
-            }
-            try:
-                from aneos_core.reporting.exporters import Exporter
-                path = Exporter().export_to_json([summary], output_file=None)
-                self.show_success(f"Summary exported to: {path}")
-            except Exception as exc:
-                fallback = Path("aneos_session_analytics.json")
-                fallback.write_text(json.dumps(summary, indent=2, default=str))
-                self.show_success(f"Summary written to: {fallback}")
+        rows = []
+        for designation, result in self._detection_results.items():
+            rows.append([designation, self._format_score(getattr(result, 'screening_score', None)),
+                         getattr(result, 'classification', 'INCONCLUSIVE')])
+        self.display_table(headers=['Designation', 'Screening score', 'Classification'], rows=rows,
+                           title='Session screening — significance unavailable')
+        fmt = self._ask('Export JSON? [y/N]').strip().lower()
+        if fmt == 'y':
+            from aneos_core.reporting.exporters import Exporter
+            records = [(getattr(r, 'analysis', {}) or {}).get('assessment', {})
+                       for r in self._detection_results.values()]
+            Exporter().export_to_json(records)
         else:
             self.show_info("Export skipped.")
 
     def _show_help(self) -> None:
         """Option 14: Display scientific methodology documentation."""
-        doc_path = Path(__file__).parent / "docs" / "scientific" / "scientific-documentation.md"
+        doc_path = Path(__file__).parent / 'docs' / 'scientific' / 'screening-guide.md'
         if not doc_path.exists():
-            self.show_error(f"Documentation not found: {doc_path}")
+            self.show_error(f'Current scientific guide not found: {doc_path}')
             return
         try:
-            text = doc_path.read_text(encoding="utf-8")
-            lines = text.splitlines()
-            # Extract all key sections: Methodology, Sigma, Classification, Detection
-            KEYWORDS = {"Methodology", "Sigma", "Classification", "Detection", "Threshold"}
-            sections: List[str] = []
-            capture = False
-            for line in lines:
-                is_heading = line.startswith("## ") or line.startswith("# ")
-                if is_heading:
-                    capture = any(kw in line for kw in KEYWORDS)
-                if capture:
-                    sections.append(line)
-            content = "\n".join(sections[:120]) if sections else "\n".join(lines[:100])
-            self.display_panel(content, title="aNEOS Scientific Documentation", style="green")
+            text = doc_path.read_text(encoding='utf-8')
+            if self.console:
+                from rich.markdown import Markdown
+                from rich.panel import Panel
+                self.console.print(Panel(Markdown(text),title='Scientific guide — evidence and limits',
+                                         border_style='blue',padding=(1,1)))
+            else:
+                print(text)
         except Exception as exc:
-            self.show_error(f"Failed to read documentation: {exc}")
+            self.show_error(f'Failed to read current scientific guide: {exc}')
 
     def _rendezvous_scan(self) -> None:
         """Option 15: PA-6 MOID-based pairwise rendezvous scan of all PHAs."""
@@ -1538,29 +1220,14 @@ class ANEOSMenuV2(ANEOSMenuBase):
 
     @staticmethod
     def _rough_torino(prob: float, energy_mt: Optional[float]) -> str:
-        """Very rough Torino Scale estimate (informational only — not authoritative)."""
-        if prob <= 0 or prob < 1e-6:
-            return "0 (no hazard)"
-        e = energy_mt or 0.0
-        if prob >= 0.99:
-            if e < 1:
-                return "8 (certain regional)"
-            if e < 100:
-                return "9 (certain regional)"
-            return "10 (certain global)"
-        if prob > 1e-4:
-            return "1–7 (elevated; detailed analysis required)"
-        return "1 (normal; merits monitoring)"
+        """Controlled deprecation: no local Torino class from heuristic inputs."""
+        raise NotImplementedError('Use a source-reported Torino value within its documented scope')
 
-
-# ---------------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------------
 
 def main():
-    menu = ANEOSMenuV2()
-    menu.run()
+    """Start the interactive menu when this module is executed as a script."""
+    ANEOSMenuV2().run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

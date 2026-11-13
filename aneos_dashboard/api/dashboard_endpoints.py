@@ -5,6 +5,7 @@ FastAPI endpoints for the comprehensive real-time validation dashboard,
 providing metrics, alerts, visualization data, and WebSocket connections.
 """
 
+from aneos_version import APPLICATION_VERSION
 import asyncio
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
@@ -350,9 +351,8 @@ async def get_scatter_plot_data(
         recommendation_counts = {'accept': 0, 'reject': 0, 'expert_review': 0}
         
         for session in history:
-            confidence = session.get('overall_confidence', 0)
-            fp_prob = session.get('overall_false_positive_probability', 0)
-            score = 1 - fp_prob  # Convert FP probability to score
+            confidence = session.get('overall_confidence')
+            score = session.get('screening_score')  # Never turn FPR into origin probability/rank.
             recommendation = session.get('recommendation', 'unknown')
             processing_time = session.get('total_processing_time_ms', 0)
             
@@ -362,7 +362,7 @@ async def get_scatter_plot_data(
                 'recommendation': recommendation,
                 'object_designation': session.get('object_designation', 'unknown'),
                 'processing_time_ms': processing_time,
-                'artificial_likelihood': session.get('artificial_object_likelihood', 0)
+                'artificial_likelihood': None, 'score_semantics': 'uncalibrated_screening_rank'
             })
             
             # Stage performance data
@@ -386,14 +386,9 @@ async def get_scatter_plot_data(
                 'recommendation': recommendation
             })
             
-            # Artificial probability distribution
-            if session.get('artificial_object_likelihood'):
-                scatter_data['artificial_probability_distribution'].append({
-                    'artificial_probability': session.get('artificial_object_likelihood', 0),
-                    'confidence': confidence,
-                    'recommendation': recommendation
-                })
-        
+            # No calibrated origin probabilities are installed; historical heuristic
+            # values must not become a current probability distribution.
+
         scatter_data['recommendation_distribution'] = recommendation_counts
         
         return JSONResponse(content={
@@ -437,21 +432,22 @@ async def get_trend_data(
                 hourly_data[hour_key] = {
                     'validations_count': 0,
                     'total_processing_time': 0,
-                    'confidence_sum': 0,
+                    'confidence_sum': 0, 'confidence_available_count': 0,
                     'recommendations': {'accept': 0, 'reject': 0, 'expert_review': 0},
                     'artificial_detections': 0
                 }
             
             hourly_data[hour_key]['validations_count'] += 1
             hourly_data[hour_key]['total_processing_time'] += session.get('total_processing_time_ms', 0)
-            hourly_data[hour_key]['confidence_sum'] += session.get('overall_confidence', 0)
+            if session.get('overall_confidence') is not None:
+                hourly_data[hour_key]['confidence_sum'] += session['overall_confidence']
+                hourly_data[hour_key]['confidence_available_count'] += 1
             
             recommendation = session.get('recommendation', 'expert_review')
             if recommendation in hourly_data[hour_key]['recommendations']:
                 hourly_data[hour_key]['recommendations'][recommendation] += 1
             
-            if session.get('artificial_object_likelihood', 0) > 0.7:
-                hourly_data[hour_key]['artificial_detections'] += 1
+            # No origin model: do not turn legacy heuristic likelihoods into detections.
         
         # Format for time series visualization
         time_series = {
@@ -474,7 +470,7 @@ async def get_trend_data(
                 data['total_processing_time'] / count if count > 0 else 0
             )
             time_series['average_confidence'].append(
-                data['confidence_sum'] / count if count > 0 else 0
+                data['confidence_sum'] / data['confidence_available_count'] if data['confidence_available_count'] else None
             )
             time_series['acceptance_rates'].append(
                 data['recommendations']['accept'] / count * 100 if count > 0 else 0
@@ -483,7 +479,7 @@ async def get_trend_data(
                 data['recommendations']['reject'] / count * 100 if count > 0 else 0
             )
             time_series['artificial_detection_rates'].append(
-                data['artificial_detections'] / count * 100 if count > 0 else 0
+                None  # Not estimated without an installed origin model
             )
         
         return JSONResponse(content={
@@ -530,7 +526,7 @@ async def dashboard_health_check():
                 'websocket_manager': websocket_manager is not None,
                 'fastapi': HAS_FASTAPI
             },
-            'version': '1.0.0'
+            'version': APPLICATION_VERSION
         }
         
         # Check service health

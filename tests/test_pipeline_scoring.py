@@ -122,9 +122,12 @@ class TestSimpleArtificialScreeningPlaceholderGuard:
         neo = _make_placeholder_neo()
         assert poller._simple_artificial_screening(neo) is False
 
-    def test_real_high_eccentricity_accepted(self, poller):
+    def test_high_eccentricity_uses_canonical_policy_not_an_independent_threshold(self, poller):
+        from aneos_core.analysis.screening import ScreeningAnalysisService
         neo = make_neo(eccentricity=0.95, inclination=45.0, semi_major_axis=2.0)
-        assert poller._simple_artificial_screening(neo) is True
+        expected = ScreeningAnalysisService().analyze_raw(neo['designation'], neo['orbital_elements'])
+        assert poller._simple_artificial_screening(neo) == expected.candidate
+        assert expected.screening_score is not None
 
     def test_real_retrograde_accepted(self, poller):
         neo = make_neo(eccentricity=0.3, inclination=170.0, semi_major_axis=1.5)

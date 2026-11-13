@@ -5,6 +5,7 @@ Provides request/response processing, rate limiting, logging,
 CORS handling, and error processing middleware.
 """
 
+from aneos_version import APPLICATION_VERSION, API_CONTRACT_VERSION
 import time
 import json
 import logging
@@ -266,7 +267,8 @@ if HAS_FASTAPI:
             response.headers['X-Frame-Options'] = 'DENY'
             response.headers['X-XSS-Protection'] = '1; mode=block'
             response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-            response.headers['X-API-Version'] = '2.0.0'
+            response.headers['X-API-Version'] = API_CONTRACT_VERSION
+            response.headers['X-Application-Version'] = APPLICATION_VERSION
             
             return response
     

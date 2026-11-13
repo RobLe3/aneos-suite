@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+.r1 {font-style: italic}
+.r2 {font-weight: bold}
+.r3 {color: #008080; text-decoration-color: #008080}
+body {
+    color: #000000;
+    background-color: #ffffff;
+}
+</style>
+</head>
+<body>
+    <pre style="font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><code style="font-family:inherit">Analysis policy and diagnostics — read-only
+<span class="r1">                   Active default canonical screening policy                    </span>
+┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span class="r2"> Setting               </span>┃<span class="r2"> Current contract                                     </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│<span class="r3"> Application           </span>│ 2.2.0.dev0                                           │
+│<span class="r3"> Inspected at          </span>│ 2026-11-13 03:21:17.064696 UTC                       │
+│<span class="r3"> Ranking engine        </span>│ catalogue-ranking-v1                                 │
+│<span class="r3"> Policy version        </span>│ follow-up-ranking-v1                                 │
+│<span class="r3"> Follow-up threshold   </span>│ 5 raw ranking units                                  │
+│<span class="r3"> Policy ID             </span>│ 7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5 │
+│<span class="r3">                       </span>│ a17134518d37                                         │
+│<span class="r3"> Significance / origin </span>│ Not calibrated / not assessed                        │
+│<span class="r3"> Scientific FDR        </span>│ Not reliably estimated                               │
+│<span class="r3"> Required review       </span>│ Separate required-review-v1 contract; not run by     │
+│<span class="r3">                       </span>│ this view                                            │
+└───────────────────────┴──────────────────────────────────────────────────────┘
+The score is an uncalibrated follow-up ranking, not Gaussian sigma. A candidate 
+is not confirmed artificial; NOT_FLAGGED does not establish natural origin. The 
+fixed reference population and dependent features still require scientific 
+calibration.
+This menu inspects the default canonical policy. Explicit custom service 
+policies and running jobs may have different recorded policy IDs. It does not 
+audit every running process. Alpha, legacy BIC and threshold mutation are 
+unavailable here; no settings are applied. Snapshot verification never imports a
+runtime policy or changes required validation.
+<span class="r1">                           Policy inspection actions                            </span>
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span class="r2"> Option </span>┃<span class="r2"> Action                    </span>┃<span class="r2"> Scope                                   </span>┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1      │ Significance controls     │ Read why alpha mutation is unavailable  │
+│ 2      │ Physical model comparison │ Read legacy BIC limitations; no toggle  │
+│ 3      │ Follow-up threshold       │ Inspect actual policy; no mutation      │
+│ 4      │ Run synthetic controls    │ Positive / ordinary / missing; not      │
+│        │                           │ scientific validation                   │
+│ 5      │ Export policy snapshot    │ New JSON file only; no overwrite        │
+│ 6      │ Verify policy snapshot    │ Read / compare only; never apply        │
+│ 0      │ Return                    │ No changes                              │
+└────────┴───────────────────────────┴─────────────────────────────────────────┘
+</code></pre>
+</body>
+</html>

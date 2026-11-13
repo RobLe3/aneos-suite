@@ -1,0 +1,184 @@
+{
+  "checked_at": "2026-11-13T12:00:00+00:00",
+  "checked_count": 1,
+  "eligible_count": 0,
+  "limits": "Read-only bounded object review of replay-checked stored adapter receipts. Unknown legacy clocks are not UTC. No live health probe, scientific completeness, alias equivalence or automatic selective backfill.",
+  "object_limit": 50,
+  "objects": [
+    {
+      "blocked_sources": [],
+      "designation": "SYNTHETIC",
+      "missing_sources": [],
+      "needs_review": false,
+      "refresh_scope": "whole_fixed_source_plan_not_selective_backfill",
+      "retry_eligible": false,
+      "sources": [
+        {
+          "adapter_read_age_seconds": 1800.0,
+          "clock_regression": false,
+          "freshness": "recent_adapter_read",
+          "last_adapter_read_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "SBDB"
+          },
+          "last_ledger_recorded_at": "2026-11-13T07:54:47.104057+00:00",
+          "last_usable_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "SBDB"
+          },
+          "latest_outcome": "available",
+          "legacy_timestamp": "2026-11-13T07:54:47.083787",
+          "limits": "Adapter read/empty response age, not wire freshness, observation epoch, provider health, source accuracy or scientific completeness. Runtime transport admission/cooldown still applies.",
+          "needs_review": false,
+          "retry_after": null,
+          "retry_eligible": false,
+          "retry_reason": "recent_adapter_read",
+          "source": "SBDB",
+          "unverified_attempt_clock": false
+        },
+        {
+          "adapter_read_age_seconds": 1800.0,
+          "clock_regression": false,
+          "freshness": "recent_adapter_read",
+          "last_adapter_read_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "Horizons"
+          },
+          "last_ledger_recorded_at": "2026-11-13T07:54:47.104057+00:00",
+          "last_usable_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "Horizons"
+          },
+          "latest_outcome": "available",
+          "legacy_timestamp": null,
+          "limits": "Adapter read/empty response age, not wire freshness, observation epoch, provider health, source accuracy or scientific completeness. Runtime transport admission/cooldown still applies.",
+          "needs_review": false,
+          "retry_after": null,
+          "retry_eligible": false,
+          "retry_reason": "recent_adapter_read",
+          "source": "Horizons",
+          "unverified_attempt_clock": false
+        },
+        {
+          "adapter_read_age_seconds": 1800.0,
+          "clock_regression": false,
+          "freshness": "recent_adapter_read",
+          "last_adapter_read_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "NEODyS"
+          },
+          "last_ledger_recorded_at": "2026-11-13T07:54:47.104057+00:00",
+          "last_usable_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "NEODyS"
+          },
+          "latest_outcome": "available",
+          "legacy_timestamp": "2026-11-13T07:54:47.083787",
+          "limits": "Adapter read/empty response age, not wire freshness, observation epoch, provider health, source accuracy or scientific completeness. Runtime transport admission/cooldown still applies.",
+          "needs_review": false,
+          "retry_after": null,
+          "retry_eligible": false,
+          "retry_reason": "recent_adapter_read",
+          "source": "NEODyS",
+          "unverified_attempt_clock": false
+        },
+        {
+          "adapter_read_age_seconds": 1800.0,
+          "clock_regression": false,
+          "freshness": "recent_adapter_read",
+          "last_adapter_read_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "MPC"
+          },
+          "last_ledger_recorded_at": "2026-11-13T07:54:47.104057+00:00",
+          "last_usable_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "MPC"
+          },
+          "latest_outcome": "available",
+          "legacy_timestamp": "2026-11-13T07:54:47.083787",
+          "limits": "Adapter read/empty response age, not wire freshness, observation epoch, provider health, source accuracy or scientific completeness. Runtime transport admission/cooldown still applies.",
+          "needs_review": false,
+          "retry_after": null,
+          "retry_eligible": false,
+          "retry_reason": "recent_adapter_read",
+          "source": "MPC",
+          "unverified_attempt_clock": false
+        },
+        {
+          "adapter_read_age_seconds": 1800.0,
+          "clock_regression": false,
+          "freshness": "recent_adapter_read",
+          "last_adapter_read_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_at": "2026-11-13T11:30:00+00:00",
+          "last_attempt_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "CAD"
+          },
+          "last_ledger_recorded_at": "2026-11-13T07:54:47.104057+00:00",
+          "last_usable_reference": {
+            "query_id": "f42f5b7e-fe3e-4ffb-b21d-43a90f88d141",
+            "source": "CAD"
+          },
+          "latest_outcome": "available",
+          "legacy_timestamp": "2026-11-13T07:54:47.083787",
+          "limits": "Adapter read/empty response age, not wire freshness, observation epoch, provider health, source accuracy or scientific completeness. Runtime transport admission/cooldown still applies.",
+          "needs_review": false,
+          "retry_after": null,
+          "retry_eligible": false,
+          "retry_reason": "recent_adapter_read",
+          "source": "CAD",
+          "unverified_attempt_clock": false
+        }
+      ]
+    }
+  ],
+  "outdated_count": 0,
+  "outdated_objects": [],
+  "policy": {
+    "adapter_read_max_age_seconds": 2592000,
+    "failed_attempt_cooldown_seconds": 3600,
+    "schema_version": "source-freshness-policy-v1",
+    "scope": "installed_object_adapters_not_all_observations"
+  },
+  "requested_designations_not_found": [],
+  "requested_designations_not_reviewed": [],
+  "schema_version": "object-source-freshness-v1",
+  "source_plan": {
+    "context_id": null,
+    "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+    "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+    "plan_id": "d4e9bbcef4e41e16a8ce8bbb392269a6d2a2bb8df026f6e966b83e4087ef4698",
+    "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+    "roles": {
+      "CAD": "computed_earth_encounters_bounded_10_rows",
+      "Horizons": "catalogue_orbit_and_available_physical_fields",
+      "MPC": "catalogue_orbit_and_available_physical_fields",
+      "NEODyS": "catalogue_orbit_and_available_physical_fields",
+      "SBDB": "catalogue_orbit_and_available_physical_fields"
+    },
+    "schema_version": "object-source-plan-v1",
+    "source_priority": [
+      "SBDB",
+      "Horizons",
+      "NEODyS",
+      "MPC"
+    ],
+    "sources": [
+      "SBDB",
+      "Horizons",
+      "NEODyS",
+      "MPC",
+      "CAD"
+    ]
+  },
+  "truncated": false
+}

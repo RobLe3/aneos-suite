@@ -47,14 +47,9 @@ def _ensure_utc(dt: datetime) -> datetime:
 
 
 def _safe_key(key: str) -> str:
-    """Return a filesystem safe cache key."""
-
-    # Limit key length and strip path separators so we can persist on disk when
-    # requested.  The simple heuristic mirrors the historical implementation.
-    sanitized = key.replace("/", "_").replace("\\", "_")
-    if len(sanitized) > 128:
-        return sanitized[:128]
-    return sanitized
+    """Versioned digest of the entire key; no truncation or slash aliasing."""
+    from hashlib import sha256
+    return 'key-v2-' + sha256(key.encode('utf-8')).hexdigest()
 
 
 @dataclass
@@ -131,16 +126,8 @@ class CacheManager(MutableMapping[str, Any]):
         self._lock = threading.RLock()
         self._stats = CacheStats()
 
-        # Remove legacy pickle cache files (migration from pickle → JSON)
-        for p in self.cache_dir.glob("*.pickle"):
-            try:
-                p.unlink()
-                import logging as _logging
-                _logging.getLogger(__name__).warning(
-                    f"Removing legacy pickle cache file: {p}"
-                )
-            except OSError:
-                pass
+        # Unsupported legacy pickle files are neither read nor removed here.
+        # A cache constructor is not authorization to migrate/delete research bytes.
 
     # -- MutableMapping interface -------------------------------------------------
     def __getitem__(self, key: str) -> Any:

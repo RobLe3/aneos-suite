@@ -1,0 +1,33 @@
+╭───────────────────────────── aNEOS v2 ─────────────────────────────╮
+│                                                                    │
+│   aNEOS — Artificial NEO Analysis Platform                         │
+│   Research tool — not an operational warning system                │
+│                                                                    │
+│   ── Detection & Classification ──────────────────                 │
+│    1  Detect NEO (single)                                          │
+│    2  Multi-Evidence Analysis                                      │
+│    3  Batch Detection                                              │
+│    4  Orbital History Analysis                                     │
+│                                                                    │
+│   ── Impact Assessment ───────────────────────────                 │
+│    5  Impact Evidence                                              │
+│    6  Close Approach History                                       │
+│                                                                    │
+│   ── Monitoring & Polling ─────────────────────────                │
+│    7  Live Pipeline Dashboard       [200-year historical poll]     │
+│    8  Population Pattern Analysis   [BC11 network sigma]           │
+│   15  Rendezvous Scan               [PA-6 MOID pairwise, all PHAs] │
+│                                                                    │
+│   ── Results & Reports ───────────────────────────                 │
+│    9  Browse Results                                               │
+│   10  Export Results                [JSON / CSV]                   │
+│                                                                    │
+│   ── System ─────────────────────────────────────                  │
+│   11  Health Check                                                 │
+│   12  Start API Server                                             │
+│   13  Detection Analytics                                          │
+│   14  Scientific Help                                              │
+│                                                                    │
+│    0  Exit                                                         │
+│                                                                    │
+╰────────────────────────────────────────────────────────────────────╯

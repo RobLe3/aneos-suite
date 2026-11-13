@@ -1,0 +1,113 @@
+{
+  "baseline_commit": "96a916bc18dfb313a0d410c33d5da987029c5df3",
+  "records": [
+    {
+      "name": "H",
+      "value": "25.91",
+      "sigma": "0.03",
+      "units": "mag",
+      "ref": "SYNTHETIC_REF"
+    },
+    {
+      "name": "diameter",
+      "value": "11",
+      "sigma": "2",
+      "units": "m",
+      "ref": "SYNTHETIC_REF"
+    }
+  ],
+  "context": {
+    "designation": "SYNTHETIC",
+    "fixture_basis": "prior-commit synthetic assertion, not live observations"
+  },
+  "evidence": {
+    "schema_version": "physical-evidence-v1",
+    "context": {
+      "designation": "SYNTHETIC",
+      "fixture_basis": "prior-commit synthetic assertion, not live observations"
+    },
+    "records": [
+      {
+        "schema_version": "physical-measurement-v1",
+        "adapter": "sbdb-phys-par-1.3",
+        "source": "SBDB",
+        "native": {
+          "name": "H",
+          "value": "25.91",
+          "sigma": "0.03",
+          "units": "mag",
+          "ref": "SYNTHETIC_REF"
+        },
+        "context": {
+          "designation": "SYNTHETIC",
+          "fixture_basis": "prior-commit synthetic assertion, not live observations"
+        },
+        "normalized": {
+          "field": "absolute_magnitude_h",
+          "value": 25.91,
+          "sigma": 0.03,
+          "units": "mag",
+          "uncertainty_kind": "provider_1sigma"
+        },
+        "measurement_epoch": null,
+        "estimation_status": "not_provided",
+        "evidence_basis": "catalogued_external_assertion_not_independently_verified",
+        "issues": [],
+        "status": "normalized",
+        "assertion_id": "693cd98ee9b10bcc61be3c1953d56d9b825aacd0a5f1730dccd5e8b0c4eb1d00"
+      },
+      {
+        "schema_version": "physical-measurement-v1",
+        "adapter": "sbdb-phys-par-1.3",
+        "source": "SBDB",
+        "native": {
+          "name": "diameter",
+          "value": "11",
+          "sigma": "2",
+          "units": "m",
+          "ref": "SYNTHETIC_REF"
+        },
+        "context": {
+          "designation": "SYNTHETIC",
+          "fixture_basis": "prior-commit synthetic assertion, not live observations"
+        },
+        "normalized": {
+          "field": "diameter_km",
+          "value": 0.011,
+          "sigma": 0.002,
+          "units": "km",
+          "uncertainty_kind": "provider_1sigma"
+        },
+        "measurement_epoch": null,
+        "estimation_status": "not_provided",
+        "evidence_basis": "catalogued_external_assertion_not_independently_verified",
+        "issues": [],
+        "status": "normalized",
+        "assertion_id": "70b554790b640fb422c5ae00f4d48a3c84ef461dd70de8346b8abd8b7ab5abb4"
+      }
+    ],
+    "selection": {
+      "absolute_magnitude_h": {
+        "status": "selected",
+        "record_indices": [
+          0
+        ],
+        "selected_index": 0
+      },
+      "diameter_km": {
+        "status": "selected",
+        "record_indices": [
+          1
+        ],
+        "selected_index": 1
+      }
+    },
+    "duplicate_records": {},
+    "limitations": [
+      "Normalization/replay is not independent source verification.",
+      "No physical measurement epoch or fitted-versus-derived status is supplied by this adapter.",
+      "Alternative records are not averaged; physical correlation/independence is not established."
+    ],
+    "evidence_id": "c834e3d8420ea0874247871716ab3a26937e3e1f5537535d90c58597ddadf5b4"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "polling-screening-record-v1",
+  "designation": "SYNTHETIC_LEGACY",
+  "category": "inconclusive",
+  "screening_score": null,
+  "confidence": null,
+  "artificial_probability": null,
+  "sigma_confidence": null,
+  "combined_p_value": null,
+  "false_discovery_rate": null,
+  "origin_status": "inconclusive",
+  "input_record": {
+    "artificial_probability": 0.99,
+    "classification": "ARTIFICIAL",
+    "confidence": 0.95,
+    "designation": "SYNTHETIC_LEGACY"
+  },
+  "input_status": "legacy_unverified",
+  "input_id": "6e04313527603bd3a18fdc0a38edb53ea456cc48abdc11182af91ab8846c2e1c",
+  "review": null,
+  "analysis_timestamp": "2026-11-13T08:34:43.451111+00:00",
+  "five_sigma_claim_permitted": false,
+  "limits": "Rank is an uncalibrated follow-up heuristic, not Gaussian significance or an origin probability. Not flagged does not mean natural. Impact risk is not assessed here. Legacy unverified rows are retained, not promoted to measured evidence.",
+  "record_id": "8822917da89f133042f5cd73ff8f5aab41a50c7de3d2e04df2e6d761464582e0"
+}

@@ -280,8 +280,13 @@ class RealTimePredictor:
             logger.error(f"Failed to initialize models: {e}")
             self.primary_model = None
     
+    def _require_compatible_score_contract(self):
+        if getattr(self.analysis_pipeline, 'score_contract', None) == 'uncalibrated_screening_rank':
+            raise NotImplementedError('Legacy ML fusion is unavailable for the screening rank contract; a compatible independently calibrated model is required')
+
     async def predict_anomaly(self, designation: str, neo_data: Optional[NEOData] = None) -> PredictionResult:
         """Predict anomaly for a single NEO."""
+        self._require_compatible_score_contract()
         start_time = time.time()
         
         try:
@@ -401,6 +406,7 @@ class RealTimePredictor:
     async def predict_batch(self, designations: List[str], 
                           progress_callback: Optional[Callable[[int, int], None]] = None) -> List[PredictionResult]:
         """Predict anomalies for a batch of NEOs."""
+        self._require_compatible_score_contract()
         logger.info(f"Starting batch prediction for {len(designations)} NEOs")
         
         results = []
@@ -479,7 +485,9 @@ class RealTimePredictor:
         return min(combined_score, 1.0)
     
     def _create_indicator_prediction(self, designation: str, anomaly_score) -> PredictionResult:
-        """Create prediction result using only indicator scores."""
+        """Create a legacy research prediction; never reinterpret canonical rank units."""
+        if getattr(anomaly_score, 'score_semantics', None) == 'uncalibrated_screening_rank':
+            raise NotImplementedError('Screening rank is not a calibrated anomaly probability')
         return PredictionResult(
             designation=designation,
             anomaly_score=anomaly_score.overall_score,

@@ -1,0 +1,15 @@
+╭────────────────────────────────── aNEOS 2.2.0.dev0 — Candidate screening dashboard ──────────────────────────────────╮
+│ Input records: 1; distinct exact designation labels: 1; typed field inventories: 1. Repeated designations are not    │
+│ automatically independent evidence or fused observations.                                                            │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+Follow-up candidate: 1/1 records ━━━━━━━━━━━━━━━━━━━━
+Not flagged: 0/1 records 
+Inconclusive: 0/1 records 
+                                      Screening records — ranking units, not sigma                                      
+┏━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ID   ┃ Object                         ┃ Screening outcome              ┃ Raw rank      ┃ Catalogue presence          ┃
+┡━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 1    │ SYNTHETIC_FOLLOW_UP            │ Follow-up candidate            │ 20.3283       │ 7/15 fields                 │
+└──────┴────────────────────────────────┴────────────────────────────────┴───────────────┴─────────────────────────────┘
+Rank is an uncalibrated follow-up heuristic, not Gaussian significance or an origin probability. Not flagged does not 
+mean natural. Impact risk is not assessed here. Legacy unverified rows are retained, not promoted to measured evidence.

@@ -10,6 +10,22 @@ The aNEOS REST API provides programmatic access to all platform functionality in
 **Documentation**: `http://localhost:8000/docs` (Interactive Swagger UI)  
 **OpenAPI Spec**: `http://localhost:8000/openapi.json`
 
+## Screening contract correction — 2026-11-12
+
+Existing GET/POST `/analysis/detect` and `/analysis/detect/batch` return an
+uncalibrated `screening_score`, follow-up `candidate`, evidence/policy content IDs,
+ranking-input snapshots and explicit limitations. Sigma, p-value, FDR,
+artificial-origin probability, binary origin and confidence are nullable and are
+**unavailable** in the installed model. `NOT_FLAGGED` is not a natural-origin
+verdict. A designation-only spacecraft lookup cannot create significance.
+
+A1/A2/A3 fitted evidence, covariance and provenance remain descriptive; they do
+not imply propulsion. This change does not validate legacy `/analyze`, network,
+ATLAS or historical front ends. See
+[the screening contract](../engineering/screening-result-contract.md) for scope,
+controlled deprecations and outstanding acceptance requirements. Earlier examples
+that suggest calibrated inference are superseded for these detection routes.
+
 ## 🔐 Authentication
 
 ### API Key Authentication
@@ -630,3 +646,316 @@ Features:
 ---
 
 **The aNEOS REST API provides comprehensive programmatic access to all platform capabilities. Use the interactive documentation for real-time testing and exploration!** 🚀
+### Non-gravitational evidence sidecar (issue #5)
+
+`GET /api/v1/analysis/detect` and existing batch detection results include
+`non_gravitational_evidence` when catalogue coefficients are supplied. Missing
+coefficients remain `not_available`/null, not zero. This field is descriptive
+orbit-fit evidence, not a new origin classifier.
+
+The record retains A1/A2/A3 native values, uncertainty, units, SET/EST/CON status,
+raw numerical literals, force-model constants, solution identity, provider schema,
+retrieval time and canonical-response hash. Supported SI conversions label both
+value and sigma as **coefficients**, not instantaneous accelerations. Unknown
+units are retained natively and do not receive an invented conversion.
+
+Covariance carries its native labels, order, matrix, raw matrix, TDB epoch and
+solution-epoch elements. `covariance_applies_to_display_epoch=false` means that
+it must not be applied to displayed elements without explicit propagation.
+Off-diagonal correlations are preserved. The API does not infer propulsion from
+A2, nor omit A3 in favor of a scalar velocity/acceleration proxy.
+
+This does not fix the legacy score's calibration or establish artificial origin;
+those remain separate work in issues #6 and #8–#11.
+
+
+### CAD evidence correction (2026-11-12 review branch)
+
+Encounter evidence in screening snapshots preserves native TDB, body, provenance
+and query coverage; it is not raw astrometry or manoeuvre evidence. Supplemental
+history queries can be bounded/partial. Source failures are explicit and must not
+be read as empty successful surveys. See
+[CAD integrity scope](../engineering/cad-evidence-integrity.md). No new REST route
+or calibrated physical-origin capability is introduced.
+
+
+### Legacy validation consumers (2026-11-12 review branch)
+
+Required validation and dashboard responses expose nullable confidence/FP
+probability and explicit validation status. Workflow outcomes are not classifier
+accuracy. Scatter coordinates use a supplied uncalibrated screening rank, never
+`1 - false_positive_probability`. Unknown coordinates are not plotted as zero or
+perfect confidence. Standalone core legacy `/analyze` response migration remains
+unfinished; do not infer that its older examples establish scientific validation.
+See [the contract correction](../engineering/legacy-validation-integrity.md).
+
+### Core `/analyze` correction (ADR-069, 2026-11-12 review branch)
+
+`POST /api/v1/analysis/analyze` now acquires typed evidence and returns the same
+`screening_assessment` as shared screening for identical input/policy. The
+compatibility `anomaly_score.overall_score` is **uncalibrated ranking units**;
+confidence is null. `status` distinguishes completed ranking from inconclusive
+input; source failure is HTTP 503 and invalid measurements HTTP 422. Neither
+condition means natural origin. Results include evidence/policy IDs and replay
+inputs; the full observational fit/calibration capability is still unavailable.
+
+`force_refresh` reaches DataFetcher. `include_indicators=false` omits descriptive
+proxy diagnostics from the compatibility score view, not the canonical assessment.
+`include_raw_data` controls the typed source-data sidecar. The existing batch
+route now forwards refresh/raw-data flags; its jobs are still in-memory.
+No designation-only result cache is read by `/analyze`.
+
+Analysis JSON export retains a structured assessment and reproducibility metadata;
+CSV identifies raw ranking units, classification and evidence/policy IDs. These
+are in-memory convenience exports, not durable append-only case history. Other
+advertised analysis export formats are explicitly unsupported rather than
+silently returning JSON. ML prediction with the new core contract returns HTTP
+503 until a compatible independently calibrated model is integrated; old cached
+predictions cannot bypass that guard. Standalone research models are retained.
+
+The separately mocked enhanced REST endpoint is **not** repaired by these core
+changes. Do not use it as a scientific assessment; follow #6/#12 for its migration.
+
+### Enhanced REST correction (ADR-070, 2026-11-12 review branch)
+
+This supersedes the enhanced-REST migration warning in the ADR-069 section above.
+The existing declared routes are now registered in the main application under
+its existing authentication dependency:
+
+- `POST /api/v1/analysis/enhanced`: existing request object; same canonical
+  screening assessment as `/analyze` for identical evidence/policy. Source failure
+  is 503, invalid source evidence 422, processing failure 500. Missing orbit can
+  return an inconclusive assessment with null rank, never a natural/zero result.
+- `POST /api/v1/analysis/enhanced/batch`: existing bare JSON list body; existing
+  `force_refresh` and `enable_validation` query flags. One to 100 nonblank
+  designations; duplicates and all per-object failures retain their input order.
+  Failed items have null rank/assessment and explicit status/errors, not removal.
+- `GET /api/v1/analysis/enhanced/summary?days=7`: descriptive stored screening
+  rows by database assessment date, not observation date or independent-object
+  performance. Replayable current-policy payloads are summarized; legacy,
+  modified or unsupported records are counted as excluded, not rewritten.
+  Scalar legacy score/classification columns do not supply validation evidence.
+
+Enhanced results expose `screening_assessment`, provenance/replay IDs, optional
+raw-data and proxy sidecars, required-review outcomes and execution options.
+`overall_score` is uncalibrated ranking units; confidence, FP probability,
+uncertainty intervals and uninstrumented diagnostic timings are null. Top-level
+elapsed time is measured. Optional-review disablement is `not_requested`, never
+an approval. Method/sampling preferences are recorded but explicitly not
+performed without an installed scientific model; changing `validation_method`
+cannot bypass prerequisites. A workflow review pass is not an origin finding.
+
+Summary probability/risk estimates remain null (`not_reliably_estimated`),
+recommendations remain unknown without recorded valid review evidence, and empty
+rank statistics are null rather than zero. Counts are operational descriptions,
+not FDR, classifier accuracy or independent validation. New enhanced reports are
+not yet persisted by these routes; summaries concern existing stored screening
+records, not a complete enhanced-review history. Jobs/case history, provider-wide
+rate control and crash/restart recovery remain #15/#13/#16.
+
+The enhanced review adapter also rejects incomplete, truthy, errored or stale
+workflow passes using explicit stage outcomes and ranking/full-review IDs. A valid
+candidate remains visible when review transport fails. Unsupported legacy review
+probability/confidence scalars remain null until a calibrated model contract is
+installed; native measured parameter evidence is preserved separately.
+
+### Shared human/machine screening reports (ADR-071)
+
+The primary launcher analysis aliases now consume the same canonical assessment as
+core REST. `aneos.py analyze DESIGNATION --json` emits `scientific-screening-report-v1`;
+without `--json` it renders Markdown. `--force-refresh` reaches acquisition;
+`--output PATH` creates a new file without overwriting an existing report. Options
+and nonzero failures are integration-tested. No new REST route/format is implied
+by these CLI options; API export/Markdown integration remains separate #12 work.
+
+The report contains full normalized NEO input, source/covariance metadata,
+ranking/full-review/report IDs and scoped runtime metadata. Its checksum detects
+accidental change, not malicious authorship. Current-policy replay verifies the
+assessment, not scientific calibration. Computed ephemeris sidecars are not
+astrometric observations or independent origin evidence.
+
+### Standalone/advanced library contract (ADR-072)
+
+The standalone library/script now uses the same typed acquisition and assessment
+as primary CLI/core REST. Report compatibility fields include explicit null
+`confidence`, `confidence_level`, artificial probability, sigma and unassessed
+threat/risk, so missing inference cannot become a caller's default zero. Scalar
+probability/mock-input contracts are controlled-deprecated. Advanced raw inputs
+are not silently supplemented from providers; epochs require an explicit
+timezone-aware datetime, not an unlabelled Julian date. Unsupported per-call source
+selection raises instead of claiming success. Async methods are available rather
+than nesting an event loop. No new REST endpoint is implied.
+
+**Historical limitation (superseded for REST by ADR-074):** at ADR-072 the
+separate `/impact` route still used an unfitted heuristic calculator. The correction
+below applies to that REST route only; legacy menu/library/impact-pipeline claim
+surfaces remain open under #32.
+
+### Authoritative Sentry impact evidence (ADR-074)
+
+Existing `GET /api/v1/analysis/impact?designation=1998%20KY26` now returns
+`sentry-object-evidence-v1`, not a locally calculated collision probability.
+Use a primary asteroid number or unpacked provisional designation. Names/aliases
+without identity resolution return 422 instead of risking a cross-object result.
+`force_refresh=true` explicitly bypasses the per-process one-hour TTL cache; it does
+not bypass shared JPL serialization/backoff. Authentication dependencies remain
+unchanged. This endpoint is not an emergency-warning or deflection advisory service.
+
+- `available`: a version/source/primary-identity-checked Sentry object result.
+  `collision_probability` is the source cumulative Earth-impact probability for
+  **tabulated virtual impactors**, with native IOBS/LOV/MC method, listed-event span,
+  computation clocks, observation dates and event rows. It is not all-future risk.
+- `not_listed` and `removed`: explicit source catalogue outcomes, with **null**
+  probability/risk inference—not zero or negligible risk. Removed date is retained
+  when supplied. No object row means identity is query-bound, not independently matched.
+- 503: provider unavailable/rate-limited/timed out. 502: invalid/unsupported source
+  evidence or identity mismatch. 500: unexpected internal failure. None is a
+  successful natural/zero-risk result; failures do not expose internal details.
+
+The response retains exact UTF-8 source bytes, SHA-256, source/retrieval metadata,
+report digest, complete event evidence and explicit limits. Replay checks consistency,
+not source authentication. Native Pacific Local computation time is not guessed as
+UTC. Method-specific fit metrics are not Gaussian discovery significance. Approximate
+source diameter/mass/energy values are not automatically independent measurements.
+No lunar probability, annualized/decadal risk, probability interval, aNEOS confidence,
+crater/damage prediction or local Torino classification is invented: those legacy
+compatibility fields are null. JPL documents substantial probability uncertainty;
+that limitation accompanies every result rather than a fabricated confidence interval.
+
+The source adapter/shared report can be used directly:
+
+```python
+from aneos_core.analysis.impact_evidence import get_sentry_impact_service, render_sentry_markdown
+report = get_sentry_impact_service().assess("1998 KY26")
+markdown = render_sentry_markdown(report)
+```
+
+`report` is JSON-serializable. Markdown rendering rejects modified/unreplayable
+reports. No new REST format route, CLI flag or persistent case service is implied.
+Per-process cache reuse is bounded to 128 objects and returns copies; expiry/refresh
+creates new snapshots, not amendments to previously returned ones. It is not durable
+case history or cross-process cache deduplication. See the
+[scoped implementation report](../engineering/sentry-impact-contract.md).
+
+### Menu and impact-library contract (ADR-075)
+
+The V2 impact menu and enhanced-impact wrapper now consume the same scoped Sentry
+report as REST, not the old catalogue geometry/30-day-arc calculator. The wrapper
+preserves screening separately and reports source/invalid/failure/not-requested
+and archive-confirmation status without inferring origin or safe risk. No API route
+or response schema is added by this integration.
+
+`ImpactProbabilityCalculator.calculate_comprehensive_impact_probability` retains
+its name but raises a controlled-deprecation error. Use source evidence for reported
+impact probabilities, `calculate_conditional_impact_energy(mass_kg=..., velocity_km_s=...)`
+for explicit classical scenarios, or explicitly labelled legacy diagnostics for
+research replay. A supplied scenario arc is required for legacy replay; no diagnostic
+scalar or bound is a calibrated probability/confidence interval.
+
+V2 menu/enhanced reports are saved to a verified append-only local archive before
+save confirmation. The compatibility method named `_persist_impact_result_async`
+is now synchronous; no impact probability is written to an origin-score DB column.
+This archive does **not** provide durable API jobs/case lifecycle or automatically
+persist every REST response. Those remain #15/#13. Menu JSON/CSV exports retain
+complete replayable evidence and use exclusive creation without an overwrite fallback.
+See [implementation, restart controls and filesystem limits](../engineering/impact-entrypoint-contract.md).
+
+### Durable execution storage is not yet a REST job migration (ADR-076)
+
+The existing database now has a tested JobStore foundation. No new endpoint or
+background worker is activated by it. Current network/automatic/polling routes still
+need the explicit integration and scientific-result corrections in #6/#15; their
+in-memory statuses are not certified by storage-layer tests. Owner scope filtering
+inside the store is not API authentication: future routes must derive scopes from
+verified principals and test cross-owner denial.
+
+Importing database/job models now has no schema/service side effect. Use explicit
+`init_database()`/`JobStore.initialize_schema()` for the appropriate setup; full API
+lifespan performs and confirms schema initialization before services. It does not
+validate every existing migration or optional backend. API users must not be told
+that a generic stored `completed` result is scientifically validated.
+
+
+## Population report correction — 2026-11-13 (ADR-077)
+
+Existing `POST /api/v1/analysis/analyze/network` returns a job ID and the registered
+`GET /api/v1/analysis/analyze/network/{job_id}/status` URL. Queued/completed inference
+is nullable: `network_sigma` and `combined_p_value` are null, `network_tier` is
+`UNAVAILABLE`, never routine-by-default. Complete transport includes the versioned
+`scientific_report` with frozen inputs, canonical per-object screening, module
+outcomes and report/configuration/policy/input IDs. `acquisition_outcomes` retains
+requested index/designation and available/unavailable/failed/identity-mismatch
+status. A complete execution with partial acquisition is explicitly partial in
+metadata; no available inputs produces error/NO_AVAILABLE_INPUTS, not success.
+
+`harmonics` currently requests descriptive computed-encounter gaps, not spectral
+inference; the requested `historical_years` window is recorded but not fetched or
+applied by the pure report session. Correlation requires unavailable paired time
+series; rendezvous is explicitly unimplemented in session. No selected-p fusion
+or origin probability is returned. Existing prototypes require an explicit
+historical-diagnostic opt-in and are not a scientific substitute.
+
+**Execution limitation:** these endpoints still use daemon/process-memory jobs.
+They are not durable, authenticated owner-isolated jobs or a production readiness
+claim. The SQL JobStore has not yet been wired to them. See
+[the report contract and next integration gates](../engineering/network-evidence-report.md).
+Older numeric network examples are superseded by this correction. The generated
+OpenAPI snapshot reflects the registered application, not a hand-edited schema.
+
+## Execution-library dependency — 2026-11-13 (ADR-078)
+
+A registered resumable network worker now composes SQL JobStore with frozen source
+acquisitions and the replayable report contract. This does **not** replace current
+network routes' process-memory scheduling. Authenticated principal ownership and
+managed API worker lifecycle remain required before that migration. There are no
+new endpoints/options in this library change. See
+[scope, recovery controls and integration gates](../engineering/resumable-network-worker.md).
+
+## Durable owned population jobs — 2026-11-13 (ADR-079)
+
+This supersedes prior process-memory network notes only. Existing
+`POST /api/v1/analysis/analyze/network` commits a persistent owned job before returning
+its ID/status URL; optional `Idempotency-Key` preserves the first request/window.
+`GET /api/v1/analysis/analyze/network/{job_id}/status` reads the same owner's SQL
+state and verified report; `DELETE /api/v1/analysis/analyze/network/{job_id}` cancels
+owned pending/running work. Analyst/admin may write; viewer may read owned history.
+No admin cross-owner exemption. Different owner/unknown404, invalid credentials401,
+insufficient role403, changed idempotent intent409, full queue429, unready/unconfirmed
+storage503. Null sigma/p and explicit execution_status remain separate from science.
+
+Use a configured or active SQL-user API key, not mock tokens/default placeholders.
+For a scoped bearer token, explicitly request the existing exchange:
+
+```sh
+curl -X POST 'http://localhost:8000/api/v1/auth/token?audience=network-jobs-v1' \
+  -H "X-API-Key: $ANEOS_ANALYST_API_KEY"
+curl -X POST 'http://localhost:8000/api/v1/analysis/analyze/network' \
+  -H "X-API-Key: $ANEOS_ANALYST_API_KEY" -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: your-unique-query-id' \
+  -d '{"designations":["1998 KY26"],"harmonics":true}'
+```
+
+These are network-enabled examples requiring configured credentials, source access
+and provider pacing, not recorded observations or a guarantee of complete data.
+Scoped token signing also requires existing configured signing support. Raw keys are
+never query parameters. Credential rotation/revocation is checked afresh. Default
+worker lifecycle starts with the app; disabling it permits owned reads/cancellation,
+not new submission. See [scope, actual tests and limits](../engineering/durable-network-api.md).
+Other routes retain heterogeneous legacy authentication; this is not a suite-wide
+security certification or evidence of scientifically calibrated results.
+
+Administrator authority, especially SQL credential provisioning, now uses the same
+fresh verified principal (admin role required); development mock/placeholder grants
+cannot mint a bypass. Provisioning/listing are bound to the runtime database. This
+does not certify incomplete legacy user update/delete/password behavior; #47 tracks
+that work. Do not infer a working password-login flow from the required request field.
+
+## Application identity (development review)
+
+Application release2.2.0.dev0 is distinct from REST contract2.0.0. Root/health
+`application_version`, X-Application-Version and OpenAPI x-application-version
+expose the release; compatibility `version`/X-API-Version remain the API contract.
+Model/provider/schema identifiers and historical reports keep their own versions.
+Use `python aneos.py --version` for a dependency-free application check, not a
+readiness/health test. OpenAPI now reflects the app's actual uncalibrated-research
+description rather than a placeholder artificial-discovery claim/logo.

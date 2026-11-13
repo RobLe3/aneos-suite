@@ -15,8 +15,8 @@ class DetectionResult:
     """Standardized detection result format for all detectors."""
     
     def __init__(self, 
-                 is_artificial: bool,
-                 confidence: float,
+                 is_artificial: Optional[bool],
+                 confidence: Optional[float],
                  sigma_level: Optional[float] = None,
                  artificial_probability: Optional[float] = None,
                  classification: Optional[str] = None,
@@ -26,7 +26,7 @@ class DetectionResult:
         self.is_artificial = is_artificial
         self.confidence = confidence
         self.sigma_level = sigma_level
-        self.artificial_probability = artificial_probability if artificial_probability is not None else (confidence if is_artificial else 1 - confidence)
+        self.artificial_probability = artificial_probability
         self.classification = classification or self._determine_classification()
         self.analysis = analysis or {}
         self.risk_factors = risk_factors or []
@@ -34,6 +34,8 @@ class DetectionResult:
     
     def _determine_classification(self) -> str:
         """Determine classification based on confidence and artificial probability."""
+        if self.is_artificial is None or self.confidence is None or self.artificial_probability is None:
+            return "INCONCLUSIVE"
         if self.is_artificial and self.confidence >= 0.8:
             return "artificial"
         elif self.artificial_probability >= 0.7:
@@ -59,17 +61,17 @@ class OrbitalElementsNormalizer:
         
         # Semi-major axis
         normalized['a'] = normalized['semi_major_axis'] = orbital_elements.get(
-            'a', orbital_elements.get('semi_major_axis', 0.0)
+            'a', orbital_elements.get('semi_major_axis')
         )
         
         # Eccentricity
         normalized['e'] = normalized['eccentricity'] = orbital_elements.get(
-            'e', orbital_elements.get('eccentricity', 0.0)
+            'e', orbital_elements.get('eccentricity')
         )
         
         # Inclination
         normalized['i'] = normalized['inclination'] = orbital_elements.get(
-            'i', orbital_elements.get('inclination', 0.0)
+            'i', orbital_elements.get('inclination')
         )
         
         # Optional elements

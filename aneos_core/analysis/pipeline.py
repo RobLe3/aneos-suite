@@ -1,8 +1,7 @@
-"""
-Analysis pipeline orchestrator for aNEOS anomaly detection.
+"""Typed acquisition and shared uncalibrated candidate screening.
 
-This module provides the main pipeline that coordinates all anomaly indicators,
-data sources, and scoring systems to produce comprehensive NEO analysis results.
+Legacy indicator utilities remain available for research, outside deployed
+classification. No calibrated significance or physical-origin model is installed.
 """
 
 from typing import Dict, List, Optional, Any, Set, Callable
@@ -10,7 +9,7 @@ import asyncio
 import logging
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 import time
 
 from .indicators.base import AnomalyIndicator, IndicatorResult, IndicatorConfig
@@ -33,6 +32,8 @@ from .indicators.physical import (
     DiameterAnomalyIndicator, AlbedoAnomalyIndicator, SpectralAnomalyIndicator
 )
 from .scoring import ScoreCalculator, StatisticalAnalyzer, AnomalyScore
+from .screening import ScreeningAnalysisService
+from ..utils.errors import DataSourceUnavailableError, EvidencePersistenceError
 from ..data.models import NEOData, AnalysisResult
 from ..data.sources.base import DataSourceManager
 from ..data.sources.sbdb import SBDBSource
@@ -69,16 +70,39 @@ class PipelineConfig:
             for name in indicator_names:
                 self.indicator_configs[name] = default_config
 
+PIPELINE_VERSION = 'canonical-analysis-v1'
+SCORE_SEMANTICS = 'uncalibrated_screening_rank'
+
+
+@dataclass
+class CanonicalScoreView:
+    """Compatibility view: overall_score is ranking units, never a probability."""
+    designation: str
+    overall_score: Optional[float] = None
+    confidence: Optional[float] = None
+    classification: str = 'INCONCLUSIVE'
+    indicator_scores: Dict[str, Any] = field(default_factory=dict)
+    statistical_summary: Dict[str, Any] = field(default_factory=dict)
+    risk_factors: List[str] = field(default_factory=list)
+    score_semantics: str = SCORE_SEMANTICS
+
+    def to_dict(self):
+        return asdict(self)
+
+
 @dataclass
 class PipelineResult:
     """Result from the analysis pipeline."""
     designation: str
-    anomaly_score: AnomalyScore
+    anomaly_score: CanonicalScoreView
     analysis_metadata: Dict[str, Any]
     processing_time: float
     data_quality: Dict[str, Any]
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
+    neo_data: Optional[NEOData] = None
+    screening_assessment: Optional[Dict[str, Any]] = None
+    status: str = 'inconclusive'
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary format."""
@@ -90,11 +114,18 @@ class PipelineResult:
             'data_quality': self.data_quality,
             'errors': self.errors,
             'warnings': self.warnings,
-            'pipeline_version': '2.0.0'
+            'pipeline_version': PIPELINE_VERSION,
+            'status': self.status,
+            'screening_assessment': self.screening_assessment
         }
 
 class AnalysisPipeline:
-    """Main analysis pipeline orchestrator."""
+    """Acquire typed evidence and delegate decisions to the shared screening service.
+
+    Legacy indicator calculators remain callable research utilities; they do not
+    define this deployed decision policy or calibrated probabilities.
+    """
+    score_contract = SCORE_SEMANTICS
     
     def __init__(self, config: Optional[ANEOSConfig] = None, 
                  pipeline_config: Optional[PipelineConfig] = None):
@@ -112,7 +143,9 @@ class AnalysisPipeline:
         
         # Initialize components
         self.cache_manager = get_cache_manager()
-        self.data_source_manager = self._create_data_source_manager()
+        self.data_source_manager = None  # legacy manager is not an acquisition path
+        self.data_fetcher = None  # lazy real DataFetcher, or explicit test injection
+        self.screening_service = ScreeningAnalysisService()
         self.score_calculator = ScoreCalculator(self.config.weights, self.config.thresholds)
         self.statistical_analyzer = StatisticalAnalyzer()
         
@@ -131,60 +164,10 @@ class AnalysisPipeline:
         
         logger.info(f"AnalysisPipeline initialized with {len(self.indicators)} indicators")
     
-    def _create_data_source_manager(self) -> DataSourceManager:
-        """Create data source manager with default sources."""
-        try:
-            sources = []
-            
-            # Try to create SBDB source (most reliable)
-            try:
-                sources.append(SBDBSource(self.config.api))
-            except Exception as e:
-                logger.warning(f"Failed to initialize SBDB source: {e}")
-            
-            # Try to create NEODyS source
-            try:
-                sources.append(NEODySSource(self.config.api))
-            except Exception as e:
-                logger.warning(f"Failed to initialize NEODyS source: {e}")
-            
-            # Try to create MPC source
-            try:
-                sources.append(MPCSource(self.config.api))
-            except Exception as e:
-                logger.warning(f"Failed to initialize MPC source: {e}")
-            
-            if not sources:
-                logger.warning("No data sources available, creating dummy source")
-                # Create a minimal mock source for testing
-                from ..data.sources.base import DataSourceBase
-                
-                class MockSource(DataSourceBase):
-                    def __init__(self):
-                        # Mock minimal initialization
-                        self.name = "mock"
-                        
-                    async def fetch_orbital_elements(self, designation: str) -> Dict[str, Any]:
-                        return {"designation": designation, "mock": True}
-                
-                sources.append(MockSource())
-            
-            return DataSourceManager(sources, self.cache_manager)
-            
-        except Exception as e:
-            logger.error(f"Failed to create data source manager: {e}")
-            # Create an empty manager as fallback
-            from ..data.sources.base import DataSourceBase
-            
-            class EmptySource(DataSourceBase):
-                def __init__(self):
-                    self.name = "empty"
-                    
-                async def fetch_orbital_elements(self, designation: str) -> Dict[str, Any]:
-                    return {"designation": designation, "error": "No data sources available"}
-            
-            return DataSourceManager([EmptySource()], self.cache_manager)
-    
+    def _create_data_source_manager(self):
+        """Controlled deprecation: use typed DataFetcher, never mock sources."""
+        raise NotImplementedError('Legacy source manager withdrawn; use DataFetcher')
+
     def _initialize_indicators(self) -> None:
         """Initialize all anomaly indicators."""
         indicator_classes = {
@@ -225,173 +208,104 @@ class AnalysisPipeline:
             except Exception as e:
                 logger.error(f"Failed to initialize indicator {name}: {e}")
     
-    async def analyze_neo(self, designation: str, neo_data: Optional[NEOData] = None) -> PipelineResult:
-        """Analyze a single NEO."""
-        start_time = time.time()
-        
+    async def analyze_neo(self, designation: str, neo_data: Optional[NEOData] = None,
+                          force_refresh: bool = False) -> PipelineResult:
+        """Screen real/provided evidence; failures abstain, never classify natural."""
+        start = time.monotonic()
         try:
-            # Fetch data if not provided
             if neo_data is None:
-                neo_data = await self._fetch_neo_data(designation)
-            
+                neo_data = await self._fetch_neo_data(designation, force_refresh=force_refresh)
             if neo_data is None:
-                return PipelineResult(
-                    designation=designation,
-                    anomaly_score=AnomalyScore(designation, 0.0, 0.0, 'natural'),
-                    analysis_metadata={},
-                    processing_time=time.time() - start_time,
-                    data_quality={'error': 'No data available'},
-                    errors=['Failed to fetch NEO data']
-                )
-            
-            # Validate data quality
-            data_quality = self._assess_data_quality(neo_data)
-            
-            # Run anomaly indicators
-            indicator_results = await self._run_indicators(neo_data)
-            
-            # Calculate anomaly score
-            anomaly_score = self.score_calculator.calculate_score(designation, indicator_results)
-            
-            # Update statistical analyzer
-            self.statistical_analyzer.add_score(anomaly_score)
-            
-            # Generate analysis metadata
-            analysis_metadata = {
+                raise DataSourceUnavailableError('No source evidence available')
+            if not isinstance(neo_data, NEOData) or neo_data.designation != designation:
+                raise ValueError('Acquired evidence type or object identity mismatch')
+            assessment = self.screening_service.analyze_neo(neo_data)
+            payload = assessment.to_payload()
+            # Descriptive proxy diagnostics, not independent measured indicators.
+            contributions = {e['type']: {
+                'indicator_name': e['type'], 'raw_score': e['effect_size'],
+                'weighted_score': None, 'confidence': None,
+                'metadata': dict(e), 'contributing_factors': []}
+                for e in assessment.evidence_sources if e['analyzed']}
+            score = CanonicalScoreView(designation, assessment.screening_score,
+                classification=assessment.classification, indicator_scores=contributions,
+                risk_factors=list(contributions), statistical_summary={
+                    'significance_status': assessment.significance_status,
+                    'five_sigma_claim_permitted': False})
+            quality = self._assess_data_quality(neo_data)
+            elapsed = time.monotonic() - start
+            self._update_performance_metrics(elapsed, True)
+            return PipelineResult(designation, score, {
+                **payload['analysis_metadata'], 'pipeline_version': PIPELINE_VERSION,
                 'analysis_timestamp': datetime.now().isoformat(),
-                'data_sources_used': getattr(neo_data, 'data_sources', []),
-                'indicators_run': list(indicator_results.keys()),
-                'pipeline_version': '2.0.0',
-                'config_hash': self._calculate_config_hash()
-            }
-            
-            processing_time = time.time() - start_time
-            
-            # Update performance metrics
-            self._update_performance_metrics(processing_time, True)
-            
-            result = PipelineResult(
-                designation=designation,
-                anomaly_score=anomaly_score,
-                analysis_metadata=analysis_metadata,
-                processing_time=processing_time,
-                data_quality=data_quality
-            )
-            
-            # Cache result if enabled
-            if self.pipeline_config.enable_caching:
-                cache_key = f"analysis_result_{designation}_{self._calculate_config_hash()}"
-                self.cache_manager.set(cache_key, result.to_dict(), ttl=3600)
-            
-            logger.info(f"Analysis completed for {designation}: {anomaly_score.classification} "
-                       f"(score: {anomaly_score.overall_score:.3f}, time: {processing_time:.2f}s)")
-            
+                'data_sources_used': list(neo_data.sources_used),
+                'legacy_indicators_run': [],
+            }, elapsed, quality,
+                warnings=list(assessment.limitations), neo_data=neo_data,
+                screening_assessment=payload,
+                status='completed' if assessment.screening_score is not None else 'inconclusive')
+        except EvidencePersistenceError as exc:
+            return self._failure_result(designation, 'evidence_persistence_unavailable', str(exc), start)
+        except DataSourceUnavailableError as exc:
+            result = self._failure_result(designation, 'source_unavailable', str(exc), start)
+            if getattr(exc, 'acquisition_receipt', None):
+                result.analysis_metadata['acquisition_receipt'] = exc.acquisition_receipt
             return result
-            
-        except Exception as e:
-            logger.error(f"Analysis failed for {designation}: {e}")
-            
-            processing_time = time.time() - start_time
-            self._update_performance_metrics(processing_time, False)
-            
-            return PipelineResult(
-                designation=designation,
-                anomaly_score=AnomalyScore(designation, 0.0, 0.0, 'natural'),
-                analysis_metadata={'error_timestamp': datetime.now().isoformat()},
-                processing_time=processing_time,
-                data_quality={'error': 'Analysis failed'},
-                errors=[str(e)]
-            )
-    
-    async def analyze_batch(self, designations: List[str], 
-                           progress_callback: Optional[Callable[[int, int], None]] = None) -> List[PipelineResult]:
-        """Analyze a batch of NEOs."""
-        logger.info(f"Starting batch analysis of {len(designations)} NEOs")
-        
-        results = []
-        completed = 0
-        total = len(designations)
+        except ValueError as exc:
+            return self._failure_result(designation, 'invalid_evidence', str(exc), start)
+        except Exception as exc:
+            logger.exception('Analysis failed for %s', designation)
+            return self._failure_result(designation, 'failed', str(exc), start)
 
-        if not self.analysis_parallel:
-            logger.info("Parallel analysis disabled; processing sequentially")
-            for designation in designations:
-                result = await self.analyze_neo(designation)
-                results.append(result)
+    def _failure_result(self, designation, status, reason, start):
+        elapsed = time.monotonic() - start
+        self._update_performance_metrics(elapsed, False)
+        return PipelineResult(designation, CanonicalScoreView(designation),
+            {'pipeline_version': PIPELINE_VERSION, 'five_sigma_claim_permitted': False},
+            elapsed, {'reliability_score': None, 'error': reason},
+            errors=[reason], status=status)
+
+    async def analyze_batch(self, designations: List[str],
+                           progress_callback: Optional[Callable[[int, int], None]] = None,
+                           force_refresh: bool = False) -> List[PipelineResult]:
+        """Bounded async scheduling; preserve order/identity including failed items.
+
+        Cancellation stops awaiting a blocking provider call, not its worker thread.
+        Provider timeouts and global rate limiting remain acquisition responsibilities.
+        """
+        semaphore = asyncio.Semaphore(max(1, min(self.pipeline_config.max_workers,
+            self.analysis_queue_size)) if self.analysis_parallel else 1)
+        completed = 0
+
+        async def run(designation):
+            nonlocal completed
+            async with semaphore:
+                start = time.monotonic()
+                try:
+                    result = await asyncio.wait_for(self.analyze_neo(designation,
+                        force_refresh=force_refresh), self.pipeline_config.timeout_seconds)
+                except asyncio.TimeoutError:
+                    result = self._failure_result(designation, 'failed', 'Analysis timeout', start)
+                except Exception as exc:
+                    result = self._failure_result(designation, 'failed', str(exc), start)
                 completed += 1
                 if progress_callback:
-                    progress_callback(completed, total)
-            return results
-
-        queue_size = self.analysis_queue_size if self.analysis_queue_size else total
-        if queue_size <= 0:
-            queue_size = total
-        batches = [designations[i:i + queue_size] for i in range(0, total, queue_size)]
-
-        for batch in batches:
-            with ThreadPoolExecutor(max_workers=self.pipeline_config.max_workers) as executor:
-                future_to_designation = {
-                    executor.submit(asyncio.run, self.analyze_neo(designation)): designation
-                    for designation in batch
-                }
-
-                for future in as_completed(future_to_designation, timeout=self.pipeline_config.timeout_seconds):
-                    designation = future_to_designation[future]
-
                     try:
-                        result = future.result()
-                        results.append(result)
-                        completed += 1
+                        progress_callback(completed, len(designations))
+                    except Exception:
+                        logger.exception('Progress callback failed; scientific result retained')
+                return result
 
-                        if progress_callback:
-                            progress_callback(completed, total)
+        return list(await asyncio.gather(*(run(d) for d in designations)))
 
-                        logger.debug(f"Completed analysis {completed}/{total}: {designation}")
+    async def _fetch_neo_data(self, designation: str, force_refresh: bool = False) -> Optional[NEOData]:
+        """Use the existing typed/versioned DataFetcher; no duplicate legacy cache."""
+        if self.data_fetcher is None:
+            from ..data.fetcher import DataFetcher
+            self.data_fetcher = DataFetcher(cache_manager=self.cache_manager)
+        return await asyncio.to_thread(self.data_fetcher.fetch_neo_data, designation,
+            force_refresh=force_refresh or not self.pipeline_config.enable_caching)
 
-                    except Exception as e:
-                        logger.error(f"Failed to analyze {designation}: {e}")
-
-                        error_result = PipelineResult(
-                            designation=designation,
-                            anomaly_score=AnomalyScore(designation, 0.0, 0.0, 'natural'),
-                            analysis_metadata={},
-                            processing_time=0.0,
-                            data_quality={'error': 'Processing failed'},
-                            errors=[str(e)]
-                        )
-                        results.append(error_result)
-                        completed += 1
-
-                        if progress_callback:
-                            progress_callback(completed, total)
-
-        logger.info(f"Batch analysis completed: {len(results)} results")
-        return results
-    
-    async def _fetch_neo_data(self, designation: str) -> Optional[NEOData]:
-        """Fetch NEO data from available sources."""
-        try:
-            # Check cache first
-            if self.pipeline_config.enable_caching:
-                cache_key = f"neo_data_{designation}"
-                cached_data = self.cache_manager.get(cache_key)
-                if cached_data:
-                    logger.debug(f"Using cached data for {designation}")
-                    return NEOData(**cached_data)
-            
-            # Fetch from data sources
-            neo_data = await self.data_source_manager.get_neo_data(designation)
-            
-            if neo_data and self.pipeline_config.enable_caching:
-                # Cache the data
-                cache_key = f"neo_data_{designation}"
-                self.cache_manager.set(cache_key, neo_data.__dict__, ttl=7200)  # 2 hours
-            
-            return neo_data
-            
-        except Exception as e:
-            logger.error(f"Failed to fetch data for {designation}: {e}")
-            return None
-    
     async def _run_indicators(self, neo_data: NEOData) -> Dict[str, IndicatorResult]:
         """Run all enabled anomaly indicators."""
         indicator_results = {}
@@ -430,77 +344,27 @@ class AnalysisPipeline:
         return indicator_results
     
     def _assess_data_quality(self, neo_data: NEOData) -> Dict[str, Any]:
-        """Assess the quality and completeness of NEO data."""
-        quality_metrics = {
-            'completeness_score': 0.0,
-            'data_sources': getattr(neo_data, 'data_sources', []),
-            'missing_elements': [],
-            'data_age_days': None,
-            'reliability_score': 1.0
+        """Count field presence; completeness is not measurement reliability."""
+        orbital_fields = ['eccentricity', 'inclination', 'semi_major_axis', 'ascending_node',
+            'argument_of_perihelion', 'mean_anomaly', 'epoch', 'orbital_period']
+        physical_fields = ['diameter_km', 'albedo', 'absolute_magnitude_h', 'rotation_period_hours', 'spectral_type']
+        missing = [f'orbital.{k}' for k in orbital_fields
+            if getattr(neo_data.orbital_elements, k, None) is None]
+        physical_missing = [f'physical.{k}' for k in physical_fields
+            if getattr(neo_data.physical_properties, k, None) is None]
+        count = len(orbital_fields) + len(physical_fields)
+        return {
+            'completeness_score': (count - len(missing) - len(physical_missing)) / count,
+            'completeness_semantics': 'presence_of_13_catalogue_fields_not_reliability',
+            'orbital_completeness': (len(orbital_fields) - len(missing)) / len(orbital_fields),
+            'physical_fields_present': len(physical_fields) - len(physical_missing),
+            'missing_elements': missing + physical_missing,
+            'close_approaches_count': len(neo_data.close_approaches or []),
+            'data_sources': list(neo_data.sources_used),
+            'retrieved_at': neo_data.fetched_at.isoformat() if neo_data.fetched_at else None,
+            'data_age_days': None, 'reliability_score': None,
         }
-        
-        # Check orbital elements completeness
-        if neo_data.orbital_elements:
-            orbital_completeness = 0
-            orbital_total = 8  # Total expected orbital elements
-            
-            elements_to_check = [
-                'eccentricity', 'inclination', 'semi_major_axis', 'ascending_node',
-                'argument_of_perihelion', 'mean_anomaly', 'epoch', 'orbital_period'
-            ]
-            
-            for element in elements_to_check:
-                if hasattr(neo_data.orbital_elements, element) and getattr(neo_data.orbital_elements, element) is not None:
-                    orbital_completeness += 1
-                else:
-                    quality_metrics['missing_elements'].append(f'orbital.{element}')
-            
-            quality_metrics['orbital_completeness'] = orbital_completeness / orbital_total
-        else:
-            quality_metrics['missing_elements'].append('orbital_elements')
-            quality_metrics['orbital_completeness'] = 0.0
-        
-        # Check close approaches data
-        if neo_data.close_approaches:
-            approach_quality = 0
-            for approach in neo_data.close_approaches:
-                if approach.distance_au and approach.close_approach_date:
-                    approach_quality += 1
-            
-            quality_metrics['close_approaches_quality'] = approach_quality / len(neo_data.close_approaches)
-            quality_metrics['close_approaches_count'] = len(neo_data.close_approaches)
-        else:
-            quality_metrics['missing_elements'].append('close_approaches')
-            quality_metrics['close_approaches_quality'] = 0.0
-            quality_metrics['close_approaches_count'] = 0
-        
-        # Calculate overall completeness
-        completeness_factors = [
-            quality_metrics.get('orbital_completeness', 0),
-            quality_metrics.get('close_approaches_quality', 0),
-            1.0 if neo_data.designation else 0.0,
-            1.0 if getattr(neo_data, 'physical_parameters', None) else 0.0
-        ]
-        
-        quality_metrics['completeness_score'] = sum(completeness_factors) / len(completeness_factors)
-        
-        # Assess data age (if available)
-        if neo_data.orbital_elements and hasattr(neo_data.orbital_elements, 'epoch') and neo_data.orbital_elements.epoch:
-            try:
-                if isinstance(neo_data.orbital_elements.epoch, datetime):
-                    age = (datetime.now() - neo_data.orbital_elements.epoch).days
-                    quality_metrics['data_age_days'] = age
-                    
-                    # Reduce reliability for very old data
-                    if age > 365:  # More than 1 year old
-                        quality_metrics['reliability_score'] *= 0.8
-                    elif age > 30:  # More than 1 month old
-                        quality_metrics['reliability_score'] *= 0.9
-            except Exception:
-                pass
-        
-        return quality_metrics
-    
+
     def _update_performance_metrics(self, processing_time: float, success: bool) -> None:
         """Update pipeline performance metrics."""
         self.performance_metrics['total_analyses'] += 1
@@ -518,12 +382,9 @@ class AnalysisPipeline:
         )
     
     def _calculate_config_hash(self) -> str:
-        """Calculate hash of current configuration for caching."""
-        import hashlib
-        
-        config_str = f"{self.config.weights.__dict__}{self.config.thresholds.__dict__}{self.pipeline_config.__dict__}"
-        return hashlib.md5(config_str.encode()).hexdigest()[:8]
-    
+        """Compatibility accessor for the actual ranking policy ID, not legacy weights."""
+        return self.screening_service.analyze_raw('policy-only', {}).policy_id
+
     def get_performance_metrics(self) -> Dict[str, Any]:
         """Get pipeline performance metrics."""
         indicator_metrics = {}
@@ -533,7 +394,7 @@ class AnalysisPipeline:
         return {
             'pipeline_metrics': self.performance_metrics,
             'indicator_metrics': indicator_metrics,
-            'data_source_metrics': self.data_source_manager.get_performance_metrics(),
+            'data_source_metrics': self.data_fetcher.get_fetch_statistics() if self.data_fetcher is not None else {},
             'cache_metrics': self.cache_manager.get_stats()
         }
     
@@ -541,7 +402,8 @@ class AnalysisPipeline:
         """Get summary of all analyses performed."""
         return {
             'performance_metrics': self.get_performance_metrics(),
-            'statistical_summary': self.statistical_analyzer.get_summary_statistics(),
+            'statistical_summary': {'status': 'unavailable_uncalibrated_model',
+                'five_sigma_claim_permitted': False},
             'configuration': {
                 'pipeline_config': self.pipeline_config.__dict__,
                 'weights': self.config.weights.__dict__,

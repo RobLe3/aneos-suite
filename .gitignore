@@ -193,3 +193,20 @@ enhanced_neo_poll_*.json
 # Archive directory - track all content (must be last to override name-based patterns above)
 !docs/archive/
 !docs/archive/**
+!tests/test_ky26_baseline.py
+
+!tests/test_nongrav_evidence.py
+
+!tests/test_screening_service.py
+
+!tests/test_screening_numerics.py
+
+!tests/test_required_validation_gate.py
+
+!tests/test_cad_evidence_integrity.py
+
+!tests/test_legacy_validation_integrity.py
+
+# Beta/research runtime artifacts are local data, not source revisions.
+/beta-runtime/
+/dashboard_results/

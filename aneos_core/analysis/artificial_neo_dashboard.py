@@ -1,495 +1,557 @@
-"""
-Artificial NEO Analysis Dashboard
+"""Polling screening dashboard over the shared scientific contracts.
 
-Comprehensive dashboard for displaying and categorizing artificial NEO detection results
-after polling processes. Provides clear visualization of suspicious, edge case, and 
-confirmed artificial NEOs with detailed analysis metrics.
+The historical class/module names remain import-compatible. Origin categories,
+probabilities and invented confidence have been deprecated, not recalibrated.
 """
 
-import asyncio
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 import json
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
 from pathlib import Path
-import logging
+from typing import Optional
+from uuid import uuid4
 
-try:
-    from rich.console import Console
-    from rich.table import Table
-    from rich.panel import Panel
-    from rich.layout import Layout
-    from rich.text import Text
-    from rich.progress import Progress, SpinnerColumn, TextColumn
-    from rich.prompt import Prompt, Confirm
-    from rich.columns import Columns
-    from rich.tree import Tree
-    HAS_RICH = True
-except ImportError:
-    HAS_RICH = False
+from aneos_core.data.models import NEOData
+from aneos_core.data.enrichment import clone, fingerprint, identifier
+from .screening import ScreeningAnalysisService, ScreeningPolicy
+from .object_review import (
+    build_object_review,
+    build_assessment_review,
+    verify_object_review,
+)
 
-logger = logging.getLogger(__name__)
+CATEGORIES = {
+    "FOLLOW_UP_CANDIDATE": "follow_up_candidate",
+    "NOT_FLAGGED": "not_flagged",
+    "INCONCLUSIVE": "inconclusive",
+}
+CATEGORY_LABELS = {
+    "follow_up_candidate": "Follow-up candidate",
+    "not_flagged": "Not flagged",
+    "inconclusive": "Inconclusive",
+}
+LIMITS = (
+    "Rank is an uncalibrated follow-up heuristic, not Gaussian significance or an origin probability. "
+    "Not flagged does not mean natural. Impact risk is not assessed here. "
+    "Legacy unverified rows are retained, not promoted to measured evidence."
+)
 
-@dataclass
+
+def utc_now():
+    return datetime.now(timezone.utc)
+
+
+@dataclass(frozen=True)
 class NEOClassification:
-    """Classification result for a NEO."""
+    """Compatibility view; every supported inference derives from a verified review.
+
+    Old positional/keyword fields remain accepted. Their claims are archived and
+    nullified; constructing a legacy object cannot confirm its asserted origin.
+    """
+
     designation: str
-    category: str  # 'artificial', 'suspicious', 'edge_case', 'natural'
-    confidence: float
-    artificial_probability: float
-    risk_factors: List[str]
-    analysis_details: Dict[str, Any]
-    data_sources: List[str]
-    analysis_timestamp: datetime
-    orbital_elements: Dict[str, float]
+    category: str = "inconclusive"
+    confidence: Optional[float] = None
+    artificial_probability: Optional[float] = None
+    risk_factors: list = field(default_factory=list)
+    analysis_details: dict = field(default_factory=dict)
+    data_sources: list = field(default_factory=list)
+    analysis_timestamp: datetime = field(default_factory=utc_now)
+    orbital_elements: dict = field(default_factory=dict)
+    review: Optional[dict] = None
+    input_record: object = None
+    input_status: str = "legacy_unverified"
+    input_id: Optional[str] = None
+
+    def __post_init__(self):
+        raw = self.input_record
+        if raw is None:
+            raw = {
+                "designation": self.designation,
+                "category": self.category,
+                "artificial_probability": self.artificial_probability,
+                "confidence": self.confidence,
+                "orbital_elements": self.orbital_elements,
+                "data_sources": self.data_sources,
+                "analysis_details": self.analysis_details,
+                "analysis_timestamp": self.analysis_timestamp.isoformat(),
+            }
+        raw = clone(raw)
+        review = verify_object_review(self.review) if self.review is not None else None
+        if review is not None and review["designation"] != self.designation:
+            raise ValueError("Review/object identity mismatch")
+        if review is not None:
+            source = (review.get("inventory") or {}).get("source_snapshot") or {}
+            evidence = review["assessment"]["evidence_snapshot"]
+            contexts = (
+                source.get("evidence_metadata") or {},
+                evidence.get("provenance") or {},
+                evidence.get("additional") or {},
+            )
+            if any(
+                context.get(k) is True
+                for context in contexts
+                for k in ("synthetic", "is_synthetic", "mock", "demo")
+            ):
+                review = None
+                object.__setattr__(
+                    self, "input_status", "declared_synthetic_unverified"
+                )
+        assessment = review["assessment"] if review is not None else None
+        snapshot = (
+            review["inventory"]["source_snapshot"]
+            if review and review["inventory"]
+            else None
+        )
+        object.__setattr__(self, "input_record", raw)
+        object.__setattr__(self, "input_id", fingerprint(raw))
+        object.__setattr__(self, "review", review)
+        object.__setattr__(
+            self,
+            "category",
+            CATEGORIES[assessment["classification"]] if assessment else "inconclusive",
+        )
+        object.__setattr__(self, "confidence", None)
+        object.__setattr__(self, "artificial_probability", None)
+        object.__setattr__(
+            self,
+            "risk_factors",
+            (
+                [
+                    e["type"] + " (uncalibrated proxy)"
+                    for e in assessment["evidence_sources"]
+                    if e["analyzed"]
+                ]
+                if assessment
+                else []
+            ),
+        )
+        object.__setattr__(
+            self,
+            "orbital_elements",
+            clone(snapshot["orbital_elements"] or {}) if snapshot else {},
+        )
+        object.__setattr__(
+            self, "data_sources", list(snapshot["sources_used"]) if snapshot else []
+        )
+        object.__setattr__(
+            self,
+            "analysis_details",
+            {
+                "assessment": clone(assessment),
+                "data_completeness": None,
+                "basic_field_presence": (
+                    clone(review["inventory"]["coverage"]) if snapshot else None
+                ),
+                "interpretation": (
+                    review["decision"]["text"]
+                    if review
+                    else "Screening unavailable: no replayable typed evidence or canonical assessment. Legacy input is retained for review."
+                ),
+                "limits": LIMITS,
+            },
+        )
+
+    @property
+    def screening_score(self):
+        return self.review["assessment"]["screening_score"] if self.review else None
+
+    @property
+    def physical_properties(self):
+        return (
+            clone(
+                self.review["inventory"]["source_snapshot"]["physical_properties"] or {}
+            )
+            if self.review and self.review["inventory"]
+            else {}
+        )
+
+    @property
+    def impact_evidence(self):
+        raw = self.input_record if isinstance(self.input_record, dict) else {}
+        return clone(raw.get("impact_evidence", raw.get("impact_assessment")))
+
+    @property
+    def basic_presence(self):
+        return (
+            self.review["inventory"]["coverage"]["basic_catalogue"]["fraction_present"]
+            if self.review and self.review["inventory"]
+            else None
+        )
+
+    def to_payload(self):
+        # Do not allow a mutable nested dictionary to change a frozen report silently.
+        if self.input_id != fingerprint(self.input_record):
+            raise ValueError("Classification input changed")
+        review = verify_object_review(self.review) if self.review else None
+        if review and (
+            review["designation"] != self.designation
+            or CATEGORIES[review["assessment"]["classification"]] != self.category
+        ):
+            raise ValueError("Classification review changed")
+        value = {
+            "schema_version": "polling-screening-record-v1",
+            "designation": self.designation,
+            "category": self.category,
+            "screening_score": self.screening_score,
+            "confidence": None,
+            "artificial_probability": None,
+            "sigma_confidence": None,
+            "combined_p_value": None,
+            "false_discovery_rate": None,
+            "origin_status": "inconclusive",
+            "input_record": clone(self.input_record),
+            "input_status": self.input_status,
+            "input_id": self.input_id,
+            "review": review,
+            "analysis_timestamp": self.analysis_timestamp.isoformat(),
+            "five_sigma_claim_permitted": False,
+            "limits": LIMITS,
+        }
+        value["record_id"] = fingerprint(value)
+        return value
+
+
+def verify_record(value):
+    value = clone(value)
+    if (
+        not isinstance(value, dict)
+        or value.get("schema_version") != "polling-screening-record-v1"
+    ):
+        raise ValueError("Unsupported screening record")
+    stamp = datetime.fromisoformat(value["analysis_timestamp"])
+    if stamp.tzinfo is None or stamp.utcoffset().total_seconds() != 0:
+        raise ValueError("Screening receipt requires explicit UTC")
+    result = NEOClassification(
+        value["designation"],
+        review=value["review"],
+        input_record=value["input_record"],
+        input_status=value["input_status"],
+        analysis_timestamp=stamp,
+    )
+    if result.to_payload() != value:
+        raise ValueError("Screening record does not reproduce")
+    return result
+
+
+def classify_record(value, service=None):
+    """No acquisition/I/O. Accept typed snapshots or replayable canonical evidence.
+
+    Old score-only/unschematized packets retain all finite JSON values as unverified
+    input. They cannot establish measured orbit/physical inputs by field-name alone.
+    """
+    service = service or ScreeningAnalysisService()
+    is_typed = isinstance(value, NEOData)
+    if is_typed:
+        value = {"designation": value.designation, "neo_data": value.to_dict()}
+    try:
+        raw = clone(value)
+    except (ValueError, TypeError, OverflowError):
+        return NEOClassification(
+            "Unidentified record",
+            input_record={
+                "retention_error": "NONFINITE_UNSERIALIZABLE_OR_OVERSIZE_INPUT"
+            },
+            input_status="invalid_input",
+        )
+    if not isinstance(raw, dict):
+        return NEOClassification(
+            "Unidentified record",
+            input_record={"unverified_input": raw},
+            input_status="invalid_input",
+        )
+    name = "Unidentified record"
+    try:
+        if not isinstance(raw, dict):
+            raise ValueError("Record must be an object")
+        name = identifier(
+            raw.get("designation") or (raw.get("neo_data") or {}).get("designation"),
+            "designation",
+        )
+        if raw.get("schema_version") == "polling-screening-record-v1":
+            return verify_record(raw)
+        review = None
+        if raw.get("schema_version") == "object-evidence-review-v1":
+            return NEOClassification(
+                name,
+                review=verify_object_review(raw),
+                input_record=raw,
+                input_status="replayed_review_not_authenticated",
+            )
+        if any(
+            raw.get(k) is True for k in ("synthetic", "is_synthetic", "mock", "demo")
+        ):
+            return NEOClassification(
+                name, input_record=raw, input_status="declared_synthetic_unverified"
+            )
+        if "neo_data" in raw and raw["neo_data"] is not None:
+            n = NEOData.from_dict(raw["neo_data"])
+            normalized = n.to_dict()
+            supplied = raw["neo_data"]
+            # The model recomputes its old orbital-only completeness cache. Do
+            # not reject valid primary fields or use that cache as scientific quality.
+            same_snapshot = set(normalized) == set(supplied) and all(
+                normalized[k] == supplied[k] for k in normalized if k != "completeness"
+            )
+            if n.designation != name or not same_snapshot:
+                raise ValueError("Snapshot identity/schema/default mismatch")
+            if any(
+                n.evidence_metadata.get(k) is True
+                for k in ("synthetic", "is_synthetic", "mock", "demo")
+            ):
+                return NEOClassification(
+                    name, input_record=raw, input_status="declared_synthetic_unverified"
+                )
+            if raw.get("screening_assessment") is not None:
+                p = raw["screening_assessment"]
+                actual = service.analyze_neo(
+                    n, p["evidence_snapshot"]["additional"]
+                ).to_payload()
+                if actual != p:
+                    raise ValueError("Source and supplied assessment do not match")
+                review = build_assessment_review(actual, neo=n, policy=service.policy)
+            else:
+                review = build_object_review(n, policy=service.policy)
+            status = "typed_snapshot_not_authenticated"
+        elif (
+            isinstance(raw.get("screening_assessment"), dict)
+            or raw.get("schema_version") == "screening-assessment-v1"
+        ):
+            p = (
+                raw
+                if raw.get("schema_version") == "screening-assessment-v1"
+                else raw["screening_assessment"]
+            )
+            assessment = service.replay(p["evidence_snapshot"], p["evidence_id"])
+            if (
+                p.get("policy_id") != assessment.policy_id
+                or assessment.designation != name
+            ):
+                raise ValueError("Assessment binding mismatch")
+            review = build_assessment_review(
+                assessment.to_payload(), policy=service.policy
+            )
+            status = "replayed_assessment_not_authenticated"
+        else:
+            status = "legacy_unverified"
+        return NEOClassification(
+            name, review=review, input_record=raw, input_status=status
+        )
+    except (ValueError, KeyError, TypeError, AttributeError, OverflowError):
+        return NEOClassification(name, input_record=raw, input_status="invalid_input")
+
+
+def safe_classification(value):
+    if isinstance(value, NEOClassification):
+        try:
+            return verify_record(value.to_payload())
+        except (ValueError, KeyError, TypeError, OverflowError):
+            return NEOClassification(
+                value.designation,
+                input_record={"retention_error": "CLASSIFICATION_CHANGED"},
+                input_status="invalid_input",
+            )
+    return classify_record(value)
+
+
+def rank_key(value):
+    c = safe_classification(value)
+    score = c.screening_score
+    return (
+        score is None,
+        -score if score is not None else 0,
+        c.designation,
+        c.input_id,
+    )
+
 
 @dataclass
 class DashboardMetrics:
-    """Dashboard summary metrics."""
     total_objects: int
-    artificial_confirmed: int
-    suspicious_objects: int
-    edge_cases: int
-    natural_objects: int
-    high_confidence_detections: int
-    data_quality_score: float
-    analysis_timestamp: datetime
+    artificial_confirmed: Optional[int] = None
+    suspicious_objects: Optional[int] = None
+    edge_cases: Optional[int] = None
+    natural_objects: Optional[int] = None
+    high_confidence_detections: Optional[int] = None
+    data_quality_score: Optional[float] = None
+    analysis_timestamp: datetime = field(default_factory=utc_now)
+    total_records: int = 0
+    follow_up_candidates: int = 0
+    not_flagged: int = 0
+    inconclusive: int = 0
+    records_with_inventory: int = 0
+
 
 class ArtificialNEODashboard:
-    """
-    Comprehensive dashboard for artificial NEO analysis results.
-    
-    Categorizes NEOs into:
-    - ARTIFICIAL: High confidence artificial objects (≥0.8 probability)
-    - SUSPICIOUS: Objects requiring investigation (0.5-0.8 probability)
-    - EDGE_CASE: Borderline objects with unusual characteristics (0.3-0.5 probability)
-    - NATURAL: Confirmed natural objects (<0.3 probability)
-    """
-    
-    def __init__(self, console: Optional[Console] = None):
-        self.console = console or (Console() if HAS_RICH else None)
-        self.classifications: List[NEOClassification] = []
-        self.metrics: Optional[DashboardMetrics] = None
-        
-        # Classification thresholds
-        self.thresholds = {
-            'artificial': 0.8,      # High confidence artificial
-            'suspicious': 0.5,      # Requires investigation
-            'edge_case': 0.3,       # Borderline/unusual
-            'natural': 0.0          # Natural objects
-        }
-    
-    async def analyze_polling_results(self, polling_results: List[Dict[str, Any]]) -> List[NEOClassification]:
-        """
-        Analyze polling results and classify NEOs for dashboard display.
-        
-        Args:
-            polling_results: Raw results from polling process
-            
-        Returns:
-            List of classified NEO objects
-        """
-        classifications = []
-        
-        if self.console:
-            self.console.print("\n🔬 [bold cyan]Analyzing Polling Results for Artificial Signatures[/bold cyan]")
-            
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=self.console
-            ) as progress:
-                task = progress.add_task("Classifying NEOs...", total=len(polling_results))
-                
-                for result in polling_results:
-                    classification = await self._classify_neo(result)
-                    classifications.append(classification)
-                    progress.advance(task)
-        else:
-            print("\n🔬 Analyzing polling results for artificial signatures...")
-            for i, result in enumerate(polling_results, 1):
-                if i % 10 == 0:
-                    print(f"   Processed {i}/{len(polling_results)} objects...")
-                classification = await self._classify_neo(result)
-                classifications.append(classification)
-        
-        self.classifications = classifications
-        self.metrics = self._calculate_metrics(classifications)
-        
-        return classifications
-    
-    async def _classify_neo(self, result: Dict[str, Any]) -> NEOClassification:
-        """Classify a single NEO based on analysis results."""
-        
-        # Extract key data
-        designation = result.get('designation', 'Unknown')
-        artificial_prob = result.get('artificial_probability', result.get('artificial_score', 0.0))
-        risk_factors = result.get('risk_factors', result.get('indicators', []))
-        data_sources = result.get('data_sources', [result.get('data_source', 'Unknown')])
-        orbital_elements = result.get('orbital_elements', {})
-        
-        # Enhanced analysis using detection system
-        try:
-            from ..detection.detection_manager import DetectionManager, DetectorType
-            detector = DetectionManager(preferred_detector=DetectorType.AUTO)
-            if orbital_elements:
-                enhanced_result = detector.analyze_neo(orbital_elements)
-                artificial_prob = max(artificial_prob, enhanced_result.artificial_probability)
-                risk_factors.extend(enhanced_result.risk_factors)
-        except Exception as e:
-            logger.debug(f"Enhanced detection failed for {designation}: {e}")
-        
-        # Determine category based on probability
-        if artificial_prob >= self.thresholds['artificial']:
-            category = 'artificial'
-            confidence = 0.9 + (artificial_prob - 0.8) * 0.5  # Scale 0.8-1.0 to 0.9-0.95
-        elif artificial_prob >= self.thresholds['suspicious']:
-            category = 'suspicious'
-            confidence = 0.6 + (artificial_prob - 0.5) * 0.6  # Scale 0.5-0.8 to 0.6-0.9
-        elif artificial_prob >= self.thresholds['edge_case']:
-            category = 'edge_case'
-            confidence = 0.4 + (artificial_prob - 0.3) * 1.0  # Scale 0.3-0.5 to 0.4-0.6
-        else:
-            category = 'natural'
-            confidence = 0.8 - artificial_prob * 2.0  # Higher confidence for lower prob
-        
-        # Additional analysis based on risk factors
-        analysis_details = {
-            'primary_indicators': risk_factors[:3],
-            'data_completeness': result.get('data_completeness', 0.5),
-            'analysis_method': result.get('analysis_method', 'standard'),
-            'orbital_anomalies': self._detect_orbital_anomalies(orbital_elements),
-            'temporal_patterns': self._analyze_temporal_patterns(result),
-            'physical_characteristics': self._analyze_physical_characteristics(result)
-        }
-        
-        return NEOClassification(
-            designation=designation,
-            category=category,
-            confidence=min(0.95, max(0.1, confidence)),
-            artificial_probability=artificial_prob,
-            risk_factors=list(set(risk_factors)),  # Remove duplicates
-            analysis_details=analysis_details,
-            data_sources=data_sources if isinstance(data_sources, list) else [data_sources],
-            analysis_timestamp=datetime.now(),
-            orbital_elements=orbital_elements
-        )
-    
-    def _detect_orbital_anomalies(self, orbital_elements: Dict[str, float]) -> List[str]:
-        """Detect orbital anomalies that may indicate artificial origin."""
-        anomalies = []
-        
-        if not orbital_elements:
-            return anomalies
-        
-        # Eccentricity analysis
-        eccentricity = orbital_elements.get('e', orbital_elements.get('eccentricity', 0.0))
-        if eccentricity > 0.7:
-            anomalies.append(f"Extremely high eccentricity: {eccentricity:.3f}")
-        elif eccentricity > 0.4:
-            anomalies.append(f"High eccentricity: {eccentricity:.3f}")
-        
-        # Inclination analysis
-        inclination = orbital_elements.get('i', orbital_elements.get('inclination', 0.0))
-        if inclination > 45:
-            anomalies.append(f"High inclination: {inclination:.1f}°")
-        elif inclination < 0.5:
-            anomalies.append(f"Unusually low inclination: {inclination:.1f}°")
-        
-        # Semi-major axis analysis
-        semi_major_axis = orbital_elements.get('a', orbital_elements.get('semi_major_axis', 1.0))
-        if semi_major_axis < 0.8 or semi_major_axis > 3.0:
-            anomalies.append(f"Unusual orbital size: {semi_major_axis:.3f} AU")
-        
-        # Check for suspiciously round numbers (potential artificial precision)
-        for key, value in orbital_elements.items():
-            if isinstance(value, (int, float)):
-                # Check if value is suspiciously round
-                if abs(value - round(value, 1)) < 0.001 and value != 0:
-                    anomalies.append(f"Suspiciously precise {key}: {value}")
-        
-        return anomalies
-    
-    def _analyze_temporal_patterns(self, result: Dict[str, Any]) -> List[str]:
-        """Analyze temporal patterns that may indicate artificial behavior."""
-        patterns = []
-        
-        # Check for discovery patterns
-        discovery_date = result.get('discovery_date')
-        if discovery_date:
-            # Recent discoveries are more likely to be artificial debris
+    """Historical entry point, now an evidence-bound candidate-screening dashboard."""
+
+    def __init__(self, console=None, service=None):
+        if console is None:
             try:
-                disc_date = datetime.fromisoformat(discovery_date.replace('Z', '+00:00'))
-                if (datetime.now() - disc_date).days < 30:
-                    patterns.append("Recent discovery (last 30 days)")
-            except:
+                from rich.console import Console
+
+                console = Console()
+            except ImportError:
                 pass
-        
-        # Check observation patterns
-        observation_count = result.get('observation_count', 0)
-        if observation_count < 10:
-            patterns.append("Limited observational data")
-        elif observation_count > 1000:
-            patterns.append("Extensive observational history")
-        
-        return patterns
-    
-    def _analyze_physical_characteristics(self, result: Dict[str, Any]) -> List[str]:
-        """Analyze physical characteristics for artificial signatures."""
-        characteristics = []
-        
-        # Size analysis
-        diameter = result.get('diameter', result.get('physical_properties', {}).get('diameter'))
-        if diameter:
-            if diameter < 1.0:  # Very small objects are often artificial
-                characteristics.append(f"Very small size: {diameter:.2f}m")
-            elif diameter > 1000:  # Very large objects are usually natural
-                characteristics.append(f"Large natural-sized object: {diameter:.0f}m")
-        
-        # Albedo analysis
-        albedo = result.get('albedo', result.get('physical_properties', {}).get('albedo'))
-        if albedo:
-            if albedo > 0.5:  # High albedo may indicate metallic/artificial surfaces
-                characteristics.append(f"High albedo (metallic?): {albedo:.3f}")
-            elif albedo < 0.03:  # Very dark objects
-                characteristics.append(f"Very low albedo: {albedo:.3f}")
-        
-        return characteristics
-    
-    def _calculate_metrics(self, classifications: List[NEOClassification]) -> DashboardMetrics:
-        """Calculate dashboard summary metrics."""
-        if not classifications:
-            return DashboardMetrics(0, 0, 0, 0, 0, 0, 0.0, datetime.now())
-        
-        total = len(classifications)
-        artificial = len([c for c in classifications if c.category == 'artificial'])
-        suspicious = len([c for c in classifications if c.category == 'suspicious'])
-        edge_cases = len([c for c in classifications if c.category == 'edge_case'])
-        natural = len([c for c in classifications if c.category == 'natural'])
-        high_confidence = len([c for c in classifications if c.confidence >= 0.8])
-        
-        # Calculate data quality score
-        avg_confidence = sum(c.confidence for c in classifications) / total
-        data_quality = avg_confidence * 0.7 + (high_confidence / total) * 0.3
-        
-        return DashboardMetrics(
-            total_objects=total,
-            artificial_confirmed=artificial,
-            suspicious_objects=suspicious,
-            edge_cases=edge_cases,
-            natural_objects=natural,
-            high_confidence_detections=high_confidence,
-            data_quality_score=data_quality,
-            analysis_timestamp=datetime.now()
+        self.console = console
+        self.service = service or ScreeningAnalysisService()
+        self.classifications = []
+        self.metrics = None
+        self.thresholds = {
+            "deprecated_origin_thresholds": None,
+            "policy": self.service.describe_policy(),
+        }
+
+    async def analyze_polling_results(self, polling_results):
+        self.classifications = self.classify_records(polling_results)
+        self.metrics = self._calculate_metrics(self.classifications)
+        return self.classifications
+
+    def classify_records(self, records):
+        if not isinstance(records, list) or len(records) > 10000:
+            raise ValueError("Dashboard requires at most 10000 explicit records")
+        return [classify_record(r, self.service) for r in records]
+
+    async def _classify_neo(self, result):
+        return classify_record(result, self.service)
+
+    def _detect_orbital_anomalies(self, orbital_elements):
+        raise NotImplementedError(
+            "Legacy orbit cutoffs/round-number origin indicators are deprecated; inspect the canonical ranking trace"
         )
-    
-    def display_dashboard(self, save_results: bool = True, output_dir: str = "dashboard_results"):
-        """Display the comprehensive artificial NEO analysis dashboard."""
-        
-        if not self.classifications or not self.metrics:
-            if self.console:
-                self.console.print("❌ [red]No analysis results available. Run analysis first.[/red]")
-            else:
-                print("❌ No analysis results available. Run analysis first.")
-            return
-        
+
+    def _analyze_temporal_patterns(self, result):
+        raise NotImplementedError(
+            "Unverified discovery/observation defaults are not scientific temporal evidence; inspect source chronology"
+        )
+
+    def _analyze_physical_characteristics(self, result):
+        raise NotImplementedError(
+            "Unitless diameter/metallicity-origin heuristics are deprecated; inspect typed physical evidence"
+        )
+
+    def _calculate_metrics(self, classifications):
+        items = [safe_classification(c) for c in classifications]
+        return DashboardMetrics(
+            total_objects=len({c.designation for c in items}),
+            total_records=len(items),
+            follow_up_candidates=sum(
+                c.category == "follow_up_candidate" for c in items
+            ),
+            not_flagged=sum(c.category == "not_flagged" for c in items),
+            inconclusive=sum(c.category == "inconclusive" for c in items),
+            records_with_inventory=sum(c.basic_presence is not None for c in items),
+        )
+
+    def display_dashboard(self, save_results=True, output_dir="dashboard_results"):
+        self.classifications = [safe_classification(c) for c in self.classifications]
+        self.metrics = self._calculate_metrics(self.classifications)
         if self.console:
             self._display_rich_dashboard()
         else:
             self._display_text_dashboard()
-        
         if save_results:
-            self._save_dashboard_results(output_dir)
-    
-    def _display_rich_dashboard(self):
-        """Display dashboard using Rich interface."""
-        # Clear screen and show header
-        self.console.clear()
-        
-        # Title Panel
-        title = Panel(
-            Text("🛸 ARTIFICIAL NEO DETECTION DASHBOARD", style="bold cyan", justify="center"),
-            title="aNEOS Analysis Results",
-            border_style="cyan"
-        )
-        self.console.print(title)
-        
-        # Metrics Overview
-        metrics_table = Table(show_header=False, box=None, padding=(0, 2))
-        metrics_table.add_column("Metric", style="bold")
-        metrics_table.add_column("Value", style="white")
-        metrics_table.add_column("", style="dim")
-        
-        metrics_table.add_row("🎯 Total Objects Analyzed", str(self.metrics.total_objects), "")
-        metrics_table.add_row("🛸 Confirmed Artificial", str(self.metrics.artificial_confirmed), 
-                              f"({self.metrics.artificial_confirmed/self.metrics.total_objects*100:.1f}%)")
-        metrics_table.add_row("⚠️  Suspicious Objects", str(self.metrics.suspicious_objects),
-                              f"({self.metrics.suspicious_objects/self.metrics.total_objects*100:.1f}%)")
-        metrics_table.add_row("❓ Edge Cases", str(self.metrics.edge_cases),
-                              f"({self.metrics.edge_cases/self.metrics.total_objects*100:.1f}%)")
-        metrics_table.add_row("🌍 Natural Objects", str(self.metrics.natural_objects),
-                              f"({self.metrics.natural_objects/self.metrics.total_objects*100:.1f}%)")
-        metrics_table.add_row("📊 Data Quality Score", f"{self.metrics.data_quality_score:.3f}", "")
-        
-        metrics_panel = Panel(metrics_table, title="[bold]📊 Analysis Summary[/bold]", border_style="green")
-        self.console.print(metrics_panel)
-        
-        # Category Details
-        self._display_category_details()
-        
-        # Risk Assessment
-        self._display_risk_assessment()
-    
-    def _display_category_details(self):
-        """Display detailed breakdown by category."""
-        categories = ['artificial', 'suspicious', 'edge_case', 'natural']
-        category_icons = {'artificial': '🛸', 'suspicious': '⚠️', 'edge_case': '❓', 'natural': '🌍'}
-        category_colors = {'artificial': 'red', 'suspicious': 'yellow', 'edge_case': 'blue', 'natural': 'green'}
-        
-        for category in categories:
-            objects = [c for c in self.classifications if c.category == category]
-            if not objects:
-                continue
-            
-            # Create table for this category
-            table = Table(show_header=True)
-            table.add_column("Designation", style="bold")
-            table.add_column("Probability", justify="center")
-            table.add_column("Confidence", justify="center")
-            table.add_column("Top Risk Factors", style="dim")
-            
-            # Sort by probability (highest first)
-            sorted_objects = sorted(objects, key=lambda x: x.artificial_probability, reverse=True)
-            
-            for obj in sorted_objects[:10]:  # Show top 10 per category
-                factors_str = ", ".join(obj.risk_factors[:2]) if obj.risk_factors else "None"
-                if len(factors_str) > 50:
-                    factors_str = factors_str[:47] + "..."
-                
-                table.add_row(
-                    obj.designation,
-                    f"{obj.artificial_probability:.3f}",
-                    f"{obj.confidence:.3f}",
-                    factors_str
-                )
-            
-            title = f"{category_icons[category]} {category.upper()} OBJECTS ({len(objects)})"
-            panel = Panel(table, title=f"[bold {category_colors[category]}]{title}[/bold {category_colors[category]}]", 
-                         border_style=category_colors[category])
-            self.console.print(panel)
-            
-            if len(objects) > 10:
-                self.console.print(f"   [dim]... and {len(objects) - 10} more {category} objects[/dim]\n")
-    
-    def _display_risk_assessment(self):
-        """Display overall risk assessment."""
-        # Calculate risk levels
-        high_risk = self.metrics.artificial_confirmed + self.metrics.suspicious_objects
-        medium_risk = self.metrics.edge_cases
-        total_concerning = high_risk + medium_risk
-        
-        # Risk assessment
-        if total_concerning == 0:
-            risk_level = "LOW"
-            risk_color = "green"
-            risk_msg = "No artificial or suspicious objects detected."
-        elif total_concerning < self.metrics.total_objects * 0.1:
-            risk_level = "MODERATE"
-            risk_color = "yellow"
-            risk_msg = f"{total_concerning} objects require further investigation."
-        else:
-            risk_level = "HIGH"
-            risk_color = "red"
-            risk_msg = f"{total_concerning} objects show artificial signatures - immediate review recommended."
-        
-        risk_table = Table(show_header=False, box=None)
-        risk_table.add_column("", style="bold")
-        risk_table.add_column("", style="white")
-        
-        risk_table.add_row("🎯 Risk Level:", f"[{risk_color}]{risk_level}[/{risk_color}]")
-        risk_table.add_row("📝 Assessment:", risk_msg)
-        risk_table.add_row("⏰ Analysis Time:", self.metrics.analysis_timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"))
-        
-        risk_panel = Panel(risk_table, title="[bold]🚨 Risk Assessment[/bold]", border_style=risk_color)
-        self.console.print(risk_panel)
-    
-    def _display_text_dashboard(self):
-        """Display dashboard using text-only interface."""
-        print("\n" + "="*80)
-        print("🛸 ARTIFICIAL NEO DETECTION DASHBOARD")
-        print("="*80)
-        
-        print(f"\n📊 ANALYSIS SUMMARY:")
-        print(f"   Total Objects: {self.metrics.total_objects}")
-        print(f"   🛸 Artificial: {self.metrics.artificial_confirmed} ({self.metrics.artificial_confirmed/self.metrics.total_objects*100:.1f}%)")
-        print(f"   ⚠️  Suspicious: {self.metrics.suspicious_objects} ({self.metrics.suspicious_objects/self.metrics.total_objects*100:.1f}%)")
-        print(f"   ❓ Edge Cases: {self.metrics.edge_cases} ({self.metrics.edge_cases/self.metrics.total_objects*100:.1f}%)")
-        print(f"   🌍 Natural: {self.metrics.natural_objects} ({self.metrics.natural_objects/self.metrics.total_objects*100:.1f}%)")
-        print(f"   Data Quality: {self.metrics.data_quality_score:.3f}")
-        
-        # Show top objects in each category
-        for category in ['artificial', 'suspicious', 'edge_case']:
-            objects = [c for c in self.classifications if c.category == category]
-            if objects:
-                print(f"\n{category.upper()} OBJECTS ({len(objects)}):")
-                sorted_objects = sorted(objects, key=lambda x: x.artificial_probability, reverse=True)
-                for obj in sorted_objects[:5]:
-                    print(f"  {obj.designation:15} - Prob: {obj.artificial_probability:.3f} - Conf: {obj.confidence:.3f}")
-                    for factor in obj.risk_factors[:2]:
-                        print(f"    • {factor}")
-    
-    def _save_dashboard_results(self, output_dir: str):
-        """Save dashboard results to files."""
-        output_path = Path(output_dir)
-        output_path.mkdir(exist_ok=True)
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-        # Save detailed results
-        results_file = output_path / f"artificial_neo_analysis_{timestamp}.json"
-        
-        dashboard_data = {
-            'metadata': {
-                'analysis_timestamp': self.metrics.analysis_timestamp.isoformat(),
-                'total_objects': self.metrics.total_objects,
-                'data_quality_score': self.metrics.data_quality_score
-            },
-            'summary': asdict(self.metrics),
-            'classifications': [asdict(c) for c in self.classifications],
-            'thresholds': self.thresholds
-        }
-        
-        # Convert datetime objects to strings for JSON serialization
-        for classification in dashboard_data['classifications']:
-            classification['analysis_timestamp'] = classification['analysis_timestamp'].isoformat()
-        
-        with open(results_file, 'w') as f:
-            json.dump(dashboard_data, f, indent=2, default=str)
-        
-        if self.console:
-            self.console.print(f"\n💾 [green]Dashboard results saved to: {results_file}[/green]")
-        else:
-            print(f"\n💾 Dashboard results saved to: {results_file}")
+            return self._save_dashboard_results(output_dir)
 
-# Integration function for polling workflow
-async def create_dashboard_from_polling(polling_results: List[Dict[str, Any]], 
-                                      display: bool = True, 
-                                      save: bool = True) -> ArtificialNEODashboard:
-    """
-    Create and display dashboard from polling results.
-    
-    Args:
-        polling_results: Results from NEO polling process
-        display: Whether to display the dashboard
-        save: Whether to save results to disk
-        
-    Returns:
-        Configured dashboard instance
-    """
+    def _display_rich_dashboard(self):
+        from .dashboard_view import render_dashboard
+
+        render_dashboard(self.classifications, self.metrics, self.console)
+
+    def _display_text_dashboard(self):
+        from .dashboard_view import render_dashboard
+
+        render_dashboard(self.classifications, self.metrics, None)
+
+    def _display_category_details(self):
+        from .dashboard_view import render_rows
+
+        render_rows(self.classifications, self.console)
+
+    def _display_risk_assessment(self):
+        from .dashboard_view import message
+
+        message(LIMITS, self.console)
+
+    def _save_dashboard_results(self, output_dir):
+        """Exclusive run directory, verified JSON and Markdown; never overwrite history."""
+        from .dashboard_view import dashboard_markdown, message
+        from .reporting import _software_metadata
+
+        records = [safe_classification(c).to_payload() for c in self.classifications]
+        report = {
+            "schema_version": "polling-screening-dashboard-v1",
+            "records": records,
+            "software": _software_metadata(),
+            "policies": record_policies(records),
+            "limits": LIMITS,
+        }
+        report["report_id"] = fingerprint(report)
+        path = Path(output_dir)
+        path.mkdir(parents=True, exist_ok=True)
+        run = path / (
+            "screening_dashboard_"
+            + utc_now().strftime("%Y%m%dT%H%M%S%fZ")
+            + "_"
+            + uuid4().hex[:8]
+        )
+        run.mkdir()
+        (run / "report.json").write_text(
+            json.dumps(report, indent=2, allow_nan=False) + "\n"
+        )
+        (run / "report.md").write_text(dashboard_markdown(self.classifications))
+        from hashlib import sha256
+
+        complete = {
+            p.name: sha256(p.read_bytes()).hexdigest()
+            for p in (run / "report.json", run / "report.md")
+        }
+        (run / "complete.json").write_text(json.dumps(complete, indent=2) + "\n")
+        message("Screening report saved: " + str(run), self.console)
+        return run
+
+
+async def create_dashboard_from_polling(polling_results, display=True, save=True):
     dashboard = ArtificialNEODashboard()
     await dashboard.analyze_polling_results(polling_results)
-    
     if display:
         dashboard.display_dashboard(save_results=save)
-    
     return dashboard
+
+
+def record_policies(records):
+    """Frozen per-record policy descriptors, not an envelope-wide re-ranking."""
+    result = {}
+    for record in records:
+        review = record["review"]
+        if review is not None:
+            description = ScreeningAnalysisService(
+                ScreeningPolicy(**review["screening_policy"])
+            ).describe_policy()
+            if description["policy_id"] != review["assessment"]["policy_id"]:
+                raise ValueError("Record policy cannot be reproduced")
+            result[description["policy_id"]] = description
+    return result
+
+
+def records_from_file(data):
+    """Current reports replay; old formats are re-screened/retained, never trusted."""
+    if isinstance(data, list):
+        return data
+    if not isinstance(data, dict):
+        raise ValueError("Unsupported dashboard file")
+    if data.get("schema_version") == "polling-screening-dashboard-v1":
+        if data.get("report_id") != fingerprint(
+            {k: v for k, v in data.items() if k != "report_id"}
+        ):
+            raise ValueError("Dashboard fingerprint mismatch")
+        records = [verify_record(r).to_payload() for r in data["records"]]
+        if data["policies"] != record_policies(records):
+            raise ValueError("Dashboard record policies do not reproduce")
+        return records
+    for key in ("classifications", "results", "objects"):
+        if key in data:
+            if not isinstance(data[key], list):
+                raise ValueError("Expected a record list")
+            return data[key]
+    return [data]

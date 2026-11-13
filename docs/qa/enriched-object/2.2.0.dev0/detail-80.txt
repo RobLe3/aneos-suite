@@ -1,0 +1,57 @@
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Stored evidence — SYNTHETIC stored object                                    │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Storage: verified_ledger_projection; artificial-origin probability: not 
+calibrated.
+╭──────────────────── Input data — SYNTHETIC stored object ────────────────────╮
+│ Basic catalogue field presence 5/15; not total completeness or readiness.    │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Field                ┃ Recorded value ┃ Units / status                   ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis      │ 1.2            │ AU; present                      │ │
+│ │ Eccentricity         │ 0.2            │ dimensionless; present           │ │
+│ │ Inclination          │ 1.49           │ degrees; present                 │ │
+│ │ Ascending node       │ not available  │ degrees; not_available           │ │
+│ │ Periapsis argument   │ not available  │ degrees; not_available           │ │
+│ │ Mean anomaly         │ not available  │ degrees; not_available           │ │
+│ │ Orbit epoch          │ not available  │ model timestamp; native solution │ │
+│ │                      │                │ retained; not_available          │ │
+│ │ Diameter             │ 0.011 (~11 m)  │ km; present                      │ │
+│ │ Absolute magnitude H │ not available  │ mag; not_available               │ │
+│ │ Albedo               │ 0.52           │ dimensionless; present           │ │
+│ │ Spectral label       │ not available  │ catalogue label; not_available   │ │
+│ │ Rotation period      │ not available  │ h; not_available                 │ │
+│ │ First observation    │ not available  │ catalogue timestamp; source      │ │
+│ │                      │                │ precision retained;              │ │
+│ │                      │                │ not_available                    │ │
+│ │ Last observation     │ not available  │ catalogue timestamp; source      │ │
+│ │                      │                │ precision retained;              │ │
+│ │                      │                │ not_available                    │ │
+│ │ Retrieved at         │ not available  │ retrieval timestamp;             │ │
+│ │                      │                │ not_available                    │ │
+│ └──────────────────────┴────────────────┴──────────────────────────────────┘ │
+│                                                                              │
+│                                                                              │
+│ Non-gravitational evidence: not available.                                   │
+│ Overall completeness and source coverage: not established. Native            │
+│ solutions/uncertainties remain in the JSON.                                  │
+╰──────────────────────────────────────────────────────────────────────────────╯
+     Physical selection provenance — not independent origin evidence     
+┏━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Field       ┃ Selected source ┃ Uncertainty   ┃ Reference             ┃
+┡━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━┩
+│ albedo      │ MPC             │ not available │ SYNTHETIC alternative │
+│ diameter_km │ SBDB            │ not available │ SYNTHETIC primary     │
+└─────────────┴─────────────────┴───────────────┴───────────────────────┘
+     Dated source assertion history — not independent observations     
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Source ┃ Recorded at           ┃ Kind             ┃ Receipt (short) ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ SBDB   │ 2026-11-13            │ source_assertion │ 11cd6e2667f1    │
+│        │ 02:54:52.835604+00:00 │                  │                 │
+│ MPC    │ 2026-11-13            │ source_assertion │ 33fea3633789    │
+│        │ 02:54:52.835604+00:00 │                  │                 │
+└────────┴───────────────────────┴──────────────────┴─────────────────┘
+Full receipt IDs and unknown/alternative measurements remain in JSON source 
+history. No source authentication, physical fit or calibrated origin inference 
+is established.

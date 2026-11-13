@@ -14,6 +14,7 @@ Pipeline:
 This implements ADR-045 Stage 1. Stage 2 (REBOUND propagation) is deferred.
 """
 
+from aneos_core.data.provider_http import get_json as provider_get_json
 import itertools
 import math
 import logging
@@ -80,27 +81,13 @@ class PHAMoidScanner:
 
     async def fetch_phas(self) -> List[PHAObject]:
         """Query SBDB for all PHAs with orbital elements and A2."""
-        if not _HAS_AIOHTTP:
-            raise ImportError(
-                "aiohttp is required for the rendezvous scanner (Option 15) but is not installed.\n"
-                "Install with: pip install aiohttp>=3.8.0\n"
-                "Or: pip install -r requirements.txt"
-            )
-
         params = {
             "sb-cdata": '{"AND":["Moid|LT|0.05","H|LT|22"]}',
             "fields": "pdes,a,e,i,om,w,A2",
             "limit": "3000",
         }
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    SBDB_QUERY_URL,
-                    params=params,
-                    timeout=aiohttp.ClientTimeout(total=30),
-                ) as resp:
-                    resp.raise_for_status()
-                    data = await resp.json()
+            data = await asyncio.to_thread(provider_get_json, SBDB_QUERY_URL, params=params, timeout=30)
         except Exception as exc:
             self.logger.error(f"SBDB PHA query failed: {exc}")
             return []

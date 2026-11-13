@@ -8,6 +8,7 @@ GroundTruthObject instances produced by GroundTruthDatasetBuilder.
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 import logging
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -162,15 +163,15 @@ class GroundTruthValidator:
 
     def _score_object(self, obj, detector) -> float:
         """Returns artificial_probability in [0, 1]."""
-        try:
-            result = detector.analyze_neo(
-                obj.orbital_elements,
-                obj.physical_params or {},
-            )
-            return float(result.artificial_probability)
-        except Exception as exc:
-            logger.warning(f"Scoring failed for {obj.object_id}: {exc}")
-            return 0.0
+        result = detector.analyze_neo(obj.orbital_elements, obj.physical_params or {})
+        value = result.artificial_probability
+        if value is None or isinstance(value, bool):
+            raise ValueError(f"{obj.object_id}: artificial-origin probability unavailable; "
+                             "cannot evaluate it as zero or calibrate on missing outputs")
+        value = float(value)
+        if not math.isfinite(value) or not 0 <= value <= 1:
+            raise ValueError(f"{obj.object_id}: invalid artificial-origin probability")
+        return value
 
     def _compute_roc_auc(self, per_object: List[Dict[str, Any]]) -> float:
         """Compute ROC AUC; falls back to trapezoidal approximation if sklearn unavailable."""

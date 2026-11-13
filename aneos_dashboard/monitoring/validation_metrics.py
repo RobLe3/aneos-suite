@@ -24,11 +24,12 @@ class ValidationStageMetrics:
     stage_name: str
     processing_time_ms: float
     passed: bool
-    score: float
-    confidence: float
-    false_positive_reduction: float
+    score: Optional[float]
+    confidence: Optional[float]
+    false_positive_reduction: Optional[float]
     timestamp: datetime
     object_designation: str
+    validation_status: str = "unavailable"
 
 @dataclass
 class ValidationSessionMetrics:
@@ -39,12 +40,17 @@ class ValidationSessionMetrics:
     end_time: datetime
     total_processing_time_ms: float
     overall_validation_passed: bool
-    overall_false_positive_probability: float
-    overall_confidence: float
+    overall_false_positive_probability: Optional[float]
+    overall_confidence: Optional[float]
     stage_metrics: List[ValidationStageMetrics]
     recommendation: str
     expert_review_priority: str
     
+    validation_status: str = "unavailable"
+    screening_score: Optional[float] = None
+    evidence_id: Optional[str] = None
+    policy_id: Optional[str] = None
+
     # Enhanced module results
     delta_bic_available: bool = False
     spectral_analysis_available: bool = False  
@@ -54,7 +60,7 @@ class ValidationSessionMetrics:
     
     # Performance indicators
     throughput_objects_per_hour: float = 0.0
-    false_positive_prevention_effectiveness: float = 0.0
+    false_positive_prevention_effectiveness: Optional[float] = None
 
 @dataclass
 class SystemHealthMetrics:
@@ -108,11 +114,11 @@ class ValidationMetricsCollector:
         self.active_sessions: Dict[str, datetime] = {}
         self.stage_performance: Dict[int, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
         self.module_availability: Dict[str, bool] = {
-            'delta_bic': True,
-            'spectral_analysis': True,
-            'radar_analysis': True,
-            'thermal_ir': True,
-            'gaia_analysis': True
+            'delta_bic': False,
+            'spectral_analysis': False,
+            'radar_analysis': False,
+            'thermal_ir': False,
+            'gaia_analysis': False
         }
         
         # Performance counters
@@ -122,8 +128,9 @@ class ValidationMetricsCollector:
             'rejected_objects': 0,
             'expert_review_objects': 0,
             'artificial_detections': 0,
-            'false_positive_prevention_rate': 0.0,
-            'average_confidence': 0.0
+            'false_positive_prevention_rate': None,
+            'average_confidence': None, 'confidence_available_count': 0,
+            'confidence_sum': 0., 'inconclusive_objects': 0
         }
         
         # Real-time aggregation
@@ -150,6 +157,9 @@ class ValidationMetricsCollector:
             session_id: Unique identifier for this validation session
         """
         try:
+            recorded = getattr(validation_result, '_metrics_sessions', {})
+            if id(self) in recorded:
+                return recorded[id(self)]
             session_id = f"validation_{int(time.time())}_{len(self.validation_sessions)}"
             timestamp = datetime.now()
             
@@ -166,7 +176,8 @@ class ValidationMetricsCollector:
                         confidence=stage_result.confidence,
                         false_positive_reduction=stage_result.false_positive_reduction,
                         timestamp=timestamp,
-                        object_designation=getattr(validation_result, 'object_designation', 'unknown')
+                        object_designation=getattr(validation_result, 'object_designation', 'unknown'),
+                        validation_status=getattr(stage_result, 'validation_status', 'unavailable')
                     )
                     stage_metrics.append(stage_metric)
                     
@@ -194,6 +205,9 @@ class ValidationMetricsCollector:
                 overall_false_positive_probability=validation_result.overall_false_positive_probability,
                 overall_confidence=validation_result.overall_confidence,
                 stage_metrics=stage_metrics,
+                validation_status=getattr(validation_result, "validation_status", "unavailable"),
+                screening_score=getattr(validation_result, "screening_score", None),
+                evidence_id=getattr(validation_result, "evidence_id", None), policy_id=getattr(validation_result, "policy_id", None),
                 recommendation=validation_result.recommendation,
                 expert_review_priority=validation_result.expert_review_priority,
                 delta_bic_available=validation_result.delta_bic_analysis is not None,
@@ -212,15 +226,17 @@ class ValidationMetricsCollector:
                 self.daily_stats['accepted_objects'] += 1
             elif validation_result.recommendation == 'reject':
                 self.daily_stats['rejected_objects'] += 1
-            else:
+            elif validation_result.recommendation == 'expert_review':
                 self.daily_stats['expert_review_objects'] += 1
+            else:
+                self.daily_stats['inconclusive_objects'] += 1
             
-            # Update confidence running average
-            self.daily_stats['average_confidence'] = (
-                (self.daily_stats['average_confidence'] * (self.daily_stats['total_validations'] - 1) +
-                 validation_result.overall_confidence) / self.daily_stats['total_validations']
-            )
-            
+            confidence = validation_result.overall_confidence
+            if confidence is not None:
+                self.daily_stats['confidence_sum'] += confidence
+                self.daily_stats['confidence_available_count'] += 1
+                self.daily_stats['average_confidence'] = self.daily_stats['confidence_sum'] / self.daily_stats['confidence_available_count']
+
             # Check for artificial object alerts
             self._check_artificial_object_alert(validation_result)
             
@@ -228,87 +244,18 @@ class ValidationMetricsCollector:
             self._update_real_time_metrics()
             
             self.logger.info(f"Recorded validation session {session_id} for {session_metrics.object_designation}")
+            validation_result._metrics_sessions = {**recorded, id(self): session_id}
             return session_id
-            
+
         except Exception as e:
             self.logger.error(f"Failed to record validation session: {e}")
             return ""
     
     def _check_artificial_object_alert(self, validation_result: Any):
         """Check if validation result warrants an artificial object alert."""
-        try:
-            # High-confidence artificial object detection criteria
-            artificial_indicators = []
-            artificial_probability = 0.0
-            
-            # Check various artificial object indicators
-            if hasattr(validation_result, 'artificial_object_likelihood') and validation_result.artificial_object_likelihood:
-                if validation_result.artificial_object_likelihood > 0.7:
-                    artificial_indicators.append('delta_bic_analysis')
-                    artificial_probability = max(artificial_probability, validation_result.artificial_object_likelihood)
-            
-            if hasattr(validation_result, 'artificial_material_probability') and validation_result.artificial_material_probability:
-                if validation_result.artificial_material_probability > 0.7:
-                    artificial_indicators.append('spectral_analysis')
-                    artificial_probability = max(artificial_probability, validation_result.artificial_material_probability)
-            
-            if hasattr(validation_result, 'radar_artificial_probability') and validation_result.radar_artificial_probability:
-                if validation_result.radar_artificial_probability > 0.7:
-                    artificial_indicators.append('radar_polarization')
-                    artificial_probability = max(artificial_probability, validation_result.radar_artificial_probability)
-            
-            if hasattr(validation_result, 'thermal_artificial_probability') and validation_result.thermal_artificial_probability:
-                if validation_result.thermal_artificial_probability > 0.7:
-                    artificial_indicators.append('thermal_ir_analysis')
-                    artificial_probability = max(artificial_probability, validation_result.thermal_artificial_probability)
-            
-            if hasattr(validation_result, 'gaia_artificial_probability') and validation_result.gaia_artificial_probability:
-                if validation_result.gaia_artificial_probability > 0.7:
-                    artificial_indicators.append('gaia_astrometry')
-                    artificial_probability = max(artificial_probability, validation_result.gaia_artificial_probability)
-            
-            # Generate alert if criteria met
-            if artificial_indicators and artificial_probability > 0.7:
-                # Determine alert level
-                if artificial_probability > 0.9 and len(artificial_indicators) >= 3:
-                    alert_level = 'urgent'
-                elif artificial_probability > 0.85 and len(artificial_indicators) >= 2:
-                    alert_level = 'critical'
-                elif artificial_probability > 0.8:
-                    alert_level = 'warning'
-                else:
-                    alert_level = 'info'
-                
-                alert = ArtificialObjectAlert(
-                    alert_id=f"artificial_{int(time.time())}_{len(self.artificial_object_alerts)}",
-                    object_designation=getattr(validation_result, 'object_designation', 'unknown'),
-                    confidence=validation_result.overall_confidence,
-                    artificial_probability=artificial_probability,
-                    detection_modules=artificial_indicators,
-                    timestamp=datetime.now(),
-                    alert_level=alert_level,
-                    details={
-                        'validation_recommendation': validation_result.recommendation,
-                        'expert_review_priority': validation_result.expert_review_priority,
-                        'false_positive_probability': validation_result.overall_false_positive_probability,
-                        'detection_details': {
-                            module: getattr(validation_result, f"{module}_result", None) 
-                            for module in artificial_indicators
-                        }
-                    }
-                )
-                
-                self.artificial_object_alerts.append(alert)
-                self.daily_stats['artificial_detections'] += 1
-                
-                self.logger.warning(
-                    f"Artificial object alert generated: {alert.object_designation} "
-                    f"(probability: {artificial_probability:.3f}, modules: {artificial_indicators})"
-                )
-        
-        except Exception as e:
-            self.logger.error(f"Failed to check artificial object alert: {e}")
-    
+        # Withdraw heuristic-threshold confirmation until a validated origin model exists.
+        return {'status': 'unavailable_no_origin_model'}
+
     def _update_real_time_metrics(self):
         """Update real-time aggregated metrics."""
         try:
@@ -359,14 +306,9 @@ class ValidationMetricsCollector:
             ]
             self.real_time_metrics['alert_rate'] = len(recent_alerts)
             
-            # Update false positive prevention rate
-            if self.daily_stats['total_validations'] > 0:
-                self.daily_stats['false_positive_prevention_rate'] = (
-                    (self.daily_stats['rejected_objects'] + 
-                     self.daily_stats['artificial_detections']) /
-                    self.daily_stats['total_validations']
-                )
-            
+            # Workflow outcomes are not an estimate of false-positive prevention.
+            self.daily_stats['false_positive_prevention_rate'] = None
+
         except Exception as e:
             self.logger.error(f"Failed to update real-time metrics: {e}")
     
@@ -414,8 +356,10 @@ class ValidationMetricsCollector:
                     stage_stats[f"stage_{stage_num}"] = {
                         'avg_processing_time_ms': np.mean([sm.processing_time_ms for sm in stage_metrics]),
                         'pass_rate': np.mean([sm.passed for sm in stage_metrics]),
-                        'avg_score': np.mean([sm.score for sm in stage_metrics]),
-                        'avg_confidence': np.mean([sm.confidence for sm in stage_metrics])
+                        'avg_score': float(np.mean([sm.score for sm in stage_metrics if sm.score is not None])) if any(sm.score is not None for sm in stage_metrics) else None,
+                        'avg_confidence': float(np.mean([sm.confidence for sm in stage_metrics if sm.confidence is not None])) if any(sm.confidence is not None for sm in stage_metrics) else None,
+                        'unavailable_count': sum(sm.validation_status in ('unavailable', 'inconclusive') for sm in stage_metrics),
+                        'rate_semantics': 'prerequisite_pass_fraction_not_detection_accuracy'
                     }
             
             return {
@@ -440,6 +384,8 @@ class ValidationMetricsCollector:
                     'rejected_objects': self.daily_stats['rejected_objects'],
                     'expert_review_objects': self.daily_stats['expert_review_objects'],
                     'artificial_detections': self.daily_stats['artificial_detections'],
+                    'origin_detection_status': 'unavailable_no_origin_model',
+                    'inconclusive_objects': self.daily_stats['inconclusive_objects'],
                     'confidence_distribution': self._get_confidence_distribution()
                 },
                 'alerts_and_notifications': {
@@ -514,10 +460,11 @@ class ValidationMetricsCollector:
         if not self.validation_sessions:
             return {}
         
-        confidences = [s.overall_confidence for s in self.validation_sessions]
+        confidences = [s.overall_confidence for s in self.validation_sessions if s.overall_confidence is not None]
         
         # Bin confidences
         bins = {
+            'unavailable': sum(s.overall_confidence is None for s in self.validation_sessions),
             'very_low': sum(1 for c in confidences if c < 0.2),
             'low': sum(1 for c in confidences if 0.2 <= c < 0.4),
             'medium': sum(1 for c in confidences if 0.4 <= c < 0.6),

@@ -7,6 +7,7 @@ Provides programmatic access to all aNEOS functions for automated testing
 without requiring interactive terminal input.
 """
 
+from aneos_core.data.provider_http import session_get as provider_session_get
 import os
 import sys
 import json
@@ -155,7 +156,7 @@ class ANEOSTestInterface:
             
             # Test NASA APIs with short timeout
             try:
-                response = session.get(
+                response = provider_session_get(session,
                     "https://ssd-api.jpl.nasa.gov/cad.api",
                     timeout=10,  # 10 second timeout
                     params={'date-min': '2025-01-01', 'dist-max': '0.1'}

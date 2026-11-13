@@ -2,8 +2,7 @@
 Detection Manager - Unified Interface for All Artificial NEO Detectors
 
 This manager provides a single entry point for all detection systems,
-automatically handles data format compatibility, and provides fallback
-detection if primary systems fail.
+handles data format compatibility without silently downgrading scientific contracts.
 """
 
 import logging
@@ -24,7 +23,7 @@ class DetectorType(Enum):
     CORRECTED = "corrected"  # DEPRECATED — see detection/_archive/
     MULTIMODAL = "multimodal"  # DEPRECATED — see detection/_archive/
     PRODUCTION = "production"  # DEPRECATED — see detection/_archive/
-    VALIDATED = "validated"  # Canonical: scientifically validated detector
+    VALIDATED = "validated"  # Legacy identifier; canonical uncalibrated screening
     AUTO = "auto"  # Automatically select best detector (resolves to VALIDATED)
 
 
@@ -33,7 +32,7 @@ class DetectionManager:
     Manages all artificial NEO detection systems with unified interface.
     
     Provides automatic detector selection, data format compatibility,
-    and fallback mechanisms for robust detection capabilities.
+    and explicit failure when the canonical service is unavailable.
     """
     
     def __init__(self, preferred_detector: DetectorType = DetectorType.AUTO):
@@ -44,44 +43,14 @@ class DetectionManager:
     
     def _load_available_detectors(self):
         """Load all available detectors with error handling."""
-        detector_configs = [
-            {
-                'type': DetectorType.VALIDATED,
-                'class_path': 'aneos_core.detection.validated_sigma5_artificial_neo_detector',
-                'class_name': 'ValidatedSigma5ArtificialNEODetector',
-                'priority': 0,  # Highest priority - scientifically validated
-                'wrapper': self._wrap_validated_detector
-            },
-            {
-                'type': DetectorType.MULTIMODAL,
-                'class_path': 'aneos_core.detection._archive.multimodal_sigma5_artificial_neo_detector',
-                'class_name': 'MultiModalSigma5ArtificialNEODetector',
-                'priority': 1,  # DEPRECATED — archived; falls back gracefully
-                'wrapper': self._wrap_multimodal_detector
-            },
-            {
-                'type': DetectorType.PRODUCTION,
-                'class_path': 'aneos_core.detection._archive.production_artificial_neo_detector',
-                'class_name': 'ProductionArtificialNEODetector',
-                'priority': 2,  # DEPRECATED — archived; falls back gracefully
-                'wrapper': self._wrap_production_detector
-            },
-            {
-                'type': DetectorType.CORRECTED,
-                'class_path': 'aneos_core.detection._archive.corrected_sigma5_artificial_neo_detector',
-                'class_name': 'CorrectedSigma5ArtificialNEODetector',
-                'priority': 3,  # DEPRECATED — archived; falls back gracefully
-                'wrapper': self._wrap_corrected_detector
-            },
-            {
-                'type': DetectorType.BASIC,
-                'class_path': 'aneos_core.detection._archive.sigma5_artificial_neo_detector',
-                'class_name': 'Sigma5ArtificialNEODetector',
-                'priority': 4,  # DEPRECATED — archived; falls back gracefully
-                'wrapper': self._wrap_basic_detector
-            }
-        ]
-        
+        # Archived detectors cannot silently downgrade the scientific contract.
+        detector_configs = [{
+            'type': DetectorType.VALIDATED,
+            'class_path': 'aneos_core.detection.validated_sigma5_artificial_neo_detector',
+            'class_name': 'ValidatedSigma5ArtificialNEODetector',
+            'priority': 0, 'wrapper': self._wrap_validated_detector,
+        }]
+
         for config in sorted(detector_configs, key=lambda x: x['priority']):
             try:
                 module = __import__(config['class_path'], fromlist=[config['class_name']])
@@ -107,114 +76,26 @@ class DetectionManager:
                           physical_data: Optional[Dict[str, Any]] = None,
                           additional_data: Optional[Dict[str, Any]] = None) -> DetectionResult:
                 
-                # Normalize orbital elements
-                normalized_elements = self.preprocess_orbital_elements(orbital_elements)
-                
-                # Compute physical indicators when real SBDB data is present
+                from ..analysis.screening import ScreeningAnalysisService
                 extra = dict(additional_data or {})
-                _phys = physical_data or {}
-                if _phys and any(_phys.get(k) for k in ('diameter_km', 'albedo')):
-                    try:
-                        from aneos_core.analysis.indicators.physical import (
-                            DiameterAnomalyIndicator, AlbedoAnomalyIndicator,
-                        )
-                        from aneos_core.analysis.indicators.base import IndicatorConfig
-                        from aneos_core.data.models import NEOData as _NEOData, PhysicalProperties
-                        _cfg = IndicatorConfig(weight=1.0, enabled=True)
-                        _pp_kwargs = {
-                            k: _phys[k] for k in ('diameter_km', 'albedo', 'spectral_type')
-                            if k in _phys and _phys[k] is not None
-                        }
-                        _pp = PhysicalProperties(**_pp_kwargs)
-                        _nd_tmp = _NEOData(
-                            designation=orbital_elements.get('designation', 'UNKNOWN'),
-                            orbital_elements=normalized_elements,
-                            physical_properties=_pp,
-                        )
-                        for ind_cls, key in [
-                            (DiameterAnomalyIndicator, 'diameter_anomaly'),
-                            (AlbedoAnomalyIndicator, 'albedo_anomaly'),
-                        ]:
-                            res = ind_cls(_cfg).safe_evaluate(_nd_tmp)
-                            if res.weighted_score > 0:
-                                extra[key] = {
-                                    'weighted_score': res.weighted_score,
-                                    'raw_score': res.raw_score,
-                                    'confidence': res.confidence,
-                                }
-                    except Exception:
-                        pass  # Never block detection on indicator failure
-
-                # Call validated detector — pass through optional rich data if supplied
-                result = self.detector.analyze_neo_validated(
-                    orbital_elements=normalized_elements,
-                    physical_data=_phys,
-                    orbital_history=extra.get('orbital_history'),
-                    close_approach_history=extra.get('close_approach_history'),
-                    observation_data=extra.get('observation_data'),
+                designation = extra.pop('designation', orbital_elements.get('designation', 'UNSPECIFIED'))
+                assessment = ScreeningAnalysisService(detector=self.detector).analyze_raw(
+                    designation, orbital_elements, physical_data, extra,
                 )
-                
-                # Determine whether physical data has real (non-internal) keys
-                _phys = physical_data or {}
-                _real_physical_keys = {k for k in _phys if not k.startswith("_")}
-                _phys_available = bool(_real_physical_keys)
+                return assessment.to_detection_result()
 
-                # Build risk_factors; exclude 'physical_properties' when no real
-                # physical data was supplied (avoids spurious risk attribution).
-                _risk_factors = [
-                    e.evidence_type.value for e in result.evidence_sources
-                    if e.evidence_type.value != "physical_properties" or _phys_available
-                ]
-
-                # Build per-source evidence breakdown for verbose display
-                _evidence_breakdown = [
-                    {
-                        "evidence_type": e.evidence_type.value,
-                        "p_value": e.p_value,
-                        "effect_size": e.effect_size,
-                        "quality_score": e.quality_score,
-                        "analyzed": e.analyzed,
-                    }
-                    for e in result.evidence_sources
-                ]
-
-                # Convert to unified format
-                return DetectionResult(
-                    is_artificial=result.is_artificial,
-                    confidence=result.bayesian_probability,
-                    sigma_level=result.sigma_confidence,
-                    artificial_probability=result.bayesian_probability,
-                    classification=self._map_validated_classification(result),
-                    analysis={**result.analysis_metadata, "evidence_breakdown": _evidence_breakdown},
-                    risk_factors=_risk_factors,
-                    metadata={
-                        'detector_type': 'validated',
-                        'evidence_count': len(result.evidence_sources),
-                        'combined_p_value': result.combined_p_value,
-                        'false_discovery_rate': result.false_discovery_rate,
-                        'validation_available': result.validation_metrics is not None,
-                        'physical_data_available': _phys_available,
-                    }
-                )
-            
             def _map_validated_classification(self, result):
                 """Map validated result to classification categories."""
-                if result.is_artificial and result.sigma_confidence >= 5.0:
-                    return "🛸 ARTIFICIAL (VALIDATED σ≥5)"
-                elif result.sigma_confidence >= 3.0:
-                    return "⚠️ SUSPICIOUS (σ≥3)"
-                elif result.sigma_confidence >= 2.0:
-                    return "❓ EDGE CASE (σ≥2)"
-                else:
-                    return "❔ INCONCLUSIVE (σ<2)"
-            
+                return getattr(result, 'analysis_metadata', {}).get('assessment', {}).get('classification', 'INCONCLUSIVE')
+
             def analyze_orbital_dynamics(self, orbital_elements: Dict[str, Any]) -> Dict[str, Any]:
                 normalized = self.preprocess_orbital_elements(orbital_elements)
                 evidence = self.detector._calculate_orbital_anomaly_score(normalized)
                 return {
                     'anomaly_score': evidence.effect_size,
-                    'p_value': evidence.p_value,
-                    'confidence_interval': evidence.confidence_interval,
+                    'p_value': None,
+                    'confidence_interval': None,
+                    'score_semantics': 'uncalibrated_ranking_heuristic',
                     'quality_score': evidence.quality_score
                 }
             
@@ -223,8 +104,9 @@ class DetectionManager:
                 evidence = self.detector._calculate_physical_anomaly_score(physical_data)
                 return {
                     'anomaly_score': evidence.effect_size,
-                    'p_value': evidence.p_value,
-                    'confidence_interval': evidence.confidence_interval,
+                    'p_value': None,
+                    'confidence_interval': None,
+                    'score_semantics': 'uncalibrated_ranking_heuristic',
                     'quality_score': evidence.quality_score
                 }
             
@@ -232,14 +114,14 @@ class DetectionManager:
                 """Get detector information and capabilities."""
                 validation_report = self.detector.get_validation_report()
                 return {
-                    'name': 'Validated Sigma 5 Artificial NEO Detector',
+                    'name': 'Uncalibrated NEO candidate screening',
                     'version': '1.0',
                     'type': 'validated',
-                    'capabilities': ['orbital_analysis', 'physical_analysis', 'bayesian_fusion'],
+                    'capabilities': ['orbital_ranking', 'physical_ranking'],
                     'validation_status': validation_report.get('validation_performed', False),
                     'ground_truth_samples': validation_report.get('sample_sizes', {}),
                     'performance_metrics': validation_report.get('performance_metrics', {}),
-                    'scientific_rigor': 'peer_review_ready'
+                    'scientific_rigor': 'uncalibrated_prototype', 'five_sigma_claim_permitted': False
                 }
             
             def validate_input_data(self, orbital_elements: Dict[str, Any], 
@@ -250,7 +132,7 @@ class DetectionManager:
                 
                 # Check orbital elements
                 required_orbital = ['a', 'e', 'i']
-                missing_orbital = [param for param in required_orbital if param not in orbital_elements or orbital_elements[param] == 0]
+                missing_orbital = [param for param in required_orbital if param not in orbital_elements or orbital_elements[param] is None]
                 
                 if missing_orbital:
                     issues.append(f"Missing orbital elements: {missing_orbital}")
@@ -484,12 +366,7 @@ class DetectionManager:
             chosen_detector = self._select_best_detector(orbital_elements, physical_data)
         
         if chosen_detector not in self._detectors:
-            # Fallback to any available detector
-            if self._detectors:
-                chosen_detector = next(iter(self._detectors.keys()))
-                self.logger.warning(f"Requested detector not available, using {chosen_detector.value}")
-            else:
-                raise RuntimeError("No detection systems available")
+            raise RuntimeError(f"Requested detector {chosen_detector.value} unavailable; scientific fallback is disabled")
         
         detector = self._detectors[chosen_detector]
         
@@ -497,7 +374,7 @@ class DetectionManager:
             # Validate input data if possible
             if hasattr(detector, 'validate_input_data'):
                 if not detector.validate_input_data(orbital_elements, physical_data):
-                    self.logger.warning("Input data validation failed, proceeding with analysis")
+                    raise ValueError("Required orbital inputs unavailable")
             
             result = detector.analyze_neo(orbital_elements, physical_data, additional_data)
             result.metadata['detector_used'] = chosen_detector.value
@@ -507,37 +384,15 @@ class DetectionManager:
         except Exception as e:
             self.logger.error(f"Detection failed with {chosen_detector.value}: {e}")
             
-            # Try fallback detector
-            if chosen_detector != DetectorType.BASIC and DetectorType.BASIC in self._detectors:
-                self.logger.info("Attempting fallback to basic detector")
-                return self.analyze_neo(orbital_elements, physical_data, additional_data, DetectorType.BASIC)
-            
+            # Failure is not permission to switch scientific models.
             raise
-    
-    def _select_best_detector(self, orbital_elements: Dict[str, Any], 
-                            physical_data: Optional[Dict[str, Any]]) -> DetectorType:
-        """Select the best detector based on available data."""
-        # Always prefer validated detector if available (highest scientific rigor)
-        if DetectorType.VALIDATED in self._detectors:
-            return DetectorType.VALIDATED
-        
-        # Prefer multimodal if we have rich data
-        if (DetectorType.MULTIMODAL in self._detectors and 
-            physical_data and len(physical_data) > 2):
-            return DetectorType.MULTIMODAL
-        
-        # Use production detector for robust analysis
-        if DetectorType.PRODUCTION in self._detectors:
-            return DetectorType.PRODUCTION
-        
-        # Fall back to corrected or basic
-        for detector_type in [DetectorType.CORRECTED, DetectorType.BASIC]:
-            if detector_type in self._detectors:
-                return detector_type
-        
-        # Should not reach here if detectors are loaded
-        raise RuntimeError("No suitable detector found")
-    
+
+    def _select_best_detector(self, orbital_elements, physical_data):
+        """AUTO resolves only to the canonical screening contract."""
+        if DetectorType.VALIDATED not in self._detectors:
+            raise RuntimeError("Canonical screening detector unavailable; fallback disabled")
+        return DetectorType.VALIDATED
+
     def get_detector_info(self, detector_type: DetectorType = None) -> Dict[str, Any]:
         """Get information about specified or all detectors."""
         if detector_type:

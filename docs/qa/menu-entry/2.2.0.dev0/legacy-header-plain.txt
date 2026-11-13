@@ -1,0 +1,3 @@
+aNEOS 2.2.0.dev0 (development): evidence acquisition and candidate screening
+Ranking is uncalibrated. Physical hypotheses and origin remain unresolved.
+No calibrated five-sigma or independent performance claim is installed.

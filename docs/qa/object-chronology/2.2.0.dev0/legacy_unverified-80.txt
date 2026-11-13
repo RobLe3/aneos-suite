@@ -1,0 +1,34 @@
+SYNTHETIC CHRONOLOGY QA — NOT LIVE OBSERVATIONS
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Stored evidence — SYNTHETIC                                                  │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Storage: legacy_unverified; artificial-origin probability: not calibrated.
+╭────────────────── Object chronology — distinct date roles ───────────────────╮
+│ Discovery day: not available; not inferred from observations or local        │
+│ intake.                                                                      │
+│ No verified ledger receipt history supplied in this view; source timestamps  │
+│ are not a substitute.                                                        │
+│ UTC receipts may display Z instead of +00:00; original literals and complete │
+│ meanings remain in JSON.                                                     │
+│ Source labels, local receipts and dynamical epochs are different roles; no   │
+│ common UTC time axis is inferred.                                            │
+│ Consistency/replay does not authenticate sources, verify clock               │
+│ synchronization or establish scientific readiness.                           │
+│ No sourced dates or verified local receipts are available in this view.      │
+│ Compatibility dates — semantics/time basis unverified; preserved, not        │
+│ silently relabelled UTC.                                                     │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Compatibility field           ┃ Stored value (not discovery)             ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ first_discovered              │ 2020-01-02                               │ │
+│ │                               │ 03:04:00                                 │ │
+│ │ last_updated                  │ 2021-02-03                               │ │
+│ │                               │ 04:05:00                                 │ │
+│ └───────────────────────────────┴──────────────────────────────────────────┘ │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Legacy unverified snapshot; overall completeness and source coverage not 
+established.
+Showing 0/0 source receipts; full payloads remain in JSON export.
+Full receipt IDs and unknown/alternative measurements remain in JSON source 
+history. No source authentication, physical fit or calibrated origin inference 
+is established.

@@ -71,6 +71,8 @@ def make_fake_neo_data(designation="99942"):
 
 def make_fake_detection_result(sigma=3.7, prob=0.037, cls="⚠️ SUSPICIOUS (σ≥3)"):
     result = MagicMock()
+    result.screening_score = sigma
+    result.candidate = sigma >= 5
     result.sigma_level = sigma
     result.artificial_probability = prob
     result.classification = cls
@@ -82,6 +84,7 @@ def make_fake_detection_result(sigma=3.7, prob=0.037, cls="⚠️ SUSPICIOUS (σ
         "detector_type": "validated",
     }
     result.analysis = {}
+    result.object_review = None  # Explicit legacy mock, not a replayable review.
     return result
 
 
@@ -369,91 +372,48 @@ class TestOption4OrbitalHistoryAnalysis:
 # Option 5 — Impact Assessment
 # ===========================================================================
 
+def make_sentry_impact(designation="99942"):
+    from aneos_core.data.sources.sentry import parse_sentry_response
+    payload = {"signature":{"source":"NASA/JPL Sentry Data API","version":"2.0"},"error":"specified object not found"}
+    import json
+    return parse_sentry_response(json.dumps(payload).encode(), designation=designation, retrieved_at="2026-11-12T00:00:00Z")
+
+
 class TestOption5ImpactAssessment:
-    """Impact probability calculation: data fetch → ImpactProbabilityCalculator → display → persist."""
-
-    def test_impact_calculator_called_with_orbital_elements(self):
-        menu = _make_menu()
-        neo_data = make_fake_neo_data()
-        impact = make_fake_impact()
-
+    """Source → replay/identity check → display → verified archive; no arc proxy."""
+    def run_source(self, menu, report):
+        service = MagicMock(); service.assess.return_value = report
         with patch.object(menu, "_ask", return_value="99942"), \
-             patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
-             patch("aneos_core.analysis.impact_probability.ImpactProbabilityCalculator"
-                   ".calculate_comprehensive_impact_probability",
-                   return_value=impact) as mock_calc, \
-             patch.object(menu, "_display_impact_result") as mock_disp, \
-             patch.object(menu, "_persist_impact_result_async") as mock_persist:
+             patch("aneos_core.analysis.impact_evidence.get_sentry_impact_service", return_value=service), \
+             patch.object(menu, "_fetch_neo_data", side_effect=AssertionError("unrelated orbital query")), \
+             patch.object(menu, "_display_impact_result") as display, \
+             patch.object(menu, "_persist_impact_result_async") as persist:
             menu._impact_assessment()
+        return service, display, persist
 
-        mock_calc.assert_called_once()
-        call_kwargs = mock_calc.call_args[1]
-        assert "orbital_elements" in call_kwargs
-        assert call_kwargs["orbital_elements"] is neo_data.orbital_elements
+    def test_source_called_without_assumed_orbital_elements(self):
+        service, _, _ = self.run_source(_make_menu(), make_sentry_impact())
+        service.assess.assert_called_once_with("99942")
 
     def test_result_stored_in_impact_results(self):
-        menu = _make_menu()
-        neo_data = make_fake_neo_data()
-        impact = make_fake_impact()
+        menu = _make_menu(); report = make_sentry_impact()
+        self.run_source(menu, report)
+        assert menu._impact_results["99942"] == report
 
-        with patch.object(menu, "_ask", return_value="99942"), \
-             patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
-             patch("aneos_core.analysis.impact_probability.ImpactProbabilityCalculator"
-                   ".calculate_comprehensive_impact_probability", return_value=impact), \
-             patch.object(menu, "_display_impact_result"), \
-             patch.object(menu, "_persist_impact_result_async"):
-            menu._impact_assessment()
+    def test_result_sent_to_verified_archive_compatibility_method(self):
+        report = make_sentry_impact()
+        _, _, persist = self.run_source(_make_menu(), report)
+        persist.assert_called_once_with("99942", report)
 
-        assert "99942" in menu._impact_results
+    def test_close_approach_proxy_not_passed_as_impact_input(self):
+        service, _, _ = self.run_source(_make_menu(), make_sentry_impact())
+        assert service.assess.call_args.kwargs == {}
 
-    def test_result_persisted_async(self):
-        menu = _make_menu()
-        neo_data = make_fake_neo_data()
-        impact = make_fake_impact()
-
-        with patch.object(menu, "_ask", return_value="99942"), \
-             patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
-             patch("aneos_core.analysis.impact_probability.ImpactProbabilityCalculator"
-                   ".calculate_comprehensive_impact_probability", return_value=impact), \
-             patch.object(menu, "_display_impact_result"), \
-             patch.object(menu, "_persist_impact_result_async") as mock_persist:
-            menu._impact_assessment()
-
-        mock_persist.assert_called_once_with("99942", impact)
-
-    def test_close_approaches_passed_to_calculator(self):
-        menu = _make_menu()
-        neo_data = make_fake_neo_data()
-        impact = make_fake_impact()
-
-        with patch.object(menu, "_ask", return_value="99942"), \
-             patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
-             patch("aneos_core.analysis.impact_probability.ImpactProbabilityCalculator"
-                   ".calculate_comprehensive_impact_probability", return_value=impact) as mock_calc, \
-             patch.object(menu, "_display_impact_result"), \
-             patch.object(menu, "_persist_impact_result_async"):
-            menu._impact_assessment()
-
-        call_kwargs = mock_calc.call_args[1]
-        assert "close_approaches" in call_kwargs
-        assert call_kwargs["close_approaches"] is not None  # populated from neo_data
-
-    def test_display_shows_collision_probability(self):
-        """_display_impact_result must be called; collision_probability must be in result."""
-        menu = _make_menu()
-        neo_data = make_fake_neo_data()
-        impact = make_fake_impact()
-
-        with patch.object(menu, "_ask", return_value="99942"), \
-             patch.object(menu, "_fetch_neo_data", return_value=neo_data), \
-             patch("aneos_core.analysis.impact_probability.ImpactProbabilityCalculator"
-                   ".calculate_comprehensive_impact_probability", return_value=impact), \
-             patch.object(menu, "_display_impact_result") as mock_disp, \
-             patch.object(menu, "_persist_impact_result_async"):
-            menu._impact_assessment()
-
-        mock_disp.assert_called_once_with("99942", impact)
-        assert impact.collision_probability == pytest.approx(2.3e-4)
+    def test_display_preserves_unavailable_probability_not_mock_number(self):
+        report = make_sentry_impact()
+        _, display, _ = self.run_source(_make_menu(), report)
+        display.assert_called_once_with("99942", report)
+        assert report["collision_probability"] is None
 
 
 # ===========================================================================
@@ -593,14 +553,16 @@ class TestOption7LivePipeline:
 # ===========================================================================
 
 class TestOption8PopulationPatternAnalysis:
-    """BC11 network sigma: file → concurrent fetch → NetworkAnalysisSession.run()."""
+    """BC11 canonical population report: file → concurrent fetch → NetworkAnalysisSession.run()."""
 
     def test_fetch_multiple_used_for_population(self, tmp_path):
         dfile = tmp_path / "population.txt"
         dfile.write_text("99942\n2020 SO\n433\n")
         menu = _make_menu()
 
-        neo_map = {d: make_fake_neo_data(d) for d in ["99942", "2020 SO", "433"]}
+        from aneos_core.data.models import NEOData, OrbitalElements
+        neo_map = {d: NEOData(designation=d, orbital_elements=OrbitalElements(semi_major_axis=1., eccentricity=.2, inclination=5.))
+                   for d in ["99942", "2020 SO", "433"]}
         pattern_result = {
             "designations_analyzed": 3,
             "clusters": [],
@@ -622,7 +584,8 @@ class TestOption8PopulationPatternAnalysis:
         dfile = tmp_path / "population.txt"
         dfile.write_text("99942\n")
         menu = _make_menu()
-        neo_data = make_fake_neo_data()
+        from aneos_core.data.models import NEOData, OrbitalElements
+        neo_data = NEOData(designation="99942", orbital_elements=OrbitalElements(semi_major_axis=1., eccentricity=.2, inclination=5.))
         pattern_result = {"designations_analyzed": 1, "clusters": []}
 
         with patch.object(menu, "_ask", return_value=str(dfile)), \
@@ -704,7 +667,7 @@ class TestOption10ExportResults:
     def _menu_with_results(self):
         menu = _make_menu()
         menu._detection_results["99942"] = make_fake_detection_result()
-        menu._impact_results["APOPHIS"] = make_fake_impact()
+        menu._impact_results["99942"] = make_sentry_impact()
         return menu
 
     def test_json_export_calls_exporter(self, tmp_path):
@@ -747,21 +710,15 @@ class TestOption10ExportResults:
             menu._export_results()
         mock_info.assert_called_once()
 
-    def test_fallback_json_written_on_exporter_failure(self, tmp_path):
+    def test_failed_export_cannot_claim_fallback_success_or_overwrite(self, tmp_path):
         menu = self._menu_with_results()
-        out = str(tmp_path / "fallback.json")
-
-        with patch.object(menu, "_ask", side_effect=["1", out]), \
-             patch("aneos_core.reporting.exporters.Exporter.export_to_json",
-                   side_effect=ImportError("no exporter")), \
-             patch.object(menu, "show_success"):
+        out = tmp_path / "existing.json"
+        out.write_text("historical")
+        with patch.object(menu, "_ask", side_effect=["1", str(out)]), \
+             patch.object(menu, "show_success") as success, patch.object(menu, "show_error") as error:
             menu._export_results()
-
-        # Fallback should write the file directly
-        p = Path(out)
-        if not p.exists():
-            p = Path("aneos_results_export.json")
-        assert p.exists() or True  # Non-fatal; file path may vary
+        assert out.read_text() == "historical"
+        assert error.called and not success.called
 
 
 # ===========================================================================
@@ -778,7 +735,8 @@ class TestOption11SystemHealth:
             "ImpactCalculator", "MetricsCollector", "NetworkAnalysisSession",
             "PipelineIntegration", "Exporter",
         }
-        with patch.object(menu, "display_table") as mock_table, \
+        with patch("urllib.request.urlopen", return_value=MagicMock()), \
+             patch.object(menu, "display_table") as mock_table, \
              patch.object(menu, "display_panel"):
             menu._system_health()
 
@@ -790,14 +748,17 @@ class TestOption11SystemHealth:
 
     def test_scientific_caveats_displayed(self):
         menu = _make_menu()
-        with patch.object(menu, "display_table"), \
+        with patch("urllib.request.urlopen", return_value=MagicMock()), \
+             patch.object(menu, "display_table"), \
              patch.object(menu, "display_panel") as mock_panel:
             menu._system_health()
 
         assert mock_panel.called
         panel_content = mock_panel.call_args[0][0]
-        # Must mention the posterior ceiling and F1 caveat
-        assert "3–5%" in panel_content or "INCONCLUSIVE" in panel_content
+        # Must not present assumed posteriors or constructor F1 as current validation.
+        assert "not reliably estimated" in panel_content
+        assert "No independently evaluated calibration" in panel_content
+        assert "3–5%" not in panel_content
 
     def test_api_down_shows_warning_not_exception(self):
         menu = _make_menu()
@@ -823,27 +784,25 @@ class TestRunDetectionAdditionalData:
         menu = _make_menu()
         neo_data = make_fake_neo_data()
 
-        with patch("aneos_core.detection.detection_manager.DetectionManager.analyze_neo",
-                   return_value=make_fake_detection_result()) as mock_analyze:
-            menu._run_detection("99942", neo_data)
-
-        call_kwargs = mock_analyze.call_args[1]
-        assert "physical_data" in call_kwargs
-        # diameter is now in metres (0.37 km × 1000 = 370 m) to match detector's population stats
-        assert call_kwargs["physical_data"].get("diameter") == pytest.approx(370.0)
-        assert call_kwargs["physical_data"].get("diameter_km") == pytest.approx(0.37)
+        from aneos_core.data.models import NEOData, OrbitalElements, PhysicalProperties
+        neo_data = NEOData("99942", orbital_elements=OrbitalElements(
+            semi_major_axis=.922, eccentricity=.191, inclination=3.331),
+            physical_properties=PhysicalProperties(diameter_km=.37, absolute_magnitude_h=19.7))
+        result = menu._run_detection("99942", neo_data)
+        assert result is not None
+        physical = result.analysis["assessment"]["evidence_snapshot"]["physical"]
+        assert physical["diameter"] == pytest.approx(370)
+        assert result.metadata["physical_data_available"] is True
 
     def test_orbital_history_reaches_detector(self):
         menu = _make_menu()
-        neo_data = make_fake_neo_data()
-        history = [{"epoch": "2024-01-01", "a": 0.921}]
-
-        with patch("aneos_core.detection.detection_manager.DetectionManager.analyze_neo",
-                   return_value=make_fake_detection_result()) as mock_analyze:
-            menu._run_detection("99942", neo_data, extra_additional={"orbital_history": history})
-
-        call_kwargs = mock_analyze.call_args[1]
-        assert call_kwargs["additional_data"].get("orbital_history") == history
+        from aneos_core.data.models import NEOData, OrbitalElements
+        neo_data = NEOData("99942", orbital_elements=OrbitalElements(
+            semi_major_axis=.922, eccentricity=.191, inclination=3.331))
+        history = [{"epoch": "2024-01-01", "a": .921}]
+        result = menu._run_detection("99942", neo_data, extra_additional={"orbital_history": history})
+        assert result is not None
+        assert result.analysis["assessment"]["evidence_snapshot"]["additional"]["orbital_history"] == history
 
 
 # ===========================================================================
@@ -851,20 +810,8 @@ class TestRunDetectionAdditionalData:
 # ===========================================================================
 
 class TestRoughTorino:
-    def test_zero_probability(self):
+    @pytest.mark.parametrize("prob,energy", [(0.,None),(1e-10,None),(1e-3,100.),(.99,1000.)])
+    def test_unfitted_local_scale_is_controlled_deprecated(self, prob, energy):
         from aneos_menu_v2 import ANEOSMenuV2
-        assert "0" in ANEOSMenuV2._rough_torino(0.0, None)
-
-    def test_tiny_probability(self):
-        from aneos_menu_v2 import ANEOSMenuV2
-        assert "0" in ANEOSMenuV2._rough_torino(1e-10, None)
-
-    def test_elevated_probability(self):
-        from aneos_menu_v2 import ANEOSMenuV2
-        label = ANEOSMenuV2._rough_torino(5e-4, 500.0)
-        assert "1" in label or "elevated" in label.lower()
-
-    def test_near_certain(self):
-        from aneos_menu_v2 import ANEOSMenuV2
-        label = ANEOSMenuV2._rough_torino(0.999, 50000.0)
-        assert "10" in label
+        with pytest.raises(NotImplementedError, match="source-reported"):
+            ANEOSMenuV2._rough_torino(prob, energy)

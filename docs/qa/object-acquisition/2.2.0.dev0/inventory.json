@@ -1,0 +1,92 @@
+{
+  "schema_version": "object-acquisition-menu-qa-v1",
+  "synthetic": true,
+  "metrics": {
+    "complete-80": {
+      "lines": 120,
+      "max_columns": 80
+    },
+    "complete-120": {
+      "lines": 107,
+      "max_columns": 120
+    },
+    "complete-160": {
+      "lines": 102,
+      "max_columns": 160
+    },
+    "partial-80": {
+      "lines": 107,
+      "max_columns": 80
+    },
+    "partial-120": {
+      "lines": 92,
+      "max_columns": 120
+    },
+    "partial-160": {
+      "lines": 87,
+      "max_columns": 160
+    },
+    "unavailable-80": {
+      "lines": 57,
+      "max_columns": 80
+    },
+    "unavailable-120": {
+      "lines": 51,
+      "max_columns": 120
+    },
+    "unavailable-160": {
+      "lines": 49,
+      "max_columns": 160
+    }
+  },
+  "source_sha256": {
+    "aneos_core/data/acquisition.py": "50148c4c43d70f788b2605cfea0467495f7b65191e6c31a94cbe4302a1c88e94",
+    "aneos_core/data/fetcher.py": "325c621f6d0f4eb959933116755551d53a3ae2045a0b9e665aaa36e8c76743d0",
+    "aneos_core/data/models.py": "2fd137c793a104b44a4c7b3384daa7fc6c8accb84d81cfd7c555d040ed7ab752",
+    "aneos_core/data/cache.py": "7e4b6d40f9a9c1b1bb1fc7ffdbcec479b3d3f2f622dfc1fafb4373899bc0e1a3",
+    "aneos_core/data/sources/mpc.py": "7a86211cbf4a2adc618fc098057e786f14534d85eac186adb11fb3dd314277f0",
+    "aneos_core/data/sources/sbdb.py": "29e74ae3b455180697b97533569d04f058bf38cd8d1985f9d80338c7db39b05a",
+    "aneos_core/data/sources/horizons.py": "2dac6abb39d21866426674d0a3dee3835d01183e936ec9f86589c0d1368dbd3a",
+    "aneos_core/data/sources/neodys.py": "76bc6521efb9c1abecc4f7e2ab9b690942a7db7ad44cd389be6bfdfcd51ee62d",
+    "aneos_core/analysis/reporting.py": "987db2390d001d36482c1141d965ff5abd5aac4e014854913bc0dfa754f6ee30",
+    "aneos_core/analysis/acquisition_view.py": "d6745ce23f033ce35f0e237a3c9d253fbcca030e9e6ef9122b6cbc78fd90ab1a",
+    "aneos_api/acquisition_repository.py": "9ca4cdb889e2738744913999eb529de4c4c9a7cf11c63bc2898a670dce246751",
+    "aneos_api/enrichment_store.py": "c9f1936ba89442fe22fcde2198ba53a17ffa12bd08a184a1d52dfcf267d44085",
+    "aneos_api/database.py": "435bcdbd244430583ac23b672bab7b4aeb62154854a5002b206784ad2da96d15",
+    "aneos_menu.py": "c358ff84c2e15b85ebac55809bb38506b2be000aa28ad71133e671ca1f4a7ca1",
+    "scripts/qa_object_acquisition.py": "2632ab49b6ea30b3fb3ee617523a0f09329d41d8005b5e96357bcab1175abc52"
+  },
+  "artifact_sha256": {
+    "complete-80.html": "fc6d9cbe45fad56d10fe02f6b25dc9ebb9358a3bfe58d4c219e0229fc10e35fb",
+    "unavailable-120.svg": "97f1a92ad95d149b9e6285f7cc2e46486c0cb3ad8d7d121fdad623e409e3b329",
+    "partial-160.svg": "6c004ea2adb8ec15e47123c9aa9e68e5dd7c70c14b46b666331f9951b6489afa",
+    "partial-160.txt": "b947d891097ec792bb235b0a7e970d68d7eeb1185681d11f32c62b34a8b0cc4d",
+    "unavailable-120.txt": "14352aa8d81ae779b9eff3efd4421086df1faa9868c08afb4eb31d91b451da6a",
+    "complete-160.html": "fc6d9cbe45fad56d10fe02f6b25dc9ebb9358a3bfe58d4c219e0229fc10e35fb",
+    "complete-160.svg": "fddfd64c4ecc9723584fe41abd90b10745616706ea51b67be692d091aa9e1e6c",
+    "complete-object.json": "429eff435d584d217a0556b7d961e4b1ad62ee8c05cd4a0d936aed4c629cbec9",
+    "partial-80.html": "937cacfcc0c5a1e9e44739536db790023c705482c1b0037775c9c4052983c067",
+    "complete-120.html": "fc6d9cbe45fad56d10fe02f6b25dc9ebb9358a3bfe58d4c219e0229fc10e35fb",
+    "complete-160.txt": "51160923335c99bb658c5a6fb7bec294a0bf61ced0aa3a6ae0fa03558355beaf",
+    "unavailable-80.svg": "97f1a92ad95d149b9e6285f7cc2e46486c0cb3ad8d7d121fdad623e409e3b329",
+    "partial-object.json": "5c5c97ababd5a97572fd25e65b0c3eda0b428900c45d9a7a6198ace20ad79cb3",
+    "partial-120.svg": "6c004ea2adb8ec15e47123c9aa9e68e5dd7c70c14b46b666331f9951b6489afa",
+    "unavailable-160.svg": "97f1a92ad95d149b9e6285f7cc2e46486c0cb3ad8d7d121fdad623e409e3b329",
+    "partial-160.html": "937cacfcc0c5a1e9e44739536db790023c705482c1b0037775c9c4052983c067",
+    "complete-80.svg": "fddfd64c4ecc9723584fe41abd90b10745616706ea51b67be692d091aa9e1e6c",
+    "unavailable-160.txt": "f184bc6067dba63d37d962e77eb635fe94983a8d69737dddb0c29316237b1766",
+    "complete-80.txt": "794ea9ef513c5660c04002efdd14dfa199efb03e501b0aab7669a688e8d5d94a",
+    "partial-120.html": "937cacfcc0c5a1e9e44739536db790023c705482c1b0037775c9c4052983c067",
+    "unavailable-80.txt": "a044bc84adab9dfd423a57acbc235b6aa7ce7bb30f56c3b53d568858312077b6",
+    "partial-120.txt": "2e01dd681d3e61e401405b23be3e78f8889913c093b24c6d2a1159254d89ca40",
+    "unavailable-object.json": "1e71cf7a2580033eb77c229bed2c02db419b1e7c7c5460d23756cff4944fc89a",
+    "partial-80.svg": "6c004ea2adb8ec15e47123c9aa9e68e5dd7c70c14b46b666331f9951b6489afa",
+    "complete-120.svg": "fddfd64c4ecc9723584fe41abd90b10745616706ea51b67be692d091aa9e1e6c",
+    "unavailable-160.html": "4214429b3282d8c46c6b293c1ced922a472e851500b18c2d8dc142c552a4a9ef",
+    "unavailable-80.html": "4214429b3282d8c46c6b293c1ced922a472e851500b18c2d8dc142c552a4a9ef",
+    "unavailable-120.html": "4214429b3282d8c46c6b293c1ced922a472e851500b18c2d8dc142c552a4a9ef",
+    "complete-120.txt": "019c7dc4594f7278d62017fa2ae8765a1e9c5c74a2c29a7c0aa0b0303af28b29",
+    "partial-80.txt": "c14f51ab39c6fc17e73e6d0345d3eef2f01c63402dbeb2e6cbe6ab9f832c78d3"
+  },
+  "limits": "Actual public query and real disposable file-SQLite, synthetic source packets only. Complete means this named profile/field presence, never full science, authentic sources, all-source eligibility, independent calibration or all-menu certification."
+}

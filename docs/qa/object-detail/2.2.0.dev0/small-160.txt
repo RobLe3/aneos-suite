@@ -1,0 +1,76 @@
+╭───────────────────────────────────────────────────── Object review — SYNTHETIC small-body illustration ──────────────────────────────────────────────────────╮
+│                                                                                                                                                              │
+│ Screening classification                                                                                                                                     │
+│ NOT_FLAGGED                                                                                                                                                  │
+│                                                                                                                                                              │
+│ Interpretation                                                                                                                                               │
+│ Uncalibrated rank 4.141288008229254 is below policy threshold 5.0 ranking units. This does not establish a natural origin or a perfectly normal object.      │
+│                                                                                                                                                              │
+│ Scientific status                                                                                                                                            │
+│ not independently validated; significance and origin probability unavailable                                                                                 │
+│                                                                                                                                                              │
+│ Evidence binding                                                                                                                                             │
+│ Review ID: 7e1750acd0ca5a9b66c853cc9bac5e22d199b92bf050d4ce9e645037b6509c91                                                                                  │
+│ Evidence ID: 4d577addbf9706f443f8c5753ad2ac8b71b68bf9f08394d923661076a3f8bc7b                                                                                │
+│ Policy ID: 7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37                                                                                  │
+│                                                                                                                                                              │
+│ Data coverage                                                                                                                                                │
+│ Basic catalogue field presence: 10/15 (declared 15-field profile only).                                                                                      │
+│ Screening orbital fields present: 3/3; domain eligibility is separate.                                                                                       │
+│ Overall data completeness: not established. Eligible source coverage: not established.                                                                       │
+│                                                                                                                                                              │
+│                                                                   Recorded catalogue data                                                                    │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Field                      ┃ Recorded value / display conversion          ┃ Units / status                                                               ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis            │ 1.23                                         │ AU; present                                                                  │ │
+│ │ Eccentricity               │ 0.2                                          │ dimensionless; present                                                       │ │
+│ │ Inclination                │ 1.49                                         │ degrees; present                                                             │ │
+│ │ Ascending node             │ 0                                            │ degrees; present                                                             │ │
+│ │ Periapsis argument         │ 0                                            │ degrees; present                                                             │ │
+│ │ Mean anomaly               │ 0                                            │ degrees; present                                                             │ │
+│ │ Orbit epoch                │ not available                                │ model timestamp; native solution retained; not_available                     │ │
+│ │ Diameter                   │ 0.011 (~11 m)                                │ km; present                                                                  │ │
+│ │ Absolute magnitude H       │ 25.9                                         │ mag; present                                                                 │ │
+│ │ Albedo                     │ 0.52                                         │ dimensionless; present                                                       │ │
+│ │ Spectral label             │ not available                                │ catalogue label; not_available                                               │ │
+│ │ Rotation period            │ 0.089193 (~5.35158 min)                      │ h; present                                                                   │ │
+│ │ First observation          │ not available                                │ catalogue timestamp; source precision retained; not_available                │ │
+│ │ Last observation           │ not available                                │ catalogue timestamp; source precision retained; not_available                │ │
+│ │ Retrieved at               │ not available                                │ retrieval timestamp; not_available                                           │ │
+│ └────────────────────────────┴──────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                                                                              │
+│                                                      Squared-ranking decomposition — not probabilities                                                       │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Proxy channel                    ┃ Effect / weight                          ┃ Weighted square / share                                                    ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ orbital_dynamics                 │ 2.64511421 / 1                           │ 6.99662918; 40.8% of squared rank ━━━━━━━━                                 │ │
+│ │ physical_properties              │ 3.90262166 / 0.666666667                 │ 10.1536372; 59.2% of squared rank ━━━━━━━━━━━━                             │ │
+│ └──────────────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────┘ │
+│                                                                                                                                                              │
+│ Evidence-grounded explanation                                                                                                                                │
+│ The rank uses fixed global prototype reference parameters, not a size/survey-conditioned population or calibrated null. Its proxy channels are not           │
+│ independent observations.                                                                                                                                    │
+│                                                                                                                                                              │
+│ A hand-set inclination enhancement was applied to the orbital proxy. This is an algorithm assumption, not origin evidence.                                   │
+│                                                                                                                                                              │
+│ The supplied diameter 11.0 m is smaller than the legacy reference centre 800.0 m. The physical proxy compares diameter in log space; this prototype          │
+│ comparison is not origin evidence.                                                                                                                           │
+│                                                                                                                                                              │
+│ Diameter, absolute magnitude and albedo have physical dependencies. Their availability is not three independent pieces of origin evidence; recorded albedo   │
+│ is not independently scored by the current physical proxy.                                                                                                   │
+│                                                                                                                                                              │
+│ The largest squared-ranking term is physical_properties. This is a decomposition of the heuristic, not the strongest physical evidence or a probability.     │
+│                                                                                                                                                              │
+│ The displayed profile counts recorded fields, not complete knowledge or verified source coverage. Missing physical uncertainties, observations and           │
+│ unresolved sources still limit scientific use.                                                                                                               │
+│                                                                                                                                                              │
+│ Follow-up and limits                                                                                                                                         │
+│ • Verify source identity, dated measurements, required uncertainty and compatible solutions.                                                                 │
+│ • Use fitted natural/human-technology/artifact comparisons and withheld observations before physical-origin inference.                                       │
+│ • Independent population calibration and search-wide error control are required before significance claims.                                                  │
+│ • Binding/replay verifies consistency, not source authenticity or measurement accuracy.                                                                      │
+│ • No natural/artificial origin, calibrated probability or five-sigma result is supplied.                                                                     │
+│ • Complete local enrichment and scientific operation readiness remain separate requirements.                                                                 │
+│                                                                                                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

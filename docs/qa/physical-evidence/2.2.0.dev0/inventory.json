@@ -1,0 +1,101 @@
+{
+  "schema_version": "object-detail-qa-v1",
+  "cases": {
+    "selected": {
+      "review_id": "d1b44630bb359805597fdf2fcf3b9e5e7fc1fe72e2efaeba8b060f1e853582be",
+      "classification": "NOT_FLAGGED",
+      "widths": {
+        "80": {
+          "lines": 113,
+          "max_columns": 80
+        },
+        "120": {
+          "lines": 88,
+          "max_columns": 120
+        },
+        "160": {
+          "lines": 81,
+          "max_columns": 160
+        }
+      }
+    },
+    "ambiguous": {
+      "review_id": "7957dc1fb44c2f80e54f9300c41096d277f740a8561bec2ec3ea5a5c6f575b52",
+      "classification": "NOT_FLAGGED",
+      "widths": {
+        "80": {
+          "lines": 104,
+          "max_columns": 80
+        },
+        "120": {
+          "lines": 83,
+          "max_columns": 120
+        },
+        "160": {
+          "lines": 76,
+          "max_columns": 160
+        }
+      }
+    },
+    "units-unavailable": {
+      "review_id": "018a7f06372246cfff7c29ec155bc5d337e287b29b4d964d790a4e7bef494659",
+      "classification": "NOT_FLAGGED",
+      "widths": {
+        "80": {
+          "lines": 103,
+          "max_columns": 80
+        },
+        "120": {
+          "lines": 82,
+          "max_columns": 120
+        },
+        "160": {
+          "lines": 75,
+          "max_columns": 160
+        }
+      }
+    }
+  },
+  "artifact_sha256": {
+    "units-unavailable-160.txt": "ac7a10d034044f98a15209b34493c57f03d89d14d737a87d41ea4bec51364d86",
+    "ambiguous-160.svg": "957db519e54c6b83900d0297235b765568b95e4e04fa866cd9f09ad56456bd03",
+    "ambiguous-160.txt": "fde022fd44d8e7e66c287a6c9df56054633442d6dada0b4f94ffba8c47251a72",
+    "units-unavailable-160.svg": "055d93a227593aa40adc6c5e0c4ac41996c5e948d31a83438efa45d0806eab1f",
+    "selected-120.txt": "27f80989e3a599aeff8a01229529b7c12dd51258e4658e8351ddfa0eef258c69",
+    "ambiguous-80.html": "c867a6fc4a42411205cb367f918451cc77b8ba6d30354665f60b77629aa943c2",
+    "selected-80.svg": "d49e26f11cea1a1f0548da48035d8c0499b289618f863ffd71a1aa8c08a7cecc",
+    "selected-80.txt": "6aafefb354db2a0ecdb36b9bd91043a5fdd0306c2159c56ccb5da113838a3332",
+    "selected.json": "a518858033ad19706fd36d9a9ef1f4ce11ab41afe04225bd0b6b0cbaae26b889",
+    "selected-120.svg": "d49e26f11cea1a1f0548da48035d8c0499b289618f863ffd71a1aa8c08a7cecc",
+    "units-unavailable-80.html": "ab762379a8c5c292f240d6510275f56c1934e92964145c864b9b31d123286621",
+    "ambiguous-160.html": "c867a6fc4a42411205cb367f918451cc77b8ba6d30354665f60b77629aa943c2",
+    "ambiguous-120.svg": "957db519e54c6b83900d0297235b765568b95e4e04fa866cd9f09ad56456bd03",
+    "ambiguous-80.txt": "55b4e962c9b4451be1cecb48273994ca2d4d316e53ae204ac17ca8fa80dbc7f1",
+    "units-unavailable-120.txt": "2dc63e12f7ce96b016bb96323d78bd98f3a09acb264ec6324b727519fc6ece8b",
+    "units-unavailable.json": "e501a98b282970c06425c21cfba4d96fb828568a6b87af38fcc2cc6083870778",
+    "units-unavailable-160.html": "ab762379a8c5c292f240d6510275f56c1934e92964145c864b9b31d123286621",
+    "units-unavailable-120.svg": "055d93a227593aa40adc6c5e0c4ac41996c5e948d31a83438efa45d0806eab1f",
+    "units-unavailable-120.html": "ab762379a8c5c292f240d6510275f56c1934e92964145c864b9b31d123286621",
+    "selected-80.html": "b5750c7b49a8f3ae9200be07dfacd06d2a1160e024afd34be65088ffb1a6d67a",
+    "ambiguous-120.txt": "98d4d50baceed2adcd68302a48adb525f4f1c35b5c05a18060a5b0f5a325ba2f",
+    "ambiguous.json": "cf93587224298fa1ca07b82410125b3c6571116171645b207ec7aea9ce1f63f3",
+    "ambiguous-120.html": "c867a6fc4a42411205cb367f918451cc77b8ba6d30354665f60b77629aa943c2",
+    "ambiguous-80.svg": "957db519e54c6b83900d0297235b765568b95e4e04fa866cd9f09ad56456bd03",
+    "units-unavailable-80.txt": "3ece3fcbc733ac6d1ec6aaa75dde43f1b2f9cec8096e99c2945b57f0c5e9444f",
+    "selected-120.html": "b5750c7b49a8f3ae9200be07dfacd06d2a1160e024afd34be65088ffb1a6d67a",
+    "selected-160.txt": "496ed214867841986ba18382552396f4dac7aec35d6aa00e31ecba1ce5bd5257",
+    "selected-160.html": "b5750c7b49a8f3ae9200be07dfacd06d2a1160e024afd34be65088ffb1a6d67a",
+    "units-unavailable-80.svg": "055d93a227593aa40adc6c5e0c4ac41996c5e948d31a83438efa45d0806eab1f",
+    "selected-160.svg": "d49e26f11cea1a1f0548da48035d8c0499b289618f863ffd71a1aa8c08a7cecc"
+  },
+  "source_sha256": {
+    "aneos_core/analysis/object_review.py": "1433efb2dc506e064c98f121a483502d54b663c9ce01a86f9349a4eff915f0d8",
+    "aneos_core/analysis/screening.py": "22597083f10bea22b9c134d7f1e8fef4daa2865b084bc8c1399bc08800849caf",
+    "scripts/qa_object_review.py": "d85c43eee7c9db3a4a6dbad796def39ea643089dab5d50b823378db5ba7352bd",
+    "aneos_core/data/physical_evidence.py": "1ddd0d83ad44c49b48cdd1823e153d021a511179cbd305e59aeec4a695af27ef",
+    "aneos_core/data/models.py": "bb3e0ee35f3d96f059613f2fa0fd9e4b2938191aecdf279baa063a96827a5b0e",
+    "aneos_core/data/fetcher.py": "04d97ba15b892c9c67a58b45392f129d9afcef03b125b7e73ccd5b80e5c8f9eb",
+    "aneos_core/data/sources/sbdb.py": "a9d2c93bfea338db410390313b6fb40fbc2b50e06d0c5291b782e107c29d9d5d"
+  },
+  "limits": "Synthetic illustrative controls only; no source acquisition, independent calibration, physical fits or all-menu certification."
+}

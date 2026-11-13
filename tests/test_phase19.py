@@ -59,29 +59,42 @@ class TestDetectionNoteConditional:
         from aneos_menu_v2 import ANEOSMenuV2
         return inspect.getsource(ANEOSMenuV2._display_detection_result)
 
+    def _render(self, inclination, threshold=5):
+        from aneos_core.analysis.screening import ScreeningAnalysisService, ScreeningPolicy
+        from aneos_menu_v2 import ANEOSMenuV2
+        from unittest.mock import Mock
+        menu = ANEOSMenuV2.__new__(ANEOSMenuV2)
+        menu.console = None
+        menu.display_panel = Mock()
+        result = ScreeningAnalysisService(ScreeningPolicy(candidate_threshold=threshold)).analyze_raw(
+            "marker", {"a": 1, "e": .2, "i": inclination}).to_detection_result()
+        from dataclasses import asdict
+        import io
+        from contextlib import redirect_stdout
+        result.screening_policy = asdict(ScreeningPolicy(candidate_threshold=threshold))
+        output = io.StringIO()
+        with redirect_stdout(output):
+            menu._display_detection_result("marker", result)
+        return result, output.getvalue()
+
     def test_note_inconclusive_for_sigma_below_2(self):
-        """Source must have a branch for sigma < 2.0 with 'INCONCLUSIVE' text."""
-        src = self._src()
-        assert "sigma < 2" in src or "sigma < 2.0" in src, (
-            "No sigma < 2 branch found in _display_detection_result"
-        )
-        assert "INCONCLUSIVE" in src, (
-            "INCONCLUSIVE text not found in _display_detection_result"
-        )
+        result, content = self._render(15)
+        assert not result.candidate
+        assert result.is_artificial is None
+        assert "unavailable" in content
 
     def test_note_interesting_for_sigma_2_to_5(self):
-        """Source must have a branch for sigma < 5 with 'statistically interesting'."""
-        src = self._src()
-        assert "statistically interesting" in src, (
-            "'statistically interesting' note not found for σ 2–5 range"
-        )
+        result, content = self._render(35)
+        assert result.screening_score is not None
+        assert "uncalibrated" in content.lower()
+        assert "statistically interesting" not in content
 
     def test_note_exceptional_for_sigma_5(self):
-        """Source must have a branch for sigma >= 5 mentioning the σ=5 threshold."""
-        src = self._src()
-        assert "σ=5 threshold" in src or "sigma=5 threshold" in src or "σ=5" in src, (
-            "No σ=5 threshold note found for the exceptional case"
-        )
+        result, content = self._render(80)
+        assert result.candidate
+        assert "FOLLOW_UP_CANDIDATE" in content
+        assert "unavailable" in content
+        assert "σ=5" not in content
 
 
 # ===========================================================================
@@ -229,23 +242,32 @@ class TestOption15Exists:
             "_rendezvous_scan is not defined on ANEOSMenuV2"
         )
 
-    def test_rendezvous_scan_in_handlers(self):
-        """The run() method must include '15' as a handler key."""
+    def test_rendezvous_scan_in_handlers(self,monkeypatch):
+        """Actual advertised option15 dispatch, not a literal source-map assertion."""
         from aneos_menu_v2 import ANEOSMenuV2
-        src = inspect.getsource(ANEOSMenuV2.run)
-        assert '"15"' in src or "'15'" in src, (
-            "Option '15' not found in handlers dict in ANEOSMenuV2.run()"
-        )
+        from aneos_menu_catalog import MENU_OPTIONS
+        from unittest.mock import Mock
+        menu=ANEOSMenuV2();probe=Mock();choices=iter(['15','0'])
+        assert next(o for o in MENU_OPTIONS if o.choice=='15').handler=='_rendezvous_scan'
+        monkeypatch.setattr(menu,'_rendezvous_scan',probe)
+        monkeypatch.setattr(menu,'_prompt_choice',lambda:next(choices))
+        monkeypatch.setattr(menu,'_print_banner',lambda:None)
+        monkeypatch.setattr(menu,'wait_for_input',lambda:None)
+        menu.run();probe.assert_called_once_with()
 
 
 # ===========================================================================
-# Phase 21E — HAS_AIOHTTP raises ImportError (ADR-032)
+# Phase 21E dependency contract superseded for PHA transport (ADR-073)
 # ===========================================================================
 
-def test_fetch_phas_raises_importerror_when_no_aiohttp(monkeypatch):
-    """PHAMoidScanner.fetch_phas() must raise ImportError with install hint when aiohttp absent."""
+def test_fetch_phas_uses_guarded_transport_without_aiohttp(monkeypatch):
+    """Shared requests transport replaces the former optional aiohttp dependency."""
     import asyncio
+    from unittest.mock import Mock
     import aneos_core.pattern_analysis.rendezvous as rv
     monkeypatch.setattr(rv, '_HAS_AIOHTTP', False)
-    with pytest.raises(ImportError, match='aiohttp'):
-        asyncio.run(rv.PHAMoidScanner().fetch_phas())
+    request = Mock(return_value={'data': [['synthetic', '1', '.2', '10', '20', '30', None]]})
+    monkeypatch.setattr(rv, 'provider_get_json', request)
+    objects = asyncio.run(rv.PHAMoidScanner().fetch_phas())
+    assert len(objects) == 1 and objects[0].pdes == 'synthetic'
+    request.assert_called_once()

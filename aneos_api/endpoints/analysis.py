@@ -39,6 +39,7 @@ from ..auth import get_current_user
 from ..schemas.detection import DetectionResponse, EvidenceSummary, OrbitalInput
 from ..schemas.history import OrbitalHistoryResponse, OrbitalElementPoint
 from ..schemas.impact import ImpactResponse
+from aneos_core.analysis.impact_evidence import get_sentry_impact_service
 from ..schemas.network import NetworkRequest, NetworkStatusResponse
 
 logger = logging.getLogger(__name__)
@@ -83,7 +84,7 @@ def _persist_detection_result(designation: str, result: dict) -> None:
             service = AnalysisService(db)
             service.save_analysis_result({
                 'designation': designation,
-                'overall_score': result.get('artificial_probability', 0.0),
+                'overall_score': result.get('screening_score'),
                 'classification': result.get('classification', 'UNKNOWN'),
                 'confidence': result.get('confidence', 0.0),
                 'processing_time': 0.0,
@@ -95,40 +96,30 @@ def _persist_detection_result(designation: str, result: dict) -> None:
     except Exception as exc:
         logger.warning("Could not persist detection result for %s: %s", designation, exc)
 
-# Known spacecraft catalog for API-level pre-check
-_KNOWN_SPACECRAFT = {
-    "2018 a1": "Tesla Roadster (SpaceX Falcon Heavy, 2018-017A)",
-    "2020 so": "Centaur upper stage (Surveyor 2, 1966-084A)",
-    "j002e3":  "S-IVB upper stage (Apollo 12)",
-}
+def _sigma_tier(sigma):
+    """Deprecated: a heuristic rank does not define a significance tier."""
+    raise NotImplementedError("Uncalibrated sigma tiers withdrawn; use screening classification")
 
 
-def _sigma_tier(sigma: float) -> str:
-    if sigma >= 5.0: return "EXCEPTIONAL"
-    if sigma >= 4.0: return "ANOMALOUS"
-    if sigma >= 3.0: return "SIGNIFICANT"
-    if sigma >= 2.0: return "INTERESTING"
-    if sigma >= 1.0: return "NOTABLE"
-    return "ROUTINE"
+def _build_interpretation(*args, **kwargs):
+    """Deprecated: assumed Bayesian posteriors are not calibrated probabilities."""
+    raise NotImplementedError("Uncalibrated interpretation withdrawn; use assessment.to_payload()")
 
 
-def _build_interpretation(designation, sigma_confidence, tier, top_type, bayesian_prob):
-    pct = bayesian_prob * 100
-    return (
-        f"{designation} shows {tier} orbital/physical characteristics "
-        f"(sigma={sigma_confidence:.2f}, dominant evidence: {top_type}). "
-        f"artificial_probability={pct:.2f}% — incorporates 0.1% base-rate prior. "
-        f"Propulsion or course-correction evidence required to exceed 10%."
-    )
+def _spacecraft_veto(designation):
+    """Deprecated: designation lookup cannot establish sigma or source identity."""
+    raise NotImplementedError("Name-only spacecraft veto withdrawn; provenance-backed identity required")
 
 
-def _spacecraft_veto(designation: str):
-    """Return (is_vetoed, reason) tuple for known spacecraft catalog."""
-    key = designation.strip().lower()
-    label = _KNOWN_SPACECRAFT.get(key)
-    if label:
-        return True, f"Known spacecraft: {label}"
-    return False, None
+def _screening_payload(neo, service=None):
+    """Shared snapshot adapter; no per-endpoint scientific decision logic."""
+    from aneos_core.analysis.screening import ScreeningAnalysisService
+    assessment = (service or ScreeningAnalysisService()).analyze_neo(neo)
+    payload = assessment.to_payload()
+    payload['data_source'] = neo.sources_used[0] if neo.sources_used else None
+    payload['data_freshness'] = neo.fetched_at.isoformat() if neo.fetched_at else None
+    return payload
+
 
 async def get_analysis_pipeline() -> AnalysisPipeline:
     """Get the analysis pipeline from the application."""
@@ -145,68 +136,49 @@ async def analyze_neo(
     pipeline: AnalysisPipeline = Depends(get_analysis_pipeline),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
-    """
-    Analyze a single NEO for anomaly indicators.
-    
-    Performs comprehensive analysis including orbital mechanics,
-    approach patterns, and anomaly detection.
-    """
+    """Acquire current evidence and return the shared uncalibrated screening result."""
     try:
-        logger.info(f"Starting analysis for NEO: {request.designation}")
-        start_time = datetime.now()
-        
-        # Check cache first (unless force refresh requested)
-        cache_key = f"{request.designation}_{request.include_raw_data}_{request.include_indicators}"
-        if not request.force_refresh and cache_key in _analysis_cache:
-            cached_result = _analysis_cache[cache_key]
-            logger.info(f"Returning cached analysis for {request.designation}")
-            return cached_result
-        
-        # Perform analysis
-        analysis_result = await pipeline.analyze_neo(request.designation)
-        
-        if not analysis_result:
-            raise HTTPException(
-                status_code=404, 
-                detail=f"NEO {request.designation} not found or analysis failed"
-            )
-        
-        # Build response
-        processing_time = (datetime.now() - start_time).total_seconds()
-        
+        result = await pipeline.analyze_neo(request.designation, force_refresh=request.force_refresh)
+        if result.errors:
+            code = {'source_unavailable': 503, 'invalid_evidence': 422}.get(result.status, 500)
+            raise HTTPException(status_code=code, detail={
+                'status': result.status, 'errors': result.errors,
+                'classification': 'INCONCLUSIVE', 'screening_score': None})
+        neo = result.neo_data
+        raw = neo.to_dict() if neo is not None else {}
+        score = result.anomaly_score.to_dict()
+        if not request.include_indicators:
+            score['indicator_scores'] = {}
         response = AnalysisResponse(
-            designation=request.designation,
-            anomaly_score=analysis_result.anomaly_score.__dict__,
-            processing_time=processing_time,
-            data_quality=analysis_result.data_quality.__dict__,
-            orbital_elements=analysis_result.neo_data.orbital_elements.__dict__ if analysis_result.neo_data.orbital_elements else None,
-            close_approaches=[ca.__dict__ for ca in analysis_result.neo_data.close_approaches] if analysis_result.neo_data.close_approaches else [],
-            raw_neo_data=analysis_result.neo_data.__dict__ if request.include_raw_data else None
-        )
-        
-        # Cache result
+            designation=result.designation, anomaly_score=score,
+            processing_time=result.processing_time, data_quality=result.data_quality,
+            orbital_elements=raw.get('orbital_elements'),
+            close_approaches=raw.get('close_approaches', []),
+            raw_neo_data=raw if request.include_raw_data else None,
+            screening_assessment=result.screening_assessment,
+            analysis_metadata=result.analysis_metadata, status=result.status,
+            errors=result.errors, warnings=result.warnings)
+        # Snapshot history for retrieval/export, never a designation-only read cache.
+        evidence_id = result.screening_assessment['evidence_id']
+        policy_id = result.screening_assessment['policy_id']
+        cache_key = f'{request.designation}:{evidence_id}:{policy_id}:{request.include_raw_data}:{request.include_indicators}'
         _analysis_cache[cache_key] = response
-        
-        # Log completion
-        background_tasks.add_task(
-            _log_analysis_completion,
-            request.designation, 
-            processing_time,
-            analysis_result.anomaly_score.overall_score
-        )
-        
-        logger.info(f"Analysis completed for {request.designation} in {processing_time:.2f}s")
+        _detection_cache[request.designation] = result.screening_assessment
+        background_tasks.add_task(_log_analysis_completion, request.designation,
+            result.processing_time, result.anomaly_score.overall_score)
         return response
-        
-    except Exception as e:
-        logger.error(f"Analysis failed for {request.designation}: {e}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception('Analysis failed for %s', request.designation)
+        raise HTTPException(status_code=500, detail='Analysis failed') from exc
 
 @router.get(
     "/detect",
     response_model=DetectionResponse,
     responses={
-        404: {"model": ErrorResponse, "description": "No orbital data for designation"},
+        422: {"model": ErrorResponse, "description": "Invalid source measurements"},
+        503: {"model": ErrorResponse, "description": "Source data unavailable"},
         500: {"model": ErrorResponse, "description": "Detection pipeline failure"},
     },
 )
@@ -215,217 +187,67 @@ async def detect_neo(
     force_refresh: bool = Query(False, description="Bypass cache and re-fetch from source"),
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
-    """
-    Run the canonical ValidatedSigma5 artificial-NEO detector on a named object.
-
-    Fetches orbital elements from the data pipeline and returns a typed
-    DetectionResponse with sigma_confidence and artificial_probability.
-    """
+    """Screen a named object; unavailable significance/origin remain null."""
+    import asyncio
+    from aneos_core.data.fetcher import DataFetcher
+    from aneos_core.utils.errors import DataSourceUnavailableError, EvidencePersistenceError
     try:
-        vetoed, veto_reason = _spacecraft_veto(designation)
-        if vetoed:
-            return DetectionResponse(
-                designation=designation,
-                is_artificial=True,
-                artificial_probability=1.0,
-                sigma_confidence=5.0,
-                sigma_tier="EXCEPTIONAL",
-                classification="ARTIFICIAL",
-                confidence=1.0,
-                evidence_count=0,
-                spacecraft_veto=True,
-                veto_reason=veto_reason,
-                interpretation=(
-                    f"{designation} is a confirmed spacecraft ({veto_reason}). "
-                    "Statistical analysis skipped."
-                ),
-            )
-        from aneos_core.data.fetcher import DataFetcher
-        from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
-            ValidatedSigma5ArtificialNEODetector,
-        )
-        fetcher = DataFetcher()
-        neo = fetcher.fetch_neo_data(designation, force_refresh=force_refresh)
-        data_source = neo.sources_used[0] if neo.sources_used else None
-        data_freshness = neo.fetched_at.isoformat() if neo.fetched_at else datetime.now().isoformat()
-        oe = neo.orbital_elements
-        if oe is None:
-            raise HTTPException(status_code=404, detail=f"No orbital data for {designation}")
-
-        orbital_dict = {
-            "a": oe.semi_major_axis,
-            "e": oe.eccentricity,
-            "i": oe.inclination,
-        }
-        # Enrich detector with available physical + approach data
-        physical_data = None
-        if neo.physical_properties:
-            pp = neo.physical_properties
-            physical_data = {
-                "diameter": (pp.diameter_km * 1000) if pp.diameter_km else None,  # km → m
-                "albedo": pp.albedo,
-                "absolute_magnitude": pp.absolute_magnitude_h,
-            }
-        close_approach_history = None
-        if neo.close_approaches:
-            close_approach_history = [
-                {
-                    "date": ca.close_approach_date.isoformat() if ca.close_approach_date else None,
-                    "distance_au": ca.distance_au,
-                    "velocity_kms": ca.relative_velocity_km_s,
-                }
-                for ca in neo.close_approaches
-            ]
-        # Fetch orbital history from Horizons for course correction analysis
-        orbital_history = None
-        try:
-            from aneos_core.data.sources.horizons import HorizonsSource
-            _h = HorizonsSource()
-            _raw_hist = _h.fetch_orbital_history(designation, years=10)
-            if _raw_hist:
-                orbital_history = _raw_hist
-        except Exception as _hist_exc:
-            logger.debug(f"Horizons orbital history unavailable for {designation}: {_hist_exc}")
-
-        # Build observation_data for propulsion signature analysis
-        # Includes non-gravitational acceleration (A2) if fetched from SBDB
-        observation_data: Dict[str, Any] = {}
-        if neo.nongrav is not None:
-            if neo.nongrav.a2 is not None:
-                observation_data["non_gravitational_accel"] = abs(neo.nongrav.a2)
-            if neo.nongrav.a1 is not None:
-                observation_data["nongrav_a1"] = neo.nongrav.a1
-            if neo.nongrav.a3 is not None:
-                observation_data["nongrav_a3"] = neo.nongrav.a3
-
-        detector = ValidatedSigma5ArtificialNEODetector()
-        result = detector.analyze_neo_validated(
-            orbital_dict,
-            physical_data=physical_data,
-            close_approach_history=close_approach_history,
-            orbital_history=orbital_history,
-            observation_data=observation_data or None,
-        )
-
-        classification = "ARTIFICIAL" if result.is_artificial else "NATURAL"
-        evidence_summaries = [
-            EvidenceSummary(
-                type=e.evidence_type.value,
-                anomaly_score=e.anomaly_score,
-                p_value=e.p_value,
-                quality_score=e.quality_score,
-                effect_size=e.effect_size,
-                confidence_interval=list(e.confidence_interval),
-                sample_size=e.sample_size,
-                analyzed=getattr(e, 'analyzed', True),
-                data_available=getattr(e, 'data_available', True),
-            )
-            for e in result.evidence_sources
-        ]
-        tier = _sigma_tier(result.sigma_confidence)
-        top_type = evidence_summaries[0].type if evidence_summaries else "orbital_dynamics"
-        detection_dict = {
-            'designation': designation,
-            'is_artificial': result.is_artificial,
-            'artificial_probability': result.bayesian_probability,
-            'sigma_confidence': result.sigma_confidence,
-            'sigma_tier': tier,
-            'classification': classification,
-            'confidence': min(result.sigma_confidence / 5.0, 1.0),
-            'evidence_count': len(result.evidence_sources),
-            'data_source': data_source,
-            'data_freshness': data_freshness,
-        }
-        _detection_cache[designation] = detection_dict
-        import threading
-        threading.Thread(
-            target=_persist_detection_result, args=(designation, detection_dict), daemon=True
-        ).start()
-        return DetectionResponse(
-            designation=designation,
-            is_artificial=result.is_artificial,
-            artificial_probability=result.bayesian_probability,
-            sigma_confidence=result.sigma_confidence,
-            sigma_tier=tier,
-            classification=classification,
-            confidence=min(result.sigma_confidence / 5.0, 1.0),
-            evidence_count=len(result.evidence_sources),
-            evidence_sources=evidence_summaries,
-            data_source=data_source,
-            data_freshness=data_freshness,
-            interpretation=_build_interpretation(
-                designation, result.sigma_confidence, tier, top_type, result.bayesian_probability
-            ),
-            combined_p_value=result.combined_p_value,
-            false_discovery_rate=result.false_discovery_rate,
-            analysis_metadata=result.analysis_metadata,
-        )
+        neo = await asyncio.to_thread(DataFetcher().fetch_neo_data, designation, force_refresh=force_refresh)
+        payload = _screening_payload(neo)
+        _detection_cache[designation] = payload
+        await asyncio.to_thread(_persist_detection_result, designation, payload)
+        return DetectionResponse(**payload)
+    except EvidencePersistenceError as exc:
+        raise HTTPException(status_code=503, detail="Required local evidence storage unavailable; no scientific result published") from exc
+    except DataSourceUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=f"Source data unavailable: {exc}")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Detection failed for {designation}: {e}")
-        from aneos_core.utils.errors import DataSourceUnavailableError
-        if isinstance(e, DataSourceUnavailableError):
-            raise HTTPException(status_code=404, detail=f"NEO not found: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Detection failed: {str(e)}")
-
+    except Exception as exc:
+        logger.exception("Screening failed for %s", designation)
+        raise HTTPException(status_code=500, detail="Screening failed") from exc
 
 @router.get(
-    "/impact",
-    response_model=ImpactResponse,
+    "/impact", response_model=ImpactResponse,
     responses={
-        404: {"model": ErrorResponse, "description": "No orbital data for designation"},
-        500: {"model": ErrorResponse, "description": "Impact calculation failure"},
+        422: {"model": ErrorResponse, "description": "Use a primary number or provisional designation"},
+        502: {"model": ErrorResponse, "description": "Invalid or unsupported Sentry response"},
+        503: {"model": ErrorResponse, "description": "Authoritative impact source unavailable"},
     },
 )
 async def impact_neo(
-    designation: str = Query(..., description="NEO designation, e.g. '99942'"),
-    current_user: Optional[Dict] = Depends(get_current_user)
+    designation: str = Query(..., description="Primary asteroid number or unpacked provisional designation; names/aliases are not resolved"),
+    force_refresh: bool = Query(False, description="Explicitly bypass the per-process Sentry TTL cache"),
+    current_user: Optional[Dict] = Depends(get_current_user),
+    impact_service=Depends(get_sentry_impact_service),
 ):
-    """
-    Calculate Earth/Moon impact probability for a named NEO.
+    """Return replayable JPL Sentry evidence for its tabulated Earth-impact events.
 
-    Returns collision_probability, moon_collision_probability, risk_level,
-    impact_energy_mt, and crater_diameter_km.
+    Not listed/removed is not zero risk. No lunar probability, local fitted
+    probability, calibrated confidence, damage prediction or origin inference.
+    Source method, dates, uncertainty limits and complete input snapshot accompany
+    every result. This endpoint does not use the legacy heuristic calculator.
     """
+    from aneos_core.data.sources.sentry import normalize_designation, SentryResponseError, verify_sentry_report
+    from aneos_core.data.provider_http import ProviderUnavailableError
     try:
-        from aneos_core.data.fetcher import DataFetcher
-        from aneos_core.analysis.impact_probability import ImpactProbabilityCalculator
-        fetcher = DataFetcher()
-        neo = fetcher.fetch_neo_data(designation)
-        oe = neo.orbital_elements
-        if oe is None:
-            raise HTTPException(status_code=404, detail=f"No orbital data for {designation}")
-        oe.designation = designation
-        calc = ImpactProbabilityCalculator()
-        result = calc.calculate_comprehensive_impact_probability(
-            orbital_elements=oe,
-            close_approaches=neo.close_approaches or [],
-            physical_properties=neo.physical_properties,
-        )
-        return ImpactResponse(
-            designation=designation,
-            collision_probability=result.collision_probability,
-            probability_uncertainty=list(result.probability_uncertainty),
-            calculation_confidence=result.calculation_confidence,
-            moon_collision_probability=result.moon_collision_probability,
-            moon_earth_ratio=result.earth_vs_moon_impact_ratio,
-            impact_energy_mt=result.impact_energy_mt,
-            crater_diameter_km=result.crater_diameter_km,
-            damage_radius_km=result.damage_radius_km,
-            risk_level=result.risk_level,
-            comparative_risk=result.comparative_risk,
-            time_to_impact_years=result.time_to_impact_years,
-            peak_risk_period=list(result.peak_risk_period) if result.peak_risk_period else None,
-            keyhole_passages=result.keyhole_passages,
-            primary_risk_factors=result.primary_risk_factors,
-            impact_probability_by_decade=result.impact_probability_by_decade,
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Impact calculation failed for {designation}: {e}")
-        raise HTTPException(status_code=500, detail=f"Impact calculation failed: {str(e)}")
+        canonical = normalize_designation(designation)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    try:
+        report = await asyncio.to_thread(impact_service.assess, canonical, force_refresh=force_refresh)
+        if not verify_sentry_report(report) or report.get('designation') != canonical:
+            raise SentryResponseError('Invalid or modified Sentry report')
+        return ImpactResponse(**report)
+    except SentryResponseError as exc:
+        raise HTTPException(status_code=502, detail="Sentry evidence schema or identity could not be verified") from exc
+    except ProviderUnavailableError as exc:
+        raise HTTPException(status_code=503, detail="Sentry impact source unavailable; no probability assessment") from exc
+    except Exception as exc:
+        logger.exception("Authoritative impact retrieval failed")
+        raise HTTPException(status_code=500, detail="Impact evidence retrieval failed; no probability assessment") from exc
 
 
 @router.post("/detect", response_model=DetectionResponse)
@@ -433,110 +255,131 @@ async def detect_neo_raw(
     request: OrbitalInput,
     current_user: Optional[Dict] = Depends(get_current_user)
 ):
-    """
-    Run ValidatedSigma5 detector on caller-supplied orbital elements.
-    No data source lookup — use when you have elements from your own reduction.
-    """
+    """Screen supplied measurements; a name alone is not origin evidence."""
+    from aneos_core.analysis.screening import ScreeningAnalysisService
     try:
-        designation = request.designation or f"user_{request.a:.3f}_{request.e:.3f}"
-        if request.designation:
-            vetoed, veto_reason = _spacecraft_veto(request.designation)
-            if vetoed:
-                return DetectionResponse(
-                    designation=designation, is_artificial=True, artificial_probability=1.0,
-                    sigma_confidence=5.0, sigma_tier="EXCEPTIONAL", classification="ARTIFICIAL",
-                    confidence=1.0, spacecraft_veto=True, veto_reason=veto_reason,
-                    interpretation=f"{designation} is a confirmed spacecraft ({veto_reason}).",
-                )
-        from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
-            ValidatedSigma5ArtificialNEODetector,
+        designation = request.designation or 'USER_PROVIDED'
+        physical = {'diameter_km': request.diameter_km, 'albedo': request.albedo,
+                    'absolute_magnitude': request.absolute_magnitude,
+                    'spectral_type': request.spectral_type}
+        extra = dict(request.additional_data or {})
+        if request.orbital_history is not None:
+            if 'orbital_history' in extra and extra['orbital_history'] != request.orbital_history:
+                raise ValueError('Conflicting orbital history inputs')
+            extra['orbital_history'] = request.orbital_history
+        assessment = ScreeningAnalysisService().analyze_raw(
+            designation, {'a': request.a, 'e': request.e, 'i': request.i}, physical,
+            extra,
+            request.evidence_metadata,
         )
-        orbital_dict = {"a": request.a, "e": request.e, "i": request.i}
-        physical_data = None
-        if request.diameter_km is not None:
-            physical_data = {
-                "diameter": request.diameter_km * 1000,
-                "albedo": request.albedo,
-            }
-        detector = ValidatedSigma5ArtificialNEODetector()
-        result = detector.analyze_neo_validated(
-            orbital_dict,
-            physical_data=physical_data,
-            orbital_history=request.orbital_history,
-        )
-        classification = "ARTIFICIAL" if result.is_artificial else "NATURAL"
-        evidence_summaries = [
-            EvidenceSummary(
-                type=e.evidence_type.value, anomaly_score=e.anomaly_score,
-                p_value=e.p_value, quality_score=e.quality_score, effect_size=e.effect_size,
-                confidence_interval=list(e.confidence_interval), sample_size=e.sample_size,
-                analyzed=getattr(e, 'analyzed', True),
-                data_available=getattr(e, 'data_available', True),
-            )
-            for e in result.evidence_sources
-        ]
-        tier = _sigma_tier(result.sigma_confidence)
-        top_type = evidence_summaries[0].type if evidence_summaries else "orbital_dynamics"
-        return DetectionResponse(
-            designation=designation, is_artificial=result.is_artificial,
-            artificial_probability=result.bayesian_probability,
-            sigma_confidence=result.sigma_confidence, sigma_tier=tier,
-            classification=classification, confidence=min(result.sigma_confidence / 5.0, 1.0),
-            evidence_count=len(result.evidence_sources), evidence_sources=evidence_summaries,
-            data_source="user_provided", data_freshness=datetime.now().isoformat(),
-            interpretation=_build_interpretation(
-                designation, result.sigma_confidence, tier, top_type, result.bayesian_probability
-            ),
-            combined_p_value=result.combined_p_value,
-            false_discovery_rate=result.false_discovery_rate,
-            analysis_metadata=result.analysis_metadata,
-        )
-    except Exception as e:
-        logger.error(f"Raw detection failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Detection failed: {str(e)}")
+        return DetectionResponse(**assessment.to_payload(), data_source='user_provided')
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except Exception as exc:
+        logger.exception("Raw screening failed")
+        raise HTTPException(status_code=500, detail="Screening failed") from exc
 
 
 @router.get("/history", response_model=OrbitalHistoryResponse)
 async def orbital_history(
-    designation: str = Query(..., description="NEO designation, e.g. 'Apophis'"),
+    designation: str = Query(
+        ...,
+        min_length=1,
+        max_length=100,
+        pattern=r"^[^\x00-\x1f\x7f]+$",
+        description="NEO designation, e.g. 'Apophis'",
+    ),
     years: int = Query(10, ge=1, le=50, description="Number of years to span"),
-    current_user: Optional[Dict] = Depends(get_current_user)
+    current_user: Optional[Dict] = Depends(get_current_user),
 ):
     """
     Fetch time-series Keplerian orbital elements from JPL Horizons.
-    Returns one data point per year over the requested span.
+    Returns bounded computed samples with native epochs, never observation coverage.
     """
     try:
         from aneos_core.data.sources.horizons import HorizonsSource
+
+        if not designation.strip():
+            raise HTTPException(status_code=422, detail="Nonempty designation required")
         source = HorizonsSource()
-        raw_points = source.fetch_orbital_history(designation, years=years)
+        raw_points = await asyncio.to_thread(
+            source.fetch_orbital_history, designation, years=years
+        )
+        query_evidence = getattr(raw_points, "query_metadata", None)
+        status = (
+            query_evidence.get("status") if isinstance(query_evidence, dict) else None
+        )
+        if status == "unavailable":
+            raise HTTPException(
+                status_code=503,
+                detail="Orbital history source unavailable; no observational assessment",
+            )
+        if status == "invalid_evidence":
+            raise HTTPException(
+                status_code=502,
+                detail="Orbital history source evidence could not be verified",
+            )
+        if query_evidence is not None and status not in ("available", "empty"):
+            raise HTTPException(
+                status_code=502,
+                detail="Orbital history query outcome could not be verified",
+            )
+        if status in ("available", "empty") and bool(raw_points) != (
+            status == "available"
+        ):
+            raise HTTPException(
+                status_code=502,
+                detail="Orbital history query outcome contradicts its points",
+            )
+        if status in ("available", "empty") and (
+            query_evidence.get("schema_version") != "orbital-history-query-v1"
+            or query_evidence.get("designation_requested") != designation
+            or type(query_evidence.get("returned_points")) is not int
+            or query_evidence["returned_points"] != len(raw_points)
+        ):
+            raise HTTPException(
+                status_code=502,
+                detail="Orbital history query binding could not be verified",
+            )
         if not raw_points:
             raise HTTPException(
                 status_code=404,
-                detail=f"No orbital history available for {designation}"
+                detail=f"No orbital history available for {designation}",
             )
         points = [OrbitalElementPoint(**p) for p in raw_points]
         return OrbitalHistoryResponse(
             designation=designation,
             years=years,
             points=points,
+            query_evidence=query_evidence,
         )
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Orbital history failed for {designation}: {e}")
-        raise HTTPException(status_code=500, detail=f"History fetch failed: {str(e)}")
+    except (ValueError, TypeError) as exc:
+        logger.warning(
+            "Orbital history contains unsupported evidence for %s", designation
+        )
+        raise HTTPException(
+            status_code=502,
+            detail="Orbital history source evidence could not be verified",
+        ) from exc
+    except Exception as exc:
+        logger.exception("Orbital history failed for %s", designation)
+        raise HTTPException(
+            status_code=503,
+            detail="Orbital history source unavailable; no observational assessment",
+        ) from exc
 
 
 @router.post("/analyze/batch", response_model=Dict[str, Any])
 async def analyze_batch(
     request: BatchAnalysisRequest,
     background_tasks: BackgroundTasks,
-    current_user: Optional[Dict] = Depends(get_current_user)
+    current_user: Optional[Dict] = Depends(get_current_user),
 ):
     """
-    Analyze multiple NEOs for artificial signatures (batch mode).
-    Uses the same DataFetcher + ValidatedSigma5 path as GET /detect.
+    Screen multiple NEOs using the same DataFetcher + shared service as GET /detect.
+    Results remain in-memory; restart durability is tracked separately.
     """
     batch_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
     _batch_store[batch_id] = {
@@ -548,13 +391,15 @@ async def analyze_batch(
         'results': [],
         'started_at': datetime.now().isoformat(),
     }
-    background_tasks.add_task(_run_batch_detection, batch_id, request.designations)
+    background_tasks.add_task(_run_batch_detection, batch_id, request.designations,
+        force_refresh=request.force_refresh, include_raw_data=request.include_raw_data)
     return {
         'batch_id': batch_id,
         'status': 'processing',
         'total_neos': len(request.designations),
         'status_url': f'/api/v1/analysis/batch/{batch_id}/status',
     }
+
 
 @router.get("/batch/{batch_id}/status", response_model=Dict[str, Any])
 async def get_batch_status(
@@ -576,7 +421,7 @@ async def get_analysis_result(
     if designation in _detection_cache:
         return _detection_cache[designation]
     # Check analysis cache
-    for key, result in _analysis_cache.items():
+    for result in reversed(list(_analysis_cache.values())):
         if result.designation.upper() == designation.upper():
             return result
     # DB fallback
@@ -619,19 +464,19 @@ async def search_analyses(
             if request.filters.classification:
                 filtered_results = [
                     r for r in filtered_results 
-                    if r.anomaly_score.get('classification') in request.filters.classification
+                    if r.anomaly_score.classification in request.filters.classification
                 ]
             
             if request.filters.min_score is not None:
                 filtered_results = [
                     r for r in filtered_results 
-                    if r.anomaly_score.get('overall_score', 0) >= request.filters.min_score
+                    if r.anomaly_score.overall_score is not None and r.anomaly_score.overall_score >= request.filters.min_score
                 ]
             
             if request.filters.max_score is not None:
                 filtered_results = [
                     r for r in filtered_results 
-                    if r.anomaly_score.get('overall_score', 1) <= request.filters.max_score
+                    if r.anomaly_score.overall_score is not None and r.anomaly_score.overall_score <= request.filters.max_score
                 ]
         
         # Apply pagination
@@ -767,179 +612,59 @@ async def get_analysis_stats(
 async def _log_analysis_completion(
     designation: str,
     processing_time: float,
-    overall_score: float
+    overall_score: Optional[float]
 ):
     """Log analysis completion for monitoring."""
     logger.info(
         f"Analysis completed: {designation}, "
-        f"Score: {overall_score:.3f}, "
+        f"Uncalibrated rank: {overall_score if overall_score is not None else 'unavailable'}, "
         f"Time: {processing_time:.2f}s"
     )
 
-async def _run_batch_detection(batch_id: str, designations: List[str]):
-    """Run ValidatedSigma5 detection concurrently; populate _batch_store."""
+async def _run_batch_detection(batch_id: str, designations: List[str],
+                               force_refresh: bool = False, include_raw_data: bool = False):
+    """Use the same snapshot service as single-object screening."""
     import asyncio
     from aneos_core.data.fetcher import DataFetcher
-    from aneos_core.detection.validated_sigma5_artificial_neo_detector import (
-        ValidatedSigma5ArtificialNEODetector,
-    )
+    from aneos_core.analysis.screening import ScreeningAnalysisService
     store = _batch_store[batch_id]
     fetcher = DataFetcher()
-    detector = ValidatedSigma5ArtificialNEODetector()
-
-    # fetch_multiple is synchronous blocking I/O — run in a thread to avoid blocking
-    # the asyncio event loop (BackgroundTasks run in the same loop as request handlers)
-    loop = asyncio.get_event_loop()
-    neo_map = await loop.run_in_executor(None, fetcher.fetch_multiple, designations)
-
+    service = ScreeningAnalysisService()
     for designation in designations:
-        neo = neo_map.get(designation)
         try:
-            if neo is None or neo.orbital_elements is None:
-                raise ValueError("No orbital elements returned")
-            oe = neo.orbital_elements
-            orbital_dict = {"a": oe.semi_major_axis, "e": oe.eccentricity, "i": oe.inclination}
-            physical_data = None
-            if neo.physical_properties:
-                pp = neo.physical_properties
-                physical_data = {
-                    "diameter": (pp.diameter_km * 1000) if pp.diameter_km else None,
-                    "albedo": pp.albedo,
-                    "absolute_magnitude": pp.absolute_magnitude_h,
-                }
-            close_approach_history = None
-            if neo.close_approaches:
-                close_approach_history = [
-                    {
-                        "date": ca.close_approach_date.isoformat() if ca.close_approach_date else None,
-                        "distance_au": ca.distance_au,
-                        "velocity_kms": ca.relative_velocity_km_s,
-                    }
-                    for ca in neo.close_approaches
-                ]
-            observation_data: Dict[str, Any] = {}
-            if neo.nongrav is not None:
-                if neo.nongrav.a2 is not None:
-                    observation_data["non_gravitational_accel"] = abs(neo.nongrav.a2)
-                if neo.nongrav.a1 is not None:
-                    observation_data["nongrav_a1"] = neo.nongrav.a1
-                if neo.nongrav.a3 is not None:
-                    observation_data["nongrav_a3"] = neo.nongrav.a3
-            result = detector.analyze_neo_validated(
-                orbital_dict,
-                physical_data=physical_data,
-                close_approach_history=close_approach_history,
-                observation_data=observation_data or None,
-            )
-            _tier = _sigma_tier(result.sigma_confidence)
-            _top = result.evidence_sources[0].evidence_type.value if result.evidence_sources else "orbital_dynamics"
-            store['results'].append({
-                'designation': designation,
-                'status': 'success',
-                'is_artificial': result.is_artificial,
-                'sigma_confidence': result.sigma_confidence,
-                'sigma_tier': _tier,
-                'artificial_probability': result.bayesian_probability,
-                'combined_p_value': result.combined_p_value,
-                'false_discovery_rate': result.false_discovery_rate,
-                'classification': 'ARTIFICIAL' if result.is_artificial else 'NATURAL',
-                'evidence_count': len(result.evidence_sources),
-                'evidence_sources': [
-                    {
-                        'type': e.evidence_type.value,
-                        'anomaly_score': e.anomaly_score,
-                        'p_value': e.p_value,
-                        'quality_score': e.quality_score,
-                        'effect_size': e.effect_size,
-                    }
-                    for e in result.evidence_sources
-                ],
-                'interpretation': _build_interpretation(
-                    designation, result.sigma_confidence, _tier, _top, result.bayesian_probability
-                ),
-            })
+            neo = await asyncio.to_thread(fetcher.fetch_neo_data, designation, force_refresh=force_refresh)
+            payload = _screening_payload(neo, service)
+            if include_raw_data:
+                payload['raw_neo_data'] = neo.to_dict()
+            store['results'].append({**payload, 'status': 'success'})
+            _detection_cache[designation] = payload
+            await asyncio.to_thread(_persist_detection_result, designation, payload)
             store['completed'] += 1
-        except Exception as e:
+        except Exception as exc:
             store['failed'] += 1
-            store['results'].append({'designation': designation, 'status': 'failed', 'error': str(e)})
+            store['results'].append({'designation': designation, 'status': 'failed', 'error': str(exc)})
     store['status'] = 'completed'
     store['finished_at'] = datetime.now().isoformat()
-    logger.info(f"Batch detection {batch_id} completed")
 
-def _run_network_analysis(job_id: str, request: NetworkRequest) -> None:
-    """Background worker for population pattern analysis."""
-    try:
-        _network_store[job_id]["status"] = "processing"
-        from aneos_core.data.fetcher import DataFetcher
-        from aneos_core.pattern_analysis.session import (
-            NetworkAnalysisSession, PatternAnalysisConfig
-        )
-        fetcher = DataFetcher()
-        designations = request.designations
-        neo_objects = []
-        for des in designations:
-            try:
-                neo_objects.append(fetcher.fetch_neo_data(des))
-            except Exception as e:
-                logger.debug(f"Network analysis: could not fetch {des}: {e}")
-
-        cfg = PatternAnalysisConfig(
-            clustering=request.clustering,
-            harmonics=request.harmonics,
-            correlation=request.correlation,
-            rendezvous=False,   # deferred ADR-045
-            historical_years=request.historical_years,
-        )
-        session = NetworkAnalysisSession(config=cfg, fetcher=fetcher)
-        result = session.run(neo_objects)
-        _network_store[job_id].update(result)
-        _network_store[job_id]["status"] = "complete"
-    except Exception as exc:
-        logger.exception(f"Network analysis job {job_id} failed: {exc}")
-        _network_store[job_id]["status"] = "error"
-        _network_store[job_id]["error"] = str(exc)
+def _run_network_analysis(*args, **kwargs):
+    """Controlled deprecation: daemon/dictionary execution is not durable."""
+    raise NotImplementedError('Use the registered SQL NetworkWorker; process-memory execution withdrawn')
 
 
-@router.post("/analyze/network", summary="Start population pattern analysis")
-async def start_network_analysis(request: NetworkRequest):
-    """Submit a batch for population-level pattern analysis. Returns a job_id immediately."""
-    import threading
-    import uuid
-    from datetime import datetime as _dt, timezone as _tz
-    job_id = f"net_{_dt.now(_tz.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
-    _network_store[job_id] = {
-        "status": "queued",
-        "designations_analyzed": 0,
-        "clusters": [],
-        "harmonic_signals": [],
-        "correlation_matrix": None,
-        "network_sigma": 0.0,
-        "network_tier": "NETWORK_ROUTINE",
-        "combined_p_value": 1.0,
-        "sub_module_p_values": {},
-        "analysis_metadata": {},
-        "error": None,
-    }
-    thread = threading.Thread(
-        target=_run_network_analysis, args=(job_id, request), daemon=True
-    )
-    thread.start()
-    return {
-        "job_id": job_id,
-        "status": "queued",
-        "status_url": f"/api/v1/analysis/network/{job_id}/status",
-    }
+async def start_network_analysis(*args, **kwargs):
+    raise NotImplementedError('Use the authenticated durable network HTTP route')
 
 
-@router.get("/analyze/network/{job_id}/status",
-            response_model=NetworkStatusResponse,
-            summary="Poll population pattern analysis status")
-async def get_network_status(job_id: str):
-    """Return current status / results for a network analysis job."""
-    store = _network_store.get(job_id)
-    if store is None:
-        raise HTTPException(status_code=404, detail=f"Job {job_id!r} not found")
-    return NetworkStatusResponse(job_id=job_id, **store)
+async def get_network_status(*args, **kwargs):
+    raise NotImplementedError('Use the owner-filtered persistent network HTTP route')
+
+
+from ..network_routes import submit_network, network_status, cancel_network
+router.post('/analyze/network', summary='Submit authenticated durable population analysis')(submit_network)
+router.get('/analyze/network/{job_id}/status', response_model=NetworkStatusResponse,
+           summary='Read an owned persistent population job')(network_status)
+router.delete('/analyze/network/{job_id}', response_model=NetworkStatusResponse,
+              summary='Cancel an owned persistent population job')(cancel_network)
 
 
 async def _process_export(export_id: str, request: ExportRequest):
@@ -954,22 +679,20 @@ async def _process_export(export_id: str, request: ExportRequest):
         if fmt == 'csv':
             buf = io.StringIO()
             writer = csv.writer(buf)
-            writer.writerow(['designation', 'sigma_confidence', 'artificial_probability', 'classification'])
+            writer.writerow(['designation', 'screening_score', 'score_semantics', 'classification',
+                             'significance_status', 'evidence_id', 'policy_id'])
             for item in items:
-                score = item.anomaly_score if isinstance(item.anomaly_score, dict) else {}
-                writer.writerow([
-                    item.designation,
-                    score.get('sigma_confidence', ''),
-                    score.get('artificial_probability', ''),
-                    score.get('classification', ''),
-                ])
+                assessment = item.screening_assessment
+                writer.writerow([item.designation, assessment['screening_score'],
+                    item.anomaly_score.score_semantics, assessment['classification'],
+                    assessment['significance_status'], assessment['evidence_id'], assessment['policy_id']])
             content = buf.getvalue().encode('utf-8')
+        elif fmt == 'json':
+            content = _json.dumps([i.model_dump(mode='json', exclude={'raw_neo_data'})
+                if not request.include_raw_data else i.model_dump(mode='json') for i in items],
+                allow_nan=False).encode('utf-8')
         else:
-            data = [
-                {'designation': i.designation, 'anomaly_score': i.anomaly_score}
-                for i in items
-            ]
-            content = _json.dumps(data, default=str).encode('utf-8')
+            raise ValueError('Only JSON and CSV analysis exports are implemented')
         job['content'] = content
         job['status'] = 'completed'
         job['file_size_bytes'] = len(content)

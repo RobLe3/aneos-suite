@@ -2,7 +2,12 @@
 """
 Impact Probability Analysis for aNEOS
 
-This module calculates Earth impact probabilities for Near Earth Objects using
+LEGACY UNVALIDATED RESEARCH MODULE: the former probability entry point is withdrawn.
+Use scoped external Sentry evidence or explicitly conditional scenarios. Private
+prototype helpers below are not validated impact models.
+
+Historical description (not a current capability claim):
+This module attempted to calculate Earth impact probabilities for Near Earth Objects using
 orbital mechanics, close approach data, and uncertainty propagation methods.
 
 The impact probability framework integrates with the existing aNEOS pipeline
@@ -43,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ImpactProbability:
-    """Comprehensive impact probability assessment for a NEO."""
+    """Legacy unverified result container; not an authoritative fitted assessment."""
     
     designation: str
     calculation_method: str
@@ -114,17 +119,10 @@ class ImpactScenario:
     scenario_type: str  # direct, resonant_return, keyhole_passage
     
 class ImpactProbabilityCalculator:
-    """
-    Scientific impact probability calculator for NEOs.
-    
-    This calculator implements multiple methodologies for impact probability
-    assessment, with scientific rationales for when each method applies.
-    
-    Methods implemented:
-    1. Linear approximation (short-term, well-observed objects)
-    2. Monte Carlo simulation (long-term, uncertain orbits)
-    3. Keyhole analysis (specific close approaches)
-    4. Artificial object special cases
+    """Legacy diagnostics and explicit conditional physics, not a fitted solver.
+
+    The old probability entry point fails explicitly. Private prototype helpers
+    remain for controlled legacy replay, not scientific impact-risk inference.
     """
     
     # Physical constants
@@ -137,7 +135,7 @@ class ImpactProbabilityCalculator:
     EARTH_ESCAPE_VELOCITY = 11.2  # km/s
     MOON_ESCAPE_VELOCITY = 2.4   # km/s
     
-    # Risk thresholds (based on NASA/ESA standards)
+    # Legacy hand-set diagnostic thresholds; not established NASA/ESA standards
     RISK_THRESHOLDS = {
         'negligible': 1e-9,      # 1 in billion
         'very_low': 1e-7,        # 1 in 10 million
@@ -168,7 +166,60 @@ class ImpactProbabilityCalculator:
                 return d
         return getattr(orbital_elements, "diameter", None) or None
         
-    def calculate_comprehensive_impact_probability(self,
+    def calculate_comprehensive_impact_probability(self, orbital_elements, close_approaches=None,
+            observation_arc_days=30.0, is_artificial=False, artificial_probability=0.0,
+            physical_properties=None):
+        """Controlled deprecation: legacy geometry/arc factors are unvalidated.
+
+        This signature remains to make incompatible callers fail explicitly. Use
+        scoped Sentry evidence, conditional kinetic energy or labelled diagnostics.
+        It never silently fetches a provider using a caller-supplied orbit.
+        """
+        raise NotImplementedError('Unvalidated heuristic impact probability withdrawn; use Sentry evidence or explicit conditional scenario/legacy diagnostics')
+
+    def calculate_conditional_impact_energy(self, *, mass_kg, velocity_km_s):
+        """Classical kinetic energy conditional on supplied mass and speed.
+
+        Not an encounter prediction, observed mass/velocity, damage model or
+        probability. No density, diameter, geometry or observation arc is guessed.
+        """
+        for value in (mass_kg, velocity_km_s):
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                raise ValueError('Supply finite nonnegative mass in kg and speed in km/s')
+        if velocity_km_s >= 299792.458:
+            raise ValueError('Classical scenario speed must be subluminal; relativistic effects are not modeled')
+        energy = .5 * mass_kg * (velocity_km_s * 1000)**2
+        if not math.isfinite(energy):
+            raise ValueError('Nonfinite scenario energy')
+        return {'schema_version':'conditional-kinetic-energy-v1',
+            'input_basis':'caller_supplied_conditional_scenario_not_a_measurement',
+            'mass_kg':mass_kg, 'velocity_km_s':velocity_km_s,
+            'energy_joules':energy, 'energy_megatons_tnt':energy / 4.184e15,
+            'collision_probability':None, 'calculation_confidence':None,
+            'assumptions':['Nonrelativistic classical approximation, not valid near light speed; all supplied mass and speed applied to the scenario',
+                           'No atmospheric loss, fragmentation, surface coupling or damage calculation']}
+
+    def calculate_legacy_heuristic_diagnostics(self, orbital_elements, *, observation_arc_days,
+            close_approaches=None, physical_properties=None):
+        """Explicit research replay, not measured/calibrated collision inference."""
+        if isinstance(observation_arc_days, bool) or not isinstance(observation_arc_days, (int,float)) or not math.isfinite(observation_arc_days) or observation_arc_days <= 0:
+            raise ValueError('An explicit finite positive scenario arc is required')
+        legacy = self._legacy_heuristic_calculation(orbital_elements, close_approaches,
+                    observation_arc_days, False, 0., physical_properties)
+        return {'schema_version':'legacy-impact-diagnostics-v1', 'status':'unvalidated_heuristic_scenario',
+            'collision_probability':None, 'probability_uncertainty':None, 'calculation_confidence':None,
+            'risk_level':'not_assessed', 'assumed_observation_arc_days':observation_arc_days,
+            'legacy_diagnostic_scalars':{'geometric_arc_score':legacy.collision_probability,
+                'heuristic_bounds_not_confidence_interval':legacy.probability_uncertainty,
+                'hand_set_quality_index':legacy.calculation_confidence,
+                'lunar_geometry_score':legacy.moon_collision_probability},
+            'legacy_assumed_physical_outputs':{'energy_mt':legacy.impact_energy_mt,
+                'crater_diameter_km':legacy.crater_diameter_km,'damage_radius_km':legacy.damage_radius_km},
+            'assumptions':legacy.calculation_assumptions,
+            'limitations':['Legacy formulas are retained for reproducibility only; no fitted likelihood/covariance propagation, calibrated probability, confidence interval or mitigation advice',
+                'Physical legacy outputs include assumed density/velocity/scaling and are not measurements'] + legacy.limitations}
+
+    def _legacy_heuristic_calculation(self,
                                                  orbital_elements: OrbitalElements,
                                                  close_approaches: List[CloseApproach] = None,
                                                  observation_arc_days: float = 30.0,

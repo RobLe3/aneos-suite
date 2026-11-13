@@ -1,30 +1,9 @@
 #!/usr/bin/env python3
-"""
-Validated Sigma 5 Artificial NEO Detector
+"""Legacy-named facade for uncalibrated candidate screening.
 
-Computes orbital anomaly scores relative to the Granvik et al. 2018 debiased NEO
-population and applies Bayesian evidence fusion across available evidence types.
-
-VALIDATION STATUS (as of 2026-03-08):
-  Internal consistency check: N=4 objects (2 artificial, 2 natural), LOOCV.
-  The reported F1=1.000 reflects perfect separation on these 4 hardcoded objects;
-  it is NOT a generalisation estimate and has no external predictive validity.
-  A minimum of ~50 confirmed artificials and ~200 naturals in an independent
-  held-out dataset is required before publication-grade claims can be made.
-
-SIGMA SEMANTICS:
-  σ_eff = sqrt(Z_a² + Z_e² + Z_i²) + hand-tuned low-inclination bonus.
-  Under the null (natural NEO), the base term follows χ²(3) distribution,
-  giving p = 1 − CDF_χ²(σ_eff², 3). Element correlations and non-Gaussianity
-  of real marginals are NOT modelled; p-values are optimistic.
-
-BAYESIAN POSTERIOR:
-  Prior P(artificial) = 0.001 (asserted, not data-derived).
-  Likelihood ratios (LR = 10 at σ>4) are hand-set constants.
-  Neither is calibrated against an independent corpus.
-  Posterior ceiling is ~3–5% from orbital+physical evidence alone.
-
-See docs/scientific/VALIDATION_INTEGRITY.md for the full audit.
+The earlier sigma/posterior interpretation is withdrawn. The canonical service
+returns a ranking score and candidate status, with unavailable significance and
+origin assessment represented by null. No scientific calibration is installed.
 """
 
 import numpy as np
@@ -33,6 +12,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime
 from scipy import stats
+from ..utils.statistical_utils import fisher_log_p_value, finite_probability
 import logging
 from enum import Enum
 
@@ -62,12 +42,12 @@ class EvidenceType(Enum):
 class EvidenceSource:
     """Individual piece of evidence with uncertainty quantification."""
     evidence_type: EvidenceType
-    anomaly_score: float  # Z-score of observation vs natural population
-    confidence_interval: Tuple[float, float]  # 95% CI of anomaly score
+    anomaly_score: Optional[float]  # Uncalibrated ranking contribution
+    confidence_interval: Tuple[Optional[float], ...]  # Unavailable in canonical output
     sample_size: int  # Size of reference population
-    p_value: float  # Statistical significance
-    effect_size: float  # Magnitude of anomaly (Cohen's d)
-    quality_score: float  # Data quality assessment (0-1)
+    p_value: Optional[float]  # Unavailable without a calibrated null
+    effect_size: Optional[float]  # Legacy standardized ranking contribution
+    quality_score: Optional[float]  # Legacy completeness weight; unavailable in canonical output
     analyzed: bool = True        # False when skipped due to missing input data
     data_available: bool = True  # False when no data was present for this type
 
@@ -86,29 +66,30 @@ class ValidationResult:
     
 @dataclass
 class Sigma5DetectionResult:
-    """Validated sigma 5 detection result with full statistical rigor."""
-    is_artificial: bool
-    sigma_confidence: float  # Actual sigma confidence level
-    bayesian_probability: float  # P(artificial | evidence)
+    """Legacy result shape with unavailable inference explicitly nullable."""
+    is_artificial: Optional[bool]
+    sigma_confidence: Optional[float]  # Actual sigma confidence level
+    bayesian_probability: Optional[float]  # P(artificial | evidence)
     evidence_sources: List[EvidenceSource]
-    combined_p_value: float  # Fisher's combined probability
-    false_discovery_rate: float  # Expected FDR at this threshold
+    combined_p_value: Optional[float]  # Fisher's combined probability
+    false_discovery_rate: Optional[float]  # Unavailable without independent evaluation
     validation_metrics: Optional[ValidationResult]
     analysis_metadata: Dict[str, Any]
+    screening_score: Optional[float] = None
 
 class ValidatedSigma5ArtificialNEODetector:
-    """Scientifically rigorous artificial NEO detector with validated sigma 5 confidence."""
+    """Legacy-named score engine; no installed calibrated inference model."""
     
     # Statistical thresholds based on astronomical discovery standards
     SIGMA_5_CONFIDENCE = 5.0  # 5-sigma confidence threshold
-    SIGMA_5_P_VALUE = 2 * (1 - stats.norm.cdf(5.0))  # ~5.7e-7
+    SIGMA_5_P_VALUE = 2 * stats.norm.sf(5.0)  # ~5.7e-7
     MIN_EVIDENCE_SOURCES = 2  # Require multiple independent evidence types
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         
-        # Empirically validated NEO population parameters
-        # Based on comprehensive literature review and observational databases
+        # Legacy fixed reference parameters, retained only for ranking comparison.
+        # Their installed values are not an independently validated null.
         self.neo_population_stats = self._load_validated_neo_parameters()
         
         # Ground truth datasets for validation
@@ -117,10 +98,10 @@ class ValidatedSigma5ArtificialNEODetector:
         
         # Validation metrics from cross-validation
         self.validation_results = None
-        self._perform_cross_validation()
+        # Calibration requires a frozen independent evaluation, never constructor toy CV.
         
     def _load_validated_neo_parameters(self) -> Dict[str, Dict[str, float]]:
-        """Load empirically validated NEO population parameters from literature."""
+        """Load legacy fixed reference values; citations are not calibration evidence."""
         
         # Parameters derived from:
         # - Bottke et al. (2002) - NEO population model
@@ -307,7 +288,7 @@ class ValidatedSigma5ArtificialNEODetector:
         # Calculate p-value based on enhanced anomaly
         # For multivariate case, use chi-square approximation
         chi2_stat = effect_size**2
-        p_value = 1 - stats.chi2.cdf(chi2_stat, 3)  # 3 degrees of freedom
+        p_value = float(stats.chi2.sf(chi2_stat, 3))  # 3 degrees of freedom
         
         n = orbital_stats['semi_major_axis']['n_samples']  # Sample size
         
@@ -346,7 +327,7 @@ class ValidatedSigma5ArtificialNEODetector:
             h_mag = physical_data['absolute_magnitude']
             h_zscore = abs(h_mag - physical_stats['absolute_magnitude']['mean']) / physical_stats['absolute_magnitude']['std']
             anomaly_scores.append(h_zscore)
-            p_values.append(2 * (1 - stats.norm.cdf(h_zscore)))
+            p_values.append(float(2 * stats.norm.sf(h_zscore)))
         
         # Diameter analysis (if available)
         if 'diameter' in physical_data:
@@ -355,7 +336,7 @@ class ValidatedSigma5ArtificialNEODetector:
             log_diameter = np.log(max(diameter, 0.001))  # Avoid log(0)
             d_zscore = abs(log_diameter - np.log(physical_stats['diameter']['mean'])) / physical_stats['diameter']['std']
             anomaly_scores.append(d_zscore)
-            p_values.append(2 * (1 - stats.norm.cdf(d_zscore)))
+            p_values.append(float(2 * stats.norm.sf(d_zscore)))
         
         # Mass analysis (if available)
         if 'mass_estimate' in physical_data:
@@ -383,8 +364,7 @@ class ValidatedSigma5ArtificialNEODetector:
         
         # Combined p-value using Fisher's method
         if len(p_values) > 1:
-            chi2_stat = -2 * np.sum(np.log(p_values))
-            combined_p = 1 - stats.chi2.cdf(chi2_stat, 2 * len(p_values))
+            combined_p = finite_probability(fisher_log_p_value(p_values))
         else:
             combined_p = p_values[0]
         
@@ -663,281 +643,44 @@ class ValidatedSigma5ArtificialNEODetector:
             data_available=True,
         )
 
-    def _bayesian_evidence_fusion(self, evidence_sources: List[EvidenceSource]) -> Tuple[float, float]:
-        """Fuse multiple evidence sources using proper Bayesian methods."""
-        
-        # Filter out low-quality evidence
-        valid_evidence = [e for e in evidence_sources if e.quality_score > 0.3]
-        
-        if len(valid_evidence) < 1:  # Reduced requirement for testing
-            return 0.0, 1e-6  # No reliable evidence
-        
-        # Calculate combined anomaly score using proper statistical methods
-        anomaly_scores = [e.effect_size for e in valid_evidence]
-        quality_weights = [e.quality_score for e in valid_evidence]
-        
-        # Weighted combination of anomaly scores
-        if len(anomaly_scores) == 1:
-            combined_anomaly = anomaly_scores[0] * quality_weights[0]
-        else:
-            # Use quadrature sum for independent evidence sources
-            weighted_squares = [score**2 * weight for score, weight in zip(anomaly_scores, quality_weights)]
-            combined_anomaly = np.sqrt(np.sum(weighted_squares))
-        
-        # Apply artificial object signatures boost
-        artificial_signature_boost = 0.0
-        
-        # Check for smoking gun evidence (course corrections, trajectory patterns, propulsion)
-        smoking_gun_detected = False
-        
-        for evidence in valid_evidence:
-            # SMOKING GUN: Course corrections are definitive artificial signatures
-            if evidence.evidence_type == EvidenceType.COURSE_CORRECTIONS and evidence.effect_size > 3.0:
-                artificial_signature_boost += 10.0  # Massive boost for course corrections
-                smoking_gun_detected = True
-            
-            # SMOKING GUN: Exact trajectory repetition is impossible naturally
-            if evidence.evidence_type == EvidenceType.TRAJECTORY_PATTERNS and evidence.effect_size > 5.0:
-                artificial_signature_boost += 15.0  # Extreme boost for exact patterns
-                smoking_gun_detected = True
-            
-            # SMOKING GUN: Direct propulsion signatures
-            if evidence.evidence_type == EvidenceType.PROPULSION_SIGNATURES and evidence.effect_size > 4.0:
-                artificial_signature_boost += 12.0  # Very high boost for propulsion
-                smoking_gun_detected = True
-            
-            # Standard orbital and physical evidence (much lower weight)
-            if evidence.evidence_type == EvidenceType.ORBITAL_DYNAMICS:
-                if combined_anomaly > 2.0:  # Strong orbital anomaly required
-                    artificial_signature_boost += 1.0  # Moderate boost
-            
-            if evidence.evidence_type == EvidenceType.PHYSICAL_PROPERTIES:
-                if combined_anomaly > 2.0:  # Strong physical anomaly required
-                    artificial_signature_boost += 0.8  # Moderate boost for physical properties
-        
-        # Apply multi-modal bonus if multiple evidence types
-        evidence_types = set(e.evidence_type for e in valid_evidence)
-        if len(evidence_types) > 1:
-            multimodal_bonus = 1.0 * (len(evidence_types) - 1)
-            artificial_signature_boost += multimodal_bonus
-        
-        # CORRECTED: Separate statistical significance from artificial signature evidence
-        # Sigma level should reflect statistical rarity, not artificial probability
-        statistical_sigma = combined_anomaly  # Pure statistical significance
-        
-        # Use artificial signature boost for Bayesian prior adjustment, not sigma inflation
-        signature_evidence_strength = artificial_signature_boost
-        
-        # Final sigma is the statistical significance (no artificial inflation)
-        final_sigma = statistical_sigma
-        
-        # Calculate Bayesian posterior probability with proper evidence incorporation
-        # Base prior for artificial objects (before considering signature evidence)
-        base_prior = 0.001  # 0.1% baseline artificial rate
-        
-        # Adjust prior based on artificial signature evidence strength
-        if signature_evidence_strength > 10.0:  # Smoking gun evidence
-            prior_artificial = min(0.5, base_prior * (1 + signature_evidence_strength))
-        elif signature_evidence_strength > 5.0:  # Strong artificial signatures
-            prior_artificial = min(0.1, base_prior * (1 + signature_evidence_strength))
-        elif signature_evidence_strength > 2.0:  # Moderate artificial signatures
-            prior_artificial = min(0.05, base_prior * (1 + signature_evidence_strength))
-        else:
-            prior_artificial = base_prior  # No signature evidence boost
-        
-        # Likelihood ratio based on statistical sigma level only
-        # P(unusual_sigma | artificial) / P(unusual_sigma | natural)
-        if final_sigma > 4.0:
-            likelihood_ratio = 10.0   # Reduced from 100 - sigma is about rarity, not artificial nature
-        elif final_sigma > 3.0:
-            likelihood_ratio = 5.0    # Reduced from 20
-        elif final_sigma > 2.0:
-            likelihood_ratio = 2.0    # Reduced from 5 
-        else:
-            likelihood_ratio = 1.0 + final_sigma * 0.2  # Minimal boost for low sigma
-        
-        # Bayesian update
-        posterior_artificial = (likelihood_ratio * prior_artificial) / (
-            likelihood_ratio * prior_artificial + (1 - prior_artificial)
-        )
-        
-        return final_sigma, posterior_artificial
-    
-    def _perform_cross_validation(self):
-        """Perform cross-validation on ground truth datasets."""
-        
-        # Combine artificial and natural objects
-        all_objects = []
-        true_labels = []
-        
-        # Add artificial objects
-        for obj in self.artificial_objects_db:
-            all_objects.append(obj)
-            true_labels.append(1)  # Artificial = 1
-        
-        # Add natural objects  
-        for obj in self.natural_objects_db:
-            all_objects.append(obj)
-            true_labels.append(0)  # Natural = 0
-            
-        if len(all_objects) < 4:  # Need minimum samples for validation
-            self.logger.warning("Insufficient ground truth data for validation")
-            return
-        
-        # Perform leave-one-out cross-validation
-        predictions = []
-        confidences = []
-        
-        for i, test_obj in enumerate(all_objects):
-            # Create training set (all objects except current test object)
-            train_objects = all_objects[:i] + all_objects[i+1:]
-            train_labels = true_labels[:i] + true_labels[i+1:]
-            
-            # Test on held-out object
-            result = self.analyze_neo_validated(
-                test_obj['orbital_elements'],
-                test_obj.get('physical_data', {})
-            )
-            
-            predictions.append(1 if result.is_artificial else 0)
-            confidences.append(result.sigma_confidence)
-        
-        # Calculate validation metrics
-        true_labels = np.array(true_labels)
-        predictions = np.array(predictions)
-        
-        tp = np.sum((true_labels == 1) & (predictions == 1))
-        fp = np.sum((true_labels == 0) & (predictions == 1)) 
-        tn = np.sum((true_labels == 0) & (predictions == 0))
-        fn = np.sum((true_labels == 1) & (predictions == 0))
-        
-        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
-        ppv = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        npv = tn / (tn + fn) if (tn + fn) > 0 else 0.0
-        f1 = 2 * tp / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 0.0
-        
-        self.validation_results = ValidationResult(
-            true_positives=tp,
-            false_positives=fp,
-            true_negatives=tn, 
-            false_negatives=fn,
-            sensitivity=sensitivity,
-            specificity=specificity,
-            positive_predictive_value=ppv,
-            negative_predictive_value=npv,
-            f1_score=f1
-        )
-        
-        self.logger.info(
-            f"Internal consistency check (N={len(all_objects)}, LOOCV): "
-            f"F1={f1:.3f}, Sensitivity={sensitivity:.3f}, Specificity={specificity:.3f}. "
-            f"WARNING: N={len(all_objects)} is far below any valid statistical threshold "
-            f"(minimum ~50 per class). These metrics are NOT generalisation estimates."
-        )
-    
-    def analyze_neo_validated(self, orbital_elements: Dict[str, float], 
+    def analyze_neo_validated(self, orbital_elements: Dict[str, float],
                             physical_data: Dict[str, Any] = None,
                             orbital_history: List[Dict[str, Any]] = None,
                             close_approach_history: List[Dict[str, Any]] = None,
                             observation_data: Dict[str, Any] = None) -> Sigma5DetectionResult:
-        """Perform validated artificial NEO analysis with proper sigma confidence."""
-        
-        evidence_sources = []
-        
-        # Collect evidence from multiple sources
-        orbital_evidence = self._calculate_orbital_anomaly_score(orbital_elements)
-        evidence_sources.append(orbital_evidence)
-        
-        if physical_data:
-            physical_evidence = self._calculate_physical_anomaly_score(physical_data)
-            evidence_sources.append(physical_evidence)
-
-        # Spectral type analysis (BC11 13B)
-        if physical_data:
-            spectral_evidence = self._analyze_spectral_type(physical_data)
-            if spectral_evidence is not None:
-                evidence_sources.append(spectral_evidence)
-
-        # CRITICAL: Analyze orbital dynamics signatures (smoking gun evidence)
-        if orbital_history:
-            course_correction_evidence = self._analyze_course_corrections(orbital_history)
-            evidence_sources.append(course_correction_evidence)
-        
-        if close_approach_history:
-            trajectory_pattern_evidence = self._analyze_trajectory_patterns(orbital_elements, close_approach_history)
-            evidence_sources.append(trajectory_pattern_evidence)
-        
-        if observation_data:
-            propulsion_evidence = self._analyze_propulsion_signatures(orbital_elements, observation_data)
-            evidence_sources.append(propulsion_evidence)
-        
-        # Perform Bayesian evidence fusion
-        sigma_confidence, bayesian_prob = self._bayesian_evidence_fusion(evidence_sources)
-        
-        # Bonferroni-corrected Fisher's method for combining evidence p-values
-        raw_p_values = [e.p_value for e in evidence_sources if getattr(e, 'analyzed', True) and e.p_value > 0]
-        n_tests = len(raw_p_values)
-        if n_tests > 1:
-            # Bonferroni correction: multiply each p-value by n_tests before combining.
-            # Prevents inflation of combined significance when testing multiple hypotheses.
-            bonferroni_p = [min(p * n_tests, 1.0) for p in raw_p_values]
-            clamped = [max(p, 1e-300) for p in bonferroni_p]
-            chi2_stat = -2 * np.sum(np.log(clamped))
-            combined_p = float(1 - stats.chi2.cdf(chi2_stat, 2 * n_tests))
-        elif n_tests == 1:
-            combined_p = float(raw_p_values[0])
-        else:
-            combined_p = 1.0
-        
-        # Decision based on sigma confidence threshold
-        is_artificial = sigma_confidence >= self.SIGMA_5_CONFIDENCE
-        
-        # Estimate false discovery rate based on validation data
-        fdr = 0.05  # Conservative estimate - would be calculated from validation
-        if self.validation_results:
-            fdr = self.validation_results.false_positives / max(1, 
-                self.validation_results.false_positives + self.validation_results.true_positives)
-        
-        # Analysis metadata
-        metadata = {
-            'detector_version': 'validated_sigma5_v1.0',
-            'analysis_timestamp': datetime.now().isoformat(),
-            'evidence_count': len(evidence_sources),
-            'validation_available': self.validation_results is not None,
-            'population_parameters_source': 'Granvik et al. 2018, WISE survey',
-            'statistical_method': (
-                'Bayesian evidence fusion; sigma=sqrt(Z_a^2+Z_e^2+Z_i^2)+bonus under chi2(3) null; '
-                'likelihood ratios are hardcoded constants (not calibrated)'
-            ),
-            'n_evidence_tests': n_tests,
-            'bonferroni_correction_applied': n_tests > 1,
-        }
-
-        # TEMPORARILY DISABLED: Fix sigma calculation bug before re-enabling
-        # The validated detector is reporting incorrect sigma values (e.g., σ=5.69 when should be σ=2.4)
-        # This creates false "ARTIFICIAL DETECTION" messages that mislead users
-        
-        if sigma_confidence >= self.SIGMA_5_CONFIDENCE:
-            # Only log actual 5+ sigma detections (rare, genuine cases)
-            self.logger.warning(f"VALIDATED SIGMA 5 ARTIFICIAL DETECTION: σ={sigma_confidence:.2f}, "
-                              f"Bayesian P(artificial)={bayesian_prob:.6f}, p-value={combined_p:.2e}")
-        else:
-            # Use debug level to reduce false alarm noise
-            self.logger.debug(f"Validated analysis complete: σ={sigma_confidence:.2f}, "
-                            f"P(artificial)={bayesian_prob:.6f} (below 5σ threshold)")
-        
-        return Sigma5DetectionResult(
-            is_artificial=is_artificial,
-            sigma_confidence=sigma_confidence,
-            bayesian_probability=bayesian_prob,
-            evidence_sources=evidence_sources,
-            combined_p_value=combined_p,
-            false_discovery_rate=fdr,
-            validation_metrics=self.validation_results,
-            analysis_metadata=metadata
+        """Compatibility facade; the historic name grants no assurance."""
+        from ..analysis.screening import ScreeningAnalysisService
+        assessment = ScreeningAnalysisService(detector=self).analyze_raw(
+            orbital_elements.get('designation', 'UNSPECIFIED'), orbital_elements, physical_data,
+            {'orbital_history': orbital_history, 'close_approach_history': close_approach_history,
+             'observation_data': observation_data},
         )
-    
+        payload = assessment.to_payload()
+        sources = [EvidenceSource(
+            evidence_type=EvidenceType(e['type']), anomaly_score=e['anomaly_score'],
+            confidence_interval=tuple(e['confidence_interval']), sample_size=e['sample_size'],
+            p_value=None, effect_size=e['effect_size'], quality_score=e['quality_score'],
+            analyzed=e['analyzed'], data_available=e['data_available'],
+        ) for e in assessment.evidence_sources]
+        return Sigma5DetectionResult(
+            is_artificial=None, sigma_confidence=None, bayesian_probability=None,
+            evidence_sources=sources, combined_p_value=None, false_discovery_rate=None,
+            validation_metrics=None,
+            analysis_metadata={**payload['analysis_metadata'], 'assessment': payload},
+            screening_score=assessment.screening_score,
+        )
+
+    def _bayesian_evidence_fusion(self, evidence_sources):
+        """Deprecated: assumed likelihood ratios cannot establish origin probability."""
+        raise NotImplementedError(
+            "Uncalibrated Bayesian fusion withdrawn; use ScreeningAnalysisService "
+            "for ranking and explicit unavailable probability.")
+
+    def _perform_cross_validation(self):
+        """Deprecated: evaluating constructor examples is not independent validation."""
+        raise NotImplementedError(
+            "Constructor toy validation withdrawn; independent frozen evaluation required.")
+
     @staticmethod
     def _wilson_ci(k: int, n: int, z: float = 1.96) -> tuple:
         """Wilson score 95% confidence interval for a proportion k/n."""
@@ -950,85 +693,11 @@ class ValidatedSigma5ArtificialNEODetector:
         return (max(0.0, centre - half_width), min(1.0, centre + half_width))
 
     def get_validation_report(self) -> Dict[str, Any]:
-        """Get comprehensive validation report.
+        """Report installed validation status, not constructor-example performance.
 
-        WARNING: The internal cross-validation corpus contains only N=4 objects
-        (2 artificial, 2 natural).  All reported metrics carry extreme uncertainty;
-        the 95% Wilson CIs span essentially the full [0, 1] range.  These numbers
-        are an internal consistency check, NOT a generalisation estimate.
-        See docs/scientific/VALIDATION_INTEGRITY.md for the full audit.
+        Assigning legacy validation_results cannot install a calibrated procedure.
+        Independent evaluation and artifact verification remain required.
         """
-        if not self.validation_results:
-            return {'status': 'no_validation_performed'}
-
-        val = self.validation_results
-        n_art = len(self.artificial_objects_db)
-        n_nat = len(self.natural_objects_db)
-        n_total = n_art + n_nat
-
-        # Wilson 95% CIs (these will be wide given N=4)
-        tp, fp, tn, fn = val.true_positives, val.false_positives, val.true_negatives, val.false_negatives
-        sens_ci = self._wilson_ci(tp, tp + fn)
-        spec_ci = self._wilson_ci(tn, tn + fp)
-        f1_ci   = self._wilson_ci(int(round(val.f1_score * n_total)), n_total)
-
-        return {
-            'validation_performed': True,
-            'methodology_note': (
-                f"INTERNAL CONSISTENCY CHECK ONLY. N={n_total} total objects "
-                f"({n_art} artificial, {n_nat} natural). LOOCV on the same hardcoded "
-                f"objects used to tune detector thresholds. F1=1.000 reflects perfect "
-                f"separation on 4 objects; it is NOT a generalisation estimate. "
-                f"95% Wilson CIs span ~[0, 1]. An independent held-out corpus of "
-                f"≥50 artificials is required for valid performance claims."
-            ),
-            'sample_sizes': {
-                'artificial_objects': n_art,
-                'natural_objects': n_nat,
-                'total_samples': n_total,
-                'minimum_recommended_for_valid_estimate': 50
-            },
-            'performance_metrics': {
-                'sensitivity': val.sensitivity,
-                'sensitivity_95ci': list(sens_ci),
-                'specificity': val.specificity,
-                'specificity_95ci': list(spec_ci),
-                'positive_predictive_value': val.positive_predictive_value,
-                'negative_predictive_value': val.negative_predictive_value,
-                'f1_score': val.f1_score,
-                'f1_95ci': list(f1_ci),
-                'balanced_accuracy': (val.sensitivity + val.specificity) / 2
-            },
-            'confusion_matrix': {
-                'true_positives': int(tp),
-                'false_positives': int(fp),
-                'true_negatives': int(tn),
-                'false_negatives': int(fn)
-            },
-            'sigma_semantics': {
-                'formula': 'sigma_eff = sqrt(Z_a^2 + Z_e^2 + Z_i^2) + low_inclination_bonus',
-                'null_distribution': 'chi2(3) approximation (assumes independent Gaussian marginals)',
-                'p_value_type': 'analytical from scipy.stats.chi2.cdf',
-                'multiple_testing_corrected': False,
-                'correlations_modelled': False,
-                'hand_tuned_bonus': True
-            },
-            'bayesian_calibration': {
-                'prior_p_artificial': 0.001,
-                'prior_source': 'asserted (not empirically derived)',
-                'likelihood_ratios': 'hardcoded constants (10/5/2 by sigma tier)',
-                'likelihood_source': 'not calibrated against holdout data',
-                'posterior_ceiling_orbital_physical': '~3–5%',
-                'calibration_diagram_available': False,
-                'brier_score': None
-            },
-            'statistical_significance': {
-                'sigma_5_threshold': self.SIGMA_5_CONFIDENCE,
-                'sigma_5_p_value': self.SIGMA_5_P_VALUE,
-                'validation_method': 'leave-one-out cross-validation (N=4, internal only)'
-            },
-            'ground_truth_database': {
-                'artificial_objects': [obj['name'] for obj in self.artificial_objects_db],
-                'natural_objects': [obj['name'] for obj in self.natural_objects_db]
-            }
-        }
+        return {'status': 'no_independent_validation', 'validation_performed': False,
+                'calibration_status': 'unavailable', 'five_sigma_claim_permitted': False,
+                'performance_metrics': None, 'false_discovery_rate': None}

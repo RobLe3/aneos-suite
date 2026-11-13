@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Frozen menu baseline is a prior commit, not network-fetched by tests.
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -23,6 +25,56 @@ jobs:
       - name: Run tests
         run: python -m pytest tests/ aneos_core/tests/ -m "not network" -v --tb=short --cov=aneos_core --cov-report=term-missing --cov-fail-under=30
 
+      - name: Verify durable job store component coverage
+        run: python -m pytest tests/test_durable_job_store.py -q --tb=short --cov=aneos_api.job_store --cov-report=term-missing --cov-fail-under=85
+
+      - name: Verify population report component coverage
+        run: python -m pytest tests/test_network_evidence_report.py tests/test_pattern_api.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-network-report.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify resumable network worker component coverage
+        run: python -m pytest tests/test_network_job_worker.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-worker.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify durable network API component coverage
+        run: python -m pytest tests/test_durable_network_api.py tests/test_pattern_api.py tests/test_api_bootstrap_contract.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-api.ini --cov-report=term-missing --cov-fail-under=85
+
+      - name: Verify application identity and real menu-entry renders
+        run: python -m pytest tests/test_application_identity.py -q --tb=short
+
+      - name: Verify evidence-bound object detail coverage and renders
+        run: python -m pytest tests/test_object_evidence_review.py tests/test_native_orbital_epochs.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-review.ini --cov-report=term-missing --cov-fail-under=85
+
+      - name: Verify atomic physical evidence component coverage
+        run: python -m pytest tests/test_atomic_physical_evidence.py tests/test_neodys_evidence.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-physical-evidence.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify native orbital epoch component coverage
+        run: python -m pytest tests/test_native_orbital_epochs.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-native-epochs.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify HTTP evidence schema parity and validation
+        run: python -m pytest tests/test_api_evidence_parity.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-api-evidence.ini --cov-report=term-missing --cov-fail-under=95
+
+      - name: Verify durable enrichment ledger and SQL-backed detail
+        run: python -m pytest tests/test_durable_enrichment.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-enrichment-ledger.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify truthful policy inspection and actual configuration-menu QA
+        run: python -m pytest tests/test_policy_configuration_menu.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-policy-inspection.ini --cov-report=term-missing --cov-fail-under=95
+
+      - name: Verify fixed-profile acquisition and presentation coverage
+        run: python -m pytest tests/test_object_acquisition_ledger.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-acquisition.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify atomic acquisition repository coverage
+        run: python -m pytest tests/test_object_acquisition_ledger.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-acquisition-repository.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify native NEODyS identity, field accounting and photometry
+        run: python -m pytest tests/test_neodys_evidence.py tests/test_phase24.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-neodys-evidence.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify role-separated object chronology and date presentation
+        run: python -m pytest tests/test_object_chronology.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-chronology.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify source freshness inspection and explicit shared refresh
+        run: python -m pytest tests/test_source_freshness.py -q --tb=short --cov=aneos_core --cov=aneos_api --cov-config=tests/coverage-source-freshness.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify canonical polling dashboard and browser behavior
+        run: python -m pytest tests/test_polling_dashboard_screening.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-polling-dashboard.ini --cov-report=term-missing --cov-fail-under=90
 
   docker-build:
     name: Docker build

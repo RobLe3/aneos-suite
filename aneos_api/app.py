@@ -5,6 +5,7 @@ This module provides the core API application with all endpoints,
 middleware, and service integrations.
 """
 
+from aneos_version import APPLICATION_VERSION, API_CONTRACT_VERSION, BUILD_CHANNEL
 from typing import Dict, List, Optional, Any
 import asyncio
 import logging
@@ -21,6 +22,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
     from fastapi.responses import JSONResponse
+    from fastapi.exceptions import RequestValidationError
     from fastapi.openapi.utils import get_openapi
     HAS_FASTAPI = True
 except ImportError:
@@ -206,7 +208,8 @@ class ANEOSApp:
                 'alert_manager': self.alert_manager is not None,
                 'auth_manager': self.auth_manager is not None
             },
-            'version': '2.0.0'
+            'version': API_CONTRACT_VERSION, 'application_version': APPLICATION_VERSION,
+            'api_contract_version': API_CONTRACT_VERSION
         }
 
 # Global application instance
@@ -222,44 +225,59 @@ def get_aneos_app() -> ANEOSApp:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """FastAPI lifespan context manager."""
-    # Startup
+    # Starting the full API is an explicit schema operation, unlike importing
+    # storage models. Never report a usable persistent service after failed setup.
+    from .database import init_database
+    if init_database() is not True:
+        raise RuntimeError('Application database schema unavailable; startup not complete')
     aneos_app = get_aneos_app()
-    await aneos_app.initialize_services()
-    
-    yield
-    
-    # Shutdown
-    await aneos_app.shutdown_services()
+    from .network_runtime import default_runtime
+    runtime = None
+    try:
+        await aneos_app.initialize_services()
+        factory = getattr(app.state, 'network_runtime_factory', None) or default_runtime
+        runtime = factory()
+        runtime.start()
+        app.state.network_runtime = runtime
+        yield
+    finally:
+        try:
+            if runtime is not None:
+                await asyncio.to_thread(runtime.close)
+        finally:
+            await aneos_app.shutdown_services()
 
 def create_app(config_path: Optional[str] = None) -> FastAPI:
     """Create and configure FastAPI application."""
     if not HAS_FASTAPI:
         raise ImportError("FastAPI is required for API services")
-    
+
     # Create FastAPI app with lifespan
     app = FastAPI(
         title="aNEOS API",
         description=(
-            "aNEOS REST API. "
-            "Read endpoints (GET /detect, GET /impact, GET /health) "
-            "are accessible without authentication in development mode. "
-            "Use 'Authorization: Bearer mock_admin_token' for write endpoints in dev, "
-            "or configure ANEOS_ADMIN_API_KEY for production."
+            "Uncalibrated NEO screening and scoped research evidence. "
+            "Persistent network jobs require verified API credentials or scoped JWTs; "
+            "development mock tokens do not authorize them. "
+            "Authentication on other routes varies; see their documented contracts."
         ),
-        version="2.0.0",
+        version=API_CONTRACT_VERSION,
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
         lifespan=lifespan
     )
-    
+
     # Setup middleware
     setup_middleware(app)
-    
+
     # Include routers (only if they are actual FastAPI routers)
     from fastapi import APIRouter
     if isinstance(analysis.router, APIRouter):
         app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Analysis"])
+    from .endpoints import enhanced_analysis
+    if isinstance(enhanced_analysis.router, APIRouter):
+        app.include_router(enhanced_analysis.router, prefix="/api/v1/analysis", tags=["Scientific review"])
     if isinstance(prediction.router, APIRouter):
         app.include_router(prediction.router, prefix="/api/v1/prediction", tags=["ML Prediction"])
     if isinstance(monitoring.router, APIRouter):
@@ -279,10 +297,10 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
         """Health check endpoint."""
         try:
             aneos_app = get_aneos_app()
-            if not aneos_app.services_initialized:
-                await aneos_app.initialize_services()
             raw = aneos_app.get_health_status()
             services = raw.get('services', {})
+            network = getattr(app.state, 'network_runtime', None)
+            services['network_worker'] = bool(network and network.ready)
             checks = {
                 svc: CheckResult(
                     status="ok" if ok else "degraded",
@@ -291,22 +309,25 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
                 for svc, ok in services.items()
             }
             return HealthResponse(
-                status=raw.get('status', 'unknown'),
+                status=raw.get('status', 'unknown') if checks and all(c.status == 'ok' for c in checks.values()) else 'degraded',
                 checks=checks,
-                version=raw.get('version', '0.7.0'),
+                version=raw.get('version', API_CONTRACT_VERSION),
+                application_version=APPLICATION_VERSION, api_contract_version=API_CONTRACT_VERSION,
             )
         except Exception as e:
             return HealthResponse(
                 status="error",
-                checks={"api": CheckResult(status="error", detail=str(e))},
+                checks={"api": CheckResult(status="error", detail="Health inspection unavailable")},
             )
-    
+
     @app.get("/", response_model=Dict[str, Any])
     async def root():
         """Root endpoint with API information."""
         return {
             "name": "aNEOS API",
-            "version": "2.0.0",
+            "version": API_CONTRACT_VERSION,
+            "application_version": APPLICATION_VERSION, "api_contract_version": API_CONTRACT_VERSION,
+            "build_channel": BUILD_CHANNEL,
             "description": "Advanced Near Earth Object detection System",
             "documentation": "/docs",
             "dashboard": "/dashboard",
@@ -319,30 +340,61 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
                 "streaming": "/api/v1/stream"
             }
         }
-    
+
     # Custom OpenAPI schema
     def custom_openapi():
         if app.openapi_schema:
             return app.openapi_schema
-        
+
         openapi_schema = get_openapi(
             title="aNEOS API",
-            version="2.0.0",
-            description="Advanced Near Earth Object detection System - RESTful API for artificial NEO detection",
+            version=API_CONTRACT_VERSION,
+            description=app.description,
             routes=app.routes,
         )
-        
+
         # Add custom schema elements
-        openapi_schema["info"]["x-logo"] = {
-            "url": "https://example.com/aneos-logo.png"
-        }
-        
+        openapi_schema["info"]["x-application-version"] = APPLICATION_VERSION
+        openapi_schema["info"]["x-build-channel"] = BUILD_CHANNEL
+
         app.openapi_schema = openapi_schema
         return app.openapi_schema
-    
+
     app.openapi = custom_openapi
-    
+
     # Exception handlers
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_handler(request, exc):
+        # Pydantic error inputs may themselves contain NaN/Infinity or private
+        # request bodies. Do not echo them into JSON or turn a client error into500.
+        safe = []
+        messages = {
+            "finite_number": "Value must be finite",
+            "missing": "Required value is missing",
+            "greater_than_equal": "Value is below the permitted minimum",
+            "less_than_equal": "Value exceeds the permitted maximum",
+            "json_invalid": "Malformed JSON request",
+        }
+        for error in exc.errors():
+            kind = error.get("type", "invalid_value")
+            safe.append(
+                {
+                    "type": kind,
+                    "loc": list(error.get("loc", [])),
+                    "msg": messages.get(kind, "Invalid request value"),
+                }
+            )
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": "Invalid request",
+                "status_code": 422,
+                "timestamp": datetime.now(UTC).isoformat(),
+                "detail": safe,
+                "details": {"errors": safe},
+            },
+        )
+
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request, exc):
         return JSONResponse(
@@ -353,7 +405,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
                 "timestamp": datetime.now().isoformat()
             }
         )
-    
+
     @app.exception_handler(Exception)
     async def general_exception_handler(request, exc):
         logger.error(f"Unhandled exception: {exc}")
@@ -365,7 +417,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
                 "timestamp": datetime.now().isoformat()
             }
         )
-    
+
     logger.info("FastAPI application created successfully")
     return app
 

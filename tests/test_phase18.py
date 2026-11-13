@@ -52,12 +52,16 @@ class TestPersistenceCorrectness:
         source = inspect.getsource(aneos_menu_v2.ANEOSMenuV2._persist_detection_result_async)
         assert '"designation"' in source or "'designation'" in source
 
-    def test_impact_result_dict_has_designation(self):
-        """impact result_data must include 'designation' key."""
-        import aneos_menu_v2
-        source = inspect.getsource(aneos_menu_v2.ANEOSMenuV2._persist_impact_result_async)
-        assert '"designation"' in source or "'designation'" in source
-        assert "aneos_api.services" not in source
+    def test_impact_archive_keeps_designation_and_exact_source_report(self, tmp_path, monkeypatch):
+        from aneos_core.data.sources.sentry import parse_sentry_response
+        from aneos_core.reporting.evidence_archive import EvidenceArchive
+        import json
+        monkeypatch.setenv("ANEOS_EVIDENCE_ARCHIVE",str(tmp_path/"evidence"))
+        report = parse_sentry_response(b'{"signature":{"source":"NASA/JPL Sentry Data API","version":"2.0"},"error":"specified object not found"}', designation="99942",retrieved_at="2026-11-12T00:00:00Z")
+        menu = _make_menu()
+        path = menu._persist_impact_result_async("99942",report)
+        assert path and json.loads(path.read_text()) == report
+        assert EvidenceArchive(tmp_path/"evidence").get(report["report_sha256"])["designation"] == "99942"
 
 
 # ===========================================================================
@@ -110,16 +114,23 @@ class TestBatchPrintReplaced:
 class TestVerboseEvidenceBreakdown:
 
     def test_wrapper_adds_evidence_breakdown_to_analysis(self):
-        """ValidatedWrapper.analyze_neo must include 'evidence_breakdown' in analysis dict."""
-        import aneos_core.detection.detection_manager as dm
-        source = inspect.getsource(dm)
-        assert "evidence_breakdown" in source
+        from aneos_core.detection.detection_manager import DetectionManager
+        result = DetectionManager().analyze_neo({"a": 1, "e": .2, "i": 20})
+        assert result.analysis["evidence_breakdown"]
+        assert result.analysis["evidence_breakdown"] == result.analysis["assessment"]["evidence_sources"]
 
-    def test_display_reads_evidence_breakdown_key(self):
-        """_display_detection_result must look for 'evidence_breakdown' key in analysis."""
-        import aneos_menu_v2
-        source = inspect.getsource(aneos_menu_v2.ANEOSMenuV2._display_detection_result)
-        assert "evidence_breakdown" in source
+    def test_display_reads_evidence_breakdown_key(self, capsys):
+        from aneos_core.detection.detection_manager import DetectionManager
+        from aneos_menu_v2 import ANEOSMenuV2
+        from unittest.mock import Mock
+        menu = ANEOSMenuV2.__new__(ANEOSMenuV2)
+        menu.console = None
+        menu.display_panel = Mock()
+        result = DetectionManager().analyze_neo({"a": 1, "e": .2, "i": 20})
+        menu._display_detection_result(result.analysis["assessment"]["designation"], result, verbose=True)
+        content = capsys.readouterr().out
+        assert "orbital_dynamics" in content
+        assert "unavailable" in content
 
 
 # ===========================================================================

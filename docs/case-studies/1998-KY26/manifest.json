@@ -1,0 +1,9 @@
+{
+  "schema_version": "ky26-baseline-manifest-v1",
+  "code_revision": "42cab0acd7a1e5e7781a26831f07b11a77f48ead",
+  "sha256": {
+    "tests/fixtures/ky26_baseline.json": "029dd723960bf3455ae509b6c8b8796ce1a2212ff22763f2f191398b1b6a302a",
+    "tests/fixtures/ky26_legacy_detector.json": "81730434590451f5ca879cb965824df9095c4e3268c3cb74f829a3efe23eb75e",
+    "scripts/reproduce_ky26_baseline.py": "736c16b5da969186e18b7340552faef6b65930df1134bd760954fdbdc4513bcb"
+  }
+}

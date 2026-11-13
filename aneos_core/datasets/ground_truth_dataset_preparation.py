@@ -7,6 +7,7 @@ the sigma 5 artificial NEO detector without access to object identifiers.
 CRITICAL: This is implementation work for Q&A verification - no claims of correctness made.
 """
 
+from aneos_core.data.provider_http import get as provider_get
 import numpy as np
 import json
 import requests
@@ -124,7 +125,7 @@ class GroundTruthDatasetBuilder:
     def _fetch_from_sbdb(self, designation: str) -> Optional[Dict]:
         """Fetch orbital elements + physical params for one object from JPL SBDB."""
         try:
-            resp = requests.get(
+            resp = provider_get(
                 self.SBDB_API,
                 params={"sstr": designation, "phys-par": "true"},
                 timeout=10,
@@ -220,7 +221,7 @@ class GroundTruthDatasetBuilder:
         """Fetch osculating elements for a spacecraft from the JPL Horizons REST API."""
         import re
         try:
-            resp = requests.get(self.HORIZONS_API, params={
+            resp = provider_get(self.HORIZONS_API, params={
                 "format": "json", "COMMAND": f"'{naif_id}'", "OBJ_DATA": "NO",
                 "MAKE_EPHEM": "YES", "EPHEM_TYPE": "ELEMENTS", "CENTER": "500@10",
                 "START_TIME": "2020-01-01", "STOP_TIME": "2020-01-02",
@@ -308,7 +309,7 @@ class GroundTruthDatasetBuilder:
         """
         try:
             import json as _json
-            resp = requests.get(
+            resp = provider_get(
                 self.SBDB_QUERY_API,
                 params={
                     "fields": "full_name,a,e,i,om,w,ma,H,diameter,albedo,spec_T",

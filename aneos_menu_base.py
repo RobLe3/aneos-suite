@@ -101,6 +101,8 @@ class ANEOSMenuBase:
 
     def format_probability(self, p: float) -> str:
         """Return a colour-coded probability string."""
+        if p is None:
+            return "unavailable (not calibrated)"
         pct = p * 100
         if pct >= 50:
             colour = "red"
@@ -115,6 +117,8 @@ class ANEOSMenuBase:
 
     def format_sigma(self, sigma: float) -> str:
         """Return sigma tier label."""
+        if sigma is None:
+            return "UNAVAILABLE (not calibrated)"
         if sigma >= 5.0:
             return "EXCEPTIONAL (σ≥5)"
         if sigma >= 4.0:

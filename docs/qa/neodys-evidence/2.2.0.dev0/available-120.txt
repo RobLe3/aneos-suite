@@ -1,0 +1,115 @@
+SYNTHETIC OEF SOURCE — NOT A LIVE KY26 ASSESSMENT
+╭───────────────────────────────────────────── Object review — 1998 KY26 ──────────────────────────────────────────────╮
+│                                                                                                                      │
+│ Screening classification                                                                                             │
+│ NOT_FLAGGED                                                                                                          │
+│                                                                                                                      │
+│ Interpretation                                                                                                       │
+│ Uncalibrated rank 2.8897253901906135 is below policy threshold 5.0 ranking units. This does not establish a natural  │
+│ origin or a perfectly normal object.                                                                                 │
+│                                                                                                                      │
+│ Scientific status                                                                                                    │
+│ not independently validated; significance and origin probability unavailable                                         │
+│                                                                                                                      │
+│ Evidence binding                                                                                                     │
+│ Review ID: 3079c70787b140005bf74aea56745545a2ba109b21063d09376efd7e53f2cb60                                          │
+│ Evidence ID: 5a10cffa5b9573e6c15b66fa0eeb85be8b74b636e0cab9425f8129d53592d67f                                        │
+│ Policy ID: 7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37                                          │
+│                                                                                                                      │
+│ Data coverage                                                                                                        │
+│ Basic catalogue field presence: 9/15 (declared 15-field profile only).                                               │
+│ Screening orbital fields present: 3/3; domain eligibility is separate.                                               │
+│ Overall data completeness: not established. Eligible source coverage: not established.                               │
+│                                                                                                                      │
+│ Epochs and compatibility                                                                                             │
+│ Orbital element epoch: 55869.089613878 MJD TDT (NEODyS).                                                             │
+│ Covariance epoch: not available in this inventory.                                                                   │
+│ Native times retained; not propagated, converted to UTC or treated as observation dates.                             │
+│                                                                                                                      │
+│                                               Recorded catalogue data                                                │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Field                ┃ Recorded value / display conversion         ┃ Units / status                              ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis      │ 1.23                                        │ AU; present                                 │ │
+│ │ Eccentricity         │ 0.141421356                                 │ dimensionless; present                      │ │
+│ │ Inclination          │ 1.62046134                                  │ degrees; present                            │ │
+│ │ Ascending node       │ 45                                          │ degrees; present                            │ │
+│ │ Periapsis argument   │ 0                                           │ degrees; present                            │ │
+│ │ Mean anomaly         │ 335                                         │ degrees; present                            │ │
+│ │ Orbit epoch          │ 55869.089613878; native scale not converted │ MJD TDT; present                            │ │
+│ │                      │ to UTC                                      │                                             │ │
+│ │ Diameter             │ not available                               │ km; not_available                           │ │
+│ │ Absolute magnitude H │ 25.594                                      │ mag; present                                │ │
+│ │ Albedo               │ not available                               │ dimensionless; not_available                │ │
+│ │ Spectral label       │ not available                               │ catalogue label; not_available              │ │
+│ │ Rotation period      │ not available                               │ h; not_available                            │ │
+│ │ First observation    │ not available                               │ catalogue timestamp; source precision       │ │
+│ │                      │                                             │ retained; not_available                     │ │
+│ │ Last observation     │ not available                               │ catalogue timestamp; source precision       │ │
+│ │                      │                                             │ retained; not_available                     │ │
+│ │ Retrieved at         │ 2026-11-13T05:35:23.362198+00:00; offset    │ retrieval timestamp; present                │ │
+│ │                      │ recorded not time scale conversion          │                                             │ │
+│ └──────────────────────┴─────────────────────────────────────────────┴─────────────────────────────────────────────┘ │
+│                                                                                                                      │
+│                                  Squared-ranking decomposition — not probabilities                                   │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Proxy channel          ┃ Effect / weight             ┃ Weighted square / share                                   ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ orbital_dynamics       │ 2.76367369 / 1              │ 7.63789225; 91.5% of squared rank ━━━━━━━━━━━━━━━━━━      │ │
+│ │ physical_properties    │ 1.46214286 / 0.333333333    │ 0.712620578; 8.53% of squared rank ━━                     │ │
+│ └────────────────────────┴─────────────────────────────┴───────────────────────────────────────────────────────────┘ │
+│                                                                                                                      │
+│ Evidence-grounded explanation                                                                                        │
+│ The rank uses fixed global prototype reference parameters, not a size/survey-conditioned population or calibrated    │
+│ null. Its proxy channels are not independent observations.                                                           │
+│                                                                                                                      │
+│ A hand-set inclination enhancement was applied to the orbital proxy. This is an algorithm assumption, not origin     │
+│ evidence.                                                                                                            │
+│                                                                                                                      │
+│ Diameter, absolute magnitude and albedo have physical dependencies. Their availability is not three independent      │
+│ pieces of origin evidence; albedo is not independently scored by the current physical proxy.                         │
+│                                                                                                                      │
+│ The largest squared-ranking term is orbital_dynamics. This is a decomposition of the heuristic, not the strongest    │
+│ physical evidence or a probability.                                                                                  │
+│                                                                                                                      │
+│ The displayed profile counts recorded fields, not complete knowledge or verified source coverage. Missing physical   │
+│ uncertainties, observations and unresolved sources still limit scientific use.                                       │
+│                                                                                                                      │
+│ Atomic physical assertions                                                                                           │
+│ NEODyS H (OEF MAG): 25.594 mag; uncertainty not available; ref: not available                                        │
+│ Native H/G record: MAG 25.594 0.150. G remains native; no typed phase-law fit or independent H/G evidence is         │
+│ implied.                                                                                                             │
+│ Catalogue assertions, not independently verified measurements. Physical measurement epoch: not available;            │
+│ retrieval/container orbit dates are not measurement dates.                                                           │
+│ Follow-up and limits                                                                                                 │
+│ • Verify source identity, dated measurements, required uncertainty and compatible solutions.                         │
+│ • Use fitted natural/human-technology/artifact comparisons and withheld observations before physical-origin          │
+│ inference.                                                                                                           │
+│ • Independent population calibration and search-wide error control are required before significance claims.          │
+│ • Binding/replay verifies consistency, not source authenticity or measurement accuracy.                              │
+│ • No natural/artificial origin, calibrated probability or five-sigma result is supplied.                             │
+│ • Complete local enrichment and scientific operation readiness remain separate requirements.                         │
+│                                                                                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────────────────── Recorded acquisition outcomes ────────────────────────────────────────────╮
+│ Data contributed: 1/5 planned adapters. Typed data or explicit empty responses: 1/5.                                 │
+│ ┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Source     ┃ Outcome        ┃ Recorded at (UTC)    ┃ Meaning                                                     ┃ │
+│ ┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ SBDB       │ unavailable    │ 2026-11-13           │ Source could not initialize                                 │ │
+│ │            │                │ 05:35:23.359205Z     │                                                             │ │
+│ │ NEODyS     │ available      │ 2026-11-13           │ Typed data contribution; not independently verified         │ │
+│ │            │                │ 05:35:23.362198Z     │                                                             │ │
+│ │ MPC        │ unavailable    │ 2026-11-13           │ Source could not initialize                                 │ │
+│ │            │                │ 05:35:23.359325Z     │                                                             │ │
+│ │ Horizons   │ unavailable    │ 2026-11-13           │ Source could not initialize                                 │ │
+│ │            │                │ 05:35:23.359349Z     │                                                             │ │
+│ │ CAD        │ unavailable    │ 2026-11-13           │ Adapter/result unavailable; no substitute data              │ │
+│ │            │                │ 05:35:23.363517Z     │                                                             │ │
+│ └────────────┴────────────────┴──────────────────────┴─────────────────────────────────────────────────────────────┘ │
+│ Installed catalogue + bounded CAD profile only. Counts are not total completeness, independent evidence, source      │
+│ authenticity or scientific readiness.                                                                                │
+│ Recorded times are adapter-result receipts, not observation epochs. Native/adapter packets where available and query │
+│ IDs remain in local JSON history.                                                                                    │
+│ Query: be993308-ae63-4b45-9f7e-9d5ed76e7651                                                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

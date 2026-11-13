@@ -157,8 +157,7 @@ class ANEOSConfig:
         config_path = Path(config_path)
         
         if not config_path.exists():
-            logger.warning(f"Config file {config_path} not found, using defaults")
-            return cls()
+            raise FileNotFoundError(f"Explicit configuration file not found: {config_path}")
             
         try:
             with open(config_path, 'r') as f:
@@ -172,8 +171,8 @@ class ANEOSConfig:
             return cls._from_dict(data)
             
         except Exception as e:
-            logger.error(f"Error loading config from {config_path}: {e}")
-            return cls()
+            logger.error("Invalid configuration file: %s", config_path)
+            raise ValueError("Invalid configuration file; defaults were not activated") from e
     
     @classmethod
     def from_env(cls) -> 'ANEOSConfig':
@@ -271,6 +270,11 @@ class ANEOSConfig:
     @classmethod
     def _from_dict(cls, data: Dict[str, Any]) -> 'ANEOSConfig':
         """Create config from dictionary."""
+        if not isinstance(data, dict):
+            raise ValueError("Configuration document must be an object")
+        unknown = set(data) - (set(cls.__dataclass_fields__) | {"paths"})
+        if unknown:
+            raise ValueError("Unsupported top-level configuration fields")
         # Extract nested configurations
         api_data = data.get('api', {})
         paths_data = data.get('paths', {})
@@ -356,46 +360,47 @@ class ConfigManager:
 
     def __init__(self, config_path: Optional[str] = None, *, config_file: Optional[str] = None):
         self._config = None
-        self._config_path = config_file or config_path
+        self._config_path = config_file if config_file is not None else config_path
         self._load_config()
     
     def _load_config(self) -> None:
-        """Load configuration using priority order: file -> env -> defaults."""
-        if self._config_path and Path(self._config_path).exists():
-            logger.info(f"Loading configuration from file: {self._config_path}")
-            self._config = ANEOSConfig.from_file(self._config_path)
+        """Select explicit file or environment; publish only validated state."""
+        if self._config_path is not None:
+            logger.info("Loading configuration from file: %s", self._config_path)
+            candidate = ANEOSConfig.from_file(self._config_path)
         else:
             logger.info("Loading configuration from environment variables")
-            self._config = ANEOSConfig.from_env()
+            candidate = ANEOSConfig.from_env()
+        self._validate_config(candidate)
+        self._config = candidate
 
-        # Validate configuration
-        self._validate_config()
-
-    def _collect_validation_errors(self) -> List[str]:
-        """Return a list of validation issues for the current configuration."""
+    def _collect_validation_errors(self, config=None) -> List[str]:
+        """Validate the existing bounded threshold/API/worker contract, not every field."""
+        import math
+        config = self._config if config is None else config
+        if not isinstance(config, ANEOSConfig):
+            return ["configuration must be ANEOSConfig"]
+        if not isinstance(config.api, APIConfig) or not isinstance(config.thresholds, ThresholdConfig):
+            return ["api and thresholds require their typed configuration objects"]
         errors = []
-
-        # Validate thresholds
-        if not (0 < self._config.thresholds.eccentricity <= 1):
-            errors.append("eccentricity threshold must be between 0 and 1")
-
-        if not (0 <= self._config.thresholds.inclination <= 180):
-            errors.append("inclination threshold must be between 0 and 180 degrees")
-
-        if self._config.api.request_timeout <= 0:
-            errors.append("request_timeout must be positive")
-
-        if self._config.api.max_retries < 0:
-            errors.append("max_retries must be non-negative")
-
-        if self._config.max_workers <= 0:
-            errors.append("max_workers must be positive")
-
+        eccentricity = config.thresholds.eccentricity
+        if type(eccentricity) not in (int, float) or not math.isfinite(eccentricity) or not (0 < eccentricity <= 1):
+            errors.append("eccentricity threshold must be finite and between 0 and 1")
+        inclination = config.thresholds.inclination
+        if type(inclination) not in (int, float) or not math.isfinite(inclination) or not (0 <= inclination <= 180):
+            errors.append("inclination threshold must be finite and between 0 and 180 degrees")
+        for label, value, minimum in (
+            ("request_timeout", config.api.request_timeout, 1),
+            ("max_retries", config.api.max_retries, 0),
+            ("max_workers", config.max_workers, 1),
+        ):
+            if type(value) is not int or value < minimum:
+                errors.append(f"{label} must be an integer >= {minimum}")
         return errors
 
-    def _validate_config(self) -> None:
+    def _validate_config(self, config=None) -> None:
         """Validate configuration parameters."""
-        errors = self._collect_validation_errors()
+        errors = self._collect_validation_errors(config)
 
         if errors:
             error_msg = "Configuration validation errors: " + "; ".join(errors)
@@ -435,15 +440,15 @@ class ConfigManager:
         self._load_config()
 
     def update_config(self, **kwargs) -> None:
-        """Update configuration parameters programmatically."""
+        """Publish a validated copy; never persist or partially mutate live state."""
+        from copy import deepcopy
+        candidate = deepcopy(self._config)
         for key, value in kwargs.items():
-            if hasattr(self._config, key):
-                setattr(self._config, key, value)
-                logger.info(f"Updated config parameter: {key} = {value}")
-            else:
-                logger.warning(f"Unknown config parameter: {key}")
-
-        self._validate_config()
+            if key not in ANEOSConfig.__dataclass_fields__:
+                raise ValueError(f"Unknown configuration field: {key}")
+            setattr(candidate, key, deepcopy(value))
+        self._validate_config(candidate)
+        self._config = candidate
 
     def validate_configuration(self) -> bool:
         """Public validation helper used by the regression tests."""

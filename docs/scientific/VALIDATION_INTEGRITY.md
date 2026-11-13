@@ -1,3 +1,43 @@
+> **ADR-072 review-branch update (2026-11-12):** simple/advanced standalone
+> facades now use actual core screening, nullable inference and no fabricated
+> name/hash/failure fallbacks. Their impact bridge inventories prerequisites,
+> not a fitted probability. Capability counts do not establish maturity.
+> The separate legacy `/impact` REST/menu/core claim surface remains #32.
+> No calibrated significance, independent performance or origin finding follows.
+
+> **ADR-071 review-branch update (2026-11-12):** primary legacy menu and
+> launcher analysis now share actual screening and replayable JSON/Markdown
+> reports. Name-based demos, null-to-natural display and fabricated workflow
+> inference are withdrawn from those routes. Standalone/prototype coverage is
+> still incomplete (#30/#6/#12). No calibrated significance or origin finding follows.
+
+> **ADR-070 review-branch update (2026-11-12):** enhanced REST now uses the
+> actual core pipeline and explicit nullable review outcomes. Stored summary ranks
+> are not FP probabilities; natural/inconclusive labels do not grant acceptance.
+> The prior enhanced-route migration warning is superseded. No calibrated model,
+> independent performance, durable review history or five-sigma permission follows.
+
+> **ADR-069 review-branch update (2026-11-12):** core AnalysisPipeline and
+> `/analyze` now delegate to shared uncalibrated screening. Source failure abstains;
+> compatibility ranks are not probabilities or significance. Legacy ML fusion is
+> unavailable with this contract; screening classes cannot supply training truth.
+> Independent calibration, physical fitting, enhanced REST migration and durable
+> execution remain open. Engineering controls do not establish scientific accuracy.
+
+> **ADR-068 review-branch update (2026-11-12):** direct MultiStageValidator
+> placeholder science and pass-on-error contracts are withdrawn; legacy inputs
+> use canonical screening plus unavailable/inconclusive scientific prerequisites.
+> This is not a calibrated origin model or independent performance result. Core
+> legacy AnalysisPipeline/API/CLI migration remains #6. The prior audit remains
+> historical evidence rather than certification of current capability.
+
+> **2026-11-12 review-branch correction:** ADR-065 withdraws constructor toy
+> performance/sigma/posterior claims on canonical screening. ADR-066 requires
+> evidence-bound validation outcomes but installs no calibrated physical/null
+> model: canonical scientific validation remains inconclusive. Legacy/direct
+> helper defects remain issue #23. The historical audit below explains the old
+> limitations; it is not evidence of current independent validation.
+
 # aNEOS Validation Integrity Audit
 
 **Date:** 2026-03-08
@@ -245,3 +285,30 @@ at every display point.
 | Posterior calibration check | **NO** | No reliability diagram or Brier score |
 | External holdout set | **NONE** | All evaluation on development objects |
 | Temporal robustness | **UNTESTED** | No arc-replay study |
+
+### Provider coordination boundary (2026-11-12, ADR-073)
+
+Shared JPL GET coordination and persistent backoff are engineering safeguards,
+not independent scientific validation. Synthetic concurrency/outage/restart tests
+do not establish provider availability, impact probability, calibrated origin
+probability or five-sigma significance. See
+[the scoped transport report](../engineering/jpl-provider-transport.md).
+
+### Scoped external impact evidence (2026-11-12, ADR-074)
+
+The existing REST impact route now reports version/identity-checked Sentry model
+evidence with source snapshots, listed-event scope and documented uncertainty.
+Not listed/removed is not zero risk. This does not validate a local impact solver,
+the legacy menu/library/enhanced-impact paths, origin inference or discovery sigma.
+See [scope and regression evidence](../engineering/sentry-impact-contract.md).
+
+### Impact scenarios and entry points (2026-11-12, ADR-075)
+
+V2 menu/enhanced impact reports now use the scoped source contract, not origin/
+quality/arc/geometric proxies. The former local comprehensive-probability and
+estimated-Torino interfaces are controlled-deprecated. Explicit legacy diagnostics
+and conditional kinetic energy remain research/scenario utilities, not fitted
+probability, confidence, damage or origin evidence. Local snapshot write/restart
+controls do not establish scientific validity or a complete durable job system.
+The offline suite now fails unmarked network attempts rather than allowing source
+errors to hide them. [Exact scope and acceptance evidence](../engineering/impact-entrypoint-contract.md).

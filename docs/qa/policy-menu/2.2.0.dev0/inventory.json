@@ -1,0 +1,81 @@
+{
+  "schema_version": "policy-menu-qa-v1",
+  "captured_at": "2026-11-13T03:21:17.101427+00:00",
+  "policy_id": "7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37",
+  "frozen_inspection_timestamp": "2026-11-13T03:21:17.064696+00:00",
+  "metrics": {
+    "inspection-80": {
+      "lines": 39,
+      "max_columns": 80
+    },
+    "inspection-120": {
+      "lines": 33,
+      "max_columns": 120
+    },
+    "inspection-160": {
+      "lines": 32,
+      "max_columns": 160
+    },
+    "controls-80": {
+      "lines": 12,
+      "max_columns": 77
+    },
+    "controls-120": {
+      "lines": 10,
+      "max_columns": 119
+    },
+    "controls-160": {
+      "lines": 10,
+      "max_columns": 119
+    },
+    "unavailable-80": {
+      "lines": 2,
+      "max_columns": 77
+    },
+    "unavailable-120": {
+      "lines": 1,
+      "max_columns": 86
+    },
+    "unavailable-160": {
+      "lines": 1,
+      "max_columns": 86
+    }
+  },
+  "source_sha256": {
+    "aneos_menu.py": "ab6fb0e1e11543b4549f81cda673b61955d3a9294e1883f2984780a8811a0c98",
+    "aneos_core/analysis/screening.py": "f442ec4ef601f7cb432fdb6c230eeefb63c75519afd11afa298d2e18d62c8345",
+    "aneos_core/analysis/policy_inspection.py": "b56c01771dd5b62537b6c9ef2e7977d1ba7a643c032db7bd3cbcee0a5b1ab3d0",
+    "scripts/qa_policy_menu.py": "d01fa3402016ab3990f4191455139200b1985ad5dc2e9d548c8fc73074e6d86d"
+  },
+  "artifact_sha256": {
+    "unavailable-120.svg": "cb118ee8d1f84696a088ce84eecd66bf50b89414330e7e96fe8c27af05a829f3",
+    "inspection-80.html": "9f3a633a3c43fa553659d459c4dc6371e4ee67bd3ed549bb4d25c5b7d0d505f5",
+    "controls-80.html": "b964f7eb62c18682f0147bef0473c91263a83a31ad891690c92c6ba9382b1629",
+    "unavailable-120.txt": "398d4761709b3bf7457f1aa36e1cc3c6b0631e2bcb3a090d8b3b1a349d56bc35",
+    "controls-160.txt": "6b19bbb9fb7fcccf2c340b39d5839369081e07d21f6ee0e4f9c3963985ed7901",
+    "inspection-160.svg": "af666d4967ef3d1e091d39360a4339c02b9696b8023498df0336d89144b6481a",
+    "policy-snapshot.json": "c045723bf27ae3eed8ddbdfb0132fa4d8c9e96133da2e8ac9e2e8c92a86d7b22",
+    "inspection-160.txt": "a31c75f38b65de137677229fcc8b1c2f0a0a4ea6bf0bab2e75b43ce362d51595",
+    "controls-160.svg": "0745ceed5fcc4d4cd33ab492f1f80f3a9cfcbf0d4f6a5fb19d402624af3a95cf",
+    "unavailable-80.svg": "cb118ee8d1f84696a088ce84eecd66bf50b89414330e7e96fe8c27af05a829f3",
+    "inspection-80.txt": "8858d19d418d328ebc26d18476bf26daa248a8c9038c63045581143878cc5c99",
+    "controls-80.txt": "7b46ab154cedcb6036247d459f9c1e4cf735642a771b8feab449732bccc8aee0",
+    "unavailable-160.svg": "cb118ee8d1f84696a088ce84eecd66bf50b89414330e7e96fe8c27af05a829f3",
+    "unavailable-160.txt": "398d4761709b3bf7457f1aa36e1cc3c6b0631e2bcb3a090d8b3b1a349d56bc35",
+    "inspection-80.svg": "af666d4967ef3d1e091d39360a4339c02b9696b8023498df0336d89144b6481a",
+    "unavailable-80.txt": "ac4d99c3f2b0968974134254c331c806fd188c8e8b2108197ca3fd38a7871947",
+    "controls-80.svg": "0745ceed5fcc4d4cd33ab492f1f80f3a9cfcbf0d4f6a5fb19d402624af3a95cf",
+    "inspection-120.svg": "af666d4967ef3d1e091d39360a4339c02b9696b8023498df0336d89144b6481a",
+    "inspection-160.html": "9f3a633a3c43fa553659d459c4dc6371e4ee67bd3ed549bb4d25c5b7d0d505f5",
+    "controls-120.html": "b964f7eb62c18682f0147bef0473c91263a83a31ad891690c92c6ba9382b1629",
+    "unavailable-160.html": "4f33994e582df733ebab6fbfa4be0143de2023e8d8d613e5409a824b57ea7685",
+    "unavailable-80.html": "4f33994e582df733ebab6fbfa4be0143de2023e8d8d613e5409a824b57ea7685",
+    "controls-120.txt": "6b19bbb9fb7fcccf2c340b39d5839369081e07d21f6ee0e4f9c3963985ed7901",
+    "unavailable-120.html": "4f33994e582df733ebab6fbfa4be0143de2023e8d8d613e5409a824b57ea7685",
+    "controls-160.html": "b964f7eb62c18682f0147bef0473c91263a83a31ad891690c92c6ba9382b1629",
+    "controls-120.svg": "0745ceed5fcc4d4cd33ab492f1f80f3a9cfcbf0d4f6a5fb19d402624af3a95cf",
+    "inspection-120.html": "9f3a633a3c43fa553659d459c4dc6371e4ee67bd3ed549bb4d25c5b7d0d505f5",
+    "inspection-120.txt": "4c89884e811963e714a2324b954e05c4c3a6d3a840b41f64adffeb32af9bb42f"
+  },
+  "limits": "Actual policy menu with frozen inspection timestamp, synthetic controls and injected missing prerequisite. No network, mutation, live-job audit, independent calibration or all-menu certification."
+}

@@ -9,8 +9,8 @@ processes candidates through progressive refinement stages.
 Pipeline Flow:
 1. Chunked Historical Polling → Variable raw objects (dataset dependent)
 2. ATLAS First-Stage Review → Dynamic candidates (up to 50,000)  
-3. Enhanced Multi-Stage Validation → Sigma 5 validated candidates (up to 500)
-4. Expert Review Queue → Final artificial NEO candidates (up to 50)
+3. Required Multi-Stage Validation → explicit pass/fail/inconclusive outcomes
+4. Expert Review Queue → Gate-eligible research candidates (up to 50)
 
 Key Features:
 - Integrated with chunked historical poller
@@ -256,7 +256,8 @@ class AutomaticReviewPipeline:
                             processing_time_seconds=(datetime.now() - start_time).total_seconds(),
                             success=True,
                             candidates=raw_objects[:1000],
-                            stage_metrics={'total_chunks': historical_result.total_chunks_processed}
+                            stage_metrics={'total_chunks': historical_result.total_chunks_processed,
+                        'source_coverage': getattr(historical_result, 'summary_stats', {})}
                         )
                         
                         # Stage 2: XVIII SWARM First-Stage Review
@@ -284,7 +285,7 @@ class AutomaticReviewPipeline:
                         # Stage 4: Expert Review Queue
                         stage4_task = progress.add_task("stage4", total=100, stage="👨‍🔬 Expert Review Queue", status="Preparing...")
                         expert_review_result = await self._stage_expert_review_prep_with_progress(
-                            multi_stage_result.candidates if multi_stage_result.success else [],
+                            multi_stage_result.candidates,
                             progress, stage4_task
                         )
                         stage_results[ProcessingStage.EXPERT_REVIEW_QUEUE] = expert_review_result
@@ -305,7 +306,8 @@ class AutomaticReviewPipeline:
                     processing_time_seconds=(datetime.now() - start_time).total_seconds(),
                     success=True,
                     candidates=raw_objects[:1000],
-                    stage_metrics={'total_chunks': historical_result.total_chunks_processed}
+                    stage_metrics={'total_chunks': historical_result.total_chunks_processed,
+                        'source_coverage': getattr(historical_result, 'summary_stats', {})}
                 )
                 
                 first_stage_result = await self._stage_first_review(raw_objects)
@@ -321,7 +323,7 @@ class AutomaticReviewPipeline:
                     self.logger.warning(f"Multi-stage validation had issues: {multi_stage_result.error_message}")
                 
                 expert_review_result = await self._stage_expert_review_prep(
-                    multi_stage_result.candidates if multi_stage_result.success else []
+                    multi_stage_result.candidates
                 )
                 stage_results[ProcessingStage.EXPERT_REVIEW_QUEUE] = expert_review_result
             
@@ -376,15 +378,15 @@ class AutomaticReviewPipeline:
     
     def _extract_raw_objects(self, historical_result: HistoricalPollingResult) -> List[Dict]:
         """Extract all raw NEO objects from historical polling results."""
-        raw_objects = []
-        
-        for chunk_result in historical_result.chunk_results:
-            if chunk_result.success and chunk_result.chunk_data:
-                raw_objects.extend(chunk_result.chunk_data)
-        
-        self.logger.info(f"Extracted {len(raw_objects)} raw objects from historical polling")
+        chunks = historical_result.chunk_results
+        successful = [chunk for chunk in chunks if chunk.success]
+        if chunks and not successful:
+            from ..utils.errors import DataSourceUnavailableError
+            raise DataSourceUnavailableError('All historical CAD chunks failed; not an empty successful survey')
+        raw_objects = HistoricalChunkedPoller._merge_chunks([chunk.chunk_data or [] for chunk in successful])
+        self.logger.info('Extracted %s distinct computed encounters', len(raw_objects))
         return raw_objects
-    
+
     def _compute_designation_frequencies(self, raw_objects: List[Dict]) -> Dict[str, int]:
         """Count how many times each designation appears across all chunks.
 
@@ -481,64 +483,14 @@ class AutomaticReviewPipeline:
                     # Fallback to simple heuristics
                     score_result = self._simple_first_stage_scoring(neo_obj)
                 
-                # REAL ARTIFICIAL NEO DETECTION
                 artificial_analysis = await self._detect_artificial_neo(neo_obj)
-                
-                # Integrate SIGMA 5 artificial NEO analysis into scoring
-                if artificial_analysis and artificial_analysis.is_artificial:
-                    # SIGMA 5 DETECTION: Maximum scoring for 99.99994% certainty
-                    base_score = score_result.get('overall_score', 0.0)
-                    sigma_level = artificial_analysis.sigma_level or 0.0
-                    certainty = artificial_analysis.artificial_probability
+                # Screening eligibility is not an artificial-origin verdict.
+                score_result['screening_candidate'] = bool(artificial_analysis and artificial_analysis.candidate)
+                score_result['screening_score'] = getattr(artificial_analysis, 'screening_score', None)
+                score_result['artificial_neo_detected'] = None
+                score_result['artificial_confidence'] = None
+                score_result['artificial_analysis'] = getattr(artificial_analysis, 'analysis', {})
 
-                    # Sigma 5 gets maximum scoring priority
-                    if sigma_level >= 5.0:
-                        # Override score completely - sigma 5 is definitive
-                        score_result['overall_score'] = 0.99  # Near maximum score
-                        score_result['sigma_5_detection'] = True
-                        score_result['sigma_level'] = sigma_level
-                        score_result['statistical_certainty'] = certainty
-                        boost_factor = 1.0  # full boost applied
-                    else:
-                        # Lower sigma levels get proportional boost
-                        boost_factor = min(sigma_level / 5.0, 0.8)  # Scale to sigma 5
-                        score_result['overall_score'] = min(
-                            base_score + boost_factor,
-                            1.0
-                        )
-
-                    # Always include sigma analysis results
-                    score_result['artificial_neo_detected'] = True
-                    score_result['artificial_confidence'] = artificial_analysis.confidence
-                    score_result['sigma_level'] = sigma_level
-                    score_result['statistical_certainty'] = certainty
-                    score_result['false_positive_rate'] = artificial_analysis.metadata.get('false_positive_rate', 0.0)
-                    score_result['artificial_analysis'] = artificial_analysis.analysis
-                    score_result['boost_applied'] = boost_factor
-                    score_result['original_score'] = base_score
-
-                    # Get primary evidence from analysis
-                    components = [k for k in artificial_analysis.analysis.keys() if k != 'overall']
-                    primary_evidence = components[0] if components else 'orbital_analysis'
-
-                    # VALIDATION TRACKING
-                    score_result['detection_validation'] = {
-                        'threshold_alignment': 'FIXED',
-                        'boost_factor_improved': True,
-                        'detection_sensitivity_tuned': True,
-                        'validation_timestamp': datetime.now().isoformat()
-                    }
-
-                    self.logger.info(
-                        f"🚀 ARTIFICIAL NEO DETECTED: {neo_obj.get('designation', 'Unknown')} "
-                        f"- {primary_evidence} (confidence: {artificial_analysis.confidence:.3f}, "
-                        f"boost: +{boost_factor:.3f})"
-                    )
-                else:
-                    score_result['artificial_neo_detected'] = False
-                    score_result['artificial_confidence'] = 0.0
-                    score_result['artificial_analysis'] = {}
-                
                 # Add scoring to object
                 neo_obj['first_stage_score'] = score_result
                 neo_obj['first_stage_timestamp'] = datetime.now().isoformat()
@@ -546,7 +498,7 @@ class AutomaticReviewPipeline:
                 
                 # Check if candidate passes threshold
                 overall_score = score_result.get('overall_score', 0.0)
-                if overall_score >= self.config.first_stage.score_threshold:
+                if score_result['screening_candidate'] or (overall_score is not None and overall_score >= self.config.first_stage.score_threshold):
                     candidates.append(neo_obj)
                     
             except Exception as e:
@@ -555,125 +507,18 @@ class AutomaticReviewPipeline:
         
         return candidates
     
-    async def _apply_xviii_swarm_scoring(self, neo_obj: Dict) -> Dict:
-        """Apply real XVIII SWARM advanced scoring to individual object."""
-        try:
-            designation = neo_obj.get('designation', 'unknown')
-            
-            if self.xviii_swarm_scorer:
-                # Use the actual XVIII SWARM advanced scoring system
-                # Prefer top-level CAD fields; fall back to orbital element proxies
-                orbital_elements = neo_obj.get('orbital_elements', {})
-                eccentricity = orbital_elements.get('eccentricity', 0.0)
-                inclination = orbital_elements.get('inclination', 0.0)
+    async def _apply_xviii_swarm_scoring(self, neo_obj):
+        """Compatibility triage wrapper; no fabricated stage/physical inputs.
 
-                # If CAD distance/velocity fields are present, use them for regularity proxy
-                dist_au = neo_obj.get('miss_distance_au')
-                v_kms = neo_obj.get('relative_velocity_km_s')
-                if dist_au is not None:
-                    import math
-                    approach_regularity_score = min(math.exp(-dist_au / 0.1), 0.9)
-                else:
-                    approach_regularity_score = min(eccentricity * 0.1, 0.3)
+        Standalone AdvancedScoreCalculator remains available for explicitly
+        sourced research inputs. Automatic origin/rank decisions use the shared
+        service; this legacy name no longer registers proxy ΔBIC or zero-filled
+        radar/thermal/spectral evidence.
+        """
+        result = self._simple_first_stage_scoring(neo_obj)
+        result['legacy_atlas_status'] = 'proxy_fusion_withdrawn'
+        return result
 
-                if v_kms is not None:
-                    # Low velocity proxy: orbital geometry only, NOT actual ΔBIC fit.
-                    # Cap at 0.5 so score never exceeds the Δ flag threshold (0.65).
-                    # Confidence kept low (0.35) to signal this is a proxy, not a measurement.
-                    delta_bic_score = min(max(0.0, (10.0 - v_kms) / 10.0), 0.5) if v_kms < 10 else min(v_kms / 100.0, 0.2)
-                    delta_bic_confidence = neo_obj.get('delta_bic_confidence', 0.35)
-                else:
-                    delta_bic_score = min(abs(inclination - 90) / 180 * 0.2, 0.2)
-                    delta_bic_confidence = 0.25
-
-                # Radar, thermal, and spectral data are NOT available from the CAD API.
-                # Setting these to 0.0 prevents fabricated "physical evidence" explanations.
-                # Real values require dedicated observational campaigns (ADR-053).
-                radar_score = neo_obj.get('radar_score', 0.0)
-                thermal_score = neo_obj.get('thermal_score', 0.0)
-                spectral_score = neo_obj.get('spectral_score', 0.0)
-                hardware_score = 0.0  # Conservative for natural objects
-
-                indicator_results = {
-                    # Orbital behavior indicators
-                    # Confidence 0.35 signals this is a single close-approach proximity
-                    # proxy, not a multi-epoch regularity measurement.
-                    'approach_regularity': {
-                        'raw_score': neo_obj.get('approach_regularity', approach_regularity_score),
-                        'confidence': neo_obj.get('approach_confidence', 0.35)
-                    },
-
-                    # Velocity-proxy ΔBIC: low confidence, score capped at 0.5
-                    # (below Δ flag threshold of 0.65). Real ΔBIC requires trajectory fit.
-                    'delta_bic_analysis': {
-                        'weighted_score': neo_obj.get('delta_bic_score', delta_bic_score),
-                        'raw_score': neo_obj.get('delta_bic_raw', delta_bic_score),
-                        'confidence': delta_bic_confidence
-                    },
-
-                    # Physical trait indicators: 0.0 unless object carries measured values
-                    'radar_polarization': {
-                        'weighted_score': radar_score,
-                        'raw_score': neo_obj.get('radar_raw', radar_score),
-                        'confidence': neo_obj.get('radar_confidence', 0.7)
-                    },
-
-                    'thermal_ir_analysis': {
-                        'weighted_score': thermal_score,
-                        'raw_score': neo_obj.get('thermal_raw', thermal_score),
-                        'confidence': neo_obj.get('thermal_confidence', 0.6)
-                    },
-
-                    # Spectral analysis: 0.0 unless object carries measured values
-                    'spectral_outlier': {
-                        'weighted_score': spectral_score,
-                        'raw_score': neo_obj.get('spectral_raw', spectral_score),
-                        'confidence': neo_obj.get('spectral_confidence', 0.7)
-                    },
-
-                    # Human origin analysis
-                    'human_hardware': {
-                        'weighted_score': neo_obj.get('hardware_score', hardware_score),
-                        'raw_score': neo_obj.get('hardware_raw', hardware_score),
-                        'confidence': neo_obj.get('hardware_confidence', 0.8)
-                    }
-                }
-                
-                # Calculate individual advanced score for this specific object
-                score_result = self.xviii_swarm_scorer.calculate_score(neo_obj, indicator_results)
-                
-                # Convert AdvancedAnomalyScore to dict format for pipeline
-                return {
-                    'overall_score': score_result.overall_score,
-                    'raw_weighted_sum': score_result.raw_weighted_sum,
-                    'confidence': score_result.confidence,
-                    'classification': score_result.classification,
-                    'category_scores': score_result.category_scores,
-                    'flag_string': score_result.flag_string,
-                    'clue_contributions': [
-                        {
-                            'name': c.name,
-                            'category': c.category, 
-                            'score': c.normalized_score,
-                            'contribution': c.contribution,
-                            'confidence': c.confidence,
-                            'flag': c.flag,
-                            'explanation': c.explanation
-                        } for c in score_result.clue_contributions
-                    ],
-                    'debris_penalty_applied': score_result.debris_penalty_applied,
-                    'processing_stage': 'xviii_swarm_advanced',
-                    'designation': designation,
-                    'analysis_timestamp': datetime.now().isoformat()
-                }
-            else:
-                # Fallback: Simple heuristic scoring for individual object
-                return self._simple_first_stage_scoring(neo_obj)
-            
-        except Exception as e:
-            self.logger.error(f"XVIII SWARM scoring failed for {neo_obj.get('designation', 'unknown')}: {e}")
-            return {'overall_score': 0.0, 'error': str(e), 'designation': neo_obj.get('designation', 'unknown')}
-    
     def _simple_first_stage_scoring(self, neo_obj: Dict) -> Dict:
         """Multi-signal first-stage scorer for CAD and orbital-element data.
 
@@ -744,13 +589,14 @@ class AutomaticReviewPipeline:
 
             if dist_au is not None or v_kms is not None:
                 dist_score = math.exp(-dist_au / 0.02) if dist_au is not None else 0.0
-                vel_bonus = (0.30 if v_kms and v_kms < 3 else (
-                             0.15 if v_kms and v_kms < 5 else (
-                             0.06 if v_kms and v_kms < 8 else 0.0)))
+                vel_bonus = (0.30 if v_kms is not None and v_kms < 3 else (
+                             0.15 if v_kms is not None and v_kms < 5 else (
+                             0.06 if v_kms is not None and v_kms < 8 else 0.0)))
                 return {
                     'overall_score': min(score, 1.0),
                     'flags': flags if flags else ['cad_no_signal'],
-                    'confidence': 0.7,
+                    'confidence': None,
+                    'score_semantics': 'uncalibrated_encounter_triage_not_origin',
                     'processing_stage': 'cad_multi_signal',
                     'signal_breakdown': {
                         'distance': dist_score,
@@ -759,183 +605,159 @@ class AutomaticReviewPipeline:
                     },
                 }
 
-            # Fallback: orbital elements only (no CAD data)
-            orbital_elements = neo_obj.get('orbital_elements', {})
-            eccentricity = orbital_elements.get('eccentricity', 0.0)
-            inclination = orbital_elements.get('inclination', 0.0)
-            orb_score = 0.0
-            if eccentricity > 0.9:
-                orb_score += 0.5
-            elif eccentricity > 0.7:
-                orb_score += 0.3
-            if inclination > 150 or (inclination < 30 and inclination != 10.0):
-                orb_score += 0.3
-            return {
-                'overall_score': orb_score,
-                'flags': ['orbital_heuristic'],
-                'confidence': 0.4,
-                'processing_stage': 'orbital_heuristic',
-            }
+            # No encounter measurements: do not synthesize zero inclination/eccentricity.
+            # The shared screening service independently handles any real orbit.
+            return {'overall_score': None, 'flags': ['encounter_data_unavailable'],
+                    'confidence': None, 'processing_stage': 'unavailable_input',
+                    'score_semantics': 'uncalibrated_encounter_triage_not_origin'}
+        except Exception as exc:
+            return {'overall_score': None, 'confidence': None, 'error': str(exc),
+                    'processing_stage': 'unavailable_input'}
 
-        except Exception:
-            return {'overall_score': 0.0, 'error': 'scoring_failed'}
-    
     async def _detect_artificial_neo(self, neo_obj: Dict):
-        """Detect if NEO is actually an artificial object using real orbital analysis."""
-        try:
-            # Extract orbital elements
-            orbital_elements = neo_obj.get('orbital_elements', {})
-            if not orbital_elements:
-                return None
+        """Use the same snapshot contract as API, menu and batch screening."""
+        from ..analysis.screening import ScreeningAnalysisService
+        from ..data.models import NEOData, PhysicalProperties
+        neo = neo_obj.get('neo_data')
+        if not isinstance(neo, NEOData):
+            neo = NEOData.from_dict(neo_obj)
+            # Only measured values are adapted; absent values are not zero.
+            if neo.physical_properties is None:
+                diameter_km = neo_obj.get('diameter_km')
+                magnitude = neo_obj.get('absolute_magnitude_h')
+                if diameter_km is not None or magnitude is not None:
+                    neo.physical_properties = PhysicalProperties(
+                        diameter_km=diameter_km, absolute_magnitude_h=magnitude)
+        assessment = ScreeningAnalysisService().analyze_neo(neo)
+        neo_obj['neo_data'] = neo
+        return assessment.to_detection_result()
 
-            # Skip sigma-5 detection on CAD placeholder orbital elements.
-            # e=0.1, i=10.0, a=1.0 are the hardcoded defaults injected when only
-            # close-approach data is available; running the detector on them
-            # triggers log(0) instability and spurious sigma≥5 results.
-            e = orbital_elements.get('eccentricity')
-            i = orbital_elements.get('inclination')
-            a = orbital_elements.get('semi_major_axis')
-            if e == 0.1 and i == 10.0 and a == 1.0:
-                return None
-            
-            # Extract physical data if available
-            physical_data = {
-                'diameter': neo_obj.get('diameter', neo_obj.get('estimated_diameter_km_max', 0) * 1000),
-                'absolute_magnitude': neo_obj.get('absolute_magnitude_h', 0)
-            }
-            
-            # Run multi-modal artificial NEO detection (no async needed)
-            from datetime import datetime
-            observation_date = None
-            if 'discovery_date' in neo_obj:
-                try:
-                    discovery_date_str = neo_obj['discovery_date']
-                    if isinstance(discovery_date_str, str):
-                        observation_date = datetime.fromisoformat(discovery_date_str)
-                    elif isinstance(discovery_date_str, datetime):
-                        observation_date = discovery_date_str
-                except:
-                    observation_date = None
-                    
-            result = self.artificial_neo_detector.analyze_neo(
-                orbital_elements, physical_data,
-                additional_data={"observation_date": observation_date}
-            )
-            
-            return result
-            
-        except Exception as e:
-            self.logger.warning(f"Artificial NEO detection failed for {neo_obj.get('designation', 'unknown')}: {e}")
-            return None
-    
+    def _required_validation_policy_id(self):
+        from hashlib import sha256
+        config = getattr(self.multi_stage_validator, 'config', {})
+        encoded = json.dumps({'contract_version': 'required-review-v1',
+            'required_stages': [1, 2, 3, 4, 5], 'validator_config': config},
+            sort_keys=True, separators=(',', ':'), allow_nan=False)
+        return sha256(encoded.encode()).hexdigest()
+
     async def _stage_multi_validation(self, candidates: List[Dict]) -> StageResult:
-        """Execute multi-stage validation with proper Sigma 5 artificial NEO detection."""
-        start_time = time.time()
-        config = self.config.multi_stage
-        
-        try:
-            self.logger.info(f"Starting multi-stage validation of {len(candidates)} candidates with Sigma 5 analysis")
-            
-            validated_candidates = []
-            processed_count = 0
-            
-            # Process candidates with proper Sigma 5 validation
-            for candidate in candidates[:config.max_candidates]:  # Limit processing
-                processed_count += 1
+        """Run the required validator; no rank/sigma threshold can replace it.
+
+        A passed gate is eligibility for expert review, never origin confirmation.
+        The installed uncalibrated validator reports inconclusive prerequisites.
+        """
+        start = time.time()
+        accepted, outcomes = [], []
+        errors = 0
+        validator = self.multi_stage_validator
+        limit = self.config.multi_stage.max_candidates
+        timeout = self.config.multi_stage.processing_timeout_seconds
+        import math
+        if isinstance(timeout, bool) or not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError('Validation timeout must be finite and positive')
+        if type(limit) is not int or limit < 0:
+            raise ValueError('Validation capacity must be a non-negative integer')
+        for index, candidate in enumerate(candidates):
+            designation = candidate.get('designation', 'unknown')
+            # Always replace stale state on retry, failure or capacity deferral.
+            state = {
+                'contract_version': 'required-review-v1', 'validation_status': 'unavailable',
+                'validation_score': None, 'confidence': None, 'fp_probability': None,
+                'origin_status': 'inconclusive', 'recommendation': 'do_not_advance',
+                'evidence_id': None, 'policy_id': None, 'validation_policy_id': None,
+                'validation_evidence_id': None, 'validation_evidence_snapshot': None, 'stage_results': [],
+                'validation_method': 'required_five_stage_validator',
+                'validation_timestamp': datetime.now().isoformat(),
+            }
+            candidate['multi_stage_validation'] = state
+            if index >= limit:
+                state.update(validation_status='not_processed_capacity', reason='Validation capacity reached')
+            elif validator is None:
+                errors += 1
+                state['reason'] = 'Required multi-stage validator unavailable'
+            else:
                 try:
-                    # Get first stage results
-                    first_stage_score = candidate.get('first_stage_score', {}).get('overall_score', 0.0)
-                    has_sigma_detection = candidate.get('first_stage_score', {}).get('artificial_neo_detected', False)
-                    sigma_level = candidate.get('first_stage_score', {}).get('sigma_level', 0.0)
-                    
-                    # MULTI-STAGE VALIDATION: Re-run Sigma 5 analysis for verification
-                    artificial_analysis = await self._detect_artificial_neo(candidate)
-                    
-                    validation_score = first_stage_score
-                    validation_method = 'standard'
-                    
-                    if artificial_analysis and artificial_analysis.is_artificial:
-                        # SIGMA 5 VALIDATION: Apply rigorous statistical standards
-                        sigma_level = artificial_analysis.sigma_level or 0.0
-                        certainty = artificial_analysis.artificial_probability
-                        confidence = artificial_analysis.confidence
-                        
-                        if sigma_level >= 5.0:
-                            # Sigma 5: 99.99994% statistical certainty - automatic validation
-                            validation_score = 0.95
-                            validation_method = 'sigma_5_validated'
-                            
-                        elif sigma_level >= 4.0:
-                            # Sigma 4: 99.99% statistical certainty - strong validation
-                            validation_score = max(first_stage_score, 0.75)
-                            validation_method = 'sigma_4_validated'
-                            
-                        elif sigma_level >= 3.0:
-                            # Sigma 3: 99.7% statistical certainty - moderate validation
-                            validation_score = max(first_stage_score, 0.60)
-                            validation_method = 'sigma_3_validated'
-                            
-                        else:
-                            # Lower sigma: Apply conservative scoring
-                            boost = min(sigma_level / 5.0 * 0.3, 0.3)  # Up to 30% boost
-                            validation_score = min(first_stage_score + boost, 0.85)
-                            validation_method = 'sigma_boosted'
-                            
-                        self.logger.info(f"Multi-stage Sigma analysis for {candidate.get('designation', 'Unknown')}: "
-                                       f"σ={sigma_level:.2f}, confidence={confidence:.3f}, validation_score={validation_score:.3f}")
-                    else:
-                        # No artificial detection - apply conservative validation
-                        validation_score = first_stage_score * 0.8  # Reduce score without artificial evidence
-                        validation_method = 'natural_object_standard'
-                    
-                    # Apply validation threshold
-                    if validation_score >= config.score_threshold:
-                        candidate['multi_stage_validation'] = {
-                            'validation_score': validation_score,
-                            'sigma_level': sigma_level if artificial_analysis else 0.0,
-                            'statistical_certainty': artificial_analysis.artificial_probability if artificial_analysis else 0.0,
-                            'artificial_confidence': artificial_analysis.confidence if artificial_analysis else 0.0,
-                            'fp_probability': 1.0 - validation_score,
-                            'confidence': validation_score,
-                            'recommendation': 'accept' if validation_score > 0.8 else 'expert_review',
-                            'validation_method': validation_method,
-                            'artificial_detected': bool(artificial_analysis and artificial_analysis.is_artificial),
-                            'validation_timestamp': datetime.now().isoformat()
-                        }
-                        validated_candidates.append(candidate)
-                        
-                except Exception as e:
-                    self.logger.warning(f"Multi-stage validation failed for {candidate.get('designation')}: {e}")
-                    continue
-            
-            processing_time = time.time() - start_time
-            
-            self.logger.info(f"Multi-stage validation complete: {len(validated_candidates)} validated candidates")
-            
-            return StageResult(
-                stage=ProcessingStage.MULTI_STAGE_VALIDATION,
-                input_count=len(candidates),
-                output_count=len(validated_candidates),
-                processing_time_seconds=processing_time,
-                success=True,
-                candidates=validated_candidates,
-                stage_metrics={
-                    'validation_rate': len(validated_candidates) / len(candidates) if candidates else 0,
-                    'threshold_used': config.score_threshold
-                }
-            )
-            
-        except Exception as e:
-            self.logger.error(f"Multi-stage validation failed: {e}")
-            return StageResult(
-                stage=ProcessingStage.MULTI_STAGE_VALIDATION,
-                input_count=len(candidates),
-                output_count=0,
-                processing_time_seconds=time.time() - start_time,
-                success=False,
-                error_message=str(e)
-            )
-    
+                    # Never trust cached/artificial_analysis or caller-supplied legacy scores.
+                    analysis = await self._detect_artificial_neo(candidate)
+                    if candidate['neo_data'].designation != designation:
+                        raise ValueError('Candidate/NEO identity mismatch')
+                    payload = analysis.analysis['assessment']
+                    candidate['required_validation_assessment'] = payload
+                    from ..validation.review_evidence import freeze_review_inputs
+                    review_snapshot, review_id = freeze_review_inputs(candidate['neo_data'])
+                    state.update(validation_evidence_id=review_id, validation_evidence_snapshot=review_snapshot,
+                                 evidence_id=payload['evidence_id'], policy_id=payload['policy_id'],
+                                 validation_policy_id=self._required_validation_policy_id())
+                    enhanced = await asyncio.wait_for(
+                        validator.validate_analysis_result(candidate['neo_data'], analysis),
+                        timeout=timeout)
+                    if state['validation_policy_id'] != self._required_validation_policy_id():
+                        raise ValueError('Validation policy changed during execution')
+                    if freeze_review_inputs(candidate['neo_data'])[1] != review_id:
+                        raise ValueError('Validation evidence changed during execution')
+                    state.update(self._checked_validation_report(enhanced.validation_result,
+                        {**payload, 'validation_evidence_id': review_id}))
+                    if state['validation_status'] == 'passed':
+                        accepted.append(candidate)
+                except Exception as exc:
+                    errors += 1
+                    state.update(validation_status='unavailable', reason=f'{type(exc).__name__}: {exc}',
+                                 recommendation='do_not_advance')
+                    self.logger.warning('Validation unavailable for %s: %s', designation, exc)
+            outcomes.append({'designation': designation, 'status': state['validation_status'],
+                             'reason': state.get('reason')})
+        return StageResult(
+            stage=ProcessingStage.MULTI_STAGE_VALIDATION, input_count=len(candidates),
+            output_count=len(accepted), processing_time_seconds=time.time() - start,
+            success=errors == 0, candidates=accepted,
+            error_message=f'Validation unavailable for {errors} candidates' if errors else None,
+            stage_metrics={'outcomes': outcomes, 'validation_records': json.loads(json.dumps([
+                {'designation': c.get('designation', 'unknown'), **c['multi_stage_validation']}
+                for c in candidates], allow_nan=False)), 'validation_errors': errors,
+                           'validation_status': 'unavailable' if validator is None else 'executed',
+                           'gate_basis': 'required_stage_outcomes_not_score_threshold',
+                           'legacy_score_threshold_ignored': self.config.multi_stage.score_threshold,
+                           'not_processed_capacity': sum(o['status'] == 'not_processed_capacity' for o in outcomes)},
+        )
+
+    @staticmethod
+    def _checked_validation_report(result, payload):
+        """Validate the executable gate contract, not a scientific model's accuracy."""
+        from dataclasses import asdict, is_dataclass
+        if result.contract_version != 'required-review-v1':
+            raise ValueError('Unsupported validation contract')
+        if result.evidence_id != payload['evidence_id'] or result.policy_id != payload['policy_id']:
+            raise ValueError('Validation evidence/policy mismatch')
+        if result.validation_evidence_id != payload['validation_evidence_id']:
+            raise ValueError('Validation input evidence mismatch')
+        stages = list(result.stage_results)
+        if (len(stages) != 5 or any(type(s.stage_number) is not int for s in stages)
+                or {s.stage_number for s in stages} != set(range(1, 6))):
+            raise ValueError('Required five-stage validation incomplete or duplicated')
+        allowed = {'passed', 'failed', 'inconclusive', 'unavailable'}
+        if type(result.overall_validation_passed) is not bool or result.validation_status not in allowed:
+            raise ValueError('Invalid aggregate validation status')
+        for stage in stages:
+            if type(stage.passed) is not bool or stage.validation_status not in allowed:
+                raise ValueError('Invalid stage validation status')
+            if stage.passed != (stage.validation_status == 'passed'):
+                raise ValueError('Contradictory stage status')
+            if not isinstance(stage.details, dict):
+                raise ValueError('Missing validation stage details')
+            if stage.details.get('error') or stage.details.get('error_message'):
+                raise ValueError('Validation stage contains an execution error')
+        complete_pass = all(stage.passed for stage in stages)
+        if (result.overall_validation_passed != complete_pass or
+                (result.validation_status == 'passed') != complete_pass):
+            raise ValueError('Aggregate does not match required stage outcomes')
+        # Snapshot without aliases; reject non-finite/non-JSON diagnostic evidence.
+        serialized = json.loads(json.dumps(
+            [asdict(s) if is_dataclass(s) else vars(s) for s in stages], allow_nan=False))
+        return {'validation_status': result.validation_status, 'stage_results': serialized,
+                'recommendation': 'expert_review' if complete_pass else 'additional_evidence_required'
+                                  if result.validation_status == 'inconclusive' else 'do_not_advance',
+                'reason': None if complete_pass else 'Required scientific prerequisites did not all pass'}
+
     async def _stage_expert_review_prep(self, validated_candidates: List[Dict]) -> StageResult:
         """Prepare expert review queue."""
         start_time = time.time()
@@ -944,14 +766,48 @@ class AutomaticReviewPipeline:
         try:
             self.logger.info(f"Preparing expert review queue from {len(validated_candidates)} candidates")
             
-            # Sort candidates by score (highest first)
+            if type(config.max_candidates) is not int or config.max_candidates < 0:
+                raise ValueError('Expert-review capacity must be a non-negative integer')
+            eligible, excluded = [], []
+            for candidate in validated_candidates:
+                record = candidate.get('multi_stage_validation', {})
+                payload = (getattr(candidate.get('artificial_analysis'), 'analysis', {}) or {}).get('assessment', {})
+                # The gate stores its canonical assessment separately from legacy scores.
+                payload = candidate.get('required_validation_assessment', payload)
+                try:
+                    from types import SimpleNamespace
+                    gate = SimpleNamespace(
+                        contract_version=record.get('contract_version'), evidence_id=record.get('evidence_id'),
+                        policy_id=record.get('policy_id'), validation_evidence_id=record.get('validation_evidence_id'),
+                        overall_validation_passed=record.get('validation_status') == 'passed',
+                        validation_status=record.get('validation_status'),
+                        stage_results=[SimpleNamespace(**s) for s in record.get('stage_results', [])])
+                    checked = self._checked_validation_report(gate,
+                        {**payload, 'validation_evidence_id': record.get('validation_evidence_id')})
+                    if checked['validation_status'] != 'passed':
+                        raise ValueError('Required validation not passed')
+                    # A changed snapshot is not covered by an earlier successful gate.
+                    from ..analysis.screening import ScreeningAnalysisService
+                    current = ScreeningAnalysisService().analyze_neo(candidate['neo_data'])
+                    if current.evidence_id != gate.evidence_id or current.policy_id != gate.policy_id:
+                        raise ValueError('Candidate evidence changed after validation')
+                    from ..validation.review_evidence import freeze_review_inputs, review_evidence_fingerprint
+                    if (freeze_review_inputs(candidate['neo_data'])[1] != gate.validation_evidence_id or
+                            review_evidence_fingerprint(record['validation_evidence_snapshot']) != gate.validation_evidence_id):
+                        raise ValueError('Full validation inputs changed after gate')
+                    if record.get('validation_policy_id') != self._required_validation_policy_id():
+                        raise ValueError('Validation policy changed after gate')
+                    candidate['required_validation_assessment'] = current.to_payload()
+                    eligible.append(candidate)
+                except (KeyError, TypeError, ValueError, AttributeError):
+                    excluded.append(candidate.get('designation', 'unknown'))
+
+            # Triage rank orders eligible records; it is not a confidence/probability.
             def get_candidate_score(candidate):
-                # Try multiple score sources
-                first_stage = candidate.get('first_stage_score', {}).get('overall_score', 0.0)
-                multi_stage = candidate.get('multi_stage_validation', {}).get('validation_score', first_stage)
-                return multi_stage
+                return candidate['required_validation_assessment'].get('screening_score')
             
-            sorted_candidates = sorted(validated_candidates, key=get_candidate_score, reverse=True)
+            sorted_candidates = sorted(eligible, key=lambda c: (get_candidate_score(c) is not None,
+                get_candidate_score(c) if get_candidate_score(c) is not None else 0), reverse=True)
             
             # Take top candidates for expert review
             expert_review_candidates = sorted_candidates[:config.max_candidates]
@@ -977,6 +833,8 @@ class AutomaticReviewPipeline:
                 success=True,
                 candidates=expert_review_candidates,
                 stage_metrics={
+                    'excluded_unvalidated': excluded,
+                    'deferred_capacity': [c.get('designation', 'unknown') for c in sorted_candidates[config.max_candidates:]],
                     'queue_rate': len(expert_review_candidates) / len(validated_candidates) if validated_candidates else 0,
                     'high_priority_count': sum(1 for c in expert_review_candidates if c.get('expert_review', {}).get('priority') == 'high')
                 }
@@ -1022,8 +880,9 @@ class AutomaticReviewPipeline:
     def _save_pipeline_results(self, result: PipelineResult):
         """Save complete pipeline results including validated candidates."""
         try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"pipeline_result_{timestamp}.json"
+            from uuid import uuid4
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            filename = f"pipeline_result_{timestamp}_{uuid4().hex[:8]}.json"
             filepath = self.results_dir / filename
             
             # Convert to JSON-serializable format
@@ -1038,11 +897,13 @@ class AutomaticReviewPipeline:
                         'input_count': stage_result.input_count,
                         'output_count': stage_result.output_count,
                         'success': stage_result.success,
-                        'processing_time_seconds': stage_result.processing_time_seconds
+                        'processing_time_seconds': stage_result.processing_time_seconds,
+                        'error_message': stage_result.error_message,
+                        'stage_metrics': stage_result.stage_metrics
                     }
                     for stage, stage_result in result.stage_results.items()
                 },
-                # Include validated candidates with Sigma 5 analysis results
+                # Include gate-eligible research candidates, not confirmed origins
                 'validated_candidates': result.validated_candidates[:100] if result.validated_candidates else [],  # Limit to first 100 for file size
                 'candidate_count': len(result.validated_candidates) if result.validated_candidates else 0
             }
@@ -1055,7 +916,7 @@ class AutomaticReviewPipeline:
                 except Exception:
                     return None
 
-            with open(filepath, 'w') as f:
+            with open(filepath, 'x') as f:
                 json.dump(data, f, indent=2, default=_default)
                 
             self.logger.info(f"Pipeline results saved to: {filepath}")

@@ -1,0 +1,90 @@
+{
+  "schema_version": "neodys-evidence-qa-v1",
+  "synthetic": true,
+  "metrics": {
+    "available-80": {
+      "lines": 144,
+      "max_columns": 80
+    },
+    "available-120": {
+      "lines": 115,
+      "max_columns": 120
+    },
+    "available-160": {
+      "lines": 105,
+      "max_columns": 160
+    },
+    "ambiguous-80": {
+      "lines": 141,
+      "max_columns": 80
+    },
+    "ambiguous-120": {
+      "lines": 114,
+      "max_columns": 120
+    },
+    "ambiguous-160": {
+      "lines": 104,
+      "max_columns": 160
+    },
+    "missing_photometry-80": {
+      "lines": 135,
+      "max_columns": 80
+    },
+    "missing_photometry-120": {
+      "lines": 109,
+      "max_columns": 120
+    },
+    "missing_photometry-160": {
+      "lines": 100,
+      "max_columns": 160
+    }
+  },
+  "source_sha256": {
+    "aneos_core/data/neodys_evidence.py": "e9663f2007e84a15b389d10c302c7cc8e39dcb84b1ffea7d8929feb5d7d459b5",
+    "aneos_core/data/physical_evidence.py": "f6844675f8c9314057970e03956603f597ed6cac90a9081590f38122695343d4",
+    "aneos_core/data/sources/neodys.py": "5e5d1d70deabb14b7b5c88275dcf33ad2ad2f08a6c78cf68aaa2d6c54081d995",
+    "aneos_core/data/fetcher.py": "615a7d4e4e470908a9f2bd694a3667313e2f72795b51378ee9eaec502bb286ee",
+    "aneos_core/analysis/object_review.py": "34d9afeff2920439d1608a37f3739c6567a8cd181ba71b520499c1c2a8bc70d5",
+    "aneos_core/analysis/reporting.py": "31877ba89f8d14e1b99721d5b6e844fff2d6ef05e7f4169f8819956d4c847be3",
+    "scripts/qa_neodys_evidence.py": "3c51e2912f601ff33cae04e0dc87c21c993e56fd8b6044bb93f1d4019efcbd2a"
+  },
+  "artifact_sha256": {
+    "available-80.txt": "3d518cdbd52b98d411b8e7346671efb2aa5aefecc9327e24c804a13edf2bd96f",
+    "missing_photometry-80.svg": "8a093156d7b045a5a16133339dd1eda5deb616e07c541274863f4ae308e247d7",
+    "ambiguous-160.svg": "74decdb1d4374b45cc97bcd818dcbe9bc5fb2546e1cfc38efbcb6041f5710207",
+    "available-80.html": "283f2077ef7e52dc1a7b50343e8f7fafe4c85e012aae08c17a1a503fe16e0f9e",
+    "missing_photometry-80.html": "dd4d2e60ad37766a5495712ba086cd6b272d13320ac98b3b361e72cff7238bf4",
+    "missing_photometry-80.txt": "b8bd43f18785a5e12273903f98c7abbdcfe9191b6adf2fd9fea661dc5966c9fc",
+    "ambiguous-160.txt": "e6101b66c4e0bfc662d4eea303dcb7fe911428400eeba4792a62d190a0270d67",
+    "ambiguous-review.json": "7b7121e55da3630cdb71439696802cac412ea8bd53a10cd833d83d1e96cd99e6",
+    "available-80.svg": "068a01f7aee3193b57ea5a044e7c36ad0c67a42c162f70c40c84abe83d254534",
+    "available-review.md": "f097fbe1ba547741194264e948e24d57eac87832b54f92a20df97d37eaddf2a5",
+    "ambiguous-review.md": "06133426b8329c01920ca350b6c0ebf64d826110d2acc898f7c79cfb8be4d220",
+    "ambiguous-80.html": "70377262c9d26ff6fe476dacf42dfa4968096c4cc786ff87f9cad143797eb814",
+    "missing_photometry-160.txt": "11663a5b1209fda84cb7929285bd6c9e83254ca27c3e14c50724c55db85d3b00",
+    "available-160.txt": "5edb3ef9a680218c7a2a35a2a9cb4e9922b2c2cbcf3971e237e4f186e4f2bce3",
+    "missing_photometry-160.svg": "8a093156d7b045a5a16133339dd1eda5deb616e07c541274863f4ae308e247d7",
+    "available-160.svg": "068a01f7aee3193b57ea5a044e7c36ad0c67a42c162f70c40c84abe83d254534",
+    "missing_photometry-review.md": "ff9446e8b6e134814a2df2b7bb4abe01c1a2a3a98e5019508172a8e866a534be",
+    "ambiguous-object.json": "65db61465195df5633f25cc5b85664dc15ea30b12dc3f1301d3c4f1ad154b184",
+    "ambiguous-160.html": "70377262c9d26ff6fe476dacf42dfa4968096c4cc786ff87f9cad143797eb814",
+    "ambiguous-120.svg": "74decdb1d4374b45cc97bcd818dcbe9bc5fb2546e1cfc38efbcb6041f5710207",
+    "ambiguous-80.txt": "efa0eac1544a2574bde7ba745a303b3b52ef1ccb604609ca11d7fe7d7e40369a",
+    "missing_photometry-object.json": "1c2212edaa0a15aa2e0d2087d89d416413af3a080afe8a44de874b6cc83d506c",
+    "ambiguous-120.txt": "51429ca56aca0cab04c0a11a06b6ec6815c31e0affe0f234b5b18e72b3a2ee18",
+    "ambiguous-120.html": "70377262c9d26ff6fe476dacf42dfa4968096c4cc786ff87f9cad143797eb814",
+    "ambiguous-80.svg": "74decdb1d4374b45cc97bcd818dcbe9bc5fb2546e1cfc38efbcb6041f5710207",
+    "available-review.json": "c9b54d3700f6f17b52124338377800120d00162ab3ae0fe57fc2b5fc10495076",
+    "available-120.txt": "ebc5dd234f9c6431fbbf5cae034afcf5e8f6a02250ce4e2081f54e9927a48913",
+    "missing_photometry-120.txt": "45ed3626a385902cdc4786e2ba241e9c4545ea6c08b63bb391fe12d80a9a6950",
+    "missing_photometry-review.json": "ab556fd083ae40bac515c0160972cdf2fc3b62e6e0d4fcf526684443a30532d0",
+    "missing_photometry-120.html": "dd4d2e60ad37766a5495712ba086cd6b272d13320ac98b3b361e72cff7238bf4",
+    "available-120.html": "283f2077ef7e52dc1a7b50343e8f7fafe4c85e012aae08c17a1a503fe16e0f9e",
+    "available-object.json": "89c3bc8376797381588ffbca59c24f0d06bdc7a78a64536c5ce84c8538e2f99f",
+    "available-160.html": "283f2077ef7e52dc1a7b50343e8f7fafe4c85e012aae08c17a1a503fe16e0f9e",
+    "missing_photometry-160.html": "dd4d2e60ad37766a5495712ba086cd6b272d13320ac98b3b361e72cff7238bf4",
+    "available-120.svg": "068a01f7aee3193b57ea5a044e7c36ad0c67a42c162f70c40c84abe83d254534",
+    "missing_photometry-120.svg": "8a093156d7b045a5a16133339dd1eda5deb616e07c541274863f4ae308e247d7"
+  },
+  "limits": "Actual public-query, disposable file-SQLite/export and object review paths; synthetic OEF packets only, not live-provider, all-menu, covariance-fit or scientific calibration certification."
+}

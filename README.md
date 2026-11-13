@@ -2,16 +2,48 @@
 
 # aNEOS: Advanced Near Earth Object Suite
 
-**v1.2.2 | Research Platform | Phase 24: bug fixes, input validation, endpoint wiring | 2026-03-11**
+**v2.2.0b1 | Beta preview | Engineering test release — not scientific validation | 2026-11-13**
 
-aNEOS is an open-source Python research platform with two independent missions:
+**Start here:** [2.2.0b1 installation, test workflows and known limitations](docs/releases/2.2.0b1.md).
+Use a new checkout and a separate database; do not overwrite an existing research
+installation or its uncommitted work. This preview supports testing the unified
+per-object screening/reporting path. Known-bad root legacy candidate polling/inference is temporarily unavailable
+while #71/#73 are repaired; it cannot return synthetic scores in this preview.
 
-1. **Artificial NEO Detection** -- statistical screening of Near Earth Objects for signatures inconsistent with natural dynamics, using a Bayesian multi-modal framework calibrated against confirmed artificial heliocentric objects.
-2. **Planetary Defense Assessment** -- comprehensive Earth and Moon impact probability calculation with energy, crater, and risk-period estimation.
+aNEOS is a Python research platform for:
 
-> **Honest scope statement**: aNEOS is a research tool, not an operational space-surveillance system. All results require independent verification through peer review, telescope follow-up, or comparison with authoritative catalogues (JPL Scout, ESA NEOCC). See [Capabilities and Limitations](#capabilities-and-limitations) before citing results.
+1. **NEO candidate screening:** reproducible, uncalibrated anomaly ranking. It does
+   not establish natural, human-made or extraterrestrial origin.
+2. **Impact research support:** scoped external JPL Sentry evidence and explicitly
+   conditional physical scenarios, not a validated local Earth/Moon risk solver.
+
+> **Current contract:** this beta does not provide independently calibrated
+> origin probabilities, FDR estimates or five-sigma discovery significance. Earlier
+> numerical examples and aspirational capability descriptions below are not current
+> scientific validation. Follow the scoped engineering reports and ADR-065–090;
+> remaining work is tracked in [programme #2](https://github.com/RobLe3/aneos-suite/issues/2).
+> This is not an operational warning or planetary-defense decision service.
 
 ---
+
+## Local evidence storage — scoped development capability
+
+Explicit file-SQLite enrichment now preserves source-specific history, atomic physical
+value/uncertainty selections and replayable object projections. The existing database
+detail view exposes provenance and missingness. See the [storage contract and runnable
+example](docs/engineering/durable-enrichment-ledger.md) before enabling writes to a
+research database. This is not yet automatic persistence of every source query, complete
+source coverage or scientific validation.
+
+## Analysis policy and configuration
+
+The legacy Analysis Policy view shows the actual default ranking policy and explicitly
+synthetic diagnostics. It exports read-only snapshots and verifies archives without
+applying them; alpha/BIC/threshold mutation is not supported by that menu. Explicit
+configuration-file errors now fail rather than silently activate defaults, and rejected
+manager updates/reloads preserve the prior object. See the [policy guide and executed
+example](docs/engineering/truthful-policy-menu.md) and [configuration reference](docs/reference/configuration-reference.md)
+for scope and remaining limits. Neither feature establishes scientific calibration.
 
 ## Long-Term Goal: Addressing the Fermi Paradox Empirically
 
@@ -19,22 +51,21 @@ The **Fermi Paradox** asks a deceptively simple question: given the age and scal
 
 Most proposed resolutions fall into two camps: either civilisations are rare or short-lived (the "rare Earth" and "great filter" families), or the universe is populated but we are not looking in the right places or with the right instruments (the "dark forest", "zoo", and "artefact" families).
 
-aNEOS is built on a specific, testable version of the second camp.
+This is a long-term research motivation, not an established capability of aNEOS.
+An anomalous catalogue entry may reflect natural physics, uncertain measurements,
+a fitting artifact or human technology. Screening alone cannot distinguish these
+explanations, much less establish extraterrestrial origin.
 
-**The core argument:**
+Even a properly calibrated five-sigma result would concern a specified statistical
+null model; it would not identify an object's origin. Hypotheses need comparable
+observations, physical fits, uncertainty and independent checks. A credible natural
+explanation or an unresolved result is a useful outcome. Results from a bounded
+screening population cannot settle the Fermi Paradox.
 
-The solar system's Near Earth Object catalogue contains tens of thousands of rocky bodies whose orbits have been measured with high precision. We know, with certainty, that at least four human-made spacecraft currently orbit the Sun disguised as asteroids -- they were classified as natural objects by automated surveys before their artificial origin was recognised through anomaly detection. If human technology from the 1960s and 2018 can produce heliocentric objects indistinguishable from asteroids, then any sufficiently advanced technology could do the same. And if it did, those objects would already be in our catalogues, waiting to be identified.
-
-The Fermi Paradox is partly an argument from silence: "we see no engineered objects, therefore none exist." But until aNEOS, no systematic, statistically rigorous tool existed to check whether the NEO catalogue already contains such objects. The silence has not been tested -- it has been assumed.
-
-**What falsification looks like:**
-
-- If aNEOS screens the entire known NEO population and every single object is consistent with natural dynamics at a credible confidence level, that is a genuine, quantified data point supporting the "rare Earth" resolutions.
-- If even one object survives the full validation pipeline (sigma >= 5, Bayesian posterior above threshold, all known natural explanations ruled out by follow-up observation), that is a direct counterexample to the observational premise of the Fermi Paradox -- and the first physical evidence of extraterrestrial technology.
-
-Neither outcome is assumed. The goal is to make the question answerable with existing data.
-
-aNEOS is the first open-source implementation of this programme. See `docs/scientific/theory.md` for the full scientific framing and `docs/scientific/VALIDATION_INTEGRITY.md` for an honest account of current limitations.
+The current reference investigation is hypothesis-neutral 1998 KY26 research. Its
+engineering/scientific requirements are tracked in programme #2 and the versioned
+case-study register; most observational fitting and independent evaluation remain
+unfinished. See `docs/scientific/VALIDATION_INTEGRITY.md`.
 
 ---
 
@@ -60,7 +91,7 @@ aNEOS is the first open-source implementation of this programme. See `docs/scien
 - [Classify a known artificial object](#2-classify-a-known-artificial-object)
 - [Multi-evidence verbose breakdown](#3-run-multi-evidence-analysis-with-verbose-breakdown)
 - [Batch-screen a list](#4-batch-screen-a-list-of-neos-with-progress-bar)
-- [Impact probability](#5-get-impact-probability-for-apophis)
+- [Scoped impact evidence](#5-inspect-scoped-impact-evidence)
 - [10-year orbital history](#6-view-10-year-orbital-history)
 - [200-year historical pipeline](#7-run-the-200-year-historical-pipeline)
 - [Population clustering and harmonics](#8-screen-a-population-for-clustering-and-harmonics)
@@ -92,57 +123,49 @@ aNEOS is the first open-source implementation of this programme. See `docs/scien
 
 ## Part 1: What is aNEOS?
 
-Space agencies and astronomers track tens of thousands of **Near Earth Objects (NEOs)**,
-asteroids and comets whose orbits bring them close to Earth. Most are natural rocks following
-paths governed entirely by gravity. A small number of confirmed objects are actually
-human-made spacecraft, such as the Tesla Roadster launched by SpaceX in 2018 or rocket
-upper stages left over from Apollo-era missions, that orbit the Sun just like asteroids do.
+**Near Earth Objects (NEOs)** include asteroids and comets with orbits near Earth's.
+Catalogue investigations can also encounter human-made objects. Origin needs
+object-specific evidence rather than a name match or anomaly threshold.
 
 aNEOS asks two questions about any object in those catalogues:
 
 **Question 1: Does this object behave like a natural rock?**
 
-The software downloads publicly available orbital data from NASA's JPL database, measures six
-different properties of the object's path around the Sun, and compares each against the
-known population of natural NEOs. If the object's orbit, size, brightness, or approach pattern
-is statistically unusual, it receives a higher "sigma score". The three confirmed artificial
-objects in our test set all score above sigma 5, the same threshold astronomers use to claim
-a scientific discovery. All natural asteroids tested score below sigma 3.
+The software acquires typed public-catalogue evidence and compares available
+features to produce an uncalibrated screening rank.
+A high rank can motivate follow-up; it is not Gaussian significance or an origin
+probability. Natural processes, source/measurement uncertainty and technological
+hypotheses require separate compatible observational models. Independent controls,
+calibration and held-out evaluation remain unfinished.
 
-This does **not** mean aNEOS can detect alien spacecraft. It means it can flag objects whose
-behaviour is inconsistent with what we expect from rocks shaped only by gravity. Human-made
-spacecraft are the only known cause of such anomalies, and even then the software assigns
-only a 3 to 4% probability of being artificial, the realistic ceiling given what orbital data
-alone can tell us. Confirming artificial origin requires telescope or radar follow-up.
+**Question 2: What impact evidence is available?**
 
-**Question 2: Could this object hit the Earth or Moon?**
+The existing REST impact route, V2 menu and impact-enhanced wrapper can retrieve
+scoped JPL Sentry object evidence: source method, listed virtual impactors, dates,
+probabilities and uncertainty limitations. Unlisted/removed/source-failed outcomes
+are distinct and do not mean zero risk. No lunar probability, confidence interval,
+local Torino class, damage or risk-period model is invented from catalogue elements.
 
-For any named object, aNEOS calculates the probability of a collision with Earth and with the
-Moon, estimates how much energy the impact would release (in megatons of TNT), how large a
-crater it would leave, and which decade carries the highest risk. It also identifies
-"gravitational keyholes" (narrow windows in space where a close approach could nudge an
-object onto a future impact trajectory).
+A separate explicit conditional energy function computes classical kinetic energy
+from caller-supplied mass and speed. That scenario is not a predicted collision,
+measured input or validated damage model. Legacy geometric/arc formula replay is
+retained only as labelled unvalidated diagnostics; its former scientific-probability
+entry point raises a controlled-deprecation error.
 
-**How deep does it go?**
+**Evidence and limits**
 
-- Data is fetched live from four NASA/ESA sources (JPL SBDB, JPL Horizons, NEODyS, MPC).
-- The detection framework has been validated against 4 confirmed artificial objects (2020 SO,
-  J002E3, WT1190F, Tesla Roadster-type) and 6+ natural NEOs.
-- A **Kardashev synthetic training corpus** generates 2 100+ labelled artificial signatures
-  across 14 scenarios from K0.5 (rocket stages, ion probes) to K2.0 (megastructure fragments),
-  training a RandomForest classifier that achieves AUC=1.000 on the ground-truth test set.
-- The primary discriminating feature is **density** (hollow vs rocky), followed by albedo
-  and non-gravitational acceleration magnitude.
-- A full REST API lets other software query aNEOS programmatically.
-- 360 automated tests verify the system works correctly end to end.
+Typed provider acquisition, shared screening/report transport and scoped Sentry
+source integration have regression controls. Those tests do not establish real-world
+origin-detection accuracy or a local impact model. Synthetic training/evaluation is
+not independent scientific validation. Current counts, commands and remaining gaps
+are recorded in the engineering reports rather than fixed historical test totals.
 
 ### What it is not
 
-aNEOS is a research platform built by an independent developer. It is not affiliated with
-NASA, ESA, or any space agency. It does not have access to classified data, telescope feeds,
-or radar measurements. Its impact probability numbers are research-grade estimates, useful
-for screening and prioritisation, but not a replacement for the authoritative calculations
-produced by JPL Sentry or ESA NEOCC.
+aNEOS is independent research software, not an agency service or an operational
+space-surveillance/impact-warning system. Catalogue/model outputs carry their source
+scope and limitations. It does not replace authoritative monitoring, observational
+follow-up or independent scientific review.
 
 [Back to top](#top)
 
@@ -205,28 +228,25 @@ All items below are implemented, tested (360 unit + integration tests pass / 0 f
 
 | Capability | Status | Notes |
 |---|---|---|
-| Earth collision probability | Working | Gravitational focusing, orbital integration |
-| Moon collision probability | Working | Lunar cross-section, Earth vs Moon ratio |
-| Impact energy (megatons TNT) | Working | Kinetic energy from velocity + mass |
-| Crater diameter (km) | Working | Pi-scaling relations |
-| Damage radius (km) | Working | Simplified energy-scaling |
-| Gravitational keyhole analysis | Working | Close-approach resonance detection |
-| Peak risk period (decade) | Working | Time-resolved probability evolution |
-| Probability uncertainty bounds | Working | `[lower, upper]` confidence interval |
-| Primary risk factors list | Working | Human-readable scientific rationale |
-| Real arc days from SBDB observation dates | Working (Phase 17) | `first_obs`/`last_obs` parsed from SBDB orbit block |
-| `GET /impact` REST endpoint | Working | 16-field `ImpactResponse` |
+| Scoped Earth-event model output | Integrated, source-dependent | JPL Sentry method/events/dates and material uncertainty; not a local fit |
+| Moon collision probability | Not implemented as a validated model | Null, not zero risk |
+| Conditional kinetic energy | Implemented, explicit supplied scenario | Mass kg, speed km/s; no probability/damage inference |
+| Legacy crater/damage/arc formulas | Unvalidated diagnostics only | No current scientific-risk claim |
+| Local keyhole/peak-risk/interval/confidence model | Not validated | Do not use prototype outputs as fitted probability/CI |
+| Observation arc inventory | Actual dated inputs only | No quality-score-to-days or 30-day missing-value default |
+| REST/V2 menu/enhanced impact wrapper | Shared scoped source | JSON/Markdown evidence; origin screening remains separate |
+| Menu/enhanced report archive | Local append-only snapshots | Verified writes, restart read-back; not a durable job queue/case workflow |
 
 ### Population and Polling (BC11)
 
 | Capability | Status | Notes |
 |---|---|---|
 | 200-year historical close-approach poll | Working | 40 x 5-year chunks via SBDB CAD API |
-| DBSCAN/HDBSCAN orbital clustering | Working (Phase 11) | PA-1; density sigma-gate, background estimation |
-| Synodic harmonic analysis | Working (Phase 11) | PA-3; Lomb-Scargle on binary time grid |
-| Non-gravitational correlation | Working (Phase 11) | PA-5; A2 Pearson r within clusters |
-| Network-level sigma combining | Working (Phase 11) | Fisher's method + Bonferroni correction; Stouffer weighted z-score optional |
-| `POST /analyze/network` REST endpoint | Working (Phase 11) | Async job with `GET .../status` polling |
+| Orbital catalogue grouping | Descriptive, not calibrated | Deterministic circular neighbourhoods; no missing-angle imputation/family claim |
+| Computed encounter gaps | Descriptive, native TDB dates | No synthetic daily observations or periodicity significance |
+| Non-gravitational correlation | Unavailable without paired time series | A1/A2/A3, uncertainty and covariance inventory retained |
+| Network significance | Not calibrated | Nullable sigma/p; legacy fusion restricted to explicit historical diagnostics |
+| Existing network REST/menu | Evidence-bound report transport | Process-memory jobs remain nondurable and not owner-isolated (#15) |
 
 ### Terminal UI
 
@@ -325,26 +345,20 @@ Output (Rich progress bar):
   └─────────────────┴──────┴──────────────┴────────────────────────────┘
 ```
 
-### 5. Get impact probability for Apophis
+### 5. Inspect scoped impact evidence
 
-```
+```sh
 python aneos.py
--> Choice: 5 (Impact Probability)
--> Designation: 99942
-
-Output:
-  P(Earth impact)  = 2.31e-05
-  P(Moon impact)   = 1.84e-06
-  Impact energy    = 1,200 MT TNT
-  Crater diameter  = 4.2 km
-  Damage radius    = 38.0 km
-  Peak risk period : 2029-2036
-  Keyholes         : 2
-  Risk factors:
-    * High eccentricity increases velocity at perihelion
-    * 2029 close approach within 32,000 km (sub-lunar)
-    * Resonant return opportunity 2036
+# Choice: 5 (Impact Evidence)
+# Primary number/provisional designation: 1998 KY26
 ```
+
+The result identifies a source outcome and dated evidence, not a default probability.
+The frozen 2026-11-12 KY26 lookup was **not listed**, with null probability and
+not-assessed risk. A future query may differ. Inspect source method, event span and
+limits for an available result; not listed/removed is not zero risk. The V2 menu
+confirms a local archive only after writing and replay verification succeed.
+See [the dated record](docs/case-studies/1998-KY26/sentry/20261112T211912Z/README.md).
 
 ### 6. View 10-year orbital history
 
@@ -388,12 +402,12 @@ python aneos.py
 -> Choice: 8 (Population Pattern Analysis)
 -> Browse files -> select a multi-object list
 
-Output:
-  Network sigma  = 2.14   (PA-1 clustering + PA-3 harmonics + PA-5 correlation)
-  Clusters found : 3
-  Cluster Bonferroni p = 0.043
-  Synodic harmonic peak: 1.000 yr (F/yr=1.00)
-  Non-grav A2 correlation within clusters: r=0.41, p=0.12  (inconclusive)
+Output (illustrative counts, not an observation):
+  Objects analysed: 3
+  Descriptive groups: 1
+  Statistical significance: not calibrated. Origin: unresolved.
+  clustering: descriptive_only
+  harmonics: descriptive_only_no_calibrated_periodicity
 ```
 
 ### 9. REST API: programmatic access
@@ -424,36 +438,22 @@ curl "http://localhost:8000/api/v1/health"
 
 ```python
 import asyncio
-from aneos_core.data.fetcher import DataFetcher
-from aneos_core.detection.detection_manager import DetectionManager, DetectorType
-from aneos_core.config.settings import ANEOSConfig
+from aneos_core.analysis.pipeline import AnalysisPipeline
+from aneos_core.analysis.impact_evidence import get_sentry_impact_service, render_sentry_markdown
 
-config = ANEOSConfig()
-fetcher = DataFetcher(config)
-manager = DetectionManager(DetectorType.AUTO)
+async def inspect(designation):
+    result = await AnalysisPipeline().analyze_neo(designation)
+    print(result.to_dict())  # Structured screening or an explicit unavailable/error state.
+    report = await asyncio.to_thread(get_sentry_impact_service().assess, designation)
+    print(render_sentry_markdown(report))  # Source-scoped impact evidence, not origin inference.
 
-async def screen(designation: str):
-    neo_data = await asyncio.to_thread(fetcher.fetch_neo_data, designation)
-    result = manager.analyze_neo(
-        designation=designation,
-        orbital_elements=neo_data.orbital_elements.__dict__,
-        additional_data={"physical_data": neo_data.physical_properties.__dict__
-                         if neo_data.physical_properties else {}},
-    )
-    print(f"{designation}: sigma={result.sigma_confidence:.2f}  "
-          f"tier={result.sigma_tier}  P={result.artificial_probability:.4f}")
-
-asyncio.run(screen("99942"))
-# -> 99942: sigma=1.82  tier=INCONCLUSIVE  P=0.0010
-asyncio.run(screen("2020 SO"))
-# -> 2020 SO: sigma=6.97  tier=EXCEPTIONAL  P=0.0367  [spacecraft veto]
+asyncio.run(inspect("1998 KY26"))
 ```
 
-[Back to top](#top)
+Both acquisition paths can fail; callers must handle provider/input errors. Missing
+probability/significance is not zero. This example does not claim durable job
+execution, automatic API-wide report persistence or independent scientific validation.
 
----
-
-## Part 5: Use Cases by Profession
 
 ### Planetary Defense Scientists (NASA PDCO / ESA NEOCC)
 
@@ -830,3 +830,176 @@ git diff --stat docs/api/openapi.json          # confirm spec is current
 ---
 
 *aNEOS v1.2.2 | Phase 24 complete | Bug fixes: NEODyS provisional designation misparse, Gaia stdout suppression, DetectionResult falsy-zero guard, monitoring alert kwarg | Input validation: Pydantic bounds on OrbitalInput (a/e/i), designation length on AnalysisRequest | Endpoint wiring: get_validation_summary uses real DB, SSE streaming uses real alert_manager | Demo NEO list updated with real designations | REST API: 52+ endpoints | Test suite: 360 pass / 0 fail*
+
+### Review-branch scientific screening contract (2026-11-12)
+
+The primary launcher and legacy menu analysis routes now use the same typed
+acquisition/shared screening path as the REST core. A rank is not Gaussian sigma,
+a calibrated origin probability or a natural-origin finding. Missing evidence and
+provider errors remain inconclusive; scientific fitting/calibration is unfinished.
+
+```sh
+python aneos.py analyze "1998 KY26"                  # human-readable Markdown
+python aneos.py analyze "1998 KY26" --json           # versioned JSON report
+python aneos.py analyze "1998 KY26" --force-refresh  # bypass source cache
+python aneos.py analyze "1998 KY26" --json --output result.json
+```
+
+`analysis`, `a`, `simple` and `detect` are aliases for this same service, not a
+separate classifier. `--output` creates a new file and refuses an existing path.
+This prevents normal overwrite, not interrupted/partial writes or later manual
+editing/deletion. New reports do not overwrite the frozen KY26 baseline. Entering
+the legacy menu no longer silently deletes cache files or changes environment.
+
+Reports retain normalized source data, native A1/A2/A3 units/uncertainty, covariance,
+evidence/policy/review IDs and a report checksum. Source-file hashes and selected
+runtime versions are not an environment lock or proof of loaded code; preserve
+any dirty source separately. See [the exact scope and limitations](docs/engineering/legacy-menu-contract.md).
+The standalone `simple_neo_analyzer.py` and remaining prototype paths are still
+under review in [issue #30](https://github.com/RobLe3/aneos-suite/issues/30); the
+launcher migration does not validate those library APIs or claim five-sigma readiness.
+
+### Standalone facade correction (ADR-072 review branch)
+
+This supersedes the standalone-analyzer warning in the preceding review-branch
+section. `SimpleNEOAnalyzer` and `AdvancedaNEOSAnalyzer` now use actual typed
+acquisition/shared screening, not name/hash-based inputs or a detector fallback.
+The existing standalone commands delegate to the shared CLI:
+
+```sh
+python simple_neo_analyzer.py single "1998 KY26" --json
+python simple_neo_analyzer.py analyze "1998 KY26" --force-refresh
+python simple_neo_analyzer.py status
+```
+
+A designation is required for analysis; there is no implicit demo named `test`.
+Scalar `calculate_artificial_probability` and fabricated/private calibration/input
+contracts raise explicit controlled-deprecation errors; structured reports retain
+probability/confidence/significance as null. Use `await analyzer.analyze_neo_async(...)`
+inside an active event loop. Importable components and capability counts are not
+scientific readiness or provider-health checks.
+
+Impact bridges report actual input/prerequisite availability, not a probability or
+safe verdict. The separate public impact REST/menu/core heuristic contract remains
+[issue #32](https://github.com/RobLe3/aneos-suite/issues/32); core scenario/research
+functions remain available but are not validated by this facade correction.
+[Exact scope, tests and reproduction](docs/engineering/standalone-analysis-contract.md).
+
+### Durable execution foundation (ADR-076, review branch)
+
+`aneos_api.job_store.JobStore` adds transactional execution storage on the existing
+SQLAlchemy database: scoped reads, idempotent admission, fenced leases, immutable
+checkpoints, atomic terminal commits and retained history. Storage import does not
+assemble web/ML services or create a database. Schema setup is explicit; starting
+the full API confirms setup before services and cleans up on lifecycle failure.
+
+**Not yet integrated:** current network/automatic/polling API workers. They are not
+made durable merely by adding this component. ADR-077 corrects normal network
+reporting; registered recoverable worker and authenticated API integration remain #15. Execution
+completion does not mean scientific validation. See
+[the storage controls, setup and integration gates](docs/engineering/durable-job-store.md).
+
+
+### Population evidence reports (ADR-077, review branch)
+
+The normal BC11 session now freezes actual NEOData and uses canonical per-object
+screening. Descriptive groups, native-TDB computed encounter gaps, explicit module
+availability and full A1/A2/A3 inventory replace unsupported network significance.
+`verify_network_report` fully recomputes the report; `network_report_to_markdown`
+includes verified JSON for replay. No network acquisition occurs inside this session.
+See [the exact scope and remaining acceptance gates](docs/engineering/network-evidence-report.md).
+
+### Registered resumable worker (ADR-078, review branch)
+
+`aneos_api.network_jobs.NetworkWorker` executes the registered population job against
+the SQL store: fixed request/query bounds, successful immutable source checkpoints,
+resume without refreshing committed evidence, lease heartbeats/fencing and full
+request/checkpoint/report verification before completion. It is an explicit Python
+worker API; no automatic daemon or new CLI/REST option is introduced.
+
+**Not yet integrated:** current authenticated API ownership, worker lifespan/health
+and persistent REST jobs. See [the exact worker controls and remaining gates](docs/engineering/resumable-network-worker.md).
+Completion is execution evidence, not calibrated scientific validation.
+
+### Durable owned population API (ADR-079, review branch)
+
+The existing population API now commits SQL jobs, runs a managed registered worker,
+serves owner-scoped verified reports and supports cancellation/idempotent retries.
+Configured/SQL API keys or explicitly scoped signed tokens are required; development
+mocks do not authorize these jobs. Restart/partial-acquisition, positive-owner and
+cross-owner controls are documented in [the scoped integration report](docs/engineering/durable-network-api.md).
+Other job families and general authentication still need review. Successful execution
+is not complete object knowledge, calibrated significance or origin confirmation.
+
+### Additional user-quality programme
+
+Requested source completeness/local enrichment, every-menu render QA, verified object
+explanations/graphics, scientific suitability, current user documentation and version
+consistency are tracked separately in [the requirements register](docs/engineering/user-quality-programme.md).
+They remain acceptance work, not claims already achieved by engineering test counts.
+
+
+Application version is defined in `aneos_version.py`. Run `python aneos.py --version`
+without starting scientific or API services. The REST API contract remains2.0.0;
+`application_version` and `X-Application-Version` identify this beta build.
+Model/schema/provider versions remain independent. The beta tag identifies an engineering checkpoint, not scientific
+readiness; historical result versions are preserved.
+
+[Menu-entry before/after captures and scope](docs/engineering/version-and-menu-identity.md)
+include actual text/HTML/SVG at80/120/160 columns, current Scientific Help and a
+machine-readable inventory. Fifteen feature dispatch routes are checked; detailed
+prerequisite/behavior/result QA remains explicitly pending in #41.
+
+For the canonical V2 object-detail scope and its limits, see [evidence-bound object details](docs/engineering/evidence-bound-object-detail.md).
+
+Physical source normalization, paired uncertainty and compatibility limits: [atomic physical evidence](docs/engineering/atomic-physical-evidence.md).
+
+Native orbital/covariance epoch handling and computed-history limits: [native orbital epochs](docs/engineering/native-orbital-epochs.md).
+
+HTTP history/native-epoch and raw-input contracts: [HTTP evidence parity](docs/engineering/http-evidence-parity.md).
+
+### Acquisition history and honest completeness (2.2.0.dev0)
+
+Ordinary queries now retain a fixed-profile source plan, source outcomes and local
+correlated evidence before returning a result. Object detail and JSON export keep
+acquisition dates and provenance visible. A complete response profile is not proof
+of complete scientific evidence. See the [acquisition guide and reproducible
+80/120/160-column QA](docs/engineering/object-acquisition-ledger.md) for usage,
+cache/persistence behavior and remaining limits. This is unreleased draft work;
+independent five-sigma/origin calibration is not claimed.
+
+NEODyS-specific source identity, H/G photometry, native matrix retention and
+reproducible object-review examples are described in the
+[NEODyS evidence guide](docs/engineering/neodys-evidence.md). Typed H enrichment
+does not imply a fitted phase law, transformed covariance or complete scientific data.
+
+### Dates and chronology (2.2.0.dev0)
+
+Object detail/export now separates source discovery days, observations, dynamical
+epochs and local receipts. The ambiguous `first_discovered` / `last_updated` export
+aliases are deprecated; use sourced `discovery_date` or explicit ledger receipt
+fields. Old values remain preserved and unverified, not silently retagged UTC.
+See the [chronology guide](docs/engineering/object-chronology.md) for the provider's
+numbered-object discovery limitation, Pacific-local fit dates, partial observations,
+compatibility changes and reproducible display examples.
+
+### Source receipt review and refresh (2.2.0.dev0)
+
+The legacy enrichment workflow now reviews replay-checked receipts for all five
+installed object adapters, including Horizons and failed-query-only objects.
+Unknown legacy timestamps are not assigned UTC. Explicit refresh uses the existing
+acquisition/SQL-history path, respects stored cooldown eligibility and distinguishes
+partial, empty, deferred and failed outcomes. A committed adapter query is not proof
+of new observations or scientific completeness. See the [receipt review guide](docs/engineering/source-freshness.md)
+for menu behavior, limits and reproducible examples. Automatic selective backfill
+and exhaustive source/menu QA remain open.
+
+### Candidate screening dashboard and browser (2.2.0.dev0)
+
+Polling dashboards and the legacy results browser now use the canonical screening
+service and replayable object reviews. Follow-up, not flagged and inconclusive are
+separate from origin claims; legacy probabilities remain archived and unverified.
+Details retain source evidence, field-presence limits, chronology and explanations.
+JSON/Markdown exports preserve frozen policies and are written to new directories.
+See the [dashboard guide](docs/engineering/polling-dashboard-screening.md) for file
+loading, controls, compatibility changes, examples and remaining upstream defects.

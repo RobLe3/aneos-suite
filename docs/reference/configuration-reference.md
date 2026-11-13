@@ -1,17 +1,34 @@
 # aNEOS Configuration Reference
 
-This reference documents the configuration surface that is currently honoured by
-`aneos_core.config.settings.ANEOSConfig`.  It focuses on the environment
-variables and file options that the loader actually parses so that operators can
-confidently tune the running system without relying on aspirational or
-deprecated knobs.
+This reference describes what `aneos_core.config.settings.ANEOSConfig` parses.
+Parsing a field does not prove that every provider, worker or entry point uses it.
+Other modules also read environment variables; this is not a complete application-wide
+configuration inventory. Provider polling/coverage is still under review (#16/#40).
 
-The configuration loader follows this precedence order (highest first):
+`ConfigManager` selects one loading path:
 
-1. Programmatic overrides (e.g. `ConfigManager.update_config`)
-2. Environment variables
-3. Configuration files (`.json`, `.yaml`/`.yml`)
-4. Built-in defaults defined in the dataclasses
+1. An explicitly supplied, existing file is loaded; environment variables are **not**
+   merged over that file. Missing file sections use dataclass defaults.
+2. Otherwise `ANEOSConfig.from_env()` overlays supported environment variables on defaults.
+3. `update_config()` changes that manager's in-memory object and validates afterward;
+   it does not persist a file or update every running service. Rejected updates/reloads
+   leave the previous manager object intact; valid changes publish a validated copy.
+   Unknown update fields are rejected, not silently ignored.
+
+**Explicit file errors fail closed:** missing files raise `FileNotFoundError`;
+malformed/unsupported construction raises `ValueError`. Defaults are not silently
+activated in their place. This corrects earlier fallback behavior. Direct
+`ANEOSConfig.from_file()` parses dataclasses; use `ConfigManager` for its bounded
+range/type validation. No file write or global hot-reload is implied.
+
+## Scientific policy menu
+
+The legacy **Analysis Policy** menu is read-only. It shows the default canonical
+ranking policy, offers explicitly synthetic controls, and exports/verifies policy
+snapshots. It does not change alpha, toggle a validated physical BIC model, apply
+thresholds or import runtime configuration. Snapshot JSON is not an `ANEOSConfig`
+file. See [policy inspection and examples](../engineering/truthful-policy-menu.md).
+A candidate threshold is in raw ranking units, not sigma or origin confidence.
 
 > **Tip:** Boolean variables accept `1`, `true`, `yes`, or `on` (case
 > insensitive) for truthy values.  Anything else is treated as `False`.
@@ -20,15 +37,14 @@ The configuration loader follows this precedence order (highest first):
 
 ## Environment Variables
 
-Only the variables listed below affect the shipping loader.  Any other `ANEOS_*`
-variables that may appear in legacy documentation are ignored by the current
-code and are safe to omit.
+The following variables are parsed by this loader. Other application modules may
+read additional variables, including database and authentication settings.
 
 ### API endpoints & timeouts
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `ANEOS_NEODYS_URL` | `https://newton.spacedys.com/neodys/api/` | Override the NEODyS API endpoint. |
+| `ANEOS_NEODYS_URL` | `https://newton.spacedys.com/~neodys2/epoch/` | Override the NEODyS API endpoint. |
 | `ANEOS_MPC_URL` | `https://www.minorplanetcenter.net/` | Override the Minor Planet Center endpoint. |
 | `ANEOS_HORIZONS_URL` | `https://ssd.jpl.nasa.gov/api/horizons.api` | Override the JPL Horizons endpoint. |
 | `ANEOS_SBDB_URL` | `https://ssd-api.jpl.nasa.gov/sbdb.api` | Override the Small Body Database endpoint. |
@@ -49,14 +65,23 @@ If neither variable is supplied the loader keeps the default order of
 
 ### Paths
 
-| Variable | Default | Description |
+| Variable | Default | Loader behavior |
 | --- | --- | --- |
-| `ANEOS_DATA_DIR` | `dataneos` | Base directory for downloaded/processed data (`PathConfig.data_neos_dir`).  The loader creates the directory on startup. |
-| `ANEOS_LOG_FILE` | `dataneos/neos_analyzer.log` | Location of the primary analyser log file. |
+| `ANEOS_BASE_DIR` | `dataneos` | Sets `DirectoryConfig.base_dir` and recomputes derived paths. |
+| `ANEOS_DATA_DIR` | `dataneos/data` | Overrides `directories.data_dir`, not the base directory. |
+| `ANEOS_ORBITAL_DIR` | `dataneos/orbital_elements` | Overrides orbital-data path. |
+| `ANEOS_OUTPUT_DIR` | `dataneos/daily_outputs` | Overrides output path. |
+| `ANEOS_CACHE_FILE` | `dataneos/orbital_elements_cache` | Overrides cache-file path. |
+| `ANEOS_LOG_FILE` | `dataneos/neos_analyzer.log` | Overrides log path. |
 
-> Other path fields (`data_dir`, `orbital_dir`, `output_dir`, `cache_dir`) are
-> derived from the defaults inside `PathConfig` and currently do not have
-dedicated environment overrides.
+Path derivation itself does not create directories. Consumers may create their own
+paths. `DirectoryConfig` is the current type; `paths` is a compatibility property.
+There is no dedicated cache-directory environment override in this loader.
+
+### Legacy threshold override
+
+`ANEOS_ECCENTRICITY_THRESHOLD` overrides the loader's legacy eccentricity threshold
+(default0.8). It is not the canonical follow-up ranking policy or a significance level.
 
 ### Analysis execution
 
@@ -80,13 +105,14 @@ dedicated environment overrides.
 
 ## Configuration Files
 
-`ANEOSConfig.from_file` accepts either JSON or YAML documents.  Unknown keys are
-ignored, and missing sections fall back to the dataclass defaults.  The
+`ANEOSConfig.from_file` accepts JSON or YAML documents (YAML requires PyYAML).
+Unknown top-level and nested dataclass keys are rejected rather than silently
+ignored or replaced with defaults. The legacy `paths` alias remains supported. Missing sections use dataclass defaults.  The
 structure mirrors the dataclasses in `aneos_core.config.settings`:
 
 ```yaml
 api:
-  neodys_url: https://newton.spacedys.com/neodys/api/
+  neodys_url: https://newton.spacedys.com/~neodys2/epoch/
   mpc_url: https://www.minorplanetcenter.net/
   horizons_url: https://ssd.jpl.nasa.gov/api/horizons.api
   sbdb_url: https://ssd-api.jpl.nasa.gov/sbdb.api
@@ -128,9 +154,11 @@ analysis_cleanup_temp_files: true
 cache_ttl: 3600
 ```
 
-> **Validation:** After loading, the configuration manager verifies numeric
-> ranges (e.g. positive worker counts, timeout values within range) and raises a
-> `ValueError` when constraints are violated.
+> **Validation scope:** The manager checks eccentricity/inclination bounds, positive integer
+> request timeout/worker count and nonnegative integer retry count. Booleans, strings
+> and nonfinite numbers are rejected in these checked fields. It does not validate every
+> parsed execution field or certify that a provider honors it. These are configuration
+> checks, not scientific calibration or physical-model validity.
 
 ---
 
@@ -143,10 +171,16 @@ format.
 
 ---
 
-## Unsupported / future variables
+## Other modules and unresolved work
 
-Earlier revisions of this document listed many more `ANEOS_*` variables covering
-areas such as authentication, database tuning, Kubernetes deployment, and ML
-training.  Those keys are currently **not** consumed by the runtime and have
-been removed to avoid confusion.  When new configuration surfaces are
-implemented they should be added to both the loader and this reference.
+`ANEOS_DATABASE_URL`, authentication settings and provider pacing/state controls are
+read outside `ANEOSConfig`; absence from this table does not make them unsupported.
+Consult their scoped implementation and engineering reports. The loader's legacy
+`thresholds`/`weights` are not the canonical `ScreeningPolicy` or a validated sigma model.
+An example field appearing here is not evidence of active policy mutation.
+
+`ANEOSConfig.save()` creates parent directories and **overwrites** its target file.
+That existing general configuration API is separate from the menu's exclusive-create
+policy snapshot export. Back up an existing configuration before calling it. Whole-app
+configuration consistency, all remaining field validation and consumer application still
+need verification/remediation under #16/#17; this reference does not claim those are complete.

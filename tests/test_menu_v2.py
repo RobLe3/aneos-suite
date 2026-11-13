@@ -27,20 +27,10 @@ class TestFetchRealOrbitalDataPhysicalProps:
     """Verify physical data is read from physical_properties, not OrbitalElements."""
 
     def _make_neo_data(self, pp_attrs: dict):
-        neo_data = MagicMock()
-        oe = MagicMock()
-        # Remove removed fields so hasattr returns False
-        del oe.diameter
-        del oe.albedo
-        del oe.spectral_type
-        del oe.rot_per
-        neo_data.orbital_elements = oe
-        pp = MagicMock()
-        for k, v in pp_attrs.items():
-            setattr(pp, k, v)
-        neo_data.physical_properties = pp
-        neo_data.sources_used = ["SBDB"]
-        return neo_data
+        from aneos_core.data.models import NEOData, OrbitalElements, PhysicalProperties
+        return NEOData('99942', orbital_elements=OrbitalElements(
+            semi_major_axis=1., eccentricity=.2, inclination=15.),
+            physical_properties=PhysicalProperties(**pp_attrs), sources_used=['SBDB'])
 
     def test_diameter_from_physical_properties(self):
         """diameter_km on PhysicalProperties appears in returned physical dict."""
@@ -56,7 +46,8 @@ class TestFetchRealOrbitalDataPhysicalProps:
         assert result is not None
         _, physical = result
         assert "diameter" in physical
-        assert abs(physical["diameter"] - 0.37) < 1e-9
+        assert abs(physical["diameter"] - 370.) < 1e-9
+        assert physical["_units"]["diameter"] == "m"
 
     def test_albedo_from_physical_properties(self):
         """albedo on PhysicalProperties appears in returned physical dict."""
@@ -93,14 +84,15 @@ class TestGetTestDataNoSilentFallback:
             with pytest.raises(ValueError, match="Cannot resolve orbital data"):
                 menu._get_test_data("COMPLETELY_UNKNOWN_9999_XYZ")
 
-    def test_known_alias_still_works(self):
-        """Known aliases (tesla, apophis, etc.) must still return data without fetch."""
+    def test_known_alias_cannot_return_demo_data_without_fetch(self):
+        """Names are resolved by the actual source seam, never a hard-coded fixture."""
         from aneos_menu import ANEOSMenu
         menu = ANEOSMenu.__new__(ANEOSMenu)
         menu.console = None
-
-        orbital, physical = menu._get_test_data("tesla")
-        assert orbital["a"] == pytest.approx(1.325)
+        with patch.object(menu, "_fetch_real_orbital_data", return_value=None) as fetch:
+            with pytest.raises(ValueError, match="Cannot resolve orbital data"):
+                menu._get_test_data("tesla")
+        fetch.assert_called_once_with("tesla")
 
     def test_live_fetch_success_bypasses_error(self):
         """If _fetch_real_orbital_data returns data, no ValueError is raised."""
@@ -181,6 +173,7 @@ class TestMapValidatedClassification:
         result = MagicMock()
         result.is_artificial = is_artificial
         result.sigma_confidence = sigma
+        result.analysis_metadata = {}
         return result
 
     def test_sigma_below_2_returns_inconclusive(self):
@@ -206,7 +199,7 @@ class TestMapValidatedClassification:
         if wrapper is None:
             pytest.skip("ValidatedWrapper not loaded")
         label = wrapper._map_validated_classification(self._make_result(False, 2.0))
-        assert "EDGE" in label.upper() or "2" in label
+        assert label == "INCONCLUSIVE"
 
     def test_sigma_5_artificial_returns_validated(self):
         """sigma=5.0, is_artificial=True → ARTIFICIAL VALIDATED."""
@@ -214,7 +207,7 @@ class TestMapValidatedClassification:
         if wrapper is None:
             pytest.skip("ValidatedWrapper not loaded")
         label = wrapper._map_validated_classification(self._make_result(True, 5.0))
-        assert "ARTIFICIAL" in label.upper()
+        assert label == "INCONCLUSIVE"
 
 
 # ===========================================================================
@@ -302,16 +295,14 @@ class TestANEOSMenuV2Helpers:
         assert result.get("absolute_magnitude") == pytest.approx(19.7)
 
     def test_rough_torino_low_probability(self):
-        """Very low probability → Torino 0."""
         from aneos_menu_v2 import ANEOSMenuV2
-        label = ANEOSMenuV2._rough_torino(1e-10, None)
-        assert "0" in label
+        with pytest.raises(NotImplementedError, match="source-reported"):
+            ANEOSMenuV2._rough_torino(1e-10, None)
 
     def test_rough_torino_elevated_probability(self):
-        """Elevated probability → non-zero Torino label."""
         from aneos_menu_v2 import ANEOSMenuV2
-        label = ANEOSMenuV2._rough_torino(1e-3, 100.0)
-        assert "0" not in label or "elevated" in label.lower() or "1" in label
+        with pytest.raises(NotImplementedError, match="source-reported"):
+            ANEOSMenuV2._rough_torino(1e-3, 100.)
 
     def test_results_browser_empty_session(self, capsys):
         """_results_browser with no results prints informational message."""

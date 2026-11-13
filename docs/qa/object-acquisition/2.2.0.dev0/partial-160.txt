@@ -1,0 +1,87 @@
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Stored evidence — SYNTHETIC                                                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+Storage: verified_ledger_projection; artificial-origin probability: not calibrated.
+╭─────────────────────────────────────────────────────────────────── Input data — SYNTHETIC ───────────────────────────────────────────────────────────────────╮
+│ Basic catalogue field presence 5/15; not total completeness or readiness.                                                                                    │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Field                ┃ Recorded value                                                    ┃ Units / status                                                ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis      │ 1.23                                                              │ AU; present                                                   │ │
+│ │ Eccentricity         │ 0.2                                                               │ dimensionless; present                                        │ │
+│ │ Inclination          │ 1.49                                                              │ degrees; present                                              │ │
+│ │ Ascending node       │ not available                                                     │ degrees; not_available                                        │ │
+│ │ Periapsis argument   │ not available                                                     │ degrees; not_available                                        │ │
+│ │ Mean anomaly         │ not available                                                     │ degrees; not_available                                        │ │
+│ │ Orbit epoch          │ not available                                                     │ model timestamp; native solution retained; not_available      │ │
+│ │ Diameter             │ not available                                                     │ km; not_available                                             │ │
+│ │ Absolute magnitude H │ 25.9                                                              │ mag; present                                                  │ │
+│ │ Albedo               │ not available                                                     │ dimensionless; not_available                                  │ │
+│ │ Spectral label       │ not available                                                     │ catalogue label; not_available                                │ │
+│ │ Rotation period      │ not available                                                     │ h; not_available                                              │ │
+│ │ First observation    │ not available                                                     │ catalogue timestamp; source precision retained; not_available │ │
+│ │ Last observation     │ not available                                                     │ catalogue timestamp; source precision retained; not_available │ │
+│ │ Retrieved at         │ 2026-11-13T05:09:08.670249+00:00; offset recorded not time scale  │ retrieval timestamp; present                                  │ │
+│ │                      │ conversion                                                        │                                                               │ │
+│ └──────────────────────┴───────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────┘ │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│ Non-gravitational evidence: not available.                                                                                                                   │
+│ Overall completeness and source coverage: not established. Native solutions/uncertainties remain in the JSON.                                                │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+     Physical selection provenance — not independent origin evidence     
+┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ Field                ┃ Selected source ┃ Uncertainty   ┃ Reference    ┃
+┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
+│ absolute_magnitude_h │ MPC             │ not available │ not supplied │
+└──────────────────────┴─────────────────┴───────────────┴──────────────┘
+╭─────────────────────────────────────────────────────────────── Recorded acquisition outcomes ────────────────────────────────────────────────────────────────╮
+│ Data contributed: 2/5 planned adapters. Typed data or explicit empty responses: 3/5.                                                                         │
+│ ┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Source        ┃ Outcome            ┃ Recorded at (UTC)          ┃ Meaning                                                                                ┃ │
+│ ┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ SBDB          │ available          │ 2026-11-13                 │ Typed data contribution; not independently verified                                    │ │
+│ │               │                    │ 05:09:08.670249Z           │                                                                                        │ │
+│ │ NEODyS        │ unavailable        │ 2026-11-13                 │ Source could not initialize                                                            │ │
+│ │               │                    │ 05:09:08.670310Z           │                                                                                        │ │
+│ │ MPC           │ available          │ 2026-11-13                 │ Typed data contribution; not independently verified                                    │ │
+│ │               │                    │ 05:09:08.670375Z           │                                                                                        │ │
+│ │ Horizons      │ unavailable        │ 2026-11-13                 │ Adapter/result unavailable; no substitute data                                         │ │
+│ │               │                    │ 05:09:08.670440Z           │                                                                                        │ │
+│ │ CAD           │ missing            │ 2026-11-13                 │ Explicit empty result in this query; not zero physical risk                            │ │
+│ │               │                    │ 05:09:08.670679Z           │                                                                                        │ │
+│ └───────────────┴────────────────────┴────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────┘ │
+│ Installed catalogue + bounded CAD profile only. Counts are not total completeness, independent evidence, source authenticity or scientific readiness.        │
+│ Recorded times are adapter-result receipts, not observation epochs. Native/adapter packets where available and query IDs remain in local JSON history.       │
+│ Query: 0af60bdc-f31c-4307-9267-e03cfe01a6c5                                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+Stored projection may include earlier source receipts; a successful query does not refresh every stored measurement.
+        Stored projection / latest query binding         
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ Source ┃ Selected receipt (short) ┃ From latest query ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ MPC    │ 58cbf574baaf             │ yes               │
+│ SBDB   │ 52b4ec6ca66a             │ yes               │
+└────────┴──────────────────────────┴───────────────────┘
+Showing 7/7 source receipts; full payloads remain in JSON export.
+      Dated source assertion history — not independent observations      
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Source   ┃ Recorded at           ┃ Kind             ┃ Receipt (short) ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ SBDB     │ 2026-11-13            │ source_assertion │ 52b4ec6ca66a    │
+│          │ 05:09:08.706380+00:00 │                  │                 │
+│ MPC      │ 2026-11-13            │ source_assertion │ 58cbf574baaf    │
+│          │ 05:09:08.706380+00:00 │                  │                 │
+│ SBDB     │ 2026-11-13            │ query_attempt    │ 6cb09be9fba8    │
+│          │ 05:09:08.706380+00:00 │                  │                 │
+│ NEODyS   │ 2026-11-13            │ query_attempt    │ 4060ef57972b    │
+│          │ 05:09:08.706380+00:00 │                  │                 │
+│ MPC      │ 2026-11-13            │ query_attempt    │ 263636622d2f    │
+│          │ 05:09:08.706380+00:00 │                  │                 │
+│ Horizons │ 2026-11-13            │ query_attempt    │ 04b89cc7c4d3    │
+│          │ 05:09:08.706380+00:00 │                  │                 │
+│ CAD      │ 2026-11-13            │ query_attempt    │ d94146bfbfd5    │
+│          │ 05:09:08.706380+00:00 │                  │                 │
+└──────────┴───────────────────────┴──────────────────┴─────────────────┘
+Full receipt IDs and unknown/alternative measurements remain in JSON source history. No source authentication, physical fit or calibrated origin inference is 
+established.

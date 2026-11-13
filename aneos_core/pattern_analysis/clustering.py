@@ -1,3 +1,5 @@
+# ADR-077: LEGACY DIAGNOSTIC ONLY. Historical outputs are not calibrated
+# significance, population family evidence, temporal correlation or origin evidence.
 """Orbital Element Clustering — PA-1 (ADR-043)."""
 from __future__ import annotations
 import logging
@@ -56,12 +58,18 @@ class OrbitalElementClusterer:
     MIN_CLUSTER_SIZE = 10      # minimum members for reporting
     DENSITY_SIGMA_THRESHOLD = 3.0
 
-    def __init__(self, min_cluster_size: int = 5, min_samples: int = 3):
+    def __init__(self, min_cluster_size: int = 5, min_samples: int = 3, *, legacy_diagnostic=False):
+        self.legacy_diagnostic = legacy_diagnostic
         self.min_cluster_size = min_cluster_size
         self.min_samples = min_samples
 
     def run(self, neo_objects: List["NEOData"]) -> List[OrbitalCluster]:
         """Cluster and return anomalous orbital groups."""
+        if self.legacy_diagnostic is not True:
+            raise NotImplementedError('Uncalibrated population prototype withdrawn from normal use; '
+                                      'use NetworkAnalysisSession for frozen evidence and screening. '
+                                      'legacy_diagnostic=True permits historical reproduction only, '
+                                      'not scientific inference.')
         vectors, labels = self._build_feature_matrix(neo_objects)
         if len(vectors) < self.min_cluster_size:
             logger.debug("Clustering: too few objects with complete elements")

@@ -36,15 +36,8 @@ try:
     from astropy.coordinates import SkyCoord, ICRS, FK5, get_body_barycentric
     from astropy.time import Time
     from astropy.table import Table
-    import contextlib as _contextlib
-    import io as _io
-    _gaia_buf = _io.StringIO()
-    with _contextlib.redirect_stdout(_gaia_buf):
-        from astroquery.gaia import Gaia
-    _gaia_msg = _gaia_buf.getvalue().strip()
-    if _gaia_msg:
-        logging.getLogger(__name__).debug("Gaia TAP server: %s", _gaia_msg)
-    from astroquery.simbad import Simbad
+    # Gaia's module-level client fetches remote status messages during import.
+    # Defer that import to an actual catalogue query, never application startup.
     from astroquery.exceptions import RemoteServiceError
     import astropy.constants as const
     from scipy import stats
@@ -57,6 +50,7 @@ except ImportError as e:
     ASTROPY_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+Gaia = None  # Compatibility name; initialized only for an explicit query.
 
 @dataclass
 class GaiaSource:
@@ -175,11 +169,6 @@ class GaiaAstrometricCalibrator:
         """
         self.config = config or self._default_config()
         self.logger = logging.getLogger(__name__)
-        
-        # Initialize Gaia query service
-        if ASTROPY_AVAILABLE:
-            Gaia.MAIN_GAIA_TABLE = self.config.get('gaia_table', 'gaiadr3.gaia_source')
-            Gaia.ROW_LIMIT = self.config.get('max_sources', 1000)
         
         # Initialize cache
         self.cache_dir = Path(self.config.get('cache_dir', 'cache/gaia'))
@@ -386,6 +375,12 @@ class GaiaAstrometricCalibrator:
             """
             
             # Execute query
+            global Gaia
+            if Gaia is None:
+                from astroquery.gaia import Gaia as client
+                Gaia = client
+            Gaia.MAIN_GAIA_TABLE = self.config.get('gaia_table', 'gaiadr3.gaia_source')
+            Gaia.ROW_LIMIT = self.config.get('max_sources', 1000)
             job = Gaia.launch_job_async(query, dump_to_file=False)
             table = job.get_results()
             

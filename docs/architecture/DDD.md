@@ -14,9 +14,10 @@ All developers, scientists, and stakeholders must use these terms consistently.
 | Term | Definition |
 |------|-----------|
 | **NEO** | Near Earth Object — any asteroid or comet with perihelion < 1.3 AU |
-| **Artificial NEO** | An NEO exhibiting multi-indicator anomalies consistent with external engineering at sigma >= 5 confidence |
+| **Artificial NEO** | An object whose technological origin is independently supported; a screening rank alone cannot establish this |
 | **Natural NEO** | An NEO whose orbital and physical properties are consistent with solar system formation and gravitational evolution |
-| **Sigma score** | Standard deviations from the mean of the reference natural NEO population for a given observable |
+| **Screening score** | Uncalibrated legacy ranking heuristic; not a Gaussian-equivalent significance |
+| **Gaussian-equivalent significance** | A calibrated null-tail probability expressed on a specified Gaussian convention; unavailable in the installed screening model |
 | **Clue** | A single measurable anomaly contributing to the composite sigma score |
 | **SWARM** | A named, specialized analytical agent responsible for one physical domain of evidence |
 | **ATLAS** | Advanced automated first-stage screening system (used in `advanced_scoring.py`) |
@@ -1025,3 +1026,492 @@ of designations through sub-module execution to `NetworkReport` production.
 ---
 
 _End of Domain-Driven Design Document_
+
+## Non-gravitational evidence implementation — 2026-11-12
+
+BC1 acquisition and BC2 core data own the new `OrbitModelParameter` and
+`OrbitalCovariance` value objects, composed by the existing
+`NonGravitationalParameters`. They preserve native values, uncertainties,
+estimation kind, model constants, coordinate labels, provenance and distinct
+TDB epochs. Their purpose is faithful evidence transport, not origin inference.
+BC7/BC8 expose this evidence through the existing Rich/REST surfaces. BC4 retains
+responsibility for future physical-model fitting and epoch-aware covariance
+propagation. No new bounded context is needed for these changes (ADR-064).
+
+Implementation and offline path coverage do not mean that the legacy detector's
+sigma/probability output or a KY26 origin hypothesis has been validated. Those
+requirements remain open in the programme issues.
+
+
+## Screening contract correction — 2026-11-12 (ADR-065)
+
+Use the existing analysis/detection boundary, not a new bounded context.
+`ScreeningAnalysisService` owns deterministic ranking and follow-up status.
+Acquisition owns source evidence; scheduling and persistence remain separate.
+
+A `ScreeningAssessment` identifies its ranking-input snapshot and policy by
+content hashes. Its contributions are labeled heuristic proxies and dependency
+groups, not independent origin measurements. Typed orbit-fit coefficients retain
+the ADR-064 evidence contract and cannot become propulsion proof through adapter
+conversion. Unavailable inference is null, never zero or a natural-origin verdict.
+
+**Implemented/integrated:** canonical manager/facade, menu single/batch, REST
+fetched/raw/batch, and the automatic screening helper. **Regression-tested:**
+bounded rank controls, actual adapter parity, frozen KY26 comparison, replay,
+missing inputs and unavailable-probability rejection. **Not validated:**
+scientific discovery significance, origin probability, independent performance,
+full automatic review gates, network/legacy interfaces or restart durability.
+Earlier capability descriptions must be read with these limits; the correction
+does not certify their implementation. Detailed remaining scope and deprecated
+contracts: `docs/engineering/screening-result-contract.md`.
+
+## Required review-gate correction — 2026-11-12 (ADR-066)
+
+The existing validation boundary owns required review prerequisites. A screening
+rank is neither a prerequisite outcome nor a validation probability. A review
+report identifies its evidence, ranking policy, validation configuration and
+required-stage contract. The automatic orchestrator and expert queue enforce
+that contract; a missing, failed, inconclusive, stale or incomplete report cannot
+advance as validated. Capacity deferral is not scientific rejection.
+
+The canonical installed validator can inventory actual inputs but cannot yet
+validate observational physical hypotheses or calibrated discovery significance.
+Its aggregate is inconclusive. Five stage records are prerequisites, not five
+independent evidence streams. A gate-positive synthetic fixture is engineering
+control evidence only. Legacy helper/direct-call science remains unverified and
+requires #23. Normal JSON report history protection is implemented; transactional
+jobs/restart recovery remain designed work under #15.
+
+## CAD intake correction — 2026-11-12 (ADR-067)
+
+A **computed encounter** is a catalogue prediction with object/body/time identity,
+not a raw observation, fitted orbit, discovery date or origin indication. The
+existing acquisition boundary owns CAD schema/units/native TDB/provenance. Orbit
+acquisition remains a separate whole-solution responsibility. The existing
+analysis service owns ranking; absence of orbit means abstention, not natural.
+
+Intake counts distinguish records, overlap-deduplicated encounters and unique
+designations. All records are retained across the historical→review boundary;
+only their review eligibility is filtered. Source coverage and execution status
+are independent of scientific validation status. New operational caches are
+versioned/checksummed; they are not authenticated scientific archives. Physical
+measurement source ingestion (#25), provider-wide scheduling (#16), restart-safe
+execution (#15) and calibrated observation-based inference remain unfinished.
+
+## Legacy scientific-contract correction — 2026-11-12 (ADR-068)
+
+Validation owns prerequisite status, not an origin verdict inferred from a rank.
+A field-presence fraction is descriptive completeness, not source reliability,
+quality or independent-evidence count. Actual observation span and orbital
+coordinates may be reported; unavailable inference cannot be filled with constants.
+
+Enhanced results retain legacy input under `original_result` and expose canonical
+claim-bearing fields. Standalone research diagnostics remain distinct from
+installed validated model evidence. Monitoring consumes authoritative outcomes
+rather than independently orchestrating science. Its pass fractions and transport
+counts are operational metrics, not measured FDR or classifier performance.
+
+Automatic origin alerts require a real origin model; a scalar threshold does not
+supply one. Current capability is unavailable, explicitly not a confirmed natural
+finding. Core legacy AnalysisPipeline/API/CLI migration and broader interface
+claim review remain unfinished under #6/#12/#17. Durable assessment identity and
+case lifecycle remain #15/#13; current collector deduplication is in-process only.
+
+## Core analysis adapter correction — 2026-11-12 (ADR-069)
+
+The existing analysis boundary now orchestrates typed acquisition and shared
+screening, instead of independently interpreting legacy indicators. The core
+result carries actual NEO evidence and canonical assessment together. Operational
+status is separate from candidate status and from unavailable origin inference.
+Field-presence completeness is not source reliability. No new bounded context.
+
+**Implemented/integrated:** core single/batch, `/analyze`, existing batch request
+flags, core CLI displays, JSON/CSV export, required-validator/fallback transport.
+ML integration rejects incompatible rank/probability units and requires explicit
+independent label inputs. **Regression evidence:** network-denied contract tests,
+actual HTTP serialization, candidate positive/negative controls, source failure,
+timeout, replay and nullable display. **Not scientifically validated:** physical
+origin, probability/significance, reference-population calibration or independent
+performance. The enhanced REST endpoint still supplies mock acquisition/pipeline
+and is explicitly outside this increment; #6/#12 remain open. Old research model
+modules do not establish a deployed validated capability.
+
+## Enhanced REST correction — 2026-11-12 (ADR-070)
+
+The existing analysis/reporting boundaries now connect the previously declared
+enhanced routes to the current application pipeline. The core owns acquisition,
+evidence and screening; the review wrapper owns explicit required-prerequisite
+outcomes. An initialized component, disabled review, request preference or
+available database is not scientific validation. No new bounded context.
+
+**Implemented/integrated:** enhanced single/batch/summary registration and typed
+HTTP transport, current-service identity, refresh/options, nullable uncertainty,
+all ordered outcomes and descriptive persisted-screening summaries.
+**Regression-tested:** actual main-app HTTP routing, source/missing/invalid cases,
+candidate controls, synthetic review-transport positive control, concurrent
+request options, timeout, native A3/covariance, read-only SQLite summary and
+OpenAPI parity. **Not independently validated:** physical models, calibrated null
+or origin probabilities, detection performance, provider-wide limits or durability.
+Summary units are persisted assessment rows, not independent objects. Enhanced
+reports currently log but are not durable case history; #15/#13 remain open.
+This corrects the enhanced REST migration gap noted in ADR-069, not the remaining
+legacy menu/pattern/standalone research-model claim audit (#6/#12).
+
+## Primary legacy menu/launcher correction — 2026-11-12 (ADR-071)
+
+The existing presentation boundary consumes shared analysis rather than creating
+another scientific decision. Primary legacy single/batch/interactive, suite and
+predefined workflow routes now carry canonical assessment and actual normalized
+source data. Computed history is separate from observed acceleration/residuals.
+Menu startup is not an authorization to clean research files or change settings.
+No new bounded context.
+
+**Implemented/integrated:** primary menu/launcher adapters, current-policy replay,
+JSON/Markdown reports, native acceleration evidence, exclusive normal report
+creation and scoped software/input/report fingerprints. **Regression-tested:**
+Rich/plain parity, candidate positives, source failures, aliases without demo data,
+ordered duplicates, history errors, native A3 sigma/covariance, malicious-designation
+nonexecution, CLI flags/exits and tamper/binding checks. **Not established:** full
+legacy/standalone/impact/report coverage, calibrated inference, independent
+performance, complete environment reproduction or restart-safe case history.
+Retained names for prototype inference raise explicit controlled deprecation
+rather than silently produce numbers; core scientific libraries remain available.
+
+## Standalone and advanced facade correction — 2026-11-12 (ADR-072)
+
+Simple/advanced names are adapters to the existing analysis boundary, not authority
+to manufacture observations or select an unvalidated fallback model. Their
+structured reports carry actual normalized NEO data, canonical screening and
+nullable scientific inference. Raw caller inputs are explicit, not silently mixed
+with a catalogue fetch. Unsupported filtering/conversions fail explicitly.
+
+An impact-prerequisite inventory belongs to the existing impact/risk boundary; it
+is not an impact-probability engine. Catalogue covariance presence is not propagated
+impact uncertainty. Dated arc length is not a quality score. Screening cannot
+supply impact, strategic-threat or maneuver probabilities. Core impact research/
+scenario modules remain available; public heuristic claims require #32 remediation.
+
+**Implemented/integrated:** simple/advanced library aliases, async paths, standalone
+CLI command delegation, native evidence/report transport and implementation-only
+capability inventory. **Regression-tested:** synthetic candidate controls, actual
+network-denied CLI processes, missing/failed sources/core, no name/hash fallback,
+raw unit/epoch validation, input preservation, A3/covariance and explicit unavailable
+impact/quality. **Not validated:** origin/impact models, provider health, independent
+performance, complete environment reproduction, durable execution or case history.
+No new bounded context is introduced. This supersedes the standalone migration gap
+in ADR-071, not all remaining scientific/legacy-interface findings.
+
+## Provider transport correction — 2026-11-12 (ADR-073)
+
+Data Acquisition owns provider-family scheduling and response transport, not just
+individual-source rate limiters. Its shared JPL adapter coordinates buffered GETs,
+application identification, persistent backoff and safe failure. Source adapters
+still own identity/schema/version checks, units, provenance and evidence parsing.
+Scheduling metadata is neither observational data nor a provider-health verdict.
+An acquired lease cannot upgrade a response into scientific evidence.
+
+**Implemented/integrated:** inventoried SBDB/Horizons/CAD/PHA-query transport and
+legacy tools, explicit health diagnostics, per-object probe removal and returned-
+failure circuit accounting. **Regression-tested:** synthetic positive responses,
+threads, real child processes, process kill, cancellation, Retry-After and unsafe
+state. **Not established:** cross-host serialization, nonparticipating clients,
+full API-version/cache/pagination compliance, live provider performance, durable
+jobs/cases or scientific accuracy. No new bounded context is needed. The impact
+boundary still requires #32's authoritative-source and scientific-contract work;
+a transport adapter does not validate impact probability.
+
+## Authoritative impact evidence — 2026-11-12 (ADR-074)
+
+Data Acquisition's Sentry anti-corruption adapter owns source version, object
+identity, native method/event parsing and response provenance. The existing Impact
+Assessment boundary owns the interpretation: a scoped external Earth-impact model
+output is not origin inference, an observed collision, a local covariance fit,
+lunar risk or a damage prediction. A source catalogue absence/removal is not a
+negative scientific measurement. Shared reports carry that distinction to REST.
+
+**Implemented/integrated:** strict source service, per-process TTL/single-flight
+reuse, existing REST route/model, JSON and replay-checked Markdown helper; one
+current KY26 not-listed capture. **Regression-tested:** all supported methods,
+positive events, absent/removed/failing/mismatched/tampered records, refresh/cohort
+failure, actual application routing and frozen capture replay. **Not established:**
+local impact probability/calibration, legacy menu/core enhanced-impact correctness,
+full alias resolution, distributed cache, durable cases/jobs, or readiness for
+planetary-defense decisions. No new bounded context is introduced; #32 stays open.
+
+## Impact entry points and local evidence snapshots — 2026-11-12 (ADR-075)
+
+Impact Assessment is not authority to infer risk from origin scores, orbit geometry
+or data-quality duration proxies. Menu/enhanced entry points now use Data Acquisition's
+scoped Sentry evidence contract and preserve independent screening state. Source,
+validation and persistence statuses have separate meanings. Legacy numerical/scenario
+research is not a fitted impact solver; absent domain values remain unavailable.
+
+Reporting owns immutable local source-report snapshots and explicit save confirmation,
+not probability values written into origin-score database fields. File atomicity and
+local restart read-back are bounded engineering evidence, not durable job scheduling,
+full case lifecycle, backups, distributed storage or independently validated science.
+No new bounded context is required. Restored/get-by-ID evidence must replay against its
+source input; a complete case history/workflow and API-wide persistence remain open.
+
+## Durable execution storage foundation — 2026-11-12 (ADR-076)
+
+Execution persistence belongs to existing API/database infrastructure, separate from
+scientific analysis and source acquisition. A stored `completed` state means an
+execution result was committed; it is not scientific validation, origin confirmation
+or five-sigma significance. A handler must validate its own versioned, evidence-bound
+result before commit. Missing results remain null; no scientific default is generated.
+
+**Implemented/regression-tested:** same-Base SQL job/admission/checkpoint/event
+storage, owner scope filters, idempotency, lease fencing/recovery, immutable snapshots,
+atomic transitions, rollback and process restart controls; side-effect-free storage
+imports and explicit full-API schema startup. **Not integrated:** current network/
+automatic/polling workers, REST persistence, authenticated principal mapping, domain
+report validation or case lifecycle. **Not validated:** PostgreSQL execution, cross-host
+clock behavior, backups, hardware/power-loss recovery or scientific accuracy. No new
+queue service or bounded context is introduced. Current API jobs remain #6/#15 work.
+
+## Population evidence contract — 2026-11-13 (ADR-077)
+
+BC11 orchestrates immutable input snapshots and BC5 canonical per-object screening;
+it does not become an independent detection engine. Ordered screening requests and
+unique grouping identities have different semantics. Conflicting duplicate snapshots
+are invalid; a missing orbital angle is not zero. Exploratory neighbourhoods and
+computed encounter gaps are descriptors, not independent observations, calibrated
+significance, physical families or origin evidence. A scalar fitted A1/A2/A3 inventory
+preserves native units, estimation kind, uncertainty and within-orbit covariance;
+paired temporal correlation remains unavailable without the required observations.
+
+Reports carry version/configuration/policy/input/result IDs and replayable complete
+snapshots. Report verification and domain interpretation are separate from execution
+storage: future handlers must verify report and request/checkpoint identity before
+terminal commits. Current network REST/menu consume the report; legacy API job
+scheduling still uses process memory with no principal ownership. Durable activation,
+case histories, independent population calibration and observational model fits
+remain separate open work. No new bounded context is introduced.
+
+## Registered population execution — 2026-11-13 (ADR-078)
+
+Execution infrastructure now composes acquisition, BC11 reporting and SQL storage
+through a versioned `network-evidence-job-v1` handler. Requests bind ordered identities,
+scientific configuration/reference policy, acquisition fingerprint and fixed calendar
+query bounds. Immutable checkpoints bind each unique source snapshot/history and
+final report to the request. Replaying a report against its own snapshots does not
+alone prove execution provenance: terminal commit also compares acquisitions to the
+actual stored checkpoints. A committed execution is not a calibrated scientific finding.
+
+Transient provider outage leaves missing acquisition work for bounded retry; valid
+committed evidence is reused, never refreshed. Missing physical properties may yield
+canonical scientific inconclusive results, whereas source outage, invalid identity,
+stop/deadline, storage uncertainty and internal errors have separate execution codes.
+Heartbeat/fencing/recovery handle old workers without granting them write authority.
+This library is not yet hosted by the API lifecycle or authenticated REST ownership;
+no additional bounded context, queue product or detection engine is introduced.
+
+## Persistent network API and ownership — 2026-11-13 (ADR-079)
+
+Existing network submission/polling now crosses verified-principal -> scoped SQL
+execution -> registered acquisition/report handler -> verified persisted presentation.
+Execution status, evidence completeness and scientific validity remain distinct.
+Stable service/SQL-user principals own jobs; role grants write capability, not access
+to another principal's history. Scoped credentials are revalidated against active
+configuration/database state. No client-supplied owner identity or development mock
+authorizes this boundary.
+
+API lifecycle owns worker admission, start/stop/join and observed readiness. Storage
+and handler contracts remain reusable, not independent detection engines. Current
+other API job families and legacy authentication are not upgraded by this integration.
+Object-wide assertion/enrichment/conflict history, explanations, graphical/menu QA,
+scientific suitability and documentation/version consistency are tracked #40–#46;
+review existing boundaries before adding any material new context.
+
+Credential-provisioning/admin authority is inside this verified boundary as well: a
+legacy development administrator must not mint SQL users to bypass persistent job
+ownership. Provisioning/listing use the same runtime database and verified admin
+role. This does not certify all legacy user-management implementations; #47 tracks
+remaining lifecycle/default-grant defects.
+
+## Application identity versus domain versions — 2026-11-13
+
+Dependency-free application identity (`aneos_version.py`) belongs to shared build/
+presentation metadata. It is not a data-source schema, orbit solution, screening
+policy, model, API contract or readiness certificate. Preserve those independent
+identifiers and recorded historical versions. Menu navigation/labels share one
+presentation catalogue; dispatch/renders do not certify feature prerequisites or
+scientific results. No new bounded context is needed for this distinction.
+
+## Replay-bound object review — 2026-11-13 / ADR-080
+
+The existing analysis context owns the screening calculation trace and deterministic
+object-evidence review. Presentation consumes the verified review; it does not infer
+origin from rank, coefficient sign or missing evidence. The review freezes one typed
+object snapshot and retains source alternatives without reconciling incompatible
+solutions. It is not the normalized multi-source evidence ledger (#40), an append-only
+research-case lifecycle, a physical fit, or independent calibration. Coverage profiles
+have frozen named denominators and describe presence only. Full acquisition coverage
+and operation-specific scientific readiness remain separate, currently unavailable
+outputs. Existing source/domain and research boundaries remain unchanged.
+
+## Atomic physical assertions — 2026-11-13 / ADR-081
+
+Acquisition owns native catalogue assertions and documented normalization. The common
+reconciler owns priority selection of value/uncertainty pairs and preservation of all
+source snapshots; it does not decide physical origin or average incompatible solutions.
+NEO metadata carries the versioned contract through cache/export/report reconstruction.
+Analysis validates projection consistency before consuming scalar compatibility fields.
+Presentation explains the selected/ambiguous/unavailable status. Physical fitting must
+separately establish uncertainty convention, observation epoch, covariance/dependencies
+and source comparability. A global reference cannot describe a mixed-source object;
+per-selection references remain authoritative only as catalogue assertions. No new
+bounded context, independent detector or database migration is required for this fix.
+Full multi-source object-ledger/history/pollability (#40), alternative spin coordinate
+models, observation likelihoods and calibrated uncertainty use remain unimplemented.
+
+## Native orbital time evidence — 2026-11-13 / ADR-082
+
+Acquisition preserves native astronomical representations/time-scale labels and binds
+computed element rows to their headers. OrbitalElements owns an optional NativeEpoch
+alongside, not silently replacing, the legacy datetime. Source reconciliation keeps
+an orbit solution and epoch atomic. Analysis checks source/projection consistency;
+it does not propagate covariance or convert scales. Presentation distinguishes orbital,
+covariance, computed-encounter and observation dates. Numeric epoch equality is not
+physical fit validity or frame compatibility. Existing acquisition, evidence and
+presentation boundaries suffice; no new bounded context is created. Full observational
+likelihoods, epoch/frame-aware propagation, source identity and operation-specific
+scientific readiness remain separate requirements.
+
+## HTTP evidence adapters — 2026-11-13 / ADR-083
+
+The existing API boundary preserves domain evidence instead of narrowing or coercing
+it into a different scientific contract. A native history DTO replays the epoch and
+binds its computed header/source/role; presentation metadata describes returned samples,
+not observations or calibrated significance. Acquisition owns bounded query outcomes
+and source attempt metadata. HTTP maps those outcomes without inventing empty evidence
+on outage. Canonical analysis remains the only screening engine, with matching finite
+numeric/conic semantics. Request-error serialization owns redacted client diagnostics,
+not authentication policy. No new bounded context is needed. All-source local persistence,
+identity, enrichment history, independent scientific validation and complete menu/API
+runtime prerequisites remain separate required workstreams.
+
+## Local correlated evidence persistence — 2026-11-13 / ADR-084
+
+Acquisition produces source-specific typed or explicitly legacy assertions. Persistence
+owns ingestion time, idempotent receipt identity, append-only history and atomic replayable
+projections in the existing database boundary. The shared acquisition reconciler selects
+whole orbital solutions and physical value/uncertainty pairs, retaining conflicts rather
+than treating them as independent evidence. Latest receipt per source is an explicit
+projection policy, not an astronomical epoch comparison or alias-resolution service.
+
+Analysis still owns scientific admissibility and canonical screening. Persistence does
+not fit observations, calibrate probabilities, establish measurement independence or
+supply a missing source-coverage denominator. Presentation reads verified projections and
+exposes source history, missingness and limitations. Legacy compatibility columns are a
+rebuildable view; unsupported origin/quality values are not current scientific outputs.
+The legacy polling enrichment path now uses this contract. Ordinary DataFetcher query
+persistence, all-source eligibility, identity ambiguity and complete research-case lifecycle
+remain pending in #40/#13. No additional bounded context or detection engine is introduced.
+
+## Policy inspection and configuration safety — 2026-11-13 / ADR-085
+
+The canonical screening service owns its policy/reference description and fingerprint;
+inspection reuses that identity rather than inventing UI thresholds or running another
+engine. Presentation describes the default service, diagnostics and unsupported actions.
+A read-only archive is not an active configuration, source authentication, a physical fit
+or a validator receipt. Snapshot verification compares records without modifying runtime
+policy or required review. Custom service/job policy IDs remain authoritative for their
+own results; this menu does not audit every live process.
+
+The existing configuration boundary owns explicit file/environment selection and
+candidate validation before manager-instance publication. This preserves prior state on
+rejected updates/reloads but does not persist settings, synchronize workers or validate
+all consumer behavior. Direct accessors still expose mutable objects. Acquisition source
+eligibility and polling, observational fitting/calibration and whole-menu readiness remain
+separate requirements. Existing boundaries suffice; no new context or global policy store.
+
+## Ordinary query acquisition — 2026-11-13 / ADR-086
+
+Acquisition owns the frozen installed source plan and typed source outcomes;
+normalization owns explicit adapter mappings/native identity checks; reconciliation
+owns atomic evidence selection, not a physical model. The existing repository
+owns one transaction for query, source assertions, projection and compatibility
+view. Presentation owns counts, timestamps and stale-source bindings, not inferred
+scientific certainty. Repeated bodies are not additional independent evidence.
+
+An acquisition receipt is local committed provenance, not source authentication.
+The exact requested identity remains the warehouse key; cross-query canonical
+alias resolution is still required. A cached query retains its original receipt
+and evidence dates; partial-cache backfill, all observation/history roles and a
+full research-case lifecycle remain open. No new bounded context is necessary for
+this increment. File-SQLite is validated; other backend transactions are not.
+
+## Source-native NEODyS normalization — 2026-11-13 / ADR-087
+
+The acquisition adapter owns safe file identifiers, optional bounded alias resolution
+and explicit HTTP/source outcomes. The pure normalizer owns native OEF identity,
+frame/state admission, coordinate conversion and data-record accounting. The existing
+physical-evidence boundary owns a source-specific replayable MAG/H assertion, not
+an imitation SBDB packet. G and matrix/model records remain native with explicit
+limits; no independent measurement or transformed covariance is inferred.
+
+The existing repository commits the resulting source assertion and query history;
+presentation displays the source/uncertainty/alternatives. A normalization revision
+changes new cache contexts, not historical records. These responsibilities fit
+existing boundaries. A global canonical alias registry and scientific fit/covariance
+models remain separate pending requirements, not newly implemented contexts.
+
+## Date-role contracts — 2026-11-13 / ADR-088
+
+Acquisition owns the SBDB discovery request/native assertion and adapter receipts.
+The scientific evidence boundary owns literal discovery/observation labels and
+native orbital/covariance scales, not invented UTC instants. The repository owns
+local append receipts and sequence order; it does not infer discovery from intake.
+A pure chronology read model references these inputs and keeps legacy date semantics
+unverified. Presentation owns compact role/scale labels and safe literal output,
+not DST selection, propagation or source authentication.
+
+No second lifecycle database or bounded context is introduced. Compatibility columns
+remain caches, not authoritative scientific dates. Verified-format ledger timestamps
+are distinct from original source freshness. ADR-089 below implements receipt review
+and explicit refresh (#66); automatic selective backfill remains pending (#40). Frozen source histories and review-v1 assessments remain
+available; new rendered context is not a rewritten historical scientific result.
+
+## Source-receipt review and explicit refresh — 2026-11-13 / ADR-089
+
+Acquisition owns the canonical installed-source plan, typed outcome and original
+adapter-read timestamp. Persistence owns ordered immutable queries/assertions and
+replay verification. A pure receipt-age policy consumes that history; it does not
+interpret orbital epochs, retag legacy dates or authenticate providers. Its current
+30-day review/one-hour failure cooldown are operational policy, not scientific age
+limits. A repository read adapter includes failed-query-only objects, keeps unknown
+legacy values and reports bounded coverage. No read-path schema mutation is allowed.
+
+The explicit refresh coordinator rechecks stored eligibility and uses the existing
+DataFetcher/repository/transport path. Whole-plan refresh is distinct from selective
+backfill; commit receipt replay precedes a recorded result. Presentation owns clear
+recent/stale/unknown/deferred/partial labels and safe rendering. Existing menu entry
+points delegate here instead of the legacy SBDB-only re-poll. No additional bounded
+context or database is needed. All-source backfill, eligibility/health discovery and
+a durable scheduling lifecycle remain pending; this is not scientific completeness.
+
+## Polling dashboard and browser — 2026-11-13 / ADR-090
+
+Acquisition owns source identity, units and typed snapshots; a renderer must not
+invent those from a legacy score or object name. The canonical analysis service owns
+the ranking decision and nullable scientific inference. The existing object-review
+read model owns the replayed calculation trace, fixed field-presence profile, source
+chronology and evidence-grounded explanations. A polling-screening record binds its
+original finite JSON input to that review and records a local screening receipt.
+Legacy or invalid input stays distinct from typed/replayed evidence.
+
+Presentation owns dashboard counts, navigation, safe labels and the graph of record
+outcomes. Counts are not origin probabilities; repeated designation labels are not
+independent observations. Sorting by local screening receipt is not sorting discovery.
+Field presence is not calibrated quality or scientific completeness. The existing
+Sentry boundary alone supplies source-listed impact evidence and identity checks.
+
+Versioned dashboard exports retain per-record frozen policy descriptors and verify
+replay on import. JSON/Markdown are new derived artifacts, not edits to source files
+or historical assessments. Source-file hashes are reproducibility metadata, not
+provider authentication. Unsupported older probability/heuristic helpers have explicit
+controlled deprecations. No additional bounded context or persistence engine is needed.
+Root candidate/source polling remains #71/#73, and independent model fitting,
+calibration, search-wide error control and all-feature QA remain separate obligations.

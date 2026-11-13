@@ -15,6 +15,10 @@ except ImportError:
     UTC = _tz.utc
 import json
 import logging
+import copy
+import math
+from .epoch_evidence import NativeEpoch, decimal_value
+from .orbit_evidence import OrbitModelParameter, OrbitalCovariance, AU_DAY2_TO_M_S2, finite_number
 from pathlib import Path
 
 
@@ -49,16 +53,109 @@ class NonGravitationalParameters:
     a2: Optional[float] = None   # Transverse Yarkovsky (dominant)
     a3: Optional[float] = None   # Normal component
     model: Optional[str] = None  # "marsden", "chebyshev", etc.
-    epoch: Optional[datetime] = None
+    epoch: Optional[datetime] = None  # Legacy UTC timestamp; never used for provider TDB epochs
+    parameters: Dict[str, OrbitModelParameter] = field(default_factory=dict)
+    covariance: Optional[OrbitalCovariance] = None
+    solution: Dict[str, Any] = field(default_factory=dict)
+    schema_version: str = 'nongrav-evidence-v1'
 
     def __post_init__(self):
         _log = logging.getLogger(__name__)
+        if self.schema_version != 'nongrav-evidence-v1':
+            raise ValueError(f'Unsupported non-gravitational evidence schema: {self.schema_version}')
+        for name, parameter in self.parameters.items():
+            if name != parameter.name:
+                raise ValueError('Parameter key/name mismatch')
+        for label in ('A1', 'A2', 'A3'):
+            record = self.parameters.get(label)
+            if record is not None:
+                current = getattr(self, label.lower())
+                if current is not None and current != record.value:
+                    raise ValueError(f'{label} scalar conflicts with parameter record')
+                # Legacy scalar attributes retain native values; only publish a
+                # scalar for documented units. Unknown units remain in records.
+                if record.units in {'au/d^2', 'AU/day^2'}:
+                    setattr(self, label.lower(), record.value)
+                elif current is not None:
+                    raise ValueError(f'{label} scalar has unsupported native units')
         for _name, _val in [("a1", self.a1), ("a2", self.a2), ("a3", self.a3)]:
+            if _val is not None:
+                _val = finite_number(_val, _name)
+                setattr(self, _name, _val)
             if _val is not None and abs(_val) > _NONGRAV_BOUND:
                 _log.warning(
                     f"NonGravitationalParameters.{_name}={_val:.3e} AU/day² exceeds "
                     f"physical bound ±{_NONGRAV_BOUND:.0e}; data quality suspect"
                 )
+
+    def to_dict(self):
+        return {'schema_version': self.schema_version, 'a1': self.a1, 'a2': self.a2, 'a3': self.a3,
+                'model': self.model, 'epoch': self.epoch.isoformat() if self.epoch else None,
+                'parameters': {key: value.to_dict() for key, value in self.parameters.items()},
+                'covariance': self.covariance.to_dict() if self.covariance else None,
+                'solution': copy.deepcopy(self.solution)}
+
+    @classmethod
+    def from_dict(cls, data):
+        epoch = data.get('epoch')
+        if isinstance(epoch, str):
+            epoch = _ensure_utc(datetime.fromisoformat(epoch.replace('Z', '+00:00')))
+        return cls(a1=data.get('a1'), a2=data.get('a2'), a3=data.get('a3'),
+                   model=data.get('model'), epoch=epoch,
+                   parameters={key: OrbitModelParameter.from_dict(value)
+                               for key, value in data.get('parameters', {}).items()},
+                   covariance=OrbitalCovariance.from_dict(data['covariance']) if data.get('covariance') else None,
+                   solution=copy.deepcopy(data.get('solution', {})),
+                   schema_version=data.get('schema_version', 'nongrav-evidence-v1'))
+
+    def evidence_report(self):
+        """Describe all three axes without turning coefficients into thrust."""
+        components = {}
+        for name in ('A1', 'A2', 'A3'):
+            parameter = self.parameters.get(name)
+            legacy = getattr(self, name.lower())
+            if parameter is not None:
+                try:
+                    si = parameter.in_si()
+                except ValueError:
+                    si = None
+                components[name] = {
+                    'status': 'available', 'native': parameter.to_dict(), 'si_coefficient': si,
+                    'evidence_basis': 'fitted_parameter' if parameter.kind == 'EST' else
+                                      'considered_parameter' if parameter.kind == 'CON' else 'fixed_model_parameter',
+                }
+            else:
+                components[name] = {'status': 'not_available' if legacy is None else 'unverified_legacy_scalar',
+                                    'value': legacy, 'sigma': None, 'units': 'AU/day^2',
+                                    'kind': None, 'evidence_basis': 'unknown'}
+        return {'schema_version': self.schema_version, 'components': components,
+                'solution': copy.deepcopy(self.solution),
+                'model_parameters': {key: parameter.to_dict() for key, parameter in self.parameters.items()},
+                'covariance': self.covariance.to_dict() if self.covariance else None,
+                'covariance_status': 'available' if self.covariance else 'not_available',
+                'covariance_applies_to_display_epoch': (
+                    decimal_value(self.covariance.epoch_jd_tdb) ==
+                    decimal_value(self.solution['epoch_jd_tdb'])
+                    if self.covariance and self.solution.get('epoch_jd_tdb') is not None else None),
+                'origin_inference': 'not_assessed',
+                'interpretation': 'Orbit-fit coefficients; not direct propulsion or origin evidence'}
+
+    def acceleration_covariance_si(self):
+        if self.covariance is None:
+            return None
+        labels = ['A1', 'A2', 'A3']
+        for label in labels:
+            if label not in self.parameters:
+                return None  # No fabricated component or zero variance.
+            self.parameters[label].in_si()  # Validate units before conversion.
+        if any(label not in self.covariance.labels for label in labels):
+            return None
+        block = self.covariance.select(labels)
+        block['data'] = [[value * AU_DAY2_TO_M_S2**2 for value in row] for row in block['data']]
+        block['units'] = '(m/s^2)^2'
+        block['kind'] = 'marginal_covariance_submatrix'
+        block['interpretation'] = 'Coefficient covariance at the labelled solution epoch, not an instantaneous force covariance'
+        return block
 
 
 @dataclass
@@ -79,9 +176,14 @@ class OrbitalElements:
     argument_of_perihelion: Optional[float] = None  # degrees
     mean_anomaly: Optional[float] = None  # degrees
     epoch: Optional[datetime] = None
+    native_epoch: Optional[NativeEpoch] = None
     
     def __post_init__(self):
-        """Normalize alternate field names and validate values."""
+        """Normalize aliases/native evidence and validate orbital values."""
+        if isinstance(self.native_epoch, dict):
+            self.native_epoch = NativeEpoch.from_dict(self.native_epoch)
+        if self.native_epoch is not None and not isinstance(self.native_epoch, NativeEpoch):
+            raise ValueError('Invalid native orbital epoch')
         self._synchronize_aliases()
         self._validate()
 
@@ -132,14 +234,14 @@ class OrbitalElements:
         all_fields = [
             self.eccentricity, self.inclination, self.semi_major_axis,
             self.ascending_node, self.argument_of_perihelion, self.mean_anomaly,
-            self.epoch
+            self.native_epoch if self.native_epoch is not None else self.epoch
         ]
         present_count = sum(1 for field in all_fields if field is not None)
         return present_count / len(all_fields)
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary format for compatibility."""
-        return {
+        result = {
             "eccentricity": self.eccentricity,
             "inclination": self.inclination,
             "semi_major_axis": self.semi_major_axis,
@@ -150,7 +252,10 @@ class OrbitalElements:
             "mean_anomaly": self.mean_anomaly,
             "epoch": self.epoch.isoformat() if self.epoch else None,
         }
-    
+        if self.native_epoch is not None:
+            result['native_epoch'] = self.native_epoch.to_dict()
+        return result
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'OrbitalElements':
         """Create from dictionary data."""
@@ -176,12 +281,13 @@ class OrbitalElements:
             eccentricity=data.get("eccentricity"),
             inclination=data.get("inclination"),
             semi_major_axis=data.get("semi_major_axis"),
-            ra_of_ascending_node=data.get("ra_of_ascending_node") or data.get("ascending_node"),
-            arg_of_periapsis=data.get("arg_of_periapsis") or data.get("argument_of_perihelion"),
+            ra_of_ascending_node=data.get("ra_of_ascending_node") if data.get("ra_of_ascending_node") is not None else data.get("ascending_node"),
+            arg_of_periapsis=data.get("arg_of_periapsis") if data.get("arg_of_periapsis") is not None else data.get("argument_of_perihelion"),
             ascending_node=data.get("ascending_node"),
             argument_of_perihelion=data.get("argument_of_perihelion"),
             mean_anomaly=data.get("mean_anomaly"),
             epoch=epoch,
+            native_epoch=NativeEpoch.from_dict(data["native_epoch"]) if data.get("native_epoch") is not None else None,
         )
 
 @dataclass
@@ -197,6 +303,12 @@ class CloseApproach:
     infinity_velocity_km_s: Optional[float] = None  # km/s
     subpoint: Optional[tuple] = None  # (lat, lon) in degrees
     
+    epoch_jd_tdb: Optional[float] = None
+    time_scale: Optional[str] = None
+    native_calendar: Optional[str] = None
+    body: Optional[str] = None
+    evidence_metadata: Dict[str, Any] = field(default_factory=dict)
+
     def __post_init__(self):
         """Calculate derived values."""
         # Convert distance units if only one is provided
@@ -215,6 +327,11 @@ class CloseApproach:
             "distance_km": self.distance_km,
             "v_rel": self.relative_velocity_km_s,
             "v_inf": self.infinity_velocity_km_s,
+            "epoch_jd_tdb": self.epoch_jd_tdb,
+            "time_scale": self.time_scale,
+            "native_calendar": self.native_calendar,
+            "body": self.body,
+            "evidence_metadata": copy.deepcopy(self.evidence_metadata),
             "subpoint": self.subpoint
         }
     
@@ -245,7 +362,9 @@ class CloseApproach:
             distance_km=data.get("distance_km"),
             relative_velocity_km_s=data.get("v_rel"),
             infinity_velocity_km_s=data.get("v_inf"),
-            subpoint=data.get("subpoint")
+            subpoint=data.get("subpoint"), epoch_jd_tdb=data.get("epoch_jd_tdb"),
+            time_scale=data.get("time_scale"), native_calendar=data.get("native_calendar"), body=data.get("body"),
+            evidence_metadata=copy.deepcopy(data.get("evidence_metadata", {}))
         )
 
 @dataclass
@@ -277,19 +396,23 @@ class NEOData:
     updated_at: datetime = field(default_factory=_utcnow)
     fetched_at: Optional[datetime] = None  # Timestamp when data was fetched from source
     nongrav: Optional["NonGravitationalParameters"] = None
+    evidence_metadata: Dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
         """Post-initialization processing."""
         if self.orbital_elements:
             self.completeness = self.orbital_elements.completeness_score()
         
-        # Calculate observation period from close approaches
-        if self.close_approaches and not self.first_observation:
-            dates = [ca.close_approach_date for ca in self.close_approaches if ca.close_approach_date]
-            if dates:
-                self.first_observation = min(dates)
-                self.last_observation = max(dates)
-    
+        from .physical_evidence import verify_neo_physical
+        verify_neo_physical(self)
+        from .epoch_evidence import verify_neo_epoch
+        verify_neo_epoch(self)
+        from .chronology import verify_neo_discovery
+        verify_neo_discovery(self)
+
+        # Predicted encounters are not observations of the fitted orbit.
+        # Only source first_obs/last_obs may establish the observation arc.
+
     def add_close_approach(self, approach: Union[CloseApproach, Dict[str, Any]]) -> None:
         """Add a close approach event."""
         if isinstance(approach, dict):
@@ -298,13 +421,6 @@ class NEOData:
         self.close_approaches.append(approach)
         self.updated_at = _utcnow()
         
-        # Update observation period
-        if approach.close_approach_date:
-            if not self.first_observation or approach.close_approach_date < self.first_observation:
-                self.first_observation = approach.close_approach_date
-            if not self.last_observation or approach.close_approach_date > self.last_observation:
-                self.last_observation = approach.close_approach_date
-    
     def set_orbital_elements(self, elements: Union[OrbitalElements, Dict[str, Any]]) -> None:
         """Set orbital elements."""
         if isinstance(elements, dict):
@@ -342,6 +458,7 @@ class NEOData:
             "close_approaches": [ca.to_dict() for ca in self.close_approaches],
             "sources_used": self.sources_used,
             "source_contributions": self.source_contributions,
+            "evidence_metadata": self.evidence_metadata,
             "completeness": self.completeness,
             "raw_TAS": self.raw_anomaly_score,
             "dynamic_TAS": self.dynamic_anomaly_score,
@@ -351,21 +468,9 @@ class NEOData:
             "last_observation": self.last_observation.isoformat() if self.last_observation else None,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "physical_properties": {
-                "diameter_km":           self.physical_properties.diameter_km,
-                "albedo":                self.physical_properties.albedo,
-                "rotation_period_hours": self.physical_properties.rotation_period_hours,
-                "spectral_type":         self.physical_properties.spectral_type,
-                "absolute_magnitude_h":  self.physical_properties.absolute_magnitude_h,
-            } if self.physical_properties else None,
+            "physical_properties": copy.deepcopy(self.physical_properties.to_dict()) if self.physical_properties else None,
             "fetched_at": self.fetched_at.isoformat() if self.fetched_at else None,
-            "nongrav": {
-                "a1": self.nongrav.a1,
-                "a2": self.nongrav.a2,
-                "a3": self.nongrav.a3,
-                "model": self.nongrav.model,
-                "epoch": self.nongrav.epoch.isoformat() if self.nongrav.epoch else None,
-            } if self.nongrav else None,
+            "nongrav": self.nongrav.to_dict() if self.nongrav else None,
         }
     
     @classmethod
@@ -397,24 +502,12 @@ class NEOData:
         pp_data = data.get("physical_properties")
         physical_properties = None
         if pp_data:
-            physical_properties = PhysicalProperties(
-                diameter_km=pp_data.get("diameter_km"),
-                albedo=pp_data.get("albedo"),
-                rotation_period_hours=pp_data.get("rotation_period_hours"),
-                spectral_type=pp_data.get("spectral_type"),
-                absolute_magnitude_h=pp_data.get("absolute_magnitude_h"),
-            )
+            physical_properties = PhysicalProperties.from_dict(copy.deepcopy(pp_data))
 
         ng_data = data.get("nongrav")
         nongrav = None
         if ng_data:
-            nongrav = NonGravitationalParameters(
-                a1=ng_data.get("a1"),
-                a2=ng_data.get("a2"),
-                a3=ng_data.get("a3"),
-                model=ng_data.get("model"),
-                epoch=_ensure_utc(parse_datetime(ng_data.get("epoch"))),
-            )
+            nongrav = NonGravitationalParameters.from_dict(ng_data)
 
         return cls(
             designation=data.get("designation", ""),
@@ -423,16 +516,17 @@ class NEOData:
             close_approaches=close_approaches,
             sources_used=data.get("sources_used", []),
             source_contributions=data.get("source_contributions", {}),
+            evidence_metadata=copy.deepcopy(data.get("evidence_metadata", {})),
             completeness=data.get("completeness", 0.0),
             raw_anomaly_score=data.get("raw_TAS"),
             dynamic_anomaly_score=data.get("dynamic_TAS"),
             anomaly_category=data.get("dynamic_category"),
             score_components=data.get("score_components", {}),
-            first_observation=_ensure_utc(parse_datetime(data.get("first_observation"))),
-            last_observation=_ensure_utc(parse_datetime(data.get("last_observation"))),
+            first_observation=parse_datetime(data.get("first_observation")),
+            last_observation=parse_datetime(data.get("last_observation")),
             created_at=_ensure_utc(parse_datetime(data.get("created_at")) or _utcnow()),
             updated_at=_ensure_utc(parse_datetime(data.get("updated_at")) or _utcnow()),
-            fetched_at=_ensure_utc(parse_datetime(data.get("fetched_at"))),
+            fetched_at=parse_datetime(data.get("fetched_at")),
             nongrav=nongrav,
         )
 
@@ -537,8 +631,8 @@ class PhysicalProperties:
                 errors.append(f"Density {self.density_g_cm3} g/cm³ must be positive")
         
         if self.albedo is not None:
-            if not (0 <= self.albedo <= 1):
-                errors.append(f"Albedo {self.albedo} outside valid range [0, 1]")
+            if not math.isfinite(self.albedo) or self.albedo < 0:
+                errors.append(f"Albedo {self.albedo} must be finite and nonnegative")
         
         if self.rotation_period_hours is not None:
             if self.rotation_period_hours <= 0:
@@ -612,10 +706,10 @@ class PhysicalProperties:
 @dataclass
 class ImpactAssessment:
     """
-    Comprehensive Earth impact probability assessment for a NEO.
-    
-    This model encapsulates all impact-related calculations and provides
-    scientific rationale for impact risk evaluation.
+    Legacy impact record container, not evidence of a fitted scientific model.
+
+    Empty fields remain unavailable/not-assessed. Scoped source evidence uses the
+    replayable Sentry report contract, not this record's presence or defaults.
     """
     
     designation: str
@@ -623,14 +717,14 @@ class ImpactAssessment:
     last_updated: datetime = field(default_factory=_utcnow)
     
     # Core impact metrics
-    collision_probability: float = 0.0  # Overall probability of Earth impact
-    collision_probability_per_year: float = 0.0  # Annual impact rate
+    collision_probability: Optional[float] = None  # Overall probability of Earth impact
+    collision_probability_per_year: Optional[float] = None  # Annual impact rate
     time_to_impact_years: Optional[float] = None  # Most probable impact time
     
     # Uncertainty and confidence
-    probability_uncertainty: Tuple[float, float] = (0.0, 0.0)  # (lower, upper bounds)
-    calculation_confidence: float = 0.0  # 0-1, quality of calculation
-    data_arc_years: float = 0.0  # Observation arc length
+    probability_uncertainty: Optional[Tuple[float, float]] = None  # (lower, upper bounds)
+    calculation_confidence: Optional[float] = None  # 0-1, quality of calculation
+    data_arc_years: Optional[float] = None  # Observation arc length
     
     # Physical impact assessment
     impact_energy_mt: Optional[float] = None  # Megatons TNT equivalent
@@ -656,8 +750,8 @@ class ImpactAssessment:
     limitations: List[str] = field(default_factory=list)
     
     # Risk classification
-    risk_level: str = "negligible"  # negligible, very_low, low, moderate, high, extreme
-    comparative_risk: str = "Much lower than everyday risks"
+    risk_level: str = "not_assessed"  # negligible, very_low, low, moderate, high, extreme
+    comparative_risk: Optional[str] = None
     
     # Moon impact assessment
     moon_collision_probability: Optional[float] = None  # Probability of Moon impact
@@ -667,10 +761,10 @@ class ImpactAssessment:
     
     def __post_init__(self):
         """Validate impact assessment data."""
-        if not (0 <= self.collision_probability <= 1):
+        if self.collision_probability is not None and not (0 <= self.collision_probability <= 1):
             raise ValueError(f"Collision probability {self.collision_probability} must be in [0,1]")
         
-        if not (0 <= self.calculation_confidence <= 1):
+        if self.calculation_confidence is not None and not (0 <= self.calculation_confidence <= 1):
             raise ValueError(f"Calculation confidence {self.calculation_confidence} must be in [0,1]")
         
         # Ensure last_updated is UTC-aware
@@ -689,7 +783,7 @@ class ImpactAssessment:
             "time_to_impact_years": self.time_to_impact_years,
             
             # Uncertainty
-            "probability_uncertainty": list(self.probability_uncertainty),
+            "probability_uncertainty": list(self.probability_uncertainty) if self.probability_uncertainty is not None else None,
             "calculation_confidence": self.calculation_confidence,
             "data_arc_years": self.data_arc_years,
             
@@ -737,7 +831,7 @@ class ImpactAssessment:
             last_updated = _utcnow()
         
         # Handle tuple conversion
-        uncertainty = data.get("probability_uncertainty", [0.0, 0.0])
+        uncertainty = data.get("probability_uncertainty")
         if isinstance(uncertainty, list):
             uncertainty = tuple(uncertainty)
         
@@ -750,13 +844,13 @@ class ImpactAssessment:
             calculation_method=data.get("calculation_method", "unknown"),
             last_updated=last_updated,
             
-            collision_probability=data.get("collision_probability", 0.0),
-            collision_probability_per_year=data.get("collision_probability_per_year", 0.0),
+            collision_probability=data.get("collision_probability"),
+            collision_probability_per_year=data.get("collision_probability_per_year"),
             time_to_impact_years=data.get("time_to_impact_years"),
             
             probability_uncertainty=uncertainty,
-            calculation_confidence=data.get("calculation_confidence", 0.0),
-            data_arc_years=data.get("data_arc_years", 0.0),
+            calculation_confidence=data.get("calculation_confidence"),
+            data_arc_years=data.get("data_arc_years"),
             
             impact_energy_mt=data.get("impact_energy_mt"),
             impact_velocity_km_s=data.get("impact_velocity_km_s"),
@@ -775,8 +869,8 @@ class ImpactAssessment:
             calculation_assumptions=data.get("calculation_assumptions", []),
             limitations=data.get("limitations", []),
             
-            risk_level=data.get("risk_level", "negligible"),
-            comparative_risk=data.get("comparative_risk", "Much lower than everyday risks"),
+            risk_level=data.get("risk_level", "not_assessed"),
+            comparative_risk=data.get("comparative_risk"),
             
             moon_collision_probability=data.get("moon_collision_probability"),
             moon_impact_energy_mt=data.get("moon_impact_energy_mt"),

@@ -81,7 +81,7 @@ class TestOrbitalElementClusterer:
             for i in range(30)
         ]
         from aneos_core.pattern_analysis.clustering import OrbitalElementClusterer
-        clusters = OrbitalElementClusterer(min_cluster_size=5, min_samples=3).run(neos)
+        clusters = OrbitalElementClusterer(min_cluster_size=5, min_samples=3, legacy_diagnostic=True).run(neos)
         # Random spread should not produce clusters passing the 3-sigma quality gate
         anomalous = [c for c in clusters if c.known_family is None]
         assert len(anomalous) == 0
@@ -99,7 +99,7 @@ class TestOrbitalElementClusterer:
         ]
         all_neos = cluster_neos + background
         from aneos_core.pattern_analysis.clustering import OrbitalElementClusterer
-        clusters = OrbitalElementClusterer(min_cluster_size=5, min_samples=3).run(all_neos)
+        clusters = OrbitalElementClusterer(min_cluster_size=5, min_samples=3, legacy_diagnostic=True).run(all_neos)
         assert len(clusters) >= 1
         anomalous = [c for c in clusters if c.known_family is None]
         assert any(c.n_members >= 10 for c in anomalous)
@@ -108,7 +108,7 @@ class TestOrbitalElementClusterer:
         """Objects at Hungaria orbital elements should be labelled as KNOWN_FAMILY."""
         hungarias = [_make_neo(f"HUN{i}", 1.88 + i * 0.001, 0.07, 20.0) for i in range(12)]
         from aneos_core.pattern_analysis.clustering import OrbitalElementClusterer
-        clusters = OrbitalElementClusterer(min_cluster_size=5, min_samples=3).run(hungarias)
+        clusters = OrbitalElementClusterer(min_cluster_size=5, min_samples=3, legacy_diagnostic=True).run(hungarias)
         # If clustered, should be labelled Hungaria
         for c in clusters:
             if c.n_members >= 10:
@@ -132,13 +132,13 @@ class TestOrbitalElementClusterer:
 class TestNetworkSigmaCombiner:
     def test_no_valid_p_values_returns_routine(self):
         from aneos_core.pattern_analysis.network_sigma import NetworkSigmaCombiner
-        result = NetworkSigmaCombiner().combine({"clustering": None, "harmonics": None})
+        result = NetworkSigmaCombiner(legacy_diagnostic=True).combine({"clustering": None, "harmonics": None})
         assert result["network_tier"] == "NETWORK_ROUTINE"
         assert result["network_sigma"] == 0.0
 
     def test_very_small_p_values_produce_high_sigma(self):
         from aneos_core.pattern_analysis.network_sigma import NetworkSigmaCombiner
-        result = NetworkSigmaCombiner().combine(
+        result = NetworkSigmaCombiner(legacy_diagnostic=True).combine(
             {"clustering": 1e-8, "harmonics": 1e-6}, n_objects=1
         )
         assert result["network_sigma"] >= 3.0
@@ -146,15 +146,15 @@ class TestNetworkSigmaCombiner:
 
     def test_moderate_p_values_produce_notable_tier(self):
         from aneos_core.pattern_analysis.network_sigma import NetworkSigmaCombiner
-        result = NetworkSigmaCombiner().combine({"clustering": 0.05}, n_objects=1)
+        result = NetworkSigmaCombiner(legacy_diagnostic=True).combine({"clustering": 0.05}, n_objects=1)
         assert result["network_sigma"] >= 0.0
         assert result["combined_p_value"] <= 1.0
 
     def test_bonferroni_correction_applied(self):
         """With n_objects=100, p-values should be multiplied by 100."""
         from aneos_core.pattern_analysis.network_sigma import NetworkSigmaCombiner
-        r1 = NetworkSigmaCombiner().combine({"clustering": 0.001}, n_objects=1)
-        r100 = NetworkSigmaCombiner().combine({"clustering": 0.001}, n_objects=100)
+        r1 = NetworkSigmaCombiner(legacy_diagnostic=True).combine({"clustering": 0.001}, n_objects=1)
+        r100 = NetworkSigmaCombiner(legacy_diagnostic=True).combine({"clustering": 0.001}, n_objects=100)
         # Bonferroni-corrected result should be less significant
         assert r100["network_sigma"] <= r1["network_sigma"]
 
@@ -180,7 +180,7 @@ class TestSynodicHarmonicAnalyzer:
         """Regular 365-day approaches should produce a strong harmonic signal."""
         neo = self._make_neo_with_approaches("HARM001", period_days=365, n_approaches=8)
         from aneos_core.pattern_analysis.harmonics import SynodicHarmonicAnalyzer
-        analyzer = SynodicHarmonicAnalyzer(fetcher=None)
+        analyzer = SynodicHarmonicAnalyzer(fetcher=None, legacy_diagnostic=True)
         signals = analyzer.run([neo])
         assert len(signals) >= 1
         sig = signals[0]
@@ -194,7 +194,7 @@ class TestSynodicHarmonicAnalyzer:
         """Objects with fewer than 5 approaches must be silently skipped."""
         neo = self._make_neo_with_approaches("FEW001", period_days=100, n_approaches=3)
         from aneos_core.pattern_analysis.harmonics import SynodicHarmonicAnalyzer
-        signals = SynodicHarmonicAnalyzer(fetcher=None).run([neo])
+        signals = SynodicHarmonicAnalyzer(fetcher=None, legacy_diagnostic=True).run([neo])
         assert len(signals) == 0
 
 
@@ -283,23 +283,18 @@ class TestNetworkRequestValidation:
 # ---- Session sigma filter ----
 
 class TestSessionSigmaFilter:
-    def test_filter_applied_when_scores_available(self):
-        from aneos_core.pattern_analysis.session import NetworkAnalysisSession, PatternAnalysisConfig
-        cfg = PatternAnalysisConfig(clustering=False, harmonics=False, min_sigma_filter=2.0)
-        neos = [_make_neo(f"S{i}", 1.0, 0.2, 5.0) for i in range(4)]
-        neos[0].dynamic_anomaly_score = 3.0   # passes
-        neos[1].dynamic_anomaly_score = 1.0   # below threshold
-        neos[2].dynamic_anomaly_score = 2.5   # passes
-        # neos[3] has no score — included regardless (unscored passthrough)
-        result = NetworkAnalysisSession(config=cfg).run(neos)
-        assert result["designations_analyzed"] == 3
+    def test_legacy_sigma_filter_rejected_not_silently_applied(self):
+        from aneos_core.pattern_analysis.session import PatternAnalysisConfig
+        with pytest.raises(ValueError, match='deprecated'):
+            PatternAnalysisConfig(min_sigma_filter=2.0)
 
-    def test_filter_skipped_if_none_scored(self):
+    def test_dynamic_score_does_not_select_or_exclude_inputs(self):
         from aneos_core.pattern_analysis.session import NetworkAnalysisSession, PatternAnalysisConfig
-        cfg = PatternAnalysisConfig(clustering=False, harmonics=False, min_sigma_filter=5.0)
-        neos = [_make_neo(f"U{i}", 1.0, 0.2, 5.0) for i in range(5)]
-        result = NetworkAnalysisSession(config=cfg).run(neos)
-        assert result["designations_analyzed"] == 5
+        neos = [_make_neo(f'U{i}', 1.0, 0.2, 5.0) for i in range(5)]
+        for n in neos: n.dynamic_anomaly_score = 0.0
+        result = NetworkAnalysisSession(PatternAnalysisConfig(clustering=False, harmonics=False)).run(neos)
+        assert result['designations_analyzed'] == 5
+        assert len(result['object_assessments']) == 5
 
 
 # ---- Rendezvous guard ----
@@ -311,7 +306,7 @@ class TestRendezvousGuard:
         cfg = PatternAnalysisConfig(clustering=False, harmonics=False, rendezvous=True)
         with caplog.at_level(logging.WARNING):
             result = NetworkAnalysisSession(config=cfg).run([_make_neo("RV001", 1.0, 0.2, 5.0)])
-        assert any("ADR-045" in m or "rendezvous" in m.lower() for m in caplog.messages)
+        assert result['modules']['rendezvous']['status'] == 'unavailable_not_implemented'
         assert "network_sigma" in result
 
 
@@ -336,7 +331,7 @@ class TestHarmonicsSkipTracking:
 class TestStouffersMethod:
     def _combiner(self):
         from aneos_core.pattern_analysis.network_sigma import NetworkSigmaCombiner
-        return NetworkSigmaCombiner()
+        return NetworkSigmaCombiner(legacy_diagnostic=True)
 
     def test_stouffer_no_valid_p_returns_routine(self):
         """No valid p-values → network_sigma 0.0, tier NETWORK_ROUTINE."""
@@ -381,10 +376,8 @@ class TestStouffersMethod:
         with pytest.raises(ValueError, match='stouffer'):
             self._combiner().combine({'pa1': 0.01}, method='unknown_method')
 
-    def test_session_combination_method_field(self):
-        """PatternAnalysisConfig must expose combination_method field defaulting to 'fisher'."""
+    def test_session_combination_method_explicitly_deprecated(self):
         from aneos_core.pattern_analysis.session import PatternAnalysisConfig
-        cfg = PatternAnalysisConfig()
-        assert cfg.combination_method == 'fisher'
-        cfg2 = PatternAnalysisConfig(combination_method='stouffer')
-        assert cfg2.combination_method == 'stouffer'
+        assert PatternAnalysisConfig().combination_method is None
+        with pytest.raises(ValueError, match='dependent selected p-values'):
+            PatternAnalysisConfig(combination_method='stouffer')
