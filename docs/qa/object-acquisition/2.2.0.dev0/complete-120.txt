@@ -24,7 +24,7 @@ Storage: verified_ledger_projection; artificial-origin probability: not calibrat
 │ │                      │                                             │ retained; present                           │ │
 │ │ Last observation     │ 2026-11-08T00:00:00; timezone unspecified   │ catalogue timestamp; source precision       │ │
 │ │                      │                                             │ retained; present                           │ │
-│ │ Retrieved at         │ 2026-11-13T05:04:59.808341+00:00; offset    │ retrieval timestamp; present                │ │
+│ │ Retrieved at         │ 2026-11-13T05:09:08.417886+00:00; offset    │ retrieval timestamp; present                │ │
 │ │                      │ recorded not time scale conversion          │                                             │ │
 │ └──────────────────────┴─────────────────────────────────────────────┴─────────────────────────────────────────────┘ │
 │ Orbital element epoch: 2460000.5 JD TDB (SBDB).                                                                      │
@@ -50,58 +50,58 @@ Storage: verified_ledger_projection; artificial-origin probability: not calibrat
 │ ┃ Source     ┃ Outcome      ┃ Recorded at (UTC)     ┃ Meaning                                                      ┃ │
 │ ┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
 │ │ SBDB       │ available    │ 2026-11-13            │ Typed data contribution; not independently verified          │ │
-│ │            │              │ 05:04:59.808341Z      │                                                              │ │
+│ │            │              │ 05:09:08.417886Z      │                                                              │ │
 │ │ NEODyS     │ available    │ 2026-11-13            │ Typed data contribution; not independently verified          │ │
-│ │            │              │ 05:04:59.808523Z      │                                                              │ │
+│ │            │              │ 05:09:08.418036Z      │                                                              │ │
 │ │ MPC        │ available    │ 2026-11-13            │ Typed data contribution; not independently verified          │ │
-│ │            │              │ 05:04:59.808670Z      │                                                              │ │
+│ │            │              │ 05:09:08.418172Z      │                                                              │ │
 │ │ Horizons   │ available    │ 2026-11-13            │ Typed data contribution; not independently verified          │ │
-│ │            │              │ 05:04:59.808781Z      │                                                              │ │
+│ │            │              │ 05:09:08.418276Z      │                                                              │ │
 │ │ CAD        │ available    │ 2026-11-13            │ Computed encounters, not observations                        │ │
-│ │            │              │ 05:04:59.811401Z      │                                                              │ │
+│ │            │              │ 05:09:08.420627Z      │                                                              │ │
 │ └────────────┴──────────────┴───────────────────────┴──────────────────────────────────────────────────────────────┘ │
 │ Installed catalogue + bounded CAD profile only. Counts are not total completeness, independent evidence, source      │
 │ authenticity or scientific readiness.                                                                                │
 │ Recorded times are adapter-result receipts, not observation epochs. Native/adapter packets where available and query │
 │ IDs remain in local JSON history.                                                                                    │
-│ Query: 78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa                                                                          │
+│ Query: 457aea94-1ca5-4624-bc83-b30e317e7c50                                                                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 Stored projection may include earlier source receipts; a successful query does not refresh every stored measurement.
          Stored projection / latest query binding          
 ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
 ┃ Source   ┃ Selected receipt (short) ┃ From latest query ┃
 ┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
-│ CAD      │ 917d5ff941af             │ yes               │
-│ Horizons │ 3a44b3408dcd             │ yes               │
-│ MPC      │ 43cad5fb0d4d             │ yes               │
-│ NEODyS   │ a991a971a429             │ yes               │
-│ SBDB     │ 61c54e091f7f             │ yes               │
+│ CAD      │ 0e2f594c6d47             │ yes               │
+│ Horizons │ 7436cea43cc7             │ yes               │
+│ MPC      │ cebd0b0df6aa             │ yes               │
+│ NEODyS   │ 86aa1de34a52             │ yes               │
+│ SBDB     │ 038289320c07             │ yes               │
 └──────────┴──────────────────────────┴───────────────────┘
 Showing 10/10 source receipts; full payloads remain in JSON export.
       Dated source assertion history — not independent observations      
 ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
 ┃ Source   ┃ Recorded at           ┃ Kind             ┃ Receipt (short) ┃
 ┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
-│ SBDB     │ 2026-11-13            │ source_assertion │ 61c54e091f7f    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
-│ NEODyS   │ 2026-11-13            │ source_assertion │ a991a971a429    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
-│ MPC      │ 2026-11-13            │ source_assertion │ 43cad5fb0d4d    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
-│ Horizons │ 2026-11-13            │ source_assertion │ 3a44b3408dcd    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
-│ CAD      │ 2026-11-13            │ source_assertion │ 917d5ff941af    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
-│ SBDB     │ 2026-11-13            │ query_attempt    │ 262d8124b45f    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
-│ NEODyS   │ 2026-11-13            │ query_attempt    │ dac27415b729    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
-│ MPC      │ 2026-11-13            │ query_attempt    │ 3e9430905f09    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
-│ Horizons │ 2026-11-13            │ query_attempt    │ 9bdb789b0ef2    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
-│ CAD      │ 2026-11-13            │ query_attempt    │ b387a574151c    │
-│          │ 05:04:59.866244+00:00 │                  │                 │
+│ SBDB     │ 2026-11-13            │ source_assertion │ 038289320c07    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
+│ NEODyS   │ 2026-11-13            │ source_assertion │ 86aa1de34a52    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
+│ MPC      │ 2026-11-13            │ source_assertion │ cebd0b0df6aa    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
+│ Horizons │ 2026-11-13            │ source_assertion │ 7436cea43cc7    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
+│ CAD      │ 2026-11-13            │ source_assertion │ 0e2f594c6d47    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
+│ SBDB     │ 2026-11-13            │ query_attempt    │ 56e8c21382c2    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
+│ NEODyS   │ 2026-11-13            │ query_attempt    │ b7d30900b1e7    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
+│ MPC      │ 2026-11-13            │ query_attempt    │ 94a2b876e74e    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
+│ Horizons │ 2026-11-13            │ query_attempt    │ 3058cff82ffc    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
+│ CAD      │ 2026-11-13            │ query_attempt    │ 49bc4b586d1d    │
+│          │ 05:09:08.474149+00:00 │                  │                 │
 └──────────┴───────────────────────┴──────────────────┴─────────────────┘
 Full receipt IDs and unknown/alternative measurements remain in JSON source history. No source authentication, physical 
 fit or calibrated origin inference is established.

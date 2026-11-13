@@ -80,8 +80,8 @@ def has_material(neo):
                     "eccentricity",
                     "inclination",
                     "mean_anomaly",
-                    "native_epoch",
-                    "epoch",
+                    "ra_of_ascending_node",
+                    "arg_of_periapsis",
                 )
             )
         )
@@ -92,9 +92,16 @@ def has_material(neo):
                 for k, v in neo.physical_properties.to_dict().items()
                 if k
                 not in {"reference_source", "measurement_method", "data_quality_flag"}
+                and not k.endswith("_uncertainty")
             )
         )
-        or neo.nongrav is not None
+        or (
+            neo.nongrav is not None
+            and (
+                any(getattr(neo.nongrav, k) is not None for k in ("a1", "a2", "a3"))
+                or any(p.value is not None for p in neo.nongrav.parameters.values())
+            )
+        )
         or neo.close_approaches
     )
 

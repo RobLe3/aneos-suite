@@ -2,7 +2,7 @@
   "acquisition_history": [
     {
       "bundle": {
-        "bundle_id": "3af71457861eada9cece2d511ad546723416fdb9df8c9c310fb86fde16153e3f",
+        "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
         "coverage": {
           "contributing_fraction": 0.0,
           "contributing_sources": 0,
@@ -28,65 +28,65 @@
           {
             "adapter_payload": null,
             "basis": "adapter_result",
-            "completed_at": "2026-11-13T05:05:00.260965+00:00",
+            "completed_at": "2026-11-13T05:09:08.845178+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "SOURCE_QUERY_UNAVAILABLE",
             "source": "SBDB",
-            "started_at": "2026-11-13T05:05:00.260957+00:00",
+            "started_at": "2026-11-13T05:09:08.845169+00:00",
             "status": "unavailable"
           },
           {
             "adapter_payload": null,
             "basis": "adapter_result",
-            "completed_at": "2026-11-13T05:05:00.261044+00:00",
+            "completed_at": "2026-11-13T05:09:08.845262+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "SOURCE_QUERY_UNAVAILABLE",
             "source": "NEODyS",
-            "started_at": "2026-11-13T05:05:00.261038+00:00",
+            "started_at": "2026-11-13T05:09:08.845258+00:00",
             "status": "unavailable"
           },
           {
             "adapter_payload": null,
             "basis": "adapter_result",
-            "completed_at": "2026-11-13T05:05:00.261077+00:00",
+            "completed_at": "2026-11-13T05:09:08.845281+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "SOURCE_QUERY_UNAVAILABLE",
             "source": "MPC",
-            "started_at": "2026-11-13T05:05:00.261074+00:00",
+            "started_at": "2026-11-13T05:09:08.845279+00:00",
             "status": "unavailable"
           },
           {
             "adapter_payload": null,
             "basis": "adapter_result",
-            "completed_at": "2026-11-13T05:05:00.261176+00:00",
+            "completed_at": "2026-11-13T05:09:08.845371+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "SOURCE_QUERY_UNAVAILABLE",
             "source": "Horizons",
-            "started_at": "2026-11-13T05:05:00.261173+00:00",
+            "started_at": "2026-11-13T05:09:08.845366+00:00",
             "status": "unavailable"
           },
           {
             "adapter_payload": null,
             "basis": "adapter_result",
-            "completed_at": "2026-11-13T05:05:00.261278+00:00",
+            "completed_at": "2026-11-13T05:09:08.845472+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "CAD_QUERY_UNAVAILABLE",
             "source": "CAD",
-            "started_at": "2026-11-13T05:05:00.261256+00:00",
+            "started_at": "2026-11-13T05:09:08.845445+00:00",
             "status": "unavailable"
           }
         ],
-        "query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+        "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
         "schema_version": "object-acquisition-v1",
         "software": {
           "application_version": "2.2.0.dev0",
@@ -103,9 +103,9 @@
             "scipy": "1.15.1"
           },
           "python_version": "3.11.9",
-          "repository_commit": "ad0ee9937c5820b0eb0e096a57540fdbe43b1a48",
+          "repository_commit": "64f5fd0a18957224fc12a0034bb9ab50093694a6",
           "source_hashes_at_report_time": {
-            "aneos_api/acquisition_repository.py": "5edfe7919e80926a486524997940f5a152d32e82628a221a7a13886d972fa2b1",
+            "aneos_api/acquisition_repository.py": "9ca4cdb889e2738744913999eb529de4c4c9a7cf11c63bc2898a670dce246751",
             "aneos_api/enrichment_store.py": "c9f1936ba89442fe22fcde2198ba53a17ffa12bd08a184a1d52dfcf267d44085",
             "aneos_core/analysis/advanced_aneos_analyzer.py": "ecfd7b43db434d990bae486f28904c0c7e95a60052d5299e4daa795abc7f10a0",
             "aneos_core/analysis/impact_evidence.py": "ecf8820b8ecb5f87d45fdb22e71bbfca2bcba6b51217f8152452903462010552",
@@ -113,7 +113,7 @@
             "aneos_core/analysis/pipeline.py": "effb2fe26d1734b7c8b8cfdc1e458ed3a556c8d2dc6851d0e23e80c622600aa9",
             "aneos_core/analysis/reporting.py": "987db2390d001d36482c1141d965ff5abd5aac4e014854913bc0dfa754f6ee30",
             "aneos_core/analysis/screening.py": "f442ec4ef601f7cb432fdb6c230eeefb63c75519afd11afa298d2e18d62c8345",
-            "aneos_core/data/acquisition.py": "d76c767d358a64f9a0931d18bb13aca96fa9317de9672d7085deefcee770c6b7",
+            "aneos_core/data/acquisition.py": "50148c4c43d70f788b2605cfea0467495f7b65191e6c31a94cbe4302a1c88e94",
             "aneos_core/data/cache.py": "7e4b6d40f9a9c1b1bb1fc7ffdbcec479b3d3f2f622dfc1fafb4373899bc0e1a3",
             "aneos_core/data/enrichment.py": "500ec6b89f7f225cd815a46f0720bc36e7e771c2bcff1d63cb3c5fae25b4017a",
             "aneos_core/data/epoch_evidence.py": "5ca2e443a536eeb0bffa220b69133f05c322cd65ed5fbb44df28d546abc473f5",
@@ -161,17 +161,17 @@
             "CAD"
           ]
         },
-        "started_at": "2026-11-13T05:05:00.260810+00:00"
+        "started_at": "2026-11-13T05:09:08.845043+00:00"
       },
       "native_response_repeat_checks": [],
       "receipt": {
         "assertion_count": 5,
-        "bundle_id": "3af71457861eada9cece2d511ad546723416fdb9df8c9c310fb86fde16153e3f",
+        "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
         "commit_status": "committed",
-        "committed_at": "2026-11-13T05:05:00.301510+00:00",
+        "committed_at": "2026-11-13T05:09:08.887161+00:00",
         "consistency_status": "replayed_not_authenticated",
         "projection_id": null,
-        "query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+        "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
         "query_sequence": 1,
         "schema_version": "acquisition-storage-receipt-v1"
       }
@@ -187,7 +187,7 @@
   "discovery_data": null,
   "evidence_history": [
     {
-      "assertion_id": "e7f2ba2113e8bfe9cbf707d24d07b8bd8603379b7345fd071d149f1d5d232f42",
+      "assertion_id": "bd215ffb7981a6fda305d736164d91491eb9e2355ba40f41232561bef81997f5",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -195,19 +195,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
         "data_source": "SBDB",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.260965+00:00",
+          "completed_at": "2026-11-13T05:09:08.845178+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "SBDB",
-          "started_at": "2026-11-13T05:05:00.260957+00:00",
+          "started_at": "2026-11-13T05:09:08.845169+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -240,14 +240,14 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "4d4f0677a1899858b993d662ff8d4e596ef615d3f49d3b37028a076028bbd2ab",
-      "recorded_at": "2026-11-13T05:05:00.296777+00:00",
+      "payload_sha256": "ea13a3c07c1ccdf77abd8013ffa9db1360f0961ddb7e09423e9d18c44aba4418",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
       "sequence": 1,
-      "session_id": "acquisition-1cae6678-44f0-447e-b199-895878c67d19",
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
       "source": "SBDB"
     },
     {
-      "assertion_id": "6ab16f7b5c56f1a2fa029bb16672dcf551c6249acab1cc21b3186c5c7e1e3448",
+      "assertion_id": "84a79bb15153ec04aa4ef6ea9026eecbc27bd231b2e6077abc73bca6c26721ca",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -255,19 +255,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
         "data_source": "NEODyS",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.261044+00:00",
+          "completed_at": "2026-11-13T05:09:08.845262+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "NEODyS",
-          "started_at": "2026-11-13T05:05:00.261038+00:00",
+          "started_at": "2026-11-13T05:09:08.845258+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -300,14 +300,14 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "0b61145490290baf6df73fc2f2eb9ed6679d335dcb6ad61ff57c5ff5bf3ae3de",
-      "recorded_at": "2026-11-13T05:05:00.296777+00:00",
+      "payload_sha256": "1d9b5828a35cb65ad2570f0659fbea5fd9ab34fff8d5e91f29962863c22f2b26",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
       "sequence": 2,
-      "session_id": "acquisition-1cae6678-44f0-447e-b199-895878c67d19",
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
       "source": "NEODyS"
     },
     {
-      "assertion_id": "b44c63a79cb97fca1a945584278ee6ab9e4b5dbfb89d760860f3afe14939f051",
+      "assertion_id": "e32f5bcef5190907af46e5bb86bf276413d5c0ae43d7cb8e50bb8f73afd59908",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -315,19 +315,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
         "data_source": "MPC",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.261077+00:00",
+          "completed_at": "2026-11-13T05:09:08.845281+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "MPC",
-          "started_at": "2026-11-13T05:05:00.261074+00:00",
+          "started_at": "2026-11-13T05:09:08.845279+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -360,14 +360,14 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "b8447a1c5b1c926886c6bb79c7f860f70f370608082fd39716046fbb77dbe0cc",
-      "recorded_at": "2026-11-13T05:05:00.296777+00:00",
+      "payload_sha256": "f3bca7688fffedeffe4da98da4ad5f9ea526ce3b64ad7b3adc410e8f09ae3222",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
       "sequence": 3,
-      "session_id": "acquisition-1cae6678-44f0-447e-b199-895878c67d19",
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
       "source": "MPC"
     },
     {
-      "assertion_id": "37c4e779eb1f3e422ff8a18899d63ef931954f44c93e381c28c6145b8cea193c",
+      "assertion_id": "c756369f8dfb7f2756e54a8cbfe31131cddb81ddffa55a9d25e5a55235ef0945",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -375,19 +375,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
         "data_source": "Horizons",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.261176+00:00",
+          "completed_at": "2026-11-13T05:09:08.845371+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "Horizons",
-          "started_at": "2026-11-13T05:05:00.261173+00:00",
+          "started_at": "2026-11-13T05:09:08.845366+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -420,14 +420,14 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "08f5b003cdd39b8867387802d06919c938d8e73df627777fb31314c22a883294",
-      "recorded_at": "2026-11-13T05:05:00.296777+00:00",
+      "payload_sha256": "bb3225130938f8bf0e1df7d0bb42517794659ecdfed8e8b649f52b4d19385720",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
       "sequence": 4,
-      "session_id": "acquisition-1cae6678-44f0-447e-b199-895878c67d19",
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
       "source": "Horizons"
     },
     {
-      "assertion_id": "a2bf847e00f61469e0e64979e8e7e8c25e9f2e53636b7909ecb067e6ecf1aa95",
+      "assertion_id": "624df2681fe1814f28e058fa60e98b7de361ec30e5818363e20165867ad29ee3",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -435,19 +435,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+        "acquisition_query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
         "data_source": "CAD",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.261278+00:00",
+          "completed_at": "2026-11-13T05:09:08.845472+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "CAD_QUERY_UNAVAILABLE",
           "source": "CAD",
-          "started_at": "2026-11-13T05:05:00.261256+00:00",
+          "started_at": "2026-11-13T05:09:08.845445+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -480,10 +480,10 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "87cc3d77c44224c736ae7f350a5cfafde32bb70ed0d2b9a45c8199511b53f323",
-      "recorded_at": "2026-11-13T05:05:00.296777+00:00",
+      "payload_sha256": "7abc1fcde79e41268079cd21dc8604530f55576f3ae5c2bf8ea3c30c3ac2a30f",
+      "recorded_at": "2026-11-13T05:09:08.882614+00:00",
       "sequence": 5,
-      "session_id": "acquisition-1cae6678-44f0-447e-b199-895878c67d19",
+      "session_id": "acquisition-ccccaf31-cf60-4565-af34-211daf9d1b00",
       "source": "CAD"
     }
   ],
@@ -491,9 +491,9 @@
   "last_updated": null,
   "latest_acquisition": {
     "assertion_count": 5,
-    "bundle_id": "3af71457861eada9cece2d511ad546723416fdb9df8c9c310fb86fde16153e3f",
+    "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
     "commit_status": "committed",
-    "committed_at": "2026-11-13T05:05:00.301510+00:00",
+    "committed_at": "2026-11-13T05:09:08.887161+00:00",
     "consistency_status": "replayed_not_authenticated",
     "coverage": {
       "contributing_fraction": 0.0,
@@ -515,7 +515,7 @@
       "validated_response_sources": 0
     },
     "projection_id": null,
-    "query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+    "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
     "query_sequence": 1,
     "schema_version": "acquisition-storage-receipt-v1",
     "source_plan": {
@@ -547,7 +547,7 @@
       ]
     },
     "summary": {
-      "bundle_id": "3af71457861eada9cece2d511ad546723416fdb9df8c9c310fb86fde16153e3f",
+      "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
       "coverage": {
         "contributing_fraction": 0.0,
         "contributing_sources": 0,
@@ -570,46 +570,46 @@
       "outcomes": [
         {
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.260965+00:00",
+          "completed_at": "2026-11-13T05:09:08.845178+00:00",
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "SBDB",
-          "started_at": "2026-11-13T05:05:00.260957+00:00",
+          "started_at": "2026-11-13T05:09:08.845169+00:00",
           "status": "unavailable"
         },
         {
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.261044+00:00",
+          "completed_at": "2026-11-13T05:09:08.845262+00:00",
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "NEODyS",
-          "started_at": "2026-11-13T05:05:00.261038+00:00",
+          "started_at": "2026-11-13T05:09:08.845258+00:00",
           "status": "unavailable"
         },
         {
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.261077+00:00",
+          "completed_at": "2026-11-13T05:09:08.845281+00:00",
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "MPC",
-          "started_at": "2026-11-13T05:05:00.261074+00:00",
+          "started_at": "2026-11-13T05:09:08.845279+00:00",
           "status": "unavailable"
         },
         {
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.261176+00:00",
+          "completed_at": "2026-11-13T05:09:08.845371+00:00",
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "Horizons",
-          "started_at": "2026-11-13T05:05:00.261173+00:00",
+          "started_at": "2026-11-13T05:09:08.845366+00:00",
           "status": "unavailable"
         },
         {
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.261278+00:00",
+          "completed_at": "2026-11-13T05:09:08.845472+00:00",
           "reason_code": "CAD_QUERY_UNAVAILABLE",
           "source": "CAD",
-          "started_at": "2026-11-13T05:05:00.261256+00:00",
+          "started_at": "2026-11-13T05:09:08.845445+00:00",
           "status": "unavailable"
         }
       ],
-      "query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+      "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
       "schema_version": "object-acquisition-v1",
       "source_plan": {
         "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
@@ -641,12 +641,12 @@
       },
       "storage_receipt": {
         "assertion_count": 5,
-        "bundle_id": "3af71457861eada9cece2d511ad546723416fdb9df8c9c310fb86fde16153e3f",
+        "bundle_id": "46990df9f46c26fac022e55a0933beb107042f794a7271e72517614b0c7ee6e5",
         "commit_status": "committed",
-        "committed_at": "2026-11-13T05:05:00.301510+00:00",
+        "committed_at": "2026-11-13T05:09:08.887161+00:00",
         "consistency_status": "replayed_not_authenticated",
         "projection_id": null,
-        "query_id": "1cae6678-44f0-447e-b199-895878c67d19",
+        "query_id": "ccccaf31-cf60-4565-af34-211daf9d1b00",
         "query_sequence": 1,
         "schema_version": "acquisition-storage-receipt-v1"
       }

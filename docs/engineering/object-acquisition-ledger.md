@@ -117,10 +117,10 @@ unrounded historical KY26 baseline remains unresolved in #3.
 
 ## Delivery evidence — 2026-11-13
 
-The offline suite passed 1,418 tests (eight network tests excluded); core coverage
+The offline suite passed 1,422 tests (eight network tests excluded); core coverage
 was 49.63% against the unchanged 30% floor. The new acquisition/presentation and
 repository gates require 90%; the measured repository coverage was 90.98%.
-The 74 focused tests include rollback, concurrent admission, process death around
+The 78 focused tests include rollback, concurrent admission, process death around
 commit, cache replay, identity ambiguity, unavailable sources and actual renders.
 CI remains the authority for the published revision's complete gate results.
 
@@ -140,3 +140,7 @@ committed cached query returned the same query and byte-identical export without
 repolling. This was a harness error, not an additional observation or an application
 failure. Live raw responses remain outside Git pending redistribution review.
 Neither this run nor the synthetic controls validate physical-origin hypotheses.
+
+Final admission review also reproduced and repaired empty-NG/uncertainty-only
+contribution inflation and loss of node/periapsis-only partial data (#62). Counts
+require actual values, not an empty evidence container or an uncertainty alone.

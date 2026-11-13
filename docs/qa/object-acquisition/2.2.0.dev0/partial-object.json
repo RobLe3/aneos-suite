@@ -2,7 +2,7 @@
   "acquisition_history": [
     {
       "bundle": {
-        "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+        "bundle_id": "ec87829b321591bfd53224a02e148217be4f9719f20ae6d59aaf87278bc75966",
         "coverage": {
           "contributing_fraction": 0.4,
           "contributing_sources": 2,
@@ -26,7 +26,7 @@
         "neo_data": {
           "close_approaches": [],
           "completeness": 0.42857142857142855,
-          "created_at": "2026-11-13T05:05:00.074696+00:00",
+          "created_at": "2026-11-13T05:09:08.670249+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
@@ -93,7 +93,7 @@
               }
             }
           },
-          "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+          "fetched_at": "2026-11-13T05:09:08.670249+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -136,7 +136,7 @@
             "SBDB",
             "MPC"
           ],
-          "updated_at": "2026-11-13T05:05:00.074696+00:00"
+          "updated_at": "2026-11-13T05:09:08.670249+00:00"
         },
         "outcomes": [
           {
@@ -149,20 +149,20 @@
               "semi_major_axis": 1.23
             },
             "basis": "typed_adapter_projection_not_independently_verified",
-            "completed_at": "2026-11-13T05:05:00.074696+00:00",
+            "completed_at": "2026-11-13T05:09:08.670249+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": {
               "close_approaches": [],
               "completeness": 0.42857142857142855,
-              "created_at": "2026-11-13T05:05:00.074696+00:00",
+              "created_at": "2026-11-13T05:09:08.670249+00:00",
               "designation": "SYNTHETIC",
               "dynamic_TAS": null,
               "dynamic_category": null,
               "evidence_metadata": {
                 "synthetic": true
               },
-              "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+              "fetched_at": "2026-11-13T05:09:08.670249+00:00",
               "first_observation": null,
               "last_observation": null,
               "nongrav": null,
@@ -184,23 +184,23 @@
               "sources_used": [
                 "SBDB"
               ],
-              "updated_at": "2026-11-13T05:05:00.074696+00:00"
+              "updated_at": "2026-11-13T05:09:08.670249+00:00"
             },
             "reason_code": null,
             "source": "SBDB",
-            "started_at": "2026-11-13T05:05:00.074646+00:00",
+            "started_at": "2026-11-13T05:09:08.670230+00:00",
             "status": "available"
           },
           {
             "adapter_payload": null,
             "basis": "source_initialization",
-            "completed_at": "2026-11-13T05:05:00.074815+00:00",
+            "completed_at": "2026-11-13T05:09:08.670310+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "SOURCE_INITIALIZATION_FAILED",
             "source": "NEODyS",
-            "started_at": "2026-11-13T05:05:00.074815+00:00",
+            "started_at": "2026-11-13T05:09:08.670310+00:00",
             "status": "unavailable"
           },
           {
@@ -213,20 +213,20 @@
               }
             },
             "basis": "typed_adapter_projection_not_independently_verified",
-            "completed_at": "2026-11-13T05:05:00.074900+00:00",
+            "completed_at": "2026-11-13T05:09:08.670375+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": {
               "close_approaches": [],
               "completeness": 0.0,
-              "created_at": "2026-11-13T05:05:00.074900+00:00",
+              "created_at": "2026-11-13T05:09:08.670375+00:00",
               "designation": "SYNTHETIC",
               "dynamic_TAS": null,
               "dynamic_category": null,
               "evidence_metadata": {
                 "synthetic": true
               },
-              "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+              "fetched_at": "2026-11-13T05:09:08.670375+00:00",
               "first_observation": null,
               "last_observation": null,
               "nongrav": null,
@@ -258,23 +258,23 @@
               "sources_used": [
                 "MPC"
               ],
-              "updated_at": "2026-11-13T05:05:00.074900+00:00"
+              "updated_at": "2026-11-13T05:09:08.670375+00:00"
             },
             "reason_code": null,
             "source": "MPC",
-            "started_at": "2026-11-13T05:05:00.074886+00:00",
+            "started_at": "2026-11-13T05:09:08.670366+00:00",
             "status": "available"
           },
           {
             "adapter_payload": null,
             "basis": "adapter_result",
-            "completed_at": "2026-11-13T05:05:00.074988+00:00",
+            "completed_at": "2026-11-13T05:09:08.670440+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "SOURCE_QUERY_UNAVAILABLE",
             "source": "Horizons",
-            "started_at": "2026-11-13T05:05:00.074984+00:00",
+            "started_at": "2026-11-13T05:09:08.670437+00:00",
             "status": "unavailable"
           },
           {
@@ -288,9 +288,9 @@
                   "des": "SYNTHETIC",
                   "limit": 10
                 },
-                "received_at": "2026-11-13T05:05:00.066814+00:00",
+                "received_at": "2026-11-13T05:09:08.663933+00:00",
                 "retrieval_timestamp_status": "available",
-                "retrieved_at": "2026-11-13T05:05:00.066792+00:00",
+                "retrieved_at": "2026-11-13T05:09:08.663915+00:00",
                 "signature": {
                   "source": "SYNTHETIC QA",
                   "version": "1.5"
@@ -300,17 +300,17 @@
               }
             },
             "basis": "computed_encounters_not_observations",
-            "completed_at": "2026-11-13T05:05:00.075325+00:00",
+            "completed_at": "2026-11-13T05:09:08.670679+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": null,
             "reason_code": "VALIDATED_EMPTY_ENCOUNTER_QUERY",
             "source": "CAD",
-            "started_at": "2026-11-13T05:05:00.075285+00:00",
+            "started_at": "2026-11-13T05:09:08.670650+00:00",
             "status": "missing"
           }
         ],
-        "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "schema_version": "object-acquisition-v1",
         "software": {
           "application_version": "2.2.0.dev0",
@@ -327,9 +327,9 @@
             "scipy": "1.15.1"
           },
           "python_version": "3.11.9",
-          "repository_commit": "ad0ee9937c5820b0eb0e096a57540fdbe43b1a48",
+          "repository_commit": "64f5fd0a18957224fc12a0034bb9ab50093694a6",
           "source_hashes_at_report_time": {
-            "aneos_api/acquisition_repository.py": "5edfe7919e80926a486524997940f5a152d32e82628a221a7a13886d972fa2b1",
+            "aneos_api/acquisition_repository.py": "9ca4cdb889e2738744913999eb529de4c4c9a7cf11c63bc2898a670dce246751",
             "aneos_api/enrichment_store.py": "c9f1936ba89442fe22fcde2198ba53a17ffa12bd08a184a1d52dfcf267d44085",
             "aneos_core/analysis/advanced_aneos_analyzer.py": "ecfd7b43db434d990bae486f28904c0c7e95a60052d5299e4daa795abc7f10a0",
             "aneos_core/analysis/impact_evidence.py": "ecf8820b8ecb5f87d45fdb22e71bbfca2bcba6b51217f8152452903462010552",
@@ -337,7 +337,7 @@
             "aneos_core/analysis/pipeline.py": "effb2fe26d1734b7c8b8cfdc1e458ed3a556c8d2dc6851d0e23e80c622600aa9",
             "aneos_core/analysis/reporting.py": "987db2390d001d36482c1141d965ff5abd5aac4e014854913bc0dfa754f6ee30",
             "aneos_core/analysis/screening.py": "f442ec4ef601f7cb432fdb6c230eeefb63c75519afd11afa298d2e18d62c8345",
-            "aneos_core/data/acquisition.py": "d76c767d358a64f9a0931d18bb13aca96fa9317de9672d7085deefcee770c6b7",
+            "aneos_core/data/acquisition.py": "50148c4c43d70f788b2605cfea0467495f7b65191e6c31a94cbe4302a1c88e94",
             "aneos_core/data/cache.py": "7e4b6d40f9a9c1b1bb1fc7ffdbcec479b3d3f2f622dfc1fafb4373899bc0e1a3",
             "aneos_core/data/enrichment.py": "500ec6b89f7f225cd815a46f0720bc36e7e771c2bcff1d63cb3c5fae25b4017a",
             "aneos_core/data/epoch_evidence.py": "5ca2e443a536eeb0bffa220b69133f05c322cd65ed5fbb44df28d546abc473f5",
@@ -385,17 +385,17 @@
             "CAD"
           ]
         },
-        "started_at": "2026-11-13T05:05:00.074483+00:00"
+        "started_at": "2026-11-13T05:09:08.670115+00:00"
       },
       "native_response_repeat_checks": [],
       "receipt": {
         "assertion_count": 7,
-        "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+        "bundle_id": "ec87829b321591bfd53224a02e148217be4f9719f20ae6d59aaf87278bc75966",
         "commit_status": "committed",
-        "committed_at": "2026-11-13T05:05:00.124385+00:00",
+        "committed_at": "2026-11-13T05:09:08.713616+00:00",
         "consistency_status": "replayed_not_authenticated",
-        "projection_id": "117bfb9011b2120b4feea131d5b5c888cbb2da217ca0524ab8721ad910c4593b",
-        "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "projection_id": "c754acc3bcc3fbbf031b9838bbdcef7f440f14bf064166e1e335cdbd13639b6e",
+        "query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "query_sequence": 1,
         "schema_version": "acquisition-storage-receipt-v1"
       }
@@ -607,7 +607,7 @@
         "status": "present",
         "time_status": "offset_recorded_not_time_scale_conversion",
         "units": "retrieval timestamp",
-        "value": "2026-11-13T05:05:00.074696+00:00"
+        "value": "2026-11-13T05:09:08.670249+00:00"
       }
     ],
     "missing_fields": [
@@ -657,11 +657,11 @@
     "raw_physical_assertions": [],
     "schema_version": "object-field-inventory-v1",
     "source_differences": {},
-    "source_id": "312eef555f7d30bad3d08d6c099134cdb23ee9db2801bf0782ca41e2ac9a113f",
+    "source_id": "dacf6a0928ef43097f086ecf5a23c22d022988865c90765e21f1243b52374b19",
     "source_snapshot": {
       "close_approaches": [],
       "completeness": 0.42857142857142855,
-      "created_at": "2026-11-13T05:05:00.074696+00:00",
+      "created_at": "2026-11-13T05:09:08.670249+00:00",
       "designation": "SYNTHETIC",
       "dynamic_TAS": null,
       "dynamic_category": null,
@@ -728,7 +728,7 @@
           }
         }
       },
-      "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+      "fetched_at": "2026-11-13T05:09:08.670249+00:00",
       "first_observation": null,
       "last_observation": null,
       "nongrav": null,
@@ -771,7 +771,7 @@
         "SBDB",
         "MPC"
       ],
-      "updated_at": "2026-11-13T05:05:00.074696+00:00"
+      "updated_at": "2026-11-13T05:09:08.670249+00:00"
     },
     "sources_recorded": [
       "SBDB",
@@ -793,7 +793,7 @@
   "discovery_data": null,
   "evidence_history": [
     {
-      "assertion_id": "f7ff40dc690fa87f770ac12e35530e15018779d6957b73e51b234fb929f85efe",
+      "assertion_id": "52b4ec6ca66abf83df8d8cd79e5b7a16f46df8dc418cf3689ea6a9e82529dab4",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "source_assertion",
@@ -801,20 +801,20 @@
         "calibrated_artificial_probability": null,
         "designation": "SYNTHETIC",
         "native_payload": {
-          "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+          "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
           "data_source": "SBDB",
           "designation": "SYNTHETIC",
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.42857142857142855,
-            "created_at": "2026-11-13T05:05:00.074696+00:00",
+            "created_at": "2026-11-13T05:09:08.670249+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+            "fetched_at": "2026-11-13T05:09:08.670249+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -836,23 +836,23 @@
             "sources_used": [
               "SBDB"
             ],
-            "updated_at": "2026-11-13T05:05:00.074696+00:00"
+            "updated_at": "2026-11-13T05:09:08.670249+00:00"
           },
           "snapshot_schema": "neo-data-v1"
         },
         "normalization_status": "typed_snapshot_not_independently_verified",
-        "normalization_timestamp": "2026-11-13T05:05:00.117318+00:00",
+        "normalization_timestamp": "2026-11-13T05:09:08.706380+00:00",
         "normalized_neo": {
           "close_approaches": [],
           "completeness": 0.42857142857142855,
-          "created_at": "2026-11-13T05:05:00.074696+00:00",
+          "created_at": "2026-11-13T05:09:08.670249+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+          "fetched_at": "2026-11-13T05:09:08.670249+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -874,7 +874,7 @@
           "sources_used": [
             "SBDB"
           ],
-          "updated_at": "2026-11-13T05:05:00.074696+00:00"
+          "updated_at": "2026-11-13T05:09:08.670249+00:00"
         },
         "origin_status": "not_assessed",
         "schema_version": "normalized-source-assertion-v1",
@@ -884,20 +884,20 @@
         ]
       },
       "payload": {
-        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "data_source": "SBDB",
         "designation": "SYNTHETIC",
         "neo_data": {
           "close_approaches": [],
           "completeness": 0.42857142857142855,
-          "created_at": "2026-11-13T05:05:00.074696+00:00",
+          "created_at": "2026-11-13T05:09:08.670249+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+          "fetched_at": "2026-11-13T05:09:08.670249+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -919,18 +919,18 @@
           "sources_used": [
             "SBDB"
           ],
-          "updated_at": "2026-11-13T05:05:00.074696+00:00"
+          "updated_at": "2026-11-13T05:09:08.670249+00:00"
         },
         "snapshot_schema": "neo-data-v1"
       },
-      "payload_sha256": "7f5afacbe1c03af80dce72a2ce0aa55a50f0bff4e7b5da59d0e1023f08a94d1e",
-      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "payload_sha256": "ddf2c68b559245a2e85e5557cb4e0f3527f98800cbc49fd360becccfb3c427a9",
+      "recorded_at": "2026-11-13T05:09:08.706380+00:00",
       "sequence": 1,
-      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "session_id": "acquisition-0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "source": "SBDB"
     },
     {
-      "assertion_id": "7d1bd8fc1c617b3b1e75356ce7767831c49842386b04ea89c1b755cafb61b851",
+      "assertion_id": "58cbf574baaf8acb05c563993209bcd1c9a4105456437754bee70467a7c3d60c",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "source_assertion",
@@ -938,20 +938,20 @@
         "calibrated_artificial_probability": null,
         "designation": "SYNTHETIC",
         "native_payload": {
-          "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+          "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
           "data_source": "MPC",
           "designation": "SYNTHETIC",
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.0,
-            "created_at": "2026-11-13T05:05:00.074900+00:00",
+            "created_at": "2026-11-13T05:09:08.670375+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+            "fetched_at": "2026-11-13T05:09:08.670375+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -983,23 +983,23 @@
             "sources_used": [
               "MPC"
             ],
-            "updated_at": "2026-11-13T05:05:00.074900+00:00"
+            "updated_at": "2026-11-13T05:09:08.670375+00:00"
           },
           "snapshot_schema": "neo-data-v1"
         },
         "normalization_status": "typed_snapshot_not_independently_verified",
-        "normalization_timestamp": "2026-11-13T05:05:00.117318+00:00",
+        "normalization_timestamp": "2026-11-13T05:09:08.706380+00:00",
         "normalized_neo": {
           "close_approaches": [],
           "completeness": 0.0,
-          "created_at": "2026-11-13T05:05:00.074900+00:00",
+          "created_at": "2026-11-13T05:09:08.670375+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+          "fetched_at": "2026-11-13T05:09:08.670375+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -1031,7 +1031,7 @@
           "sources_used": [
             "MPC"
           ],
-          "updated_at": "2026-11-13T05:05:00.074900+00:00"
+          "updated_at": "2026-11-13T05:09:08.670375+00:00"
         },
         "origin_status": "not_assessed",
         "schema_version": "normalized-source-assertion-v1",
@@ -1041,20 +1041,20 @@
         ]
       },
       "payload": {
-        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "data_source": "MPC",
         "designation": "SYNTHETIC",
         "neo_data": {
           "close_approaches": [],
           "completeness": 0.0,
-          "created_at": "2026-11-13T05:05:00.074900+00:00",
+          "created_at": "2026-11-13T05:09:08.670375+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+          "fetched_at": "2026-11-13T05:09:08.670375+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -1086,18 +1086,18 @@
           "sources_used": [
             "MPC"
           ],
-          "updated_at": "2026-11-13T05:05:00.074900+00:00"
+          "updated_at": "2026-11-13T05:09:08.670375+00:00"
         },
         "snapshot_schema": "neo-data-v1"
       },
-      "payload_sha256": "0094914de058a4c253284573bfb305dc9a9571526b16999484b7e631abdd6a73",
-      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "payload_sha256": "0639fa3066cf5a21e97e42b5b09f1427aada6f9e853987aa1abee6e044803f86",
+      "recorded_at": "2026-11-13T05:09:08.706380+00:00",
       "sequence": 2,
-      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "session_id": "acquisition-0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "source": "MPC"
     },
     {
-      "assertion_id": "fb2b10285db1c650dead3fcdf7cd1fac3e98848588da280cc1c1fc2b4b5f4f37",
+      "assertion_id": "6cb09be9fba803f0e24ce0e5d8b9555fb9e26b0f3d27e4b906ebae055317490d",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -1105,7 +1105,7 @@
         "status": "available"
       },
       "payload": {
-        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "data_source": "SBDB",
         "designation": "SYNTHETIC",
         "source_outcome": {
@@ -1118,20 +1118,20 @@
             "semi_major_axis": 1.23
           },
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:05:00.074696+00:00",
+          "completed_at": "2026-11-13T05:09:08.670249+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.42857142857142855,
-            "created_at": "2026-11-13T05:05:00.074696+00:00",
+            "created_at": "2026-11-13T05:09:08.670249+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+            "fetched_at": "2026-11-13T05:09:08.670249+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -1153,11 +1153,11 @@
             "sources_used": [
               "SBDB"
             ],
-            "updated_at": "2026-11-13T05:05:00.074696+00:00"
+            "updated_at": "2026-11-13T05:09:08.670249+00:00"
           },
           "reason_code": null,
           "source": "SBDB",
-          "started_at": "2026-11-13T05:05:00.074646+00:00",
+          "started_at": "2026-11-13T05:09:08.670230+00:00",
           "status": "available"
         },
         "source_plan": {
@@ -1190,14 +1190,14 @@
         },
         "status": "available"
       },
-      "payload_sha256": "fb5435b2288202236e4e55b8eabd34967eefe227a741b223460811bac4757908",
-      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "payload_sha256": "a04e91fd0aa5481b7375a44b43fda80a44985ec4e247311a8a43e1b1099815c5",
+      "recorded_at": "2026-11-13T05:09:08.706380+00:00",
       "sequence": 3,
-      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "session_id": "acquisition-0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "source": "SBDB"
     },
     {
-      "assertion_id": "3d86facf5f3725f895849b3674c677da7152597d6d07251ed181eed94985102a",
+      "assertion_id": "4060ef57972b6411806d40a84ad54378fe7e82d47af448d3017e45fddf75c8c4",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -1205,19 +1205,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "data_source": "NEODyS",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "source_initialization",
-          "completed_at": "2026-11-13T05:05:00.074815+00:00",
+          "completed_at": "2026-11-13T05:09:08.670310+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "SOURCE_INITIALIZATION_FAILED",
           "source": "NEODyS",
-          "started_at": "2026-11-13T05:05:00.074815+00:00",
+          "started_at": "2026-11-13T05:09:08.670310+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -1250,14 +1250,14 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "13fde180ad5ac09df3002e23f263a150995481cb97d26056815cbc856eb8a010",
-      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "payload_sha256": "d1168d4b03b7b69f1ae84d542f47facea3d01cc01a7c8ca6fb84232237f4a478",
+      "recorded_at": "2026-11-13T05:09:08.706380+00:00",
       "sequence": 4,
-      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "session_id": "acquisition-0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "source": "NEODyS"
     },
     {
-      "assertion_id": "c309778164ae1b44e9a15c7bf7ac6093531e933a4a066a859295c2a90f49f2b9",
+      "assertion_id": "263636622d2f1db7ddd34e0b74c724e7e7f011e59bd95ace494a4ecfd5c71f3c",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -1265,7 +1265,7 @@
         "status": "available"
       },
       "payload": {
-        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "data_source": "MPC",
         "designation": "SYNTHETIC",
         "source_outcome": {
@@ -1278,20 +1278,20 @@
             }
           },
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:05:00.074900+00:00",
+          "completed_at": "2026-11-13T05:09:08.670375+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.0,
-            "created_at": "2026-11-13T05:05:00.074900+00:00",
+            "created_at": "2026-11-13T05:09:08.670375+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+            "fetched_at": "2026-11-13T05:09:08.670375+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -1323,11 +1323,11 @@
             "sources_used": [
               "MPC"
             ],
-            "updated_at": "2026-11-13T05:05:00.074900+00:00"
+            "updated_at": "2026-11-13T05:09:08.670375+00:00"
           },
           "reason_code": null,
           "source": "MPC",
-          "started_at": "2026-11-13T05:05:00.074886+00:00",
+          "started_at": "2026-11-13T05:09:08.670366+00:00",
           "status": "available"
         },
         "source_plan": {
@@ -1360,14 +1360,14 @@
         },
         "status": "available"
       },
-      "payload_sha256": "71abd8b4912e8074e0f0d8449d255c85f6faa5fcddb2371464f79689df8db4b3",
-      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "payload_sha256": "17bed776f239f187754b88393630756613ee55d7ee727f6db5510e889dc5fb24",
+      "recorded_at": "2026-11-13T05:09:08.706380+00:00",
       "sequence": 5,
-      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "session_id": "acquisition-0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "source": "MPC"
     },
     {
-      "assertion_id": "4e8cd962c4f2d4585eb2e7efd46d2e45fa41bc49ddca4fdafb114a02b14fb545",
+      "assertion_id": "04b89cc7c4d3734ca08f1656876f1589b6222e61ba7cc746ea6defd3cafd3011",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -1375,19 +1375,19 @@
         "status": "unavailable"
       },
       "payload": {
-        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "data_source": "Horizons",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.074988+00:00",
+          "completed_at": "2026-11-13T05:09:08.670440+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "Horizons",
-          "started_at": "2026-11-13T05:05:00.074984+00:00",
+          "started_at": "2026-11-13T05:09:08.670437+00:00",
           "status": "unavailable"
         },
         "source_plan": {
@@ -1420,14 +1420,14 @@
         },
         "status": "unavailable"
       },
-      "payload_sha256": "81f7206ee3eb59982d3c93b6b5027a4035ffb1aa026dda8631d06ddbaa72384a",
-      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "payload_sha256": "a3d83f91b9562fa087dc995b8d3106095f338842c88f337d7367b6c3776e3c19",
+      "recorded_at": "2026-11-13T05:09:08.706380+00:00",
       "sequence": 6,
-      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "session_id": "acquisition-0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "source": "Horizons"
     },
     {
-      "assertion_id": "d826883d1cc6d582416322805e6bd9d059dff18169d319f1fd8e15b32e63c764",
+      "assertion_id": "d94146bfbfd5599871786418a773250f005c7a2833b8382591b6141e1a4c697d",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -1435,7 +1435,7 @@
         "status": "missing"
       },
       "payload": {
-        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "data_source": "CAD",
         "designation": "SYNTHETIC",
         "source_outcome": {
@@ -1449,9 +1449,9 @@
                 "des": "SYNTHETIC",
                 "limit": 10
               },
-              "received_at": "2026-11-13T05:05:00.066814+00:00",
+              "received_at": "2026-11-13T05:09:08.663933+00:00",
               "retrieval_timestamp_status": "available",
-              "retrieved_at": "2026-11-13T05:05:00.066792+00:00",
+              "retrieved_at": "2026-11-13T05:09:08.663915+00:00",
               "signature": {
                 "source": "SYNTHETIC QA",
                 "version": "1.5"
@@ -1461,13 +1461,13 @@
             }
           },
           "basis": "computed_encounters_not_observations",
-          "completed_at": "2026-11-13T05:05:00.075325+00:00",
+          "completed_at": "2026-11-13T05:09:08.670679+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": null,
           "reason_code": "VALIDATED_EMPTY_ENCOUNTER_QUERY",
           "source": "CAD",
-          "started_at": "2026-11-13T05:05:00.075285+00:00",
+          "started_at": "2026-11-13T05:09:08.670650+00:00",
           "status": "missing"
         },
         "source_plan": {
@@ -1500,20 +1500,20 @@
         },
         "status": "missing"
       },
-      "payload_sha256": "262f4cb97a726399b2027f6317617366563801aadbfaeffbea458ef43eaf7a08",
-      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "payload_sha256": "5181d7f78e9f15b2209c7217543ead3b6b8cbf14885ce6c562b81db012cf8fce",
+      "recorded_at": "2026-11-13T05:09:08.706380+00:00",
       "sequence": 7,
-      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "session_id": "acquisition-0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "source": "CAD"
     }
   ],
-  "first_discovered": "2026-11-13T05:05:00.117318",
-  "last_updated": "2026-11-13T05:05:00.117318",
+  "first_discovered": "2026-11-13T05:09:08.706380",
+  "last_updated": "2026-11-13T05:09:08.706380",
   "latest_acquisition": {
     "assertion_count": 7,
-    "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+    "bundle_id": "ec87829b321591bfd53224a02e148217be4f9719f20ae6d59aaf87278bc75966",
     "commit_status": "committed",
-    "committed_at": "2026-11-13T05:05:00.124385+00:00",
+    "committed_at": "2026-11-13T05:09:08.713616+00:00",
     "consistency_status": "replayed_not_authenticated",
     "coverage": {
       "contributing_fraction": 0.4,
@@ -1534,8 +1534,8 @@
       "validated_response_fraction": 0.6,
       "validated_response_sources": 3
     },
-    "projection_id": "117bfb9011b2120b4feea131d5b5c888cbb2da217ca0524ab8721ad910c4593b",
-    "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+    "projection_id": "c754acc3bcc3fbbf031b9838bbdcef7f440f14bf064166e1e335cdbd13639b6e",
+    "query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
     "query_sequence": 1,
     "schema_version": "acquisition-storage-receipt-v1",
     "source_plan": {
@@ -1567,7 +1567,7 @@
       ]
     },
     "summary": {
-      "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+      "bundle_id": "ec87829b321591bfd53224a02e148217be4f9719f20ae6d59aaf87278bc75966",
       "coverage": {
         "contributing_fraction": 0.4,
         "contributing_sources": 2,
@@ -1590,46 +1590,46 @@
       "outcomes": [
         {
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:05:00.074696+00:00",
+          "completed_at": "2026-11-13T05:09:08.670249+00:00",
           "reason_code": null,
           "source": "SBDB",
-          "started_at": "2026-11-13T05:05:00.074646+00:00",
+          "started_at": "2026-11-13T05:09:08.670230+00:00",
           "status": "available"
         },
         {
           "basis": "source_initialization",
-          "completed_at": "2026-11-13T05:05:00.074815+00:00",
+          "completed_at": "2026-11-13T05:09:08.670310+00:00",
           "reason_code": "SOURCE_INITIALIZATION_FAILED",
           "source": "NEODyS",
-          "started_at": "2026-11-13T05:05:00.074815+00:00",
+          "started_at": "2026-11-13T05:09:08.670310+00:00",
           "status": "unavailable"
         },
         {
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:05:00.074900+00:00",
+          "completed_at": "2026-11-13T05:09:08.670375+00:00",
           "reason_code": null,
           "source": "MPC",
-          "started_at": "2026-11-13T05:05:00.074886+00:00",
+          "started_at": "2026-11-13T05:09:08.670366+00:00",
           "status": "available"
         },
         {
           "basis": "adapter_result",
-          "completed_at": "2026-11-13T05:05:00.074988+00:00",
+          "completed_at": "2026-11-13T05:09:08.670440+00:00",
           "reason_code": "SOURCE_QUERY_UNAVAILABLE",
           "source": "Horizons",
-          "started_at": "2026-11-13T05:05:00.074984+00:00",
+          "started_at": "2026-11-13T05:09:08.670437+00:00",
           "status": "unavailable"
         },
         {
           "basis": "computed_encounters_not_observations",
-          "completed_at": "2026-11-13T05:05:00.075325+00:00",
+          "completed_at": "2026-11-13T05:09:08.670679+00:00",
           "reason_code": "VALIDATED_EMPTY_ENCOUNTER_QUERY",
           "source": "CAD",
-          "started_at": "2026-11-13T05:05:00.075285+00:00",
+          "started_at": "2026-11-13T05:09:08.670650+00:00",
           "status": "missing"
         }
       ],
-      "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "schema_version": "object-acquisition-v1",
       "source_plan": {
         "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
@@ -1661,12 +1661,12 @@
       },
       "storage_receipt": {
         "assertion_count": 7,
-        "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+        "bundle_id": "ec87829b321591bfd53224a02e148217be4f9719f20ae6d59aaf87278bc75966",
         "commit_status": "committed",
-        "committed_at": "2026-11-13T05:05:00.124385+00:00",
+        "committed_at": "2026-11-13T05:09:08.713616+00:00",
         "consistency_status": "replayed_not_authenticated",
-        "projection_id": "117bfb9011b2120b4feea131d5b5c888cbb2da217ca0524ab8721ad910c4593b",
-        "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "projection_id": "c754acc3bcc3fbbf031b9838bbdcef7f440f14bf064166e1e335cdbd13639b6e",
+        "query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
         "query_sequence": 1,
         "schema_version": "acquisition-storage-receipt-v1"
       }
@@ -1676,7 +1676,7 @@
   "neo_data": {
     "close_approaches": [],
     "completeness": 0.42857142857142855,
-    "created_at": "2026-11-13T05:05:00.074696+00:00",
+    "created_at": "2026-11-13T05:09:08.670249+00:00",
     "designation": "SYNTHETIC",
     "dynamic_TAS": null,
     "dynamic_category": null,
@@ -1743,7 +1743,7 @@
         }
       }
     },
-    "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+    "fetched_at": "2026-11-13T05:09:08.670249+00:00",
     "first_observation": null,
     "last_observation": null,
     "nongrav": null,
@@ -1786,7 +1786,7 @@
       "SBDB",
       "MPC"
     ],
-    "updated_at": "2026-11-13T05:05:00.074696+00:00"
+    "updated_at": "2026-11-13T05:09:08.670249+00:00"
   },
   "orbital_elements": {
     "arg_of_periapsis": null,
@@ -1826,23 +1826,23 @@
   "projection_cache_status": "consistent",
   "projection_query_bindings": [
     {
-      "assertion_id": "7d1bd8fc1c617b3b1e75356ce7767831c49842386b04ea89c1b755cafb61b851",
+      "assertion_id": "58cbf574baaf8acb05c563993209bcd1c9a4105456437754bee70467a7c3d60c",
       "from_latest_query": true,
-      "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "source": "MPC"
     },
     {
-      "assertion_id": "f7ff40dc690fa87f770ac12e35530e15018779d6957b73e51b234fb929f85efe",
+      "assertion_id": "52b4ec6ca66abf83df8d8cd79e5b7a16f46df8dc418cf3689ea6a9e82529dab4",
       "from_latest_query": true,
-      "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "source": "SBDB"
     }
   ],
   "projection_receipt": {
-    "created_at": "2026-11-13T05:05:00.117318+00:00",
+    "created_at": "2026-11-13T05:09:08.706380+00:00",
     "input_assertions": [
-      "f7ff40dc690fa87f770ac12e35530e15018779d6957b73e51b234fb929f85efe",
-      "7d1bd8fc1c617b3b1e75356ce7767831c49842386b04ea89c1b755cafb61b851"
+      "52b4ec6ca66abf83df8d8cd79e5b7a16f46df8dc418cf3689ea6a9e82529dab4",
+      "58cbf574baaf8acb05c563993209bcd1c9a4105456437754bee70467a7c3d60c"
     ],
     "projection": {
       "artificial_probability": null,
@@ -1855,7 +1855,7 @@
       "neo_data": {
         "close_approaches": [],
         "completeness": 0.42857142857142855,
-        "created_at": "2026-11-13T05:05:00.074696+00:00",
+        "created_at": "2026-11-13T05:09:08.670249+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
@@ -1922,7 +1922,7 @@
             }
           }
         },
-        "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+        "fetched_at": "2026-11-13T05:09:08.670249+00:00",
         "first_observation": null,
         "last_observation": null,
         "nongrav": null,
@@ -1965,14 +1965,14 @@
           "SBDB",
           "MPC"
         ],
-        "updated_at": "2026-11-13T05:05:00.074696+00:00"
+        "updated_at": "2026-11-13T05:09:08.670249+00:00"
       },
       "origin_status": "not_assessed",
       "overall_data_completeness": null,
       "schema_version": "enriched-object-projection-v1",
       "selected_source_assertions": {
-        "MPC": "7d1bd8fc1c617b3b1e75356ce7767831c49842386b04ea89c1b755cafb61b851",
-        "SBDB": "f7ff40dc690fa87f770ac12e35530e15018779d6957b73e51b234fb929f85efe"
+        "MPC": "58cbf574baaf8acb05c563993209bcd1c9a4105456437754bee70467a7c3d60c",
+        "SBDB": "52b4ec6ca66abf83df8d8cd79e5b7a16f46df8dc418cf3689ea6a9e82529dab4"
       },
       "source_acquisition_coverage": null,
       "source_priority": [
@@ -1983,25 +1983,25 @@
         "CAD"
       ]
     },
-    "projection_id": "117bfb9011b2120b4feea131d5b5c888cbb2da217ca0524ab8721ad910c4593b"
+    "projection_id": "c754acc3bcc3fbbf031b9838bbdcef7f440f14bf064166e1e335cdbd13639b6e"
   },
   "source_acquisition_coverage": null,
   "source_data": {
     "MPC": {
-      "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "data_source": "MPC",
       "designation": "SYNTHETIC",
       "neo_data": {
         "close_approaches": [],
         "completeness": 0.0,
-        "created_at": "2026-11-13T05:05:00.074900+00:00",
+        "created_at": "2026-11-13T05:09:08.670375+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
         "evidence_metadata": {
           "synthetic": true
         },
-        "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+        "fetched_at": "2026-11-13T05:09:08.670375+00:00",
         "first_observation": null,
         "last_observation": null,
         "nongrav": null,
@@ -2033,25 +2033,25 @@
         "sources_used": [
           "MPC"
         ],
-        "updated_at": "2026-11-13T05:05:00.074900+00:00"
+        "updated_at": "2026-11-13T05:09:08.670375+00:00"
       },
       "snapshot_schema": "neo-data-v1"
     },
     "SBDB": {
-      "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "acquisition_query_id": "0af60bdc-f31c-4307-9267-e03cfe01a6c5",
       "data_source": "SBDB",
       "designation": "SYNTHETIC",
       "neo_data": {
         "close_approaches": [],
         "completeness": 0.42857142857142855,
-        "created_at": "2026-11-13T05:05:00.074696+00:00",
+        "created_at": "2026-11-13T05:09:08.670249+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
         "evidence_metadata": {
           "synthetic": true
         },
-        "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+        "fetched_at": "2026-11-13T05:09:08.670249+00:00",
         "first_observation": null,
         "last_observation": null,
         "nongrav": null,
@@ -2073,7 +2073,7 @@
         "sources_used": [
           "SBDB"
         ],
-        "updated_at": "2026-11-13T05:05:00.074696+00:00"
+        "updated_at": "2026-11-13T05:09:08.670249+00:00"
       },
       "snapshot_schema": "neo-data-v1"
     }

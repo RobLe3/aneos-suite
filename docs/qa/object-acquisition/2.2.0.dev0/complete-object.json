@@ -2,7 +2,7 @@
   "acquisition_history": [
     {
       "bundle": {
-        "bundle_id": "aaa4e9a8a51fe0fa3f1cfd08db2fe52745e7f789247260e41290f851f3ec45c6",
+        "bundle_id": "d4f5c96ccd17576166967648a8de274f39d087b5b1cb9f89f3ec8f7c23151373",
         "coverage": {
           "contributing_fraction": 1.0,
           "contributing_sources": 5,
@@ -68,9 +68,9 @@
                   "00:05",
                   "25.9"
                 ],
-                "received_at": "2026-11-13T05:04:59.798333+00:00",
+                "received_at": "2026-11-13T05:09:08.408486+00:00",
                 "retrieval_timestamp_status": "available",
-                "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                 "signature": {
                   "source": "SYNTHETIC QA",
                   "version": "1.5"
@@ -95,7 +95,7 @@
             }
           ],
           "completeness": 1.0,
-          "created_at": "2026-11-13T05:04:59.808341+00:00",
+          "created_at": "2026-11-13T05:09:08.417886+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
@@ -139,7 +139,7 @@
               {
                 "basis": "computed_or_legacy_encounter_not_observation",
                 "projection_index": 0,
-                "record_sha256": "414659657651bcd5547bd4735d146131999b1ca4d7cbc380fe6596d4429235d7",
+                "record_sha256": "e281776fbf5b02082864d7ff1c0c63c5d2d35ac0a5c64b89eb366a76f8cd70e4",
                 "source": "CAD"
               }
             ],
@@ -212,9 +212,9 @@
                       "des": "SYNTHETIC",
                       "limit": 10
                     },
-                    "received_at": "2026-11-13T05:04:59.798333+00:00",
+                    "received_at": "2026-11-13T05:09:08.408486+00:00",
                     "retrieval_timestamp_status": "available",
-                    "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                    "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                     "signature": {
                       "source": "SYNTHETIC QA",
                       "version": "1.5"
@@ -293,9 +293,9 @@
                     "des": "SYNTHETIC",
                     "limit": 10
                   },
-                  "received_at": "2026-11-13T05:04:59.798333+00:00",
+                  "received_at": "2026-11-13T05:09:08.408486+00:00",
                   "retrieval_timestamp_status": "available",
-                  "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                  "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                   "signature": {
                     "source": "SYNTHETIC QA",
                     "version": "1.5"
@@ -330,7 +330,7 @@
               }
             }
           },
-          "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+          "fetched_at": "2026-11-13T05:09:08.417886+00:00",
           "first_observation": "2026-11-01T00:00:00",
           "last_observation": "2026-11-08T00:00:00",
           "nongrav": null,
@@ -388,7 +388,7 @@
             "Horizons",
             "CAD"
           ],
-          "updated_at": "2026-11-13T05:04:59.808341+00:00"
+          "updated_at": "2026-11-13T05:09:08.417886+00:00"
         },
         "outcomes": [
           {
@@ -425,13 +425,13 @@
               "semi_major_axis": 1.23
             },
             "basis": "typed_adapter_projection_not_independently_verified",
-            "completed_at": "2026-11-13T05:04:59.808341+00:00",
+            "completed_at": "2026-11-13T05:09:08.417886+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": {
               "close_approaches": [],
               "completeness": 1.0,
-              "created_at": "2026-11-13T05:04:59.808341+00:00",
+              "created_at": "2026-11-13T05:09:08.417886+00:00",
               "designation": "SYNTHETIC",
               "dynamic_TAS": null,
               "dynamic_category": null,
@@ -450,7 +450,7 @@
                 },
                 "synthetic": true
               },
-              "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+              "fetched_at": "2026-11-13T05:09:08.417886+00:00",
               "first_observation": "2026-11-01T00:00:00",
               "last_observation": "2026-11-08T00:00:00",
               "nongrav": null,
@@ -504,11 +504,11 @@
               "sources_used": [
                 "SBDB"
               ],
-              "updated_at": "2026-11-13T05:04:59.808341+00:00"
+              "updated_at": "2026-11-13T05:09:08.417886+00:00"
             },
             "reason_code": null,
             "source": "SBDB",
-            "started_at": "2026-11-13T05:04:59.808283+00:00",
+            "started_at": "2026-11-13T05:09:08.417830+00:00",
             "status": "available"
           },
           {
@@ -521,20 +521,20 @@
               "semi_major_axis": 1.23
             },
             "basis": "typed_adapter_projection_not_independently_verified",
-            "completed_at": "2026-11-13T05:04:59.808523+00:00",
+            "completed_at": "2026-11-13T05:09:08.418036+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": {
               "close_approaches": [],
               "completeness": 0.42857142857142855,
-              "created_at": "2026-11-13T05:04:59.808523+00:00",
+              "created_at": "2026-11-13T05:09:08.418036+00:00",
               "designation": "SYNTHETIC",
               "dynamic_TAS": null,
               "dynamic_category": null,
               "evidence_metadata": {
                 "synthetic": true
               },
-              "fetched_at": "2026-11-13T05:04:59.808523+00:00",
+              "fetched_at": "2026-11-13T05:09:08.418036+00:00",
               "first_observation": null,
               "last_observation": null,
               "nongrav": null,
@@ -556,11 +556,11 @@
               "sources_used": [
                 "NEODyS"
               ],
-              "updated_at": "2026-11-13T05:04:59.808523+00:00"
+              "updated_at": "2026-11-13T05:09:08.418036+00:00"
             },
             "reason_code": null,
             "source": "NEODyS",
-            "started_at": "2026-11-13T05:04:59.808501+00:00",
+            "started_at": "2026-11-13T05:09:08.418023+00:00",
             "status": "available"
           },
           {
@@ -573,20 +573,20 @@
               "semi_major_axis": 1.23
             },
             "basis": "typed_adapter_projection_not_independently_verified",
-            "completed_at": "2026-11-13T05:04:59.808670+00:00",
+            "completed_at": "2026-11-13T05:09:08.418172+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": {
               "close_approaches": [],
               "completeness": 0.42857142857142855,
-              "created_at": "2026-11-13T05:04:59.808670+00:00",
+              "created_at": "2026-11-13T05:09:08.418172+00:00",
               "designation": "SYNTHETIC",
               "dynamic_TAS": null,
               "dynamic_category": null,
               "evidence_metadata": {
                 "synthetic": true
               },
-              "fetched_at": "2026-11-13T05:04:59.808670+00:00",
+              "fetched_at": "2026-11-13T05:09:08.418172+00:00",
               "first_observation": null,
               "last_observation": null,
               "nongrav": null,
@@ -608,11 +608,11 @@
               "sources_used": [
                 "MPC"
               ],
-              "updated_at": "2026-11-13T05:04:59.808670+00:00"
+              "updated_at": "2026-11-13T05:09:08.418172+00:00"
             },
             "reason_code": null,
             "source": "MPC",
-            "started_at": "2026-11-13T05:04:59.808655+00:00",
+            "started_at": "2026-11-13T05:09:08.418152+00:00",
             "status": "available"
           },
           {
@@ -625,20 +625,20 @@
               "semi_major_axis": 1.23
             },
             "basis": "typed_adapter_projection_not_independently_verified",
-            "completed_at": "2026-11-13T05:04:59.808781+00:00",
+            "completed_at": "2026-11-13T05:09:08.418276+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": {
               "close_approaches": [],
               "completeness": 0.42857142857142855,
-              "created_at": "2026-11-13T05:04:59.808781+00:00",
+              "created_at": "2026-11-13T05:09:08.418276+00:00",
               "designation": "SYNTHETIC",
               "dynamic_TAS": null,
               "dynamic_category": null,
               "evidence_metadata": {
                 "synthetic": true
               },
-              "fetched_at": "2026-11-13T05:04:59.808781+00:00",
+              "fetched_at": "2026-11-13T05:09:08.418276+00:00",
               "first_observation": null,
               "last_observation": null,
               "nongrav": null,
@@ -660,17 +660,17 @@
               "sources_used": [
                 "Horizons"
               ],
-              "updated_at": "2026-11-13T05:04:59.808781+00:00"
+              "updated_at": "2026-11-13T05:09:08.418276+00:00"
             },
             "reason_code": null,
             "source": "Horizons",
-            "started_at": "2026-11-13T05:04:59.808771+00:00",
+            "started_at": "2026-11-13T05:09:08.418264+00:00",
             "status": "available"
           },
           {
             "adapter_payload": null,
             "basis": "computed_encounters_not_observations",
-            "completed_at": "2026-11-13T05:04:59.811401+00:00",
+            "completed_at": "2026-11-13T05:09:08.420627+00:00",
             "designation": "SYNTHETIC",
             "native_response_sha256": null,
             "neo_data": {
@@ -718,9 +718,9 @@
                       "00:05",
                       "25.9"
                     ],
-                    "received_at": "2026-11-13T05:04:59.798333+00:00",
+                    "received_at": "2026-11-13T05:09:08.408486+00:00",
                     "retrieval_timestamp_status": "available",
-                    "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                    "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                     "signature": {
                       "source": "SYNTHETIC QA",
                       "version": "1.5"
@@ -745,7 +745,7 @@
                 }
               ],
               "completeness": 0.0,
-              "created_at": "2026-11-13T05:04:59.811401+00:00",
+              "created_at": "2026-11-13T05:09:08.420627+00:00",
               "designation": "SYNTHETIC",
               "dynamic_TAS": null,
               "dynamic_category": null,
@@ -759,9 +759,9 @@
                     "des": "SYNTHETIC",
                     "limit": 10
                   },
-                  "received_at": "2026-11-13T05:04:59.798333+00:00",
+                  "received_at": "2026-11-13T05:09:08.408486+00:00",
                   "retrieval_timestamp_status": "available",
-                  "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                  "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                   "signature": {
                     "source": "SYNTHETIC QA",
                     "version": "1.5"
@@ -770,7 +770,7 @@
                   "total": 1
                 }
               },
-              "fetched_at": "2026-11-13T05:04:59.811401+00:00",
+              "fetched_at": "2026-11-13T05:09:08.420627+00:00",
               "first_observation": null,
               "last_observation": null,
               "nongrav": null,
@@ -782,15 +782,15 @@
               "sources_used": [
                 "CAD"
               ],
-              "updated_at": "2026-11-13T05:04:59.811401+00:00"
+              "updated_at": "2026-11-13T05:09:08.420627+00:00"
             },
             "reason_code": null,
             "source": "CAD",
-            "started_at": "2026-11-13T05:04:59.811371+00:00",
+            "started_at": "2026-11-13T05:09:08.420597+00:00",
             "status": "available"
           }
         ],
-        "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "schema_version": "object-acquisition-v1",
         "software": {
           "application_version": "2.2.0.dev0",
@@ -807,9 +807,9 @@
             "scipy": "1.15.1"
           },
           "python_version": "3.11.9",
-          "repository_commit": "ad0ee9937c5820b0eb0e096a57540fdbe43b1a48",
+          "repository_commit": "64f5fd0a18957224fc12a0034bb9ab50093694a6",
           "source_hashes_at_report_time": {
-            "aneos_api/acquisition_repository.py": "5edfe7919e80926a486524997940f5a152d32e82628a221a7a13886d972fa2b1",
+            "aneos_api/acquisition_repository.py": "9ca4cdb889e2738744913999eb529de4c4c9a7cf11c63bc2898a670dce246751",
             "aneos_api/enrichment_store.py": "c9f1936ba89442fe22fcde2198ba53a17ffa12bd08a184a1d52dfcf267d44085",
             "aneos_core/analysis/advanced_aneos_analyzer.py": "ecfd7b43db434d990bae486f28904c0c7e95a60052d5299e4daa795abc7f10a0",
             "aneos_core/analysis/impact_evidence.py": "ecf8820b8ecb5f87d45fdb22e71bbfca2bcba6b51217f8152452903462010552",
@@ -817,7 +817,7 @@
             "aneos_core/analysis/pipeline.py": "effb2fe26d1734b7c8b8cfdc1e458ed3a556c8d2dc6851d0e23e80c622600aa9",
             "aneos_core/analysis/reporting.py": "987db2390d001d36482c1141d965ff5abd5aac4e014854913bc0dfa754f6ee30",
             "aneos_core/analysis/screening.py": "f442ec4ef601f7cb432fdb6c230eeefb63c75519afd11afa298d2e18d62c8345",
-            "aneos_core/data/acquisition.py": "d76c767d358a64f9a0931d18bb13aca96fa9317de9672d7085deefcee770c6b7",
+            "aneos_core/data/acquisition.py": "50148c4c43d70f788b2605cfea0467495f7b65191e6c31a94cbe4302a1c88e94",
             "aneos_core/data/cache.py": "7e4b6d40f9a9c1b1bb1fc7ffdbcec479b3d3f2f622dfc1fafb4373899bc0e1a3",
             "aneos_core/data/enrichment.py": "500ec6b89f7f225cd815a46f0720bc36e7e771c2bcff1d63cb3c5fae25b4017a",
             "aneos_core/data/epoch_evidence.py": "5ca2e443a536eeb0bffa220b69133f05c322cd65ed5fbb44df28d546abc473f5",
@@ -865,17 +865,17 @@
             "CAD"
           ]
         },
-        "started_at": "2026-11-13T05:04:59.808171+00:00"
+        "started_at": "2026-11-13T05:09:08.417716+00:00"
       },
       "native_response_repeat_checks": [],
       "receipt": {
         "assertion_count": 10,
-        "bundle_id": "aaa4e9a8a51fe0fa3f1cfd08db2fe52745e7f789247260e41290f851f3ec45c6",
+        "bundle_id": "d4f5c96ccd17576166967648a8de274f39d087b5b1cb9f89f3ec8f7c23151373",
         "commit_status": "committed",
-        "committed_at": "2026-11-13T05:04:59.883666+00:00",
+        "committed_at": "2026-11-13T05:09:08.490648+00:00",
         "consistency_status": "replayed_not_authenticated",
-        "projection_id": "95f0c899178c4fa89a3ed0abca9b6c39da47d31b737342a5402f0d955a4bf664",
-        "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "projection_id": "fcbb50491202d968b32e412990a35ce27f44c7272fdd2f8829ea65ee3e68ce78",
+        "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "query_sequence": 1,
         "schema_version": "acquisition-storage-receipt-v1"
       }
@@ -926,9 +926,9 @@
           "00:05",
           "25.9"
         ],
-        "received_at": "2026-11-13T05:04:59.798333+00:00",
+        "received_at": "2026-11-13T05:09:08.408486+00:00",
         "retrieval_timestamp_status": "available",
-        "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+        "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
         "signature": {
           "source": "SYNTHETIC QA",
           "version": "1.5"
@@ -1182,7 +1182,7 @@
         "status": "present",
         "time_status": "offset_recorded_not_time_scale_conversion",
         "units": "retrieval timestamp",
-        "value": "2026-11-13T05:04:59.808341+00:00"
+        "value": "2026-11-13T05:09:08.417886+00:00"
       }
     ],
     "missing_fields": [],
@@ -1237,7 +1237,7 @@
         "semi_major_axis": 1.23
       }
     },
-    "source_id": "575531f42b5e906cd68f7b12677aaad8e6909f004e299bc87e2a8772287549b0",
+    "source_id": "54bd3c4ce538d4616d4ca0f14a22407425f11488666c84d1d32365763f4aafe6",
     "source_snapshot": {
       "close_approaches": [
         {
@@ -1283,9 +1283,9 @@
               "00:05",
               "25.9"
             ],
-            "received_at": "2026-11-13T05:04:59.798333+00:00",
+            "received_at": "2026-11-13T05:09:08.408486+00:00",
             "retrieval_timestamp_status": "available",
-            "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+            "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
             "signature": {
               "source": "SYNTHETIC QA",
               "version": "1.5"
@@ -1310,7 +1310,7 @@
         }
       ],
       "completeness": 1.0,
-      "created_at": "2026-11-13T05:04:59.808341+00:00",
+      "created_at": "2026-11-13T05:09:08.417886+00:00",
       "designation": "SYNTHETIC",
       "dynamic_TAS": null,
       "dynamic_category": null,
@@ -1354,7 +1354,7 @@
           {
             "basis": "computed_or_legacy_encounter_not_observation",
             "projection_index": 0,
-            "record_sha256": "414659657651bcd5547bd4735d146131999b1ca4d7cbc380fe6596d4429235d7",
+            "record_sha256": "e281776fbf5b02082864d7ff1c0c63c5d2d35ac0a5c64b89eb366a76f8cd70e4",
             "source": "CAD"
           }
         ],
@@ -1427,9 +1427,9 @@
                   "des": "SYNTHETIC",
                   "limit": 10
                 },
-                "received_at": "2026-11-13T05:04:59.798333+00:00",
+                "received_at": "2026-11-13T05:09:08.408486+00:00",
                 "retrieval_timestamp_status": "available",
-                "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                 "signature": {
                   "source": "SYNTHETIC QA",
                   "version": "1.5"
@@ -1508,9 +1508,9 @@
                 "des": "SYNTHETIC",
                 "limit": 10
               },
-              "received_at": "2026-11-13T05:04:59.798333+00:00",
+              "received_at": "2026-11-13T05:09:08.408486+00:00",
               "retrieval_timestamp_status": "available",
-              "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+              "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
               "signature": {
                 "source": "SYNTHETIC QA",
                 "version": "1.5"
@@ -1545,7 +1545,7 @@
           }
         }
       },
-      "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+      "fetched_at": "2026-11-13T05:09:08.417886+00:00",
       "first_observation": "2026-11-01T00:00:00",
       "last_observation": "2026-11-08T00:00:00",
       "nongrav": null,
@@ -1603,7 +1603,7 @@
         "Horizons",
         "CAD"
       ],
-      "updated_at": "2026-11-13T05:04:59.808341+00:00"
+      "updated_at": "2026-11-13T05:09:08.417886+00:00"
     },
     "sources_recorded": [
       "SBDB",
@@ -1631,7 +1631,7 @@
   "discovery_data": null,
   "evidence_history": [
     {
-      "assertion_id": "61c54e091f7f2040438ba5fc59e9476dbe4923bb4de2d2470c18c1eefa50681d",
+      "assertion_id": "038289320c0724172b29ff5f118503125b19a57d4f08b5cf010cde5d4365ae78",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "source_assertion",
@@ -1639,13 +1639,13 @@
         "calibrated_artificial_probability": null,
         "designation": "SYNTHETIC",
         "native_payload": {
-          "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+          "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
           "data_source": "SBDB",
           "designation": "SYNTHETIC",
           "neo_data": {
             "close_approaches": [],
             "completeness": 1.0,
-            "created_at": "2026-11-13T05:04:59.808341+00:00",
+            "created_at": "2026-11-13T05:09:08.417886+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
@@ -1664,7 +1664,7 @@
               },
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+            "fetched_at": "2026-11-13T05:09:08.417886+00:00",
             "first_observation": "2026-11-01T00:00:00",
             "last_observation": "2026-11-08T00:00:00",
             "nongrav": null,
@@ -1718,16 +1718,16 @@
             "sources_used": [
               "SBDB"
             ],
-            "updated_at": "2026-11-13T05:04:59.808341+00:00"
+            "updated_at": "2026-11-13T05:09:08.417886+00:00"
           },
           "snapshot_schema": "neo-data-v1"
         },
         "normalization_status": "typed_snapshot_not_independently_verified",
-        "normalization_timestamp": "2026-11-13T05:04:59.866244+00:00",
+        "normalization_timestamp": "2026-11-13T05:09:08.474149+00:00",
         "normalized_neo": {
           "close_approaches": [],
           "completeness": 1.0,
-          "created_at": "2026-11-13T05:04:59.808341+00:00",
+          "created_at": "2026-11-13T05:09:08.417886+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
@@ -1746,7 +1746,7 @@
             },
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+          "fetched_at": "2026-11-13T05:09:08.417886+00:00",
           "first_observation": "2026-11-01T00:00:00",
           "last_observation": "2026-11-08T00:00:00",
           "nongrav": null,
@@ -1800,7 +1800,7 @@
           "sources_used": [
             "SBDB"
           ],
-          "updated_at": "2026-11-13T05:04:59.808341+00:00"
+          "updated_at": "2026-11-13T05:09:08.417886+00:00"
         },
         "origin_status": "not_assessed",
         "schema_version": "normalized-source-assertion-v1",
@@ -1810,13 +1810,13 @@
         ]
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "SBDB",
         "designation": "SYNTHETIC",
         "neo_data": {
           "close_approaches": [],
           "completeness": 1.0,
-          "created_at": "2026-11-13T05:04:59.808341+00:00",
+          "created_at": "2026-11-13T05:09:08.417886+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
@@ -1835,7 +1835,7 @@
             },
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+          "fetched_at": "2026-11-13T05:09:08.417886+00:00",
           "first_observation": "2026-11-01T00:00:00",
           "last_observation": "2026-11-08T00:00:00",
           "nongrav": null,
@@ -1889,18 +1889,18 @@
           "sources_used": [
             "SBDB"
           ],
-          "updated_at": "2026-11-13T05:04:59.808341+00:00"
+          "updated_at": "2026-11-13T05:09:08.417886+00:00"
         },
         "snapshot_schema": "neo-data-v1"
       },
-      "payload_sha256": "2cb93037b41f5601642cb14bb366f30f095b9a99434743c2c80b10273f0d1ac3",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "7bbde8b9eb03836cc66aeb60785361fd7b2dc635daa7388e89977e88e54daa06",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 1,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "SBDB"
     },
     {
-      "assertion_id": "a991a971a4297e97283af5f4e4fc97530def0af0a88aab7e9b9486e50f39fe78",
+      "assertion_id": "86aa1de34a522e371f64d76c4674a76188b7267a617621131430abaa51b8ee4b",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "source_assertion",
@@ -1908,20 +1908,20 @@
         "calibrated_artificial_probability": null,
         "designation": "SYNTHETIC",
         "native_payload": {
-          "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+          "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
           "data_source": "NEODyS",
           "designation": "SYNTHETIC",
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.42857142857142855,
-            "created_at": "2026-11-13T05:04:59.808523+00:00",
+            "created_at": "2026-11-13T05:09:08.418036+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:04:59.808523+00:00",
+            "fetched_at": "2026-11-13T05:09:08.418036+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -1943,23 +1943,23 @@
             "sources_used": [
               "NEODyS"
             ],
-            "updated_at": "2026-11-13T05:04:59.808523+00:00"
+            "updated_at": "2026-11-13T05:09:08.418036+00:00"
           },
           "snapshot_schema": "neo-data-v1"
         },
         "normalization_status": "typed_snapshot_not_independently_verified",
-        "normalization_timestamp": "2026-11-13T05:04:59.866244+00:00",
+        "normalization_timestamp": "2026-11-13T05:09:08.474149+00:00",
         "normalized_neo": {
           "close_approaches": [],
           "completeness": 0.42857142857142855,
-          "created_at": "2026-11-13T05:04:59.808523+00:00",
+          "created_at": "2026-11-13T05:09:08.418036+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:04:59.808523+00:00",
+          "fetched_at": "2026-11-13T05:09:08.418036+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -1981,7 +1981,7 @@
           "sources_used": [
             "NEODyS"
           ],
-          "updated_at": "2026-11-13T05:04:59.808523+00:00"
+          "updated_at": "2026-11-13T05:09:08.418036+00:00"
         },
         "origin_status": "not_assessed",
         "schema_version": "normalized-source-assertion-v1",
@@ -1991,20 +1991,20 @@
         ]
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "NEODyS",
         "designation": "SYNTHETIC",
         "neo_data": {
           "close_approaches": [],
           "completeness": 0.42857142857142855,
-          "created_at": "2026-11-13T05:04:59.808523+00:00",
+          "created_at": "2026-11-13T05:09:08.418036+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:04:59.808523+00:00",
+          "fetched_at": "2026-11-13T05:09:08.418036+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -2026,18 +2026,18 @@
           "sources_used": [
             "NEODyS"
           ],
-          "updated_at": "2026-11-13T05:04:59.808523+00:00"
+          "updated_at": "2026-11-13T05:09:08.418036+00:00"
         },
         "snapshot_schema": "neo-data-v1"
       },
-      "payload_sha256": "0c214782851360ea2057bc68fc27e23bbf8ff559e2a9f1d7e8b3992424025625",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "0a36c45236ab446d5a3ca991bfa940295a984f1a713a3e7c1cdfc4efd027a3fb",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 2,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "NEODyS"
     },
     {
-      "assertion_id": "43cad5fb0d4dd48e1be8b57c9ec93b843f41c39eedfc3fece798c9804ab2e489",
+      "assertion_id": "cebd0b0df6aa69f438ddf0c3e78b46c9db6203734d23797a3cf581ba3f3260e0",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "source_assertion",
@@ -2045,20 +2045,20 @@
         "calibrated_artificial_probability": null,
         "designation": "SYNTHETIC",
         "native_payload": {
-          "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+          "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
           "data_source": "MPC",
           "designation": "SYNTHETIC",
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.42857142857142855,
-            "created_at": "2026-11-13T05:04:59.808670+00:00",
+            "created_at": "2026-11-13T05:09:08.418172+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:04:59.808670+00:00",
+            "fetched_at": "2026-11-13T05:09:08.418172+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -2080,23 +2080,23 @@
             "sources_used": [
               "MPC"
             ],
-            "updated_at": "2026-11-13T05:04:59.808670+00:00"
+            "updated_at": "2026-11-13T05:09:08.418172+00:00"
           },
           "snapshot_schema": "neo-data-v1"
         },
         "normalization_status": "typed_snapshot_not_independently_verified",
-        "normalization_timestamp": "2026-11-13T05:04:59.866244+00:00",
+        "normalization_timestamp": "2026-11-13T05:09:08.474149+00:00",
         "normalized_neo": {
           "close_approaches": [],
           "completeness": 0.42857142857142855,
-          "created_at": "2026-11-13T05:04:59.808670+00:00",
+          "created_at": "2026-11-13T05:09:08.418172+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:04:59.808670+00:00",
+          "fetched_at": "2026-11-13T05:09:08.418172+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -2118,7 +2118,7 @@
           "sources_used": [
             "MPC"
           ],
-          "updated_at": "2026-11-13T05:04:59.808670+00:00"
+          "updated_at": "2026-11-13T05:09:08.418172+00:00"
         },
         "origin_status": "not_assessed",
         "schema_version": "normalized-source-assertion-v1",
@@ -2128,20 +2128,20 @@
         ]
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "MPC",
         "designation": "SYNTHETIC",
         "neo_data": {
           "close_approaches": [],
           "completeness": 0.42857142857142855,
-          "created_at": "2026-11-13T05:04:59.808670+00:00",
+          "created_at": "2026-11-13T05:09:08.418172+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:04:59.808670+00:00",
+          "fetched_at": "2026-11-13T05:09:08.418172+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -2163,18 +2163,18 @@
           "sources_used": [
             "MPC"
           ],
-          "updated_at": "2026-11-13T05:04:59.808670+00:00"
+          "updated_at": "2026-11-13T05:09:08.418172+00:00"
         },
         "snapshot_schema": "neo-data-v1"
       },
-      "payload_sha256": "7ed9c5f343f22cac481723b3194b23fd0b4388856f29084dbcfaebba2cc689e8",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "8c1bfda3d8e992dea5d26d1cf27c8edcbfa11a28df2453fcd91d19b1c500c0d8",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 3,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "MPC"
     },
     {
-      "assertion_id": "3a44b3408dcd18d5023cb442d1ca25061d1c48043fefe955c12e0e3f8fb8572e",
+      "assertion_id": "7436cea43cc7242f0a1fcc549892e324473a464dfa6aa19039837f061935d1b6",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "source_assertion",
@@ -2182,20 +2182,20 @@
         "calibrated_artificial_probability": null,
         "designation": "SYNTHETIC",
         "native_payload": {
-          "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+          "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
           "data_source": "Horizons",
           "designation": "SYNTHETIC",
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.42857142857142855,
-            "created_at": "2026-11-13T05:04:59.808781+00:00",
+            "created_at": "2026-11-13T05:09:08.418276+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:04:59.808781+00:00",
+            "fetched_at": "2026-11-13T05:09:08.418276+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -2217,23 +2217,23 @@
             "sources_used": [
               "Horizons"
             ],
-            "updated_at": "2026-11-13T05:04:59.808781+00:00"
+            "updated_at": "2026-11-13T05:09:08.418276+00:00"
           },
           "snapshot_schema": "neo-data-v1"
         },
         "normalization_status": "typed_snapshot_not_independently_verified",
-        "normalization_timestamp": "2026-11-13T05:04:59.866244+00:00",
+        "normalization_timestamp": "2026-11-13T05:09:08.474149+00:00",
         "normalized_neo": {
           "close_approaches": [],
           "completeness": 0.42857142857142855,
-          "created_at": "2026-11-13T05:04:59.808781+00:00",
+          "created_at": "2026-11-13T05:09:08.418276+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:04:59.808781+00:00",
+          "fetched_at": "2026-11-13T05:09:08.418276+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -2255,7 +2255,7 @@
           "sources_used": [
             "Horizons"
           ],
-          "updated_at": "2026-11-13T05:04:59.808781+00:00"
+          "updated_at": "2026-11-13T05:09:08.418276+00:00"
         },
         "origin_status": "not_assessed",
         "schema_version": "normalized-source-assertion-v1",
@@ -2265,20 +2265,20 @@
         ]
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "Horizons",
         "designation": "SYNTHETIC",
         "neo_data": {
           "close_approaches": [],
           "completeness": 0.42857142857142855,
-          "created_at": "2026-11-13T05:04:59.808781+00:00",
+          "created_at": "2026-11-13T05:09:08.418276+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
           "evidence_metadata": {
             "synthetic": true
           },
-          "fetched_at": "2026-11-13T05:04:59.808781+00:00",
+          "fetched_at": "2026-11-13T05:09:08.418276+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -2300,18 +2300,18 @@
           "sources_used": [
             "Horizons"
           ],
-          "updated_at": "2026-11-13T05:04:59.808781+00:00"
+          "updated_at": "2026-11-13T05:09:08.418276+00:00"
         },
         "snapshot_schema": "neo-data-v1"
       },
-      "payload_sha256": "91d10b5fa5a312df603a1523ab15e417bf4293396cf9dc416ce508940fc75024",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "bd9f4ee07713d711902664fca29d9a47265745aea24d12e42c7088fbe65c40bc",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 4,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "Horizons"
     },
     {
-      "assertion_id": "917d5ff941afac9a12dcacebbd3445ea497cbfa6b9c901242f42317b78825fbd",
+      "assertion_id": "0e2f594c6d47a342e82f89be0faa220d19cd7ba39242eace6169b4134193511e",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "source_assertion",
@@ -2319,7 +2319,7 @@
         "calibrated_artificial_probability": null,
         "designation": "SYNTHETIC",
         "native_payload": {
-          "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+          "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
           "data_source": "CAD",
           "designation": "SYNTHETIC",
           "neo_data": {
@@ -2367,9 +2367,9 @@
                     "00:05",
                     "25.9"
                   ],
-                  "received_at": "2026-11-13T05:04:59.798333+00:00",
+                  "received_at": "2026-11-13T05:09:08.408486+00:00",
                   "retrieval_timestamp_status": "available",
-                  "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                  "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                   "signature": {
                     "source": "SYNTHETIC QA",
                     "version": "1.5"
@@ -2394,7 +2394,7 @@
               }
             ],
             "completeness": 0.0,
-            "created_at": "2026-11-13T05:04:59.811401+00:00",
+            "created_at": "2026-11-13T05:09:08.420627+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
@@ -2408,9 +2408,9 @@
                   "des": "SYNTHETIC",
                   "limit": 10
                 },
-                "received_at": "2026-11-13T05:04:59.798333+00:00",
+                "received_at": "2026-11-13T05:09:08.408486+00:00",
                 "retrieval_timestamp_status": "available",
-                "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                 "signature": {
                   "source": "SYNTHETIC QA",
                   "version": "1.5"
@@ -2419,7 +2419,7 @@
                 "total": 1
               }
             },
-            "fetched_at": "2026-11-13T05:04:59.811401+00:00",
+            "fetched_at": "2026-11-13T05:09:08.420627+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -2431,12 +2431,12 @@
             "sources_used": [
               "CAD"
             ],
-            "updated_at": "2026-11-13T05:04:59.811401+00:00"
+            "updated_at": "2026-11-13T05:09:08.420627+00:00"
           },
           "snapshot_schema": "neo-data-v1"
         },
         "normalization_status": "typed_snapshot_not_independently_verified",
-        "normalization_timestamp": "2026-11-13T05:04:59.866244+00:00",
+        "normalization_timestamp": "2026-11-13T05:09:08.474149+00:00",
         "normalized_neo": {
           "close_approaches": [
             {
@@ -2482,9 +2482,9 @@
                   "00:05",
                   "25.9"
                 ],
-                "received_at": "2026-11-13T05:04:59.798333+00:00",
+                "received_at": "2026-11-13T05:09:08.408486+00:00",
                 "retrieval_timestamp_status": "available",
-                "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                 "signature": {
                   "source": "SYNTHETIC QA",
                   "version": "1.5"
@@ -2509,7 +2509,7 @@
             }
           ],
           "completeness": 0.0,
-          "created_at": "2026-11-13T05:04:59.811401+00:00",
+          "created_at": "2026-11-13T05:09:08.420627+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
@@ -2523,9 +2523,9 @@
                 "des": "SYNTHETIC",
                 "limit": 10
               },
-              "received_at": "2026-11-13T05:04:59.798333+00:00",
+              "received_at": "2026-11-13T05:09:08.408486+00:00",
               "retrieval_timestamp_status": "available",
-              "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+              "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
               "signature": {
                 "source": "SYNTHETIC QA",
                 "version": "1.5"
@@ -2534,7 +2534,7 @@
               "total": 1
             }
           },
-          "fetched_at": "2026-11-13T05:04:59.811401+00:00",
+          "fetched_at": "2026-11-13T05:09:08.420627+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -2546,7 +2546,7 @@
           "sources_used": [
             "CAD"
           ],
-          "updated_at": "2026-11-13T05:04:59.811401+00:00"
+          "updated_at": "2026-11-13T05:09:08.420627+00:00"
         },
         "origin_status": "not_assessed",
         "schema_version": "normalized-source-assertion-v1",
@@ -2556,7 +2556,7 @@
         ]
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "CAD",
         "designation": "SYNTHETIC",
         "neo_data": {
@@ -2604,9 +2604,9 @@
                   "00:05",
                   "25.9"
                 ],
-                "received_at": "2026-11-13T05:04:59.798333+00:00",
+                "received_at": "2026-11-13T05:09:08.408486+00:00",
                 "retrieval_timestamp_status": "available",
-                "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                 "signature": {
                   "source": "SYNTHETIC QA",
                   "version": "1.5"
@@ -2631,7 +2631,7 @@
             }
           ],
           "completeness": 0.0,
-          "created_at": "2026-11-13T05:04:59.811401+00:00",
+          "created_at": "2026-11-13T05:09:08.420627+00:00",
           "designation": "SYNTHETIC",
           "dynamic_TAS": null,
           "dynamic_category": null,
@@ -2645,9 +2645,9 @@
                 "des": "SYNTHETIC",
                 "limit": 10
               },
-              "received_at": "2026-11-13T05:04:59.798333+00:00",
+              "received_at": "2026-11-13T05:09:08.408486+00:00",
               "retrieval_timestamp_status": "available",
-              "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+              "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
               "signature": {
                 "source": "SYNTHETIC QA",
                 "version": "1.5"
@@ -2656,7 +2656,7 @@
               "total": 1
             }
           },
-          "fetched_at": "2026-11-13T05:04:59.811401+00:00",
+          "fetched_at": "2026-11-13T05:09:08.420627+00:00",
           "first_observation": null,
           "last_observation": null,
           "nongrav": null,
@@ -2668,18 +2668,18 @@
           "sources_used": [
             "CAD"
           ],
-          "updated_at": "2026-11-13T05:04:59.811401+00:00"
+          "updated_at": "2026-11-13T05:09:08.420627+00:00"
         },
         "snapshot_schema": "neo-data-v1"
       },
-      "payload_sha256": "a1d63f497a69c943cefdafdf7d03f1fc1c116ef0a0ad0f5a34e127d12eed854d",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "fed7e2f47c7e9b4a362242bf75b4b9f58966711af8f762bd16437ca1bac6f708",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 5,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "CAD"
     },
     {
-      "assertion_id": "262d8124b45f880fba5d44a7ea114c62b9512815ce2b343d667f8f05c23172e3",
+      "assertion_id": "56e8c21382c27c733326779a656c72327c375640b0aca495f2f03838966597f6",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -2687,7 +2687,7 @@
         "status": "available"
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "SBDB",
         "designation": "SYNTHETIC",
         "source_outcome": {
@@ -2724,13 +2724,13 @@
             "semi_major_axis": 1.23
           },
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:04:59.808341+00:00",
+          "completed_at": "2026-11-13T05:09:08.417886+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": {
             "close_approaches": [],
             "completeness": 1.0,
-            "created_at": "2026-11-13T05:04:59.808341+00:00",
+            "created_at": "2026-11-13T05:09:08.417886+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
@@ -2749,7 +2749,7 @@
               },
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+            "fetched_at": "2026-11-13T05:09:08.417886+00:00",
             "first_observation": "2026-11-01T00:00:00",
             "last_observation": "2026-11-08T00:00:00",
             "nongrav": null,
@@ -2803,11 +2803,11 @@
             "sources_used": [
               "SBDB"
             ],
-            "updated_at": "2026-11-13T05:04:59.808341+00:00"
+            "updated_at": "2026-11-13T05:09:08.417886+00:00"
           },
           "reason_code": null,
           "source": "SBDB",
-          "started_at": "2026-11-13T05:04:59.808283+00:00",
+          "started_at": "2026-11-13T05:09:08.417830+00:00",
           "status": "available"
         },
         "source_plan": {
@@ -2840,14 +2840,14 @@
         },
         "status": "available"
       },
-      "payload_sha256": "10c02cfc3e2d1350045619b646be8f209c6f1e67df849425bada0a4f4eb77792",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "85350dfd1363cb8b0341c92a6eaa0d24411269b0975d16c88eb762fb46e30022",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 6,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "SBDB"
     },
     {
-      "assertion_id": "dac27415b7292d45ece9a64e470cc915159757f38f92360de5ca6287d32ea537",
+      "assertion_id": "b7d30900b1e7f7f4516e895ddeb3adf8dd7446f0412fe95897202c23d0bf727e",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -2855,7 +2855,7 @@
         "status": "available"
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "NEODyS",
         "designation": "SYNTHETIC",
         "source_outcome": {
@@ -2868,20 +2868,20 @@
             "semi_major_axis": 1.23
           },
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:04:59.808523+00:00",
+          "completed_at": "2026-11-13T05:09:08.418036+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.42857142857142855,
-            "created_at": "2026-11-13T05:04:59.808523+00:00",
+            "created_at": "2026-11-13T05:09:08.418036+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:04:59.808523+00:00",
+            "fetched_at": "2026-11-13T05:09:08.418036+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -2903,11 +2903,11 @@
             "sources_used": [
               "NEODyS"
             ],
-            "updated_at": "2026-11-13T05:04:59.808523+00:00"
+            "updated_at": "2026-11-13T05:09:08.418036+00:00"
           },
           "reason_code": null,
           "source": "NEODyS",
-          "started_at": "2026-11-13T05:04:59.808501+00:00",
+          "started_at": "2026-11-13T05:09:08.418023+00:00",
           "status": "available"
         },
         "source_plan": {
@@ -2940,14 +2940,14 @@
         },
         "status": "available"
       },
-      "payload_sha256": "d2ecd17c932c1ee8346035b3107f17d6a5820d5f8677479331859fb9119f6d52",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "43cf4ccfdd97f98188c3ef0cb13a129ff567906c49fc1d4a9de9f7bc82880406",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 7,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "NEODyS"
     },
     {
-      "assertion_id": "3e9430905f09daa3b5dfbf33b945a4d568599409e667e7bd182751f9bf4f82e6",
+      "assertion_id": "94a2b876e74e6386e9c0174cb4e1ed1bc4edb84dc3efa00ae7db9e20d2301c1e",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -2955,7 +2955,7 @@
         "status": "available"
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "MPC",
         "designation": "SYNTHETIC",
         "source_outcome": {
@@ -2968,20 +2968,20 @@
             "semi_major_axis": 1.23
           },
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:04:59.808670+00:00",
+          "completed_at": "2026-11-13T05:09:08.418172+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.42857142857142855,
-            "created_at": "2026-11-13T05:04:59.808670+00:00",
+            "created_at": "2026-11-13T05:09:08.418172+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:04:59.808670+00:00",
+            "fetched_at": "2026-11-13T05:09:08.418172+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -3003,11 +3003,11 @@
             "sources_used": [
               "MPC"
             ],
-            "updated_at": "2026-11-13T05:04:59.808670+00:00"
+            "updated_at": "2026-11-13T05:09:08.418172+00:00"
           },
           "reason_code": null,
           "source": "MPC",
-          "started_at": "2026-11-13T05:04:59.808655+00:00",
+          "started_at": "2026-11-13T05:09:08.418152+00:00",
           "status": "available"
         },
         "source_plan": {
@@ -3040,14 +3040,14 @@
         },
         "status": "available"
       },
-      "payload_sha256": "f3e228a1d2984990e516a6c22eec6040264a340b3fd69c5a44125253cc3cdc1d",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "b4ef61bed0f11a1c5f0e49c173f64719bb44e5eadbfd24de8310e7a33513f132",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 8,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "MPC"
     },
     {
-      "assertion_id": "9bdb789b0ef21ce6e7af6b03aa98e2c2942c364ebb3f18c08da7c647ad661b3b",
+      "assertion_id": "3058cff82ffcdfcb15a2fbe2309ab4f0c38ac4c8928612a3a1e69afc980f1437",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -3055,7 +3055,7 @@
         "status": "available"
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "Horizons",
         "designation": "SYNTHETIC",
         "source_outcome": {
@@ -3068,20 +3068,20 @@
             "semi_major_axis": 1.23
           },
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:04:59.808781+00:00",
+          "completed_at": "2026-11-13T05:09:08.418276+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": {
             "close_approaches": [],
             "completeness": 0.42857142857142855,
-            "created_at": "2026-11-13T05:04:59.808781+00:00",
+            "created_at": "2026-11-13T05:09:08.418276+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
             "evidence_metadata": {
               "synthetic": true
             },
-            "fetched_at": "2026-11-13T05:04:59.808781+00:00",
+            "fetched_at": "2026-11-13T05:09:08.418276+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -3103,11 +3103,11 @@
             "sources_used": [
               "Horizons"
             ],
-            "updated_at": "2026-11-13T05:04:59.808781+00:00"
+            "updated_at": "2026-11-13T05:09:08.418276+00:00"
           },
           "reason_code": null,
           "source": "Horizons",
-          "started_at": "2026-11-13T05:04:59.808771+00:00",
+          "started_at": "2026-11-13T05:09:08.418264+00:00",
           "status": "available"
         },
         "source_plan": {
@@ -3140,14 +3140,14 @@
         },
         "status": "available"
       },
-      "payload_sha256": "56af84d5975d9d33ea560748a0b719b8e330ab182f9736d8b24e183984e8710f",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "858f06d0ea4966f07c1065b8f36d20e84439d54032f4c96a6073fdfad0120a3c",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 9,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "Horizons"
     },
     {
-      "assertion_id": "b387a574151c6099ec25a4a07e38dbae445698f2a3a97bd4947a37da1e4c28b8",
+      "assertion_id": "49bc4b586d1d290006c4e84b7e294ddd7b82a815c557babad54702fa81c4ce7d",
       "designation": "SYNTHETIC",
       "exact_payload_repeat_of": null,
       "kind": "query_attempt",
@@ -3155,13 +3155,13 @@
         "status": "available"
       },
       "payload": {
-        "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "data_source": "CAD",
         "designation": "SYNTHETIC",
         "source_outcome": {
           "adapter_payload": null,
           "basis": "computed_encounters_not_observations",
-          "completed_at": "2026-11-13T05:04:59.811401+00:00",
+          "completed_at": "2026-11-13T05:09:08.420627+00:00",
           "designation": "SYNTHETIC",
           "native_response_sha256": null,
           "neo_data": {
@@ -3209,9 +3209,9 @@
                     "00:05",
                     "25.9"
                   ],
-                  "received_at": "2026-11-13T05:04:59.798333+00:00",
+                  "received_at": "2026-11-13T05:09:08.408486+00:00",
                   "retrieval_timestamp_status": "available",
-                  "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                  "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                   "signature": {
                     "source": "SYNTHETIC QA",
                     "version": "1.5"
@@ -3236,7 +3236,7 @@
               }
             ],
             "completeness": 0.0,
-            "created_at": "2026-11-13T05:04:59.811401+00:00",
+            "created_at": "2026-11-13T05:09:08.420627+00:00",
             "designation": "SYNTHETIC",
             "dynamic_TAS": null,
             "dynamic_category": null,
@@ -3250,9 +3250,9 @@
                   "des": "SYNTHETIC",
                   "limit": 10
                 },
-                "received_at": "2026-11-13T05:04:59.798333+00:00",
+                "received_at": "2026-11-13T05:09:08.408486+00:00",
                 "retrieval_timestamp_status": "available",
-                "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                 "signature": {
                   "source": "SYNTHETIC QA",
                   "version": "1.5"
@@ -3261,7 +3261,7 @@
                 "total": 1
               }
             },
-            "fetched_at": "2026-11-13T05:04:59.811401+00:00",
+            "fetched_at": "2026-11-13T05:09:08.420627+00:00",
             "first_observation": null,
             "last_observation": null,
             "nongrav": null,
@@ -3273,11 +3273,11 @@
             "sources_used": [
               "CAD"
             ],
-            "updated_at": "2026-11-13T05:04:59.811401+00:00"
+            "updated_at": "2026-11-13T05:09:08.420627+00:00"
           },
           "reason_code": null,
           "source": "CAD",
-          "started_at": "2026-11-13T05:04:59.811371+00:00",
+          "started_at": "2026-11-13T05:09:08.420597+00:00",
           "status": "available"
         },
         "source_plan": {
@@ -3310,20 +3310,20 @@
         },
         "status": "available"
       },
-      "payload_sha256": "d9bc389720c66628b10cc610a29ef90a95030b3c7c73a5537d55227a50805ed0",
-      "recorded_at": "2026-11-13T05:04:59.866244+00:00",
+      "payload_sha256": "6623de7fe4cb42778b9a8e29f107ce8c6329eb953599551ca08f318e88ae0260",
+      "recorded_at": "2026-11-13T05:09:08.474149+00:00",
       "sequence": 10,
-      "session_id": "acquisition-78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "session_id": "acquisition-457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "CAD"
     }
   ],
-  "first_discovered": "2026-11-13T05:04:59.866244",
-  "last_updated": "2026-11-13T05:04:59.866244",
+  "first_discovered": "2026-11-13T05:09:08.474149",
+  "last_updated": "2026-11-13T05:09:08.474149",
   "latest_acquisition": {
     "assertion_count": 10,
-    "bundle_id": "aaa4e9a8a51fe0fa3f1cfd08db2fe52745e7f789247260e41290f851f3ec45c6",
+    "bundle_id": "d4f5c96ccd17576166967648a8de274f39d087b5b1cb9f89f3ec8f7c23151373",
     "commit_status": "committed",
-    "committed_at": "2026-11-13T05:04:59.883666+00:00",
+    "committed_at": "2026-11-13T05:09:08.490648+00:00",
     "consistency_status": "replayed_not_authenticated",
     "coverage": {
       "contributing_fraction": 1.0,
@@ -3344,8 +3344,8 @@
       "validated_response_fraction": 1.0,
       "validated_response_sources": 5
     },
-    "projection_id": "95f0c899178c4fa89a3ed0abca9b6c39da47d31b737342a5402f0d955a4bf664",
-    "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+    "projection_id": "fcbb50491202d968b32e412990a35ce27f44c7272fdd2f8829ea65ee3e68ce78",
+    "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
     "query_sequence": 1,
     "schema_version": "acquisition-storage-receipt-v1",
     "source_plan": {
@@ -3377,7 +3377,7 @@
       ]
     },
     "summary": {
-      "bundle_id": "aaa4e9a8a51fe0fa3f1cfd08db2fe52745e7f789247260e41290f851f3ec45c6",
+      "bundle_id": "d4f5c96ccd17576166967648a8de274f39d087b5b1cb9f89f3ec8f7c23151373",
       "coverage": {
         "contributing_fraction": 1.0,
         "contributing_sources": 5,
@@ -3400,46 +3400,46 @@
       "outcomes": [
         {
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:04:59.808341+00:00",
+          "completed_at": "2026-11-13T05:09:08.417886+00:00",
           "reason_code": null,
           "source": "SBDB",
-          "started_at": "2026-11-13T05:04:59.808283+00:00",
+          "started_at": "2026-11-13T05:09:08.417830+00:00",
           "status": "available"
         },
         {
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:04:59.808523+00:00",
+          "completed_at": "2026-11-13T05:09:08.418036+00:00",
           "reason_code": null,
           "source": "NEODyS",
-          "started_at": "2026-11-13T05:04:59.808501+00:00",
+          "started_at": "2026-11-13T05:09:08.418023+00:00",
           "status": "available"
         },
         {
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:04:59.808670+00:00",
+          "completed_at": "2026-11-13T05:09:08.418172+00:00",
           "reason_code": null,
           "source": "MPC",
-          "started_at": "2026-11-13T05:04:59.808655+00:00",
+          "started_at": "2026-11-13T05:09:08.418152+00:00",
           "status": "available"
         },
         {
           "basis": "typed_adapter_projection_not_independently_verified",
-          "completed_at": "2026-11-13T05:04:59.808781+00:00",
+          "completed_at": "2026-11-13T05:09:08.418276+00:00",
           "reason_code": null,
           "source": "Horizons",
-          "started_at": "2026-11-13T05:04:59.808771+00:00",
+          "started_at": "2026-11-13T05:09:08.418264+00:00",
           "status": "available"
         },
         {
           "basis": "computed_encounters_not_observations",
-          "completed_at": "2026-11-13T05:04:59.811401+00:00",
+          "completed_at": "2026-11-13T05:09:08.420627+00:00",
           "reason_code": null,
           "source": "CAD",
-          "started_at": "2026-11-13T05:04:59.811371+00:00",
+          "started_at": "2026-11-13T05:09:08.420597+00:00",
           "status": "available"
         }
       ],
-      "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "schema_version": "object-acquisition-v1",
       "source_plan": {
         "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
@@ -3471,12 +3471,12 @@
       },
       "storage_receipt": {
         "assertion_count": 10,
-        "bundle_id": "aaa4e9a8a51fe0fa3f1cfd08db2fe52745e7f789247260e41290f851f3ec45c6",
+        "bundle_id": "d4f5c96ccd17576166967648a8de274f39d087b5b1cb9f89f3ec8f7c23151373",
         "commit_status": "committed",
-        "committed_at": "2026-11-13T05:04:59.883666+00:00",
+        "committed_at": "2026-11-13T05:09:08.490648+00:00",
         "consistency_status": "replayed_not_authenticated",
-        "projection_id": "95f0c899178c4fa89a3ed0abca9b6c39da47d31b737342a5402f0d955a4bf664",
-        "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+        "projection_id": "fcbb50491202d968b32e412990a35ce27f44c7272fdd2f8829ea65ee3e68ce78",
+        "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
         "query_sequence": 1,
         "schema_version": "acquisition-storage-receipt-v1"
       }
@@ -3528,9 +3528,9 @@
             "00:05",
             "25.9"
           ],
-          "received_at": "2026-11-13T05:04:59.798333+00:00",
+          "received_at": "2026-11-13T05:09:08.408486+00:00",
           "retrieval_timestamp_status": "available",
-          "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+          "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
           "signature": {
             "source": "SYNTHETIC QA",
             "version": "1.5"
@@ -3555,7 +3555,7 @@
       }
     ],
     "completeness": 1.0,
-    "created_at": "2026-11-13T05:04:59.808341+00:00",
+    "created_at": "2026-11-13T05:09:08.417886+00:00",
     "designation": "SYNTHETIC",
     "dynamic_TAS": null,
     "dynamic_category": null,
@@ -3599,7 +3599,7 @@
         {
           "basis": "computed_or_legacy_encounter_not_observation",
           "projection_index": 0,
-          "record_sha256": "414659657651bcd5547bd4735d146131999b1ca4d7cbc380fe6596d4429235d7",
+          "record_sha256": "e281776fbf5b02082864d7ff1c0c63c5d2d35ac0a5c64b89eb366a76f8cd70e4",
           "source": "CAD"
         }
       ],
@@ -3672,9 +3672,9 @@
                 "des": "SYNTHETIC",
                 "limit": 10
               },
-              "received_at": "2026-11-13T05:04:59.798333+00:00",
+              "received_at": "2026-11-13T05:09:08.408486+00:00",
               "retrieval_timestamp_status": "available",
-              "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+              "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
               "signature": {
                 "source": "SYNTHETIC QA",
                 "version": "1.5"
@@ -3753,9 +3753,9 @@
               "des": "SYNTHETIC",
               "limit": 10
             },
-            "received_at": "2026-11-13T05:04:59.798333+00:00",
+            "received_at": "2026-11-13T05:09:08.408486+00:00",
             "retrieval_timestamp_status": "available",
-            "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+            "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
             "signature": {
               "source": "SYNTHETIC QA",
               "version": "1.5"
@@ -3790,7 +3790,7 @@
         }
       }
     },
-    "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+    "fetched_at": "2026-11-13T05:09:08.417886+00:00",
     "first_observation": "2026-11-01T00:00:00",
     "last_observation": "2026-11-08T00:00:00",
     "nongrav": null,
@@ -3848,7 +3848,7 @@
       "Horizons",
       "CAD"
     ],
-    "updated_at": "2026-11-13T05:04:59.808341+00:00"
+    "updated_at": "2026-11-13T05:09:08.417886+00:00"
   },
   "orbital_elements": {
     "arg_of_periapsis": 2.0,
@@ -3900,44 +3900,44 @@
   "projection_cache_status": "consistent",
   "projection_query_bindings": [
     {
-      "assertion_id": "917d5ff941afac9a12dcacebbd3445ea497cbfa6b9c901242f42317b78825fbd",
+      "assertion_id": "0e2f594c6d47a342e82f89be0faa220d19cd7ba39242eace6169b4134193511e",
       "from_latest_query": true,
-      "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "CAD"
     },
     {
-      "assertion_id": "3a44b3408dcd18d5023cb442d1ca25061d1c48043fefe955c12e0e3f8fb8572e",
+      "assertion_id": "7436cea43cc7242f0a1fcc549892e324473a464dfa6aa19039837f061935d1b6",
       "from_latest_query": true,
-      "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "Horizons"
     },
     {
-      "assertion_id": "43cad5fb0d4dd48e1be8b57c9ec93b843f41c39eedfc3fece798c9804ab2e489",
+      "assertion_id": "cebd0b0df6aa69f438ddf0c3e78b46c9db6203734d23797a3cf581ba3f3260e0",
       "from_latest_query": true,
-      "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "MPC"
     },
     {
-      "assertion_id": "a991a971a4297e97283af5f4e4fc97530def0af0a88aab7e9b9486e50f39fe78",
+      "assertion_id": "86aa1de34a522e371f64d76c4674a76188b7267a617621131430abaa51b8ee4b",
       "from_latest_query": true,
-      "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "NEODyS"
     },
     {
-      "assertion_id": "61c54e091f7f2040438ba5fc59e9476dbe4923bb4de2d2470c18c1eefa50681d",
+      "assertion_id": "038289320c0724172b29ff5f118503125b19a57d4f08b5cf010cde5d4365ae78",
       "from_latest_query": true,
-      "query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "source": "SBDB"
     }
   ],
   "projection_receipt": {
-    "created_at": "2026-11-13T05:04:59.866244+00:00",
+    "created_at": "2026-11-13T05:09:08.474149+00:00",
     "input_assertions": [
-      "61c54e091f7f2040438ba5fc59e9476dbe4923bb4de2d2470c18c1eefa50681d",
-      "a991a971a4297e97283af5f4e4fc97530def0af0a88aab7e9b9486e50f39fe78",
-      "43cad5fb0d4dd48e1be8b57c9ec93b843f41c39eedfc3fece798c9804ab2e489",
-      "3a44b3408dcd18d5023cb442d1ca25061d1c48043fefe955c12e0e3f8fb8572e",
-      "917d5ff941afac9a12dcacebbd3445ea497cbfa6b9c901242f42317b78825fbd"
+      "038289320c0724172b29ff5f118503125b19a57d4f08b5cf010cde5d4365ae78",
+      "86aa1de34a522e371f64d76c4674a76188b7267a617621131430abaa51b8ee4b",
+      "cebd0b0df6aa69f438ddf0c3e78b46c9db6203734d23797a3cf581ba3f3260e0",
+      "7436cea43cc7242f0a1fcc549892e324473a464dfa6aa19039837f061935d1b6",
+      "0e2f594c6d47a342e82f89be0faa220d19cd7ba39242eace6169b4134193511e"
     ],
     "projection": {
       "artificial_probability": null,
@@ -3992,9 +3992,9 @@
                 "00:05",
                 "25.9"
               ],
-              "received_at": "2026-11-13T05:04:59.798333+00:00",
+              "received_at": "2026-11-13T05:09:08.408486+00:00",
               "retrieval_timestamp_status": "available",
-              "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+              "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
               "signature": {
                 "source": "SYNTHETIC QA",
                 "version": "1.5"
@@ -4019,7 +4019,7 @@
           }
         ],
         "completeness": 1.0,
-        "created_at": "2026-11-13T05:04:59.808341+00:00",
+        "created_at": "2026-11-13T05:09:08.417886+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
@@ -4063,7 +4063,7 @@
             {
               "basis": "computed_or_legacy_encounter_not_observation",
               "projection_index": 0,
-              "record_sha256": "414659657651bcd5547bd4735d146131999b1ca4d7cbc380fe6596d4429235d7",
+              "record_sha256": "e281776fbf5b02082864d7ff1c0c63c5d2d35ac0a5c64b89eb366a76f8cd70e4",
               "source": "CAD"
             }
           ],
@@ -4136,9 +4136,9 @@
                     "des": "SYNTHETIC",
                     "limit": 10
                   },
-                  "received_at": "2026-11-13T05:04:59.798333+00:00",
+                  "received_at": "2026-11-13T05:09:08.408486+00:00",
                   "retrieval_timestamp_status": "available",
-                  "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                  "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                   "signature": {
                     "source": "SYNTHETIC QA",
                     "version": "1.5"
@@ -4217,9 +4217,9 @@
                   "des": "SYNTHETIC",
                   "limit": 10
                 },
-                "received_at": "2026-11-13T05:04:59.798333+00:00",
+                "received_at": "2026-11-13T05:09:08.408486+00:00",
                 "retrieval_timestamp_status": "available",
-                "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+                "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
                 "signature": {
                   "source": "SYNTHETIC QA",
                   "version": "1.5"
@@ -4254,7 +4254,7 @@
             }
           }
         },
-        "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+        "fetched_at": "2026-11-13T05:09:08.417886+00:00",
         "first_observation": "2026-11-01T00:00:00",
         "last_observation": "2026-11-08T00:00:00",
         "nongrav": null,
@@ -4312,17 +4312,17 @@
           "Horizons",
           "CAD"
         ],
-        "updated_at": "2026-11-13T05:04:59.808341+00:00"
+        "updated_at": "2026-11-13T05:09:08.417886+00:00"
       },
       "origin_status": "not_assessed",
       "overall_data_completeness": null,
       "schema_version": "enriched-object-projection-v1",
       "selected_source_assertions": {
-        "CAD": "917d5ff941afac9a12dcacebbd3445ea497cbfa6b9c901242f42317b78825fbd",
-        "Horizons": "3a44b3408dcd18d5023cb442d1ca25061d1c48043fefe955c12e0e3f8fb8572e",
-        "MPC": "43cad5fb0d4dd48e1be8b57c9ec93b843f41c39eedfc3fece798c9804ab2e489",
-        "NEODyS": "a991a971a4297e97283af5f4e4fc97530def0af0a88aab7e9b9486e50f39fe78",
-        "SBDB": "61c54e091f7f2040438ba5fc59e9476dbe4923bb4de2d2470c18c1eefa50681d"
+        "CAD": "0e2f594c6d47a342e82f89be0faa220d19cd7ba39242eace6169b4134193511e",
+        "Horizons": "7436cea43cc7242f0a1fcc549892e324473a464dfa6aa19039837f061935d1b6",
+        "MPC": "cebd0b0df6aa69f438ddf0c3e78b46c9db6203734d23797a3cf581ba3f3260e0",
+        "NEODyS": "86aa1de34a522e371f64d76c4674a76188b7267a617621131430abaa51b8ee4b",
+        "SBDB": "038289320c0724172b29ff5f118503125b19a57d4f08b5cf010cde5d4365ae78"
       },
       "source_acquisition_coverage": null,
       "source_priority": [
@@ -4333,12 +4333,12 @@
         "CAD"
       ]
     },
-    "projection_id": "95f0c899178c4fa89a3ed0abca9b6c39da47d31b737342a5402f0d955a4bf664"
+    "projection_id": "fcbb50491202d968b32e412990a35ce27f44c7272fdd2f8829ea65ee3e68ce78"
   },
   "source_acquisition_coverage": null,
   "source_data": {
     "CAD": {
-      "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "data_source": "CAD",
       "designation": "SYNTHETIC",
       "neo_data": {
@@ -4386,9 +4386,9 @@
                 "00:05",
                 "25.9"
               ],
-              "received_at": "2026-11-13T05:04:59.798333+00:00",
+              "received_at": "2026-11-13T05:09:08.408486+00:00",
               "retrieval_timestamp_status": "available",
-              "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+              "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
               "signature": {
                 "source": "SYNTHETIC QA",
                 "version": "1.5"
@@ -4413,7 +4413,7 @@
           }
         ],
         "completeness": 0.0,
-        "created_at": "2026-11-13T05:04:59.811401+00:00",
+        "created_at": "2026-11-13T05:09:08.420627+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
@@ -4427,9 +4427,9 @@
               "des": "SYNTHETIC",
               "limit": 10
             },
-            "received_at": "2026-11-13T05:04:59.798333+00:00",
+            "received_at": "2026-11-13T05:09:08.408486+00:00",
             "retrieval_timestamp_status": "available",
-            "retrieved_at": "2026-11-13T05:04:59.798307+00:00",
+            "retrieved_at": "2026-11-13T05:09:08.408465+00:00",
             "signature": {
               "source": "SYNTHETIC QA",
               "version": "1.5"
@@ -4438,7 +4438,7 @@
             "total": 1
           }
         },
-        "fetched_at": "2026-11-13T05:04:59.811401+00:00",
+        "fetched_at": "2026-11-13T05:09:08.420627+00:00",
         "first_observation": null,
         "last_observation": null,
         "nongrav": null,
@@ -4450,25 +4450,25 @@
         "sources_used": [
           "CAD"
         ],
-        "updated_at": "2026-11-13T05:04:59.811401+00:00"
+        "updated_at": "2026-11-13T05:09:08.420627+00:00"
       },
       "snapshot_schema": "neo-data-v1"
     },
     "Horizons": {
-      "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "data_source": "Horizons",
       "designation": "SYNTHETIC",
       "neo_data": {
         "close_approaches": [],
         "completeness": 0.42857142857142855,
-        "created_at": "2026-11-13T05:04:59.808781+00:00",
+        "created_at": "2026-11-13T05:09:08.418276+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
         "evidence_metadata": {
           "synthetic": true
         },
-        "fetched_at": "2026-11-13T05:04:59.808781+00:00",
+        "fetched_at": "2026-11-13T05:09:08.418276+00:00",
         "first_observation": null,
         "last_observation": null,
         "nongrav": null,
@@ -4490,25 +4490,25 @@
         "sources_used": [
           "Horizons"
         ],
-        "updated_at": "2026-11-13T05:04:59.808781+00:00"
+        "updated_at": "2026-11-13T05:09:08.418276+00:00"
       },
       "snapshot_schema": "neo-data-v1"
     },
     "MPC": {
-      "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "data_source": "MPC",
       "designation": "SYNTHETIC",
       "neo_data": {
         "close_approaches": [],
         "completeness": 0.42857142857142855,
-        "created_at": "2026-11-13T05:04:59.808670+00:00",
+        "created_at": "2026-11-13T05:09:08.418172+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
         "evidence_metadata": {
           "synthetic": true
         },
-        "fetched_at": "2026-11-13T05:04:59.808670+00:00",
+        "fetched_at": "2026-11-13T05:09:08.418172+00:00",
         "first_observation": null,
         "last_observation": null,
         "nongrav": null,
@@ -4530,25 +4530,25 @@
         "sources_used": [
           "MPC"
         ],
-        "updated_at": "2026-11-13T05:04:59.808670+00:00"
+        "updated_at": "2026-11-13T05:09:08.418172+00:00"
       },
       "snapshot_schema": "neo-data-v1"
     },
     "NEODyS": {
-      "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "data_source": "NEODyS",
       "designation": "SYNTHETIC",
       "neo_data": {
         "close_approaches": [],
         "completeness": 0.42857142857142855,
-        "created_at": "2026-11-13T05:04:59.808523+00:00",
+        "created_at": "2026-11-13T05:09:08.418036+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
         "evidence_metadata": {
           "synthetic": true
         },
-        "fetched_at": "2026-11-13T05:04:59.808523+00:00",
+        "fetched_at": "2026-11-13T05:09:08.418036+00:00",
         "first_observation": null,
         "last_observation": null,
         "nongrav": null,
@@ -4570,18 +4570,18 @@
         "sources_used": [
           "NEODyS"
         ],
-        "updated_at": "2026-11-13T05:04:59.808523+00:00"
+        "updated_at": "2026-11-13T05:09:08.418036+00:00"
       },
       "snapshot_schema": "neo-data-v1"
     },
     "SBDB": {
-      "acquisition_query_id": "78d4f5a3-aa9d-44b8-95b1-a77efd6a2eaa",
+      "acquisition_query_id": "457aea94-1ca5-4624-bc83-b30e317e7c50",
       "data_source": "SBDB",
       "designation": "SYNTHETIC",
       "neo_data": {
         "close_approaches": [],
         "completeness": 1.0,
-        "created_at": "2026-11-13T05:04:59.808341+00:00",
+        "created_at": "2026-11-13T05:09:08.417886+00:00",
         "designation": "SYNTHETIC",
         "dynamic_TAS": null,
         "dynamic_category": null,
@@ -4600,7 +4600,7 @@
           },
           "synthetic": true
         },
-        "fetched_at": "2026-11-13T05:04:59.808341+00:00",
+        "fetched_at": "2026-11-13T05:09:08.417886+00:00",
         "first_observation": "2026-11-01T00:00:00",
         "last_observation": "2026-11-08T00:00:00",
         "nongrav": null,
@@ -4654,7 +4654,7 @@
         "sources_used": [
           "SBDB"
         ],
-        "updated_at": "2026-11-13T05:04:59.808341+00:00"
+        "updated_at": "2026-11-13T05:09:08.417886+00:00"
       },
       "snapshot_schema": "neo-data-v1"
     }

@@ -9,21 +9,21 @@ No admitted catalogue snapshot; query outcomes remain available below. Missing i
 │ ┃ Source      ┃ Outcome        ┃ Recorded at (UTC)      ┃ Meaning                                                  ┃ │
 │ ┡━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
 │ │ SBDB        │ unavailable    │ 2026-11-13             │ Adapter/result unavailable; no substitute data           │ │
-│ │             │                │ 05:05:00.260965Z       │                                                          │ │
+│ │             │                │ 05:09:08.845178Z       │                                                          │ │
 │ │ NEODyS      │ unavailable    │ 2026-11-13             │ Adapter/result unavailable; no substitute data           │ │
-│ │             │                │ 05:05:00.261044Z       │                                                          │ │
+│ │             │                │ 05:09:08.845262Z       │                                                          │ │
 │ │ MPC         │ unavailable    │ 2026-11-13             │ Adapter/result unavailable; no substitute data           │ │
-│ │             │                │ 05:05:00.261077Z       │                                                          │ │
+│ │             │                │ 05:09:08.845281Z       │                                                          │ │
 │ │ Horizons    │ unavailable    │ 2026-11-13             │ Adapter/result unavailable; no substitute data           │ │
-│ │             │                │ 05:05:00.261176Z       │                                                          │ │
+│ │             │                │ 05:09:08.845371Z       │                                                          │ │
 │ │ CAD         │ unavailable    │ 2026-11-13             │ Adapter/result unavailable; no substitute data           │ │
-│ │             │                │ 05:05:00.261278Z       │                                                          │ │
+│ │             │                │ 05:09:08.845472Z       │                                                          │ │
 │ └─────────────┴────────────────┴────────────────────────┴──────────────────────────────────────────────────────────┘ │
 │ Installed catalogue + bounded CAD profile only. Counts are not total completeness, independent evidence, source      │
 │ authenticity or scientific readiness.                                                                                │
 │ Recorded times are adapter-result receipts, not observation epochs. Native/adapter packets where available and query │
 │ IDs remain in local JSON history.                                                                                    │
-│ Query: 1cae6678-44f0-447e-b199-895878c67d19                                                                          │
+│ Query: ccccaf31-cf60-4565-af34-211daf9d1b00                                                                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 Stored projection may include earlier source receipts; a successful query does not refresh every stored measurement.
         Stored projection / latest query binding         
@@ -36,16 +36,16 @@ Showing 5/5 source receipts; full payloads remain in JSON export.
 ┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
 ┃ Source   ┃ Recorded at           ┃ Kind          ┃ Receipt (short) ┃
 ┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
-│ SBDB     │ 2026-11-13            │ query_attempt │ e7f2ba2113e8    │
-│          │ 05:05:00.296777+00:00 │               │                 │
-│ NEODyS   │ 2026-11-13            │ query_attempt │ 6ab16f7b5c56    │
-│          │ 05:05:00.296777+00:00 │               │                 │
-│ MPC      │ 2026-11-13            │ query_attempt │ b44c63a79cb9    │
-│          │ 05:05:00.296777+00:00 │               │                 │
-│ Horizons │ 2026-11-13            │ query_attempt │ 37c4e779eb1f    │
-│          │ 05:05:00.296777+00:00 │               │                 │
-│ CAD      │ 2026-11-13            │ query_attempt │ a2bf847e00f6    │
-│          │ 05:05:00.296777+00:00 │               │                 │
+│ SBDB     │ 2026-11-13            │ query_attempt │ bd215ffb7981    │
+│          │ 05:09:08.882614+00:00 │               │                 │
+│ NEODyS   │ 2026-11-13            │ query_attempt │ 84a79bb15153    │
+│          │ 05:09:08.882614+00:00 │               │                 │
+│ MPC      │ 2026-11-13            │ query_attempt │ e32f5bcef519    │
+│          │ 05:09:08.882614+00:00 │               │                 │
+│ Horizons │ 2026-11-13            │ query_attempt │ c756369f8dfb    │
+│          │ 05:09:08.882614+00:00 │               │                 │
+│ CAD      │ 2026-11-13            │ query_attempt │ 624df2681fe1    │
+│          │ 05:09:08.882614+00:00 │               │                 │
 └──────────┴───────────────────────┴───────────────┴─────────────────┘
 Full receipt IDs and unknown/alternative measurements remain in JSON source history. No source authentication, physical 
 fit or calibrated origin inference is established.

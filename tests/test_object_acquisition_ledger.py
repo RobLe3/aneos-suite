@@ -1332,3 +1332,32 @@ def test_actual_acquisition_render_generator_has_bounded_widths_and_no_database(
         capture_output=True,
     )
     assert again.returncode != 0
+
+
+@pytest.mark.parametrize(
+    "kind,expected",
+    [
+        ("empty_ng", False),
+        ("uncertainty_only", False),
+        ("node_only", True),
+        ("periapsis_only", True),
+    ],
+)
+def test_material_contribution_requires_a_value_not_an_empty_container(kind, expected):
+    from aneos_core.data.acquisition import has_material
+    from aneos_core.data.models import NonGravitationalParameters
+
+    values = {
+        "empty_ng": NEOData("SYNTHETIC", nongrav=NonGravitationalParameters()),
+        "uncertainty_only": NEOData(
+            "SYNTHETIC",
+            physical_properties=PhysicalProperties(diameter_uncertainty=0.002),
+        ),
+        "node_only": NEOData(
+            "SYNTHETIC", orbital_elements=OrbitalElements(ra_of_ascending_node=1.0)
+        ),
+        "periapsis_only": NEOData(
+            "SYNTHETIC", orbital_elements=OrbitalElements(arg_of_periapsis=2.0)
+        ),
+    }
+    assert has_material(values[kind]) is expected
