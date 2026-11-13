@@ -1,6 +1,10 @@
 # aNEOS Development Roadmap
 
-## Active plan — 2026-11-13
+## Paused programme — 2026-11-13
+
+See the [qualified milestone and resume record](docs/engineering/development-pause-2026-11-13.md).
+The user requested a token-conserving pause; horizons below remain requirements,
+not completed deliverables or permission for background development.
 
 Programme [#2](https://github.com/RobLe3/aneos-suite/issues/2). The
 [evidence-backed discovery/integrity review](docs/engineering/discovery-integrity-roadmap-review-2026-11-13.md)
@@ -13,11 +17,11 @@ The older 2025 plan below is historical design, **not current readiness evidence
 | Medium term | Qualified #86 groups → #10 conditional/dependency-aware follow-up; #40/#13 → #87 compatible comparisons → #7 KY26 history; #5/#7 → #8 valid fits → #9 hypothesis tests; #11 independent controls; #12/#42 presentation | Measured useful coverage, reproducibility and false-positive control, with operation-specific scientific prerequisites and unresolved outcomes |
 | Long term | #10/#11 prospective targets, object/time holdouts, Brier/reliability/PR; calibrated search-wide significance only if supportable; #87 independent checkpoints/security/recovery; #13/#14 cases/predictions | Independent generalization/review, provenance and recoverability within explicit threat-model limits |
 
-Horizons express prerequisites, not dates. Beta **2.2.0b2** is published; main has
-later scoped improvements. PR85's foundation is separate from #84 integration and
-scientific qualification. The next integrated polling version needs a scope/CI
-check after #84; no calendar ETA is substantiated yet. Do not delay qualified
-engineering increments for all future science, or label them scientifically validated.
+Horizons express prerequisites, not dates. Published beta **2.2.0b2** is unchanged.
+Main's qualified integration includes the bounded polling, reporting, statistics
+and durable batch increments through PR95; it does not finish every issue in the
+table. The separate Monte Carlo WIP is excluded. No new release or calendar ETA is
+promised. Resume only on explicit request, with issue acceptance and CI rechecked.
 
 ### Rules for every horizon
 

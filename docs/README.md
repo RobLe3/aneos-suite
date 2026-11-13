@@ -1,3 +1,5 @@
+> **Development paused, 2026-11-13:** see the [main milestone, excluded WIP and resume checklist](engineering/development-pause-2026-11-13.md). Main is newer than published v2.2.0b2; the scientific programme is incomplete.
+
 # aNEOS documentation
 
 Start here to install the engineering beta, investigate an object and understand

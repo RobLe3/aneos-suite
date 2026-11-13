@@ -1,3 +1,9 @@
+> **Pause checkpoint — 2026-11-13:** main contains the qualified engineering work
+> through PR95, not independently calibrated science. Retained legacy Monte Carlo
+> harnesses have confirmed counting/generation/interpretation defects and must not
+> support FPR or five-sigma claims. Remediation is preserved on a separate unqualified
+> WIP branch, not merged. See the [current milestone/resume record](../engineering/development-pause-2026-11-13.md).
+
 > **Active status — 2026-11-13:** dated audits/review-branch notes below preserve
 > their original evidence horizons. Several engineering changes are now on main;
 > older draft/migration labels are not current release status. See the

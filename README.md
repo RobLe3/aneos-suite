@@ -23,13 +23,15 @@ The published **v2.2.0b2** is an engineering beta for per-object acquisition,
 evidence storage, screening and reporting. Its root legacy bulk discovery remains
 quarantined. Use the [beta release guide](docs/releases/2.2.0b2.md) for that tag.
 
-This development checkout additionally contains the bounded
-[root CAD workflow](docs/engineering/root-cad-workflow.md): committed encounter
-collections, source-linked physical fields and explicitly budgeted enrichment.
-Those changes are under review in [PR #85](https://github.com/RobLe3/aneos-suite/pull/85),
-[PR #89](https://github.com/RobLe3/aneos-suite/pull/89) and
-[PR #90](https://github.com/RobLe3/aneos-suite/pull/90); they are not in the beta tag.
-Other root bulk discovery choices remain unavailable.
+Main now includes the bounded [root CAD workflow](docs/engineering/root-cad-workflow.md),
+full batch request accounting, durable primary-menu/owned REST batch execution and
+corrected statistical utility contracts. These engineering changes are newer than
+the published beta tag. Other root bulk discovery choices remain unavailable.
+
+**Development paused — 2026-11-13.** The [milestone and resume record](docs/engineering/development-pause-2026-11-13.md)
+identifies the qualified code, CI evidence, known limitations and excluded WIP.
+Short-, medium- and long-term scientific goals remain incomplete. No new release
+or calibrated scientific performance is claimed by updating main.
 
 The application version does not identify the scoring policy, input dataset or
 API schema. Keep the report's separate reproducibility identifiers when comparing
