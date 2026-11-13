@@ -49,6 +49,9 @@ jobs:
       - name: Verify native orbital epoch component coverage
         run: python -m pytest tests/test_native_orbital_epochs.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-native-epochs.ini --cov-report=term-missing --cov-fail-under=90
 
+      - name: Verify HTTP evidence schema parity and validation
+        run: python -m pytest tests/test_api_evidence_parity.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-api-evidence.ini --cov-report=term-missing --cov-fail-under=95
+
   docker-build:
     name: Docker build
     runs-on: ubuntu-latest

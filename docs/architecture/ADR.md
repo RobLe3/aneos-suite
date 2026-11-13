@@ -2793,3 +2793,43 @@ profile becomes v2 only when using a native epoch; old v1 inventories remain rep
 Neither profile establishes scientific completeness. No new bounded context/detector,
 calendar conversion service, fitted likelihood, origin conclusion or calibrated sigma
 is introduced. See `docs/engineering/native-orbital-epochs.md` and issues5/40/41/43.
+
+### ADR-083: HTTP evidence parity and explicit computed-history outcomes
+
+**Status**: Implemented for existing history/raw-screening routes and application
+request-error handling; complete acquisition ledger/auth/operational QA remain pending.
+**Date**: 2026-11-13
+
+A schema adapter must not discard a native epoch or change scientific admissibility
+relative to the canonical service. Real HTTP tests reproduced native-epoch loss and
+rejection of geometric albedo above one, plus a NaN validation error becoming HTTP500
+when the framework tried to echo non-JSON-safe input in its error response.
+
+Preserve native epochs in a replay-checked history DTO, with header/source/role binding,
+finite strict numeric fields and explicit computed-not-observed basis. Expose bounded
+sample count/query scope and distinguish a same-declared-scale numeric axis from
+unresolved, mixed-scale or legacy-unbound epochs. Neither status is physical validity,
+complete observations, model calibration or covariance propagation.
+
+Use a list-compatible history query envelope inside existing acquisition boundaries:
+request parameters, attempt/retrieval times, schema status and response-text hash;
+available/empty/unavailable/invalid outcomes are distinct. Existing list callers stay
+available, but must inspect metadata to distinguish outage from empty samples. The
+HTTP route polls outside the event loop and maps invalid evidence to502, outage to503,
+and an explicitly empty series to404. Do not expose raw provider exceptions. Pin
+requested ELEMENTS frame/units/time-scale parameters and retain returned native labels.
+No new endpoint or independent detection engine is added.
+
+Align raw-input numeric domains with the canonical service: strict finite numbers,
+no bool/string coercion, no arbitrary a/e/diameter caps overriding canonical abstention,
+nonnegative catalogue albedo without probability clipping, and consistent conic checks.
+Remove arbitrary adapter bounds, not scientific validity gates. Invalid conics remain
+invalid; supported hyperbolic/out-of-domain inputs abstain rather than become candidates.
+A request-validation handler emits bounded error type/location without raw inputs or
+exception context, preserving422 rather than crashing on NaN/Infinity.
+
+Retain existing route names and response fields, document stricter input validation,
+new history-v2 metadata and changed outage semantics. Regenerate the real registered
+OpenAPI snapshot and test actual HTTP plus canonical parity. No auth eligibility,
+source authenticity, durable-job completeness, scientific calibration or all-menu
+readiness follows from transport correctness. See `http-evidence-parity.md` and #12/40.

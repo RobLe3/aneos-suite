@@ -930,3 +930,5 @@ For the canonical V2 object-detail scope and its limits, see [evidence-bound obj
 Physical source normalization, paired uncertainty and compatibility limits: [atomic physical evidence](docs/engineering/atomic-physical-evidence.md).
 
 Native orbital/covariance epoch handling and computed-history limits: [native orbital epochs](docs/engineering/native-orbital-epochs.md).
+
+HTTP history/native-epoch and raw-input contracts: [HTTP evidence parity](docs/engineering/http-evidence-parity.md).

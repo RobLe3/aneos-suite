@@ -1378,3 +1378,16 @@ physical fit validity or frame compatibility. Existing acquisition, evidence and
 presentation boundaries suffice; no new bounded context is created. Full observational
 likelihoods, epoch/frame-aware propagation, source identity and operation-specific
 scientific readiness remain separate requirements.
+
+## HTTP evidence adapters — 2026-11-13 / ADR-083
+
+The existing API boundary preserves domain evidence instead of narrowing or coercing
+it into a different scientific contract. A native history DTO replays the epoch and
+binds its computed header/source/role; presentation metadata describes returned samples,
+not observations or calibrated significance. Acquisition owns bounded query outcomes
+and source attempt metadata. HTTP maps those outcomes without inventing empty evidence
+on outage. Canonical analysis remains the only screening engine, with matching finite
+numeric/conic semantics. Request-error serialization owns redacted client diagnostics,
+not authentication policy. No new bounded context is needed. All-source local persistence,
+identity, enrichment history, independent scientific validation and complete menu/API
+runtime prerequisites remain separate required workstreams.

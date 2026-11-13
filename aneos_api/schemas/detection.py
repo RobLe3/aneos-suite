@@ -11,28 +11,35 @@ except ImportError:
 
 
 class OrbitalInput(BaseModel):
-    model_config = ConfigDict(allow_inf_nan=False)
-    a: float = Field(..., ge=-1000.0, le=1000.0,
-                     description="Semi-major axis (AU)")
-    e: float = Field(..., ge=0.0, le=2.0,
-                     description="Eccentricity (0–1 bound, up to 2 for hyperbolic)")
-    i: float = Field(..., ge=0.0, le=180.0,
-                     description="Inclination (degrees)")
+    model_config = ConfigDict(strict=True, allow_inf_nan=False)
+    a: float = Field(..., description="Semi-major axis (AU)")
+    e: float = Field(
+        ...,
+        ge=0.0,
+        description="Nonnegative eccentricity; hyperbolic inputs remain outside the prototype ranking domain",
+    )
+    i: float = Field(..., ge=0.0, le=180.0, description="Inclination (degrees)")
     designation: Optional[str] = Field(None, min_length=1, max_length=50)
-    diameter_km: Optional[float] = Field(None, gt=0.0, le=10000.0)
-    albedo: Optional[float] = Field(None, ge=0.0, le=1.0)
+    diameter_km: Optional[float] = Field(None, gt=0.0)
+    albedo: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Catalogue albedo; geometric albedo can exceed one. Not an origin probability.",
+    )
     absolute_magnitude: Optional[float] = None
     spectral_type: Optional[str] = None
     additional_data: Optional[Dict[str, Any]] = None
     evidence_metadata: Optional[Dict[str, Any]] = None
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_orbit(self):
         if self.a == 0 or (self.a < 0 and self.e < 1) or (self.a > 0 and self.e > 1):
-            raise ValueError('Inconsistent semi-major axis and eccentricity')
+            raise ValueError("Inconsistent semi-major axis and eccentricity")
         return self
 
-    orbital_history: Optional[List[Dict[str, Any]]] = None  # time-series from GET /history
+    orbital_history: Optional[List[Dict[str, Any]]] = (
+        None  # time-series from GET /history
+    )
 
 
 class EvidenceSummary(BaseModel):

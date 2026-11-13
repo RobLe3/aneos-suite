@@ -2042,6 +2042,99 @@
         "title": "MetricsResponse",
         "type": "object"
       },
+      "NativeEpochResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "conversion": {
+            "const": "representation_only_no_time_scale_conversion",
+            "title": "Conversion",
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "JD",
+              "MJD",
+              "calendar"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "julian_day_same_scale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Julian Day Same Scale"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "native_value": {
+            "title": "Native Value",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "native-epoch-v1",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "time_scale": {
+            "enum": [
+              "TDB",
+              "TT",
+              "TDT",
+              "UTC",
+              "UT1",
+              "UT",
+              "UNKNOWN"
+            ],
+            "title": "Time Scale",
+            "type": "string"
+          },
+          "time_scale_status": {
+            "enum": [
+              "not_provided",
+              "declared_not_independently_verified"
+            ],
+            "title": "Time Scale Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schema_version",
+          "native_value",
+          "format",
+          "time_scale",
+          "source",
+          "role",
+          "label",
+          "julian_day_same_scale",
+          "conversion",
+          "time_scale_status"
+        ],
+        "title": "NativeEpochResponse",
+        "type": "object"
+      },
       "NetworkRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2340,6 +2433,7 @@
         "type": "object"
       },
       "OrbitalElementPoint": {
+        "additionalProperties": false,
         "properties": {
           "M": {
             "anyOf": [
@@ -2366,6 +2460,7 @@
           "e": {
             "anyOf": [
               {
+                "minimum": 0.0,
                 "type": "number"
               },
               {
@@ -2383,11 +2478,14 @@
                 "type": "null"
               }
             ],
+            "description": "Native header label, not a UTC observation timestamp",
             "title": "Epoch"
           },
           "i": {
             "anyOf": [
               {
+                "maximum": 180.0,
+                "minimum": 0.0,
                 "type": "number"
               },
               {
@@ -2395,6 +2493,16 @@
               }
             ],
             "title": "I"
+          },
+          "native_epoch": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeEpochResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "node": {
             "anyOf": [
@@ -2519,8 +2627,16 @@
         "type": "object"
       },
       "OrbitalHistoryResponse": {
+        "additionalProperties": false,
         "properties": {
+          "coverage_status": {
+            "const": "bounded_computed_samples_not_observation_coverage",
+            "default": "bounded_computed_samples_not_observation_coverage",
+            "title": "Coverage Status",
+            "type": "string"
+          },
           "data_source": {
+            "const": "JPL Horizons",
             "default": "JPL Horizons",
             "title": "Data Source",
             "type": "string"
@@ -2529,12 +2645,64 @@
             "title": "Designation",
             "type": "string"
           },
+          "epoch_status": {
+            "default": "legacy_unbound",
+            "title": "Epoch Status",
+            "type": "string"
+          },
+          "evidence_basis": {
+            "const": "computed_ephemeris_not_observations",
+            "default": "computed_ephemeris_not_observations",
+            "title": "Evidence Basis",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
           "points": {
             "items": {
               "$ref": "#/components/schemas/OrbitalElementPoint"
             },
             "title": "Points",
             "type": "array"
+          },
+          "query_evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query Evidence"
+          },
+          "returned_points": {
+            "default": 0,
+            "title": "Returned Points",
+            "type": "integer"
+          },
+          "schema_version": {
+            "const": "orbital-history-v2",
+            "default": "orbital-history-v2",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "scientific_status": {
+            "const": "not_independently_validated",
+            "default": "not_independently_validated",
+            "title": "Scientific Status",
+            "type": "string"
+          },
+          "time_axis_status": {
+            "default": "unavailable_unbound_or_incompatible_epochs",
+            "title": "Time Axis Status",
+            "type": "string"
           },
           "years": {
             "title": "Years",
@@ -2553,8 +2721,6 @@
         "properties": {
           "a": {
             "description": "Semi-major axis (AU)",
-            "maximum": 1000.0,
-            "minimum": -1000.0,
             "title": "A",
             "type": "number"
           },
@@ -2584,7 +2750,6 @@
           "albedo": {
             "anyOf": [
               {
-                "maximum": 1.0,
                 "minimum": 0.0,
                 "type": "number"
               },
@@ -2592,6 +2757,7 @@
                 "type": "null"
               }
             ],
+            "description": "Catalogue albedo; geometric albedo can exceed one. Not an origin probability.",
             "title": "Albedo"
           },
           "designation": {
@@ -2611,7 +2777,6 @@
             "anyOf": [
               {
                 "exclusiveMinimum": 0.0,
-                "maximum": 10000.0,
                 "type": "number"
               },
               {
@@ -2621,8 +2786,7 @@
             "title": "Diameter Km"
           },
           "e": {
-            "description": "Eccentricity (0\u20131 bound, up to 2 for hyperbolic)",
-            "maximum": 2.0,
+            "description": "Nonnegative eccentricity; hyperbolic inputs remain outside the prototype ranking domain",
             "minimum": 0.0,
             "title": "E",
             "type": "number"
@@ -5278,7 +5442,7 @@
     },
     "/api/v1/analysis/history": {
       "get": {
-        "description": "Fetch time-series Keplerian orbital elements from JPL Horizons.\nReturns one data point per year over the requested span.",
+        "description": "Fetch time-series Keplerian orbital elements from JPL Horizons.\nReturns bounded computed samples with native epochs, never observation coverage.",
         "operationId": "orbital_history_api_v1_analysis_history_get",
         "parameters": [
           {
@@ -5288,6 +5452,9 @@
             "required": true,
             "schema": {
               "description": "NEO designation, e.g. 'Apophis'",
+              "maxLength": 100,
+              "minLength": 1,
+              "pattern": "^[^\\x00-\\x1f\\x7f]+$",
               "title": "Designation",
               "type": "string"
             }

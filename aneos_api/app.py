@@ -22,6 +22,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.middleware.gzip import GZipMiddleware
     from fastapi.responses import JSONResponse
+    from fastapi.exceptions import RequestValidationError
     from fastapi.openapi.utils import get_openapi
     HAS_FASTAPI = True
 except ImportError:
@@ -250,7 +251,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
     """Create and configure FastAPI application."""
     if not HAS_FASTAPI:
         raise ImportError("FastAPI is required for API services")
-    
+
     # Create FastAPI app with lifespan
     app = FastAPI(
         title="aNEOS API",
@@ -266,10 +267,10 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
         openapi_url="/openapi.json",
         lifespan=lifespan
     )
-    
+
     # Setup middleware
     setup_middleware(app)
-    
+
     # Include routers (only if they are actual FastAPI routers)
     from fastapi import APIRouter
     if isinstance(analysis.router, APIRouter):
@@ -318,7 +319,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
                 status="error",
                 checks={"api": CheckResult(status="error", detail="Health inspection unavailable")},
             )
-    
+
     @app.get("/", response_model=Dict[str, Any])
     async def root():
         """Root endpoint with API information."""
@@ -339,29 +340,61 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
                 "streaming": "/api/v1/stream"
             }
         }
-    
+
     # Custom OpenAPI schema
     def custom_openapi():
         if app.openapi_schema:
             return app.openapi_schema
-        
+
         openapi_schema = get_openapi(
             title="aNEOS API",
             version=API_CONTRACT_VERSION,
             description=app.description,
             routes=app.routes,
         )
-        
+
         # Add custom schema elements
         openapi_schema["info"]["x-application-version"] = APPLICATION_VERSION
         openapi_schema["info"]["x-build-channel"] = BUILD_CHANNEL
-        
+
         app.openapi_schema = openapi_schema
         return app.openapi_schema
-    
+
     app.openapi = custom_openapi
-    
+
     # Exception handlers
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_handler(request, exc):
+        # Pydantic error inputs may themselves contain NaN/Infinity or private
+        # request bodies. Do not echo them into JSON or turn a client error into500.
+        safe = []
+        messages = {
+            "finite_number": "Value must be finite",
+            "missing": "Required value is missing",
+            "greater_than_equal": "Value is below the permitted minimum",
+            "less_than_equal": "Value exceeds the permitted maximum",
+            "json_invalid": "Malformed JSON request",
+        }
+        for error in exc.errors():
+            kind = error.get("type", "invalid_value")
+            safe.append(
+                {
+                    "type": kind,
+                    "loc": list(error.get("loc", [])),
+                    "msg": messages.get(kind, "Invalid request value"),
+                }
+            )
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": "Invalid request",
+                "status_code": 422,
+                "timestamp": datetime.now(UTC).isoformat(),
+                "detail": safe,
+                "details": {"errors": safe},
+            },
+        )
+
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request, exc):
         return JSONResponse(
@@ -372,7 +405,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
                 "timestamp": datetime.now().isoformat()
             }
         )
-    
+
     @app.exception_handler(Exception)
     async def general_exception_handler(request, exc):
         logger.error(f"Unhandled exception: {exc}")
@@ -384,7 +417,7 @@ def create_app(config_path: Optional[str] = None) -> FastAPI:
                 "timestamp": datetime.now().isoformat()
             }
         )
-    
+
     logger.info("FastAPI application created successfully")
     return app
 

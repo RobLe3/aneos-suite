@@ -30,6 +30,16 @@ logger = logging.getLogger(__name__)
 _HORIZONS_URL = "https://ssd.jpl.nasa.gov/api/horizons.api"
 
 
+class OrbitalHistoryQuery(list):
+    """List-compatible computed history plus explicit bounded query outcome."""
+
+    def __init__(self, records, metadata):
+        super().__init__(records)
+        import copy
+
+        self.query_metadata = copy.deepcopy(metadata)
+
+
 class HorizonsSource(HTTPDataSource):
     """
     NASA JPL Horizons data source.
@@ -276,37 +286,103 @@ class HorizonsSource(HTTPDataSource):
             self.logger.error(f"Horizons ephemeris error for {designation}: {e}")
             return None
 
-    def fetch_orbital_history(self, designation: str, years: int = 10) -> List[Dict[str, Any]]:
+    def fetch_orbital_history(
+        self, designation: str, years: int = 10
+    ) -> List[Dict[str, Any]]:
+        """Bounded computed samples, with request scope/outage metadata.
+
+        List compatibility is retained for existing callers; an outage is NOT an
+        empty observed history. HTTP consumers must inspect query_metadata.status.
         """
-        Fetch a time-series of osculating orbital elements from Horizons ELEMENTS ephemeris.
-        Returns one entry per year over `years` years centred on today.
-        """
+        if type(years) is not int or not 1 <= years <= 1000:
+            raise ValueError("History years must be a positive bounded integer")
         today = datetime.now(UTC)
         start = (today - timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
         stop = (today + timedelta(days=years * 365 // 2)).strftime("%Y-%m-%d")
+        params = {
+            "format": "json",
+            "COMMAND": self._horizons_command(designation),
+            "OBJ_DATA": "NO",
+            "MAKE_EPHEM": "YES",
+            "EPHEM_TYPE": "ELEMENTS",
+            "CENTER": "500@10",
+            "START_TIME": start,
+            "STOP_TIME": stop,
+            "STEP_SIZE": "365d",
+            "OUT_UNITS": "AU-D",
+            "REF_SYSTEM": "ICRF",
+            "REF_PLANE": "ECLIPTIC",
+            "TIME_TYPE": "TDB",
+            "ELM_LABELS": "YES",
+        }
+        metadata = {
+            "schema_version": "orbital-history-query-v1",
+            "designation_requested": designation,
+            "requested_years": years,
+            "request_parameters": params,
+            "attempted_at": today.isoformat(),
+            "retrieved_at": None,
+            "status": "unavailable",
+            "returned_points": 0,
+            "result_text_sha256": None,
+            "signature": None,
+            "schema_status": "not_available",
+            "evidence_basis": "computed_ephemeris_not_observations",
+            "coverage": "bounded_computed_samples_not_observation_coverage",
+        }
+        response = None
         try:
-            resp = provider_get(
-                _HORIZONS_URL,
-                params={
-                    "format": "json",
-                    "COMMAND": self._horizons_command(designation),
-                    "OBJ_DATA": "NO",
-                    "MAKE_EPHEM": "YES",
-                    "EPHEM_TYPE": "ELEMENTS",
-                    "CENTER": "500@10",
-                    "START_TIME": start,
-                    "STOP_TIME": stop,
-                    "STEP_SIZE": "365d",
-                    "OUT_UNITS": "AU-D",
-                },
-                timeout=self.config.request_timeout,
+            response = provider_get(
+                _HORIZONS_URL, params=params, timeout=self.config.request_timeout
             )
-            resp.raise_for_status()
-            result_text = resp.json().get("result", "")
-            return self._parse_elements_table(result_text)
-        except Exception as e:
-            self.logger.error(f"Horizons orbital history failed for {designation}: {e}")
-            return []
+            response.raise_for_status()
+            metadata["retrieved_at"] = datetime.now(UTC).isoformat()
+            data = response.json()
+            if not isinstance(data, dict):
+                raise ValueError("Invalid Horizons response")
+            signature = data.get("signature")
+            metadata["signature"] = signature
+            if signature is not None:
+                if not isinstance(signature, dict) or signature.get("version") not in (
+                    "1.2",
+                    "1.3",
+                ):
+                    metadata["schema_status"] = "unsupported"
+                    raise ValueError("Unsupported Horizons API schema")
+                metadata["schema_status"] = "supported_elements_1.2_1.3"
+            else:
+                metadata["schema_status"] = "unverified_missing_signature"
+            metadata["signature"] = signature
+            text = data.get("result")
+            if (
+                data.get("error")
+                or not isinstance(text, str)
+                or "$$SOE" not in text
+                or "$$EOE" not in text
+            ):
+                raise ValueError("Horizons did not return a bounded elements block")
+            metadata["result_text_sha256"] = hashlib.sha256(text.encode()).hexdigest()
+            rows = self._parse_elements_table(text)
+            metadata.update(
+                status="available" if rows else "empty", returned_points=len(rows)
+            )
+            return OrbitalHistoryQuery(rows, metadata)
+        except (ValueError, TypeError) as exc:
+            metadata.update(
+                status="invalid_evidence", error_code="UNSUPPORTED_HISTORY_EVIDENCE"
+            )
+            self.logger.warning("Horizons history evidence invalid for %s", designation)
+        except Exception:
+            metadata.update(
+                status="unavailable", error_code="HISTORY_SOURCE_UNAVAILABLE"
+            )
+            self.logger.warning(
+                "Horizons history source unavailable for %s", designation
+            )
+        finally:
+            if response is not None:
+                response.close()
+        return OrbitalHistoryQuery([], metadata)
 
     def _parse_elements_table(self, text: str) -> List[Dict[str, Any]]:
         """Keep complete computed element rows bound to their native epoch header.

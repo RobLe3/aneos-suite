@@ -178,10 +178,16 @@ class ScreeningAnalysisService:
                 if isinstance(value, bool) or not isinstance(value, (float, int)) or not math.isfinite(value):
                     raise ValueError(f'{key} must be a finite number')
                 orbit[key] = float(value)
-        if ('e' in orbit and orbit['e'] < 0) or ('i' in orbit and not 0 <= orbit['i'] <= 180):
-            raise ValueError('Orbital elements outside physical bounds')
-        if 'a' in orbit and orbit['a'] <= 0 and orbit.get('e', 0) < 1:
-            raise ValueError('Bound orbit requires positive semi-major axis')
+        if ("e" in orbit and orbit["e"] < 0) or (
+            "i" in orbit and not 0 <= orbit["i"] <= 180
+        ):
+            raise ValueError("Orbital elements outside physical bounds")
+        if "a" in orbit and (
+            orbit["a"] == 0
+            or (orbit["a"] < 0 and orbit.get("e", 0) < 1)
+            or (orbit["a"] > 0 and orbit.get("e", 0) > 1)
+        ):
+            raise ValueError('Inconsistent semi-major axis and eccentricity')
         phys = {k: v for k, v in (physical or {}).items() if v is not None and not k.startswith('_')}
         for key in ('diameter', 'diameter_km', 'albedo', 'absolute_magnitude'):
             if key in phys and (isinstance(phys[key], bool) or not isinstance(phys[key], (int, float))):

@@ -280,41 +280,100 @@ async def detect_neo_raw(
 
 @router.get("/history", response_model=OrbitalHistoryResponse)
 async def orbital_history(
-    designation: str = Query(..., description="NEO designation, e.g. 'Apophis'"),
+    designation: str = Query(
+        ...,
+        min_length=1,
+        max_length=100,
+        pattern=r"^[^\x00-\x1f\x7f]+$",
+        description="NEO designation, e.g. 'Apophis'",
+    ),
     years: int = Query(10, ge=1, le=50, description="Number of years to span"),
-    current_user: Optional[Dict] = Depends(get_current_user)
+    current_user: Optional[Dict] = Depends(get_current_user),
 ):
     """
     Fetch time-series Keplerian orbital elements from JPL Horizons.
-    Returns one data point per year over the requested span.
+    Returns bounded computed samples with native epochs, never observation coverage.
     """
     try:
         from aneos_core.data.sources.horizons import HorizonsSource
+
+        if not designation.strip():
+            raise HTTPException(status_code=422, detail="Nonempty designation required")
         source = HorizonsSource()
-        raw_points = source.fetch_orbital_history(designation, years=years)
+        raw_points = await asyncio.to_thread(
+            source.fetch_orbital_history, designation, years=years
+        )
+        query_evidence = getattr(raw_points, "query_metadata", None)
+        status = (
+            query_evidence.get("status") if isinstance(query_evidence, dict) else None
+        )
+        if status == "unavailable":
+            raise HTTPException(
+                status_code=503,
+                detail="Orbital history source unavailable; no observational assessment",
+            )
+        if status == "invalid_evidence":
+            raise HTTPException(
+                status_code=502,
+                detail="Orbital history source evidence could not be verified",
+            )
+        if query_evidence is not None and status not in ("available", "empty"):
+            raise HTTPException(
+                status_code=502,
+                detail="Orbital history query outcome could not be verified",
+            )
+        if status in ("available", "empty") and bool(raw_points) != (
+            status == "available"
+        ):
+            raise HTTPException(
+                status_code=502,
+                detail="Orbital history query outcome contradicts its points",
+            )
+        if status in ("available", "empty") and (
+            query_evidence.get("schema_version") != "orbital-history-query-v1"
+            or query_evidence.get("designation_requested") != designation
+            or type(query_evidence.get("returned_points")) is not int
+            or query_evidence["returned_points"] != len(raw_points)
+        ):
+            raise HTTPException(
+                status_code=502,
+                detail="Orbital history query binding could not be verified",
+            )
         if not raw_points:
             raise HTTPException(
                 status_code=404,
-                detail=f"No orbital history available for {designation}"
+                detail=f"No orbital history available for {designation}",
             )
         points = [OrbitalElementPoint(**p) for p in raw_points]
         return OrbitalHistoryResponse(
             designation=designation,
             years=years,
             points=points,
+            query_evidence=query_evidence,
         )
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Orbital history failed for {designation}: {e}")
-        raise HTTPException(status_code=500, detail=f"History fetch failed: {str(e)}")
+    except (ValueError, TypeError) as exc:
+        logger.warning(
+            "Orbital history contains unsupported evidence for %s", designation
+        )
+        raise HTTPException(
+            status_code=502,
+            detail="Orbital history source evidence could not be verified",
+        ) from exc
+    except Exception as exc:
+        logger.exception("Orbital history failed for %s", designation)
+        raise HTTPException(
+            status_code=503,
+            detail="Orbital history source unavailable; no observational assessment",
+        ) from exc
 
 
 @router.post("/analyze/batch", response_model=Dict[str, Any])
 async def analyze_batch(
     request: BatchAnalysisRequest,
     background_tasks: BackgroundTasks,
-    current_user: Optional[Dict] = Depends(get_current_user)
+    current_user: Optional[Dict] = Depends(get_current_user),
 ):
     """
     Screen multiple NEOs using the same DataFetcher + shared service as GET /detect.
@@ -338,6 +397,7 @@ async def analyze_batch(
         'total_neos': len(request.designations),
         'status_url': f'/api/v1/analysis/batch/{batch_id}/status',
     }
+
 
 @router.get("/batch/{batch_id}/status", response_model=Dict[str, Any])
 async def get_batch_status(

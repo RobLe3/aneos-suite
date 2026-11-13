@@ -18,6 +18,12 @@ tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is creat
   are ready. Independent calibration, fullKY26 fits and whole-menu/source/docs
   audits remain open. No calibrated origin/five-sigma claim is introduced.
 
+- Native orbital epochs, atomic physical assertions and computed-history HTTP
+  transport now preserve source values/units/scales and expose uncertainty/coverage
+  limits (ADR080–083). Raw HTTP inputs require actual finite numbers; geometric
+  albedo is not clipped to a probability bound. Invalid request errors stay422
+  without echoing raw inputs. These repairs are not independent scientific validation.
+
 ## [v1.2.2] - 2026-03-11 (Phase 24)
 ### Fixed
 - `DetectionResult.__init__`: falsy-zero bug — `artificial_probability=0.0` was replaced

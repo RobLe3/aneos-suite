@@ -1,0 +1,41 @@
+{
+  "coverage_status": "bounded_computed_samples_not_observation_coverage",
+  "data_source": "JPL Horizons",
+  "designation": "SYNTHETIC",
+  "epoch_status": "native_epochs_preserved",
+  "evidence_basis": "computed_ephemeris_not_observations",
+  "limitations": [
+    "Computed osculating elements are not observations, maneuvers or independent acceleration measurements.",
+    "Native scales/labels are retained; no UTC conversion, covariance propagation or scientific calibration is supplied.",
+    "Requested years and returned sample count do not establish complete observational coverage."
+  ],
+  "points": [
+    {
+      "M": 0.0,
+      "a": 1.2,
+      "e": 0.2,
+      "epoch": "2460000.500000001 = A.D. 2023-Feb-25 00:00:00 TDB",
+      "i": 1.49,
+      "native_epoch": {
+        "conversion": "representation_only_no_time_scale_conversion",
+        "format": "JD",
+        "julian_day_same_scale": "2460000.500000001",
+        "label": "2460000.500000001 = A.D. 2023-Feb-25 00:00:00 TDB",
+        "native_value": "2460000.500000001",
+        "role": "computed_elements",
+        "schema_version": "native-epoch-v1",
+        "source": "Horizons",
+        "time_scale": "TDB",
+        "time_scale_status": "declared_not_independently_verified"
+      },
+      "node": 0.0,
+      "peri": 0.0
+    }
+  ],
+  "query_evidence": null,
+  "returned_points": 1,
+  "schema_version": "orbital-history-v2",
+  "scientific_status": "not_independently_validated",
+  "time_axis_status": "native_single_scale_numeric_axis",
+  "years": 2
+}
