@@ -138,3 +138,10 @@ tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is creat
   discovery metadata is requested where available; no missing date, UTC offset
   or mixed-scale timeline is invented (ADR088, #65). Source freshness/backfill
   remains separate work (#66/#40).
+
+- Source receipt review no longer guesses ORM timestamp columns or treats naive
+  legacy times as UTC. All installed adapters and failed-query-only objects use
+  replay-checked history. Explicit bounded refresh delegates to the existing
+  acquisition/repository path and verifies a new commit before reporting recorded
+  data; partial/empty/deferred/failed outcomes stay distinct. ADR089 documents
+  operational cooldown, cache, completeness and remaining backfill limits (#66/#40).

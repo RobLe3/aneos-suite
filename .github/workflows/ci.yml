@@ -70,6 +70,9 @@ jobs:
       - name: Verify role-separated object chronology and date presentation
         run: python -m pytest tests/test_object_chronology.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-chronology.ini --cov-report=term-missing --cov-fail-under=90
 
+      - name: Verify source freshness inspection and explicit shared refresh
+        run: python -m pytest tests/test_source_freshness.py -q --tb=short --cov=aneos_core --cov=aneos_api --cov-config=tests/coverage-source-freshness.ini --cov-report=term-missing --cov-fail-under=90
+
   docker-build:
     name: Docker build
     runs-on: ubuntu-latest

@@ -1,0 +1,26 @@
+╭─────────────────────────── Source receipt review ────────────────────────────╮
+│ Objects checked: 1; need review: 1; 1 eligible for an explicit whole-plan    │
+│ refresh.                                                                     │
+╰──────────────────────────────────────────────────────────────────────────────╯
+┏━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃           ┃          ┃ Last        ┃ Receipt age ┃ Adapter     ┃ Retry       ┃
+┃ Object    ┃ Source   ┃ outcome     ┃ status      ┃ read        ┃ review      ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+│ SYNTHETIC │ SBDB     │ not         │ unknown     │ Unknown     │ review due  │
+│           │          │ recorded    │             │             │             │
+├───────────┼──────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+│ SYNTHETIC │ Horizons │ not         │ unknown     │ Unknown     │ review due  │
+│           │          │ recorded    │             │             │             │
+├───────────┼──────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+│ SYNTHETIC │ NEODyS   │ not         │ unknown     │ Unknown     │ review due  │
+│           │          │ recorded    │             │             │             │
+├───────────┼──────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+│ SYNTHETIC │ MPC      │ not         │ unknown     │ Unknown     │ review due  │
+│           │          │ recorded    │             │             │             │
+├───────────┼──────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+│ SYNTHETIC │ CAD      │ not         │ unknown     │ Unknown     │ review due  │
+│           │          │ recorded    │             │             │             │
+└───────────┴──────────┴─────────────┴─────────────┴─────────────┴─────────────┘
+Adapter receipt age is not observation age or proof of fresh network data. 
+Unknown legacy timestamps are not assigned UTC. Runtime provider admission still
+applies.

@@ -976,3 +976,14 @@ fields. Old values remain preserved and unverified, not silently retagged UTC.
 See the [chronology guide](docs/engineering/object-chronology.md) for the provider's
 numbered-object discovery limitation, Pacific-local fit dates, partial observations,
 compatibility changes and reproducible display examples.
+
+### Source receipt review and refresh (2.2.0.dev0)
+
+The legacy enrichment workflow now reviews replay-checked receipts for all five
+installed object adapters, including Horizons and failed-query-only objects.
+Unknown legacy timestamps are not assigned UTC. Explicit refresh uses the existing
+acquisition/SQL-history path, respects stored cooldown eligibility and distinguishes
+partial, empty, deferred and failed outcomes. A committed adapter query is not proof
+of new observations or scientific completeness. See the [receipt review guide](docs/engineering/source-freshness.md)
+for menu behavior, limits and reproducible examples. Automatic selective backfill
+and exhaustive source/menu QA remain open.

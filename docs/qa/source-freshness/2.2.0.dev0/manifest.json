@@ -1,0 +1,88 @@
+{
+  "schema_version": "source-freshness-qa-v1",
+  "clock": "2026-11-13T12:00:00+00:00",
+  "cases": [
+    "recent_adapter_reads",
+    "stale_with_cooldown",
+    "legacy_unknown"
+  ],
+  "widths": {
+    "recent_adapter_reads-80": {
+      "terminal_width": 80,
+      "max_rendered_cells": 80
+    },
+    "recent_adapter_reads-120": {
+      "terminal_width": 120,
+      "max_rendered_cells": 120
+    },
+    "recent_adapter_reads-160": {
+      "terminal_width": 160,
+      "max_rendered_cells": 160
+    },
+    "stale_with_cooldown-80": {
+      "terminal_width": 80,
+      "max_rendered_cells": 80
+    },
+    "stale_with_cooldown-120": {
+      "terminal_width": 120,
+      "max_rendered_cells": 120
+    },
+    "stale_with_cooldown-160": {
+      "terminal_width": 160,
+      "max_rendered_cells": 160
+    },
+    "legacy_unknown-80": {
+      "terminal_width": 80,
+      "max_rendered_cells": 80
+    },
+    "legacy_unknown-120": {
+      "terminal_width": 120,
+      "max_rendered_cells": 120
+    },
+    "legacy_unknown-160": {
+      "terminal_width": 160,
+      "max_rendered_cells": 160
+    }
+  },
+  "source_files_sha256": {
+    "aneos_core/data/freshness.py": "09a4233c16557f168e36084b4109d706686438797142f9ca4e885403c884bb69",
+    "aneos_api/source_freshness.py": "f4f257671f8859cb8107efefcb12b6ee00a5e4272a36a14583978fe5ca234a59",
+    "aneos_core/analysis/freshness_view.py": "23cb5e5f3c3c262ea2641e5e70974c3a014e39605eecee4dc97eadc5dbc8e6c0",
+    "aneos_menu.py": "52fb7ed52d3401ee4b4855681863d9d2c1390d06adf4c8d8ff681ba6681dee70",
+    "scripts/qa_source_freshness.py": "383726e22ac47c91f06d9bea5969c483c8b6e81c8b2cf29ec67c388994221333",
+    "scripts/qa_menu_entry.py": "cfdb36e3ed6dc8352c5b98af9410c2fc5d3b6cb5f3b3b810edc5485b83fb19f9"
+  },
+  "artifact_sha256": {
+    "legacy_unknown-120.svg": "21ebf4e2f1ef5822e6c411405e5217986a48fdcca390026c2d6f0d7966085d47",
+    "legacy_unknown-120.html": "89cd7ff3a2b6d1c1c89f4c694ccc28b5038399de0407e306fe4447033fbe2ca6",
+    "recent_adapter_reads-160.html": "47054987ef61e177be1825deb2dc57013b5ed50e3afd378490446be3270f81bc",
+    "legacy_unknown-160.html": "19a0f5982dedf79934f2a09cbda757001572198c7b1d89b5ed31e2c30ceb11ca",
+    "recent_adapter_reads-120.html": "fa59056c9dad584399fc2b3d7ac207524da4beadf8c6f5435a054eaae262e928",
+    "legacy_unknown.json": "1e95ed156c30364a28e1e2bf1e5efb6869f37110d8d4ff335f7b581275d4219c",
+    "legacy_unknown-120.txt": "b66eb4f9cbbbaf0fb0aa053a073bd7a80cd7e8f52bab19f2b268c770663f9e96",
+    "recent_adapter_reads.json": "6df30f3d1f4fc705a0c9b8c9665c32ec04916e0e3a07321d5ef76d34ceffa70d",
+    "stale_with_cooldown-80.svg": "9b7f70521e11ca2d2ab57ef9669bde017b8cb1bf39d6347cb301eb190396faac",
+    "recent_adapter_reads-120.svg": "14a45c5a75cd5437ab6e3c012d0d30493e0e5f6a009fad6831d24c1d3ff682c2",
+    "stale_with_cooldown-120.txt": "9d23b8c5d4f345e930b35de7f148dfbb620f95b9989ef62e699c0d125b5ade62",
+    "stale_with_cooldown-120.svg": "25e024e1dcac037732aeacee3fa7a614214f1cfc15ca47cf1000ad071064a84b",
+    "recent_adapter_reads-120.txt": "40f0746a137dfa82b66c80892dc7086e44a2778d017def94570b554faff82c2c",
+    "stale_with_cooldown-80.txt": "952026128ed095a5044250006fa47ba7d91022a01f5945fa01c4f37a0f7429fa",
+    "stale_with_cooldown-120.html": "6ac3a455d95be9a39665e34e7fe27522e6ee699d6f2a895a1df535ce70579479",
+    "recent_adapter_reads-80.html": "290b749e22f0cd47500c058535b259d7da65a27bbccd64eb047330dc0787413b",
+    "legacy_unknown-160.svg": "d1d8eb3133b749a6cac9edfea48dab9d61eb313a193ee686362a9fb97b361723",
+    "legacy_unknown-160.txt": "c953f98ebfb2cc9cd55fe9cbe56ab32534ca3c0bc92b159687f09ab396dc5da0",
+    "stale_with_cooldown-80.html": "1ee29d9286f3b50cfa716cb670c7d2c35fa80e5cdae9ba7f0edeab81a3e1c001",
+    "stale_with_cooldown-160.html": "e635edb88f2de770bc814d4f20e3dcb2ef7c818df43710fb44ea50c64b7d5ffe",
+    "legacy_unknown-80.txt": "aadbf76ca85aa426a69a866a25f8936339e72af93d4d900cf6016fa7c8a037f1",
+    "stale_with_cooldown-160.txt": "5a99f2052ddb4f61133b387743e19451272d98926b78b82a852dbcf7757f8ef0",
+    "legacy_unknown-80.html": "90f02ddcd5316dbe6eda9ac8b2b9acabfdc3cd9701493ef5bbad941045f86999",
+    "recent_adapter_reads-80.txt": "40b043fa8b73c1f16b8ef7936ce84d7a0896c27fb3e5c1e3bd3041ad32a04183",
+    "recent_adapter_reads-160.svg": "8c883c6e547f3cbe56320df15b22078704bd633a37c0467b320df3e91ddc3104",
+    "recent_adapter_reads-160.txt": "667f8da3bed79479d61db0f09976dd18925d245bf14b10ef3f403c66fb33deef",
+    "recent_adapter_reads-80.svg": "5895bf7014cb68d96875cdd9f669c20bc9483398a0c474627cd2117e114d5f9f",
+    "legacy_unknown-80.svg": "0299225e38731a563340f3724792c8a5bc6ea7a48db2c22b3745b71b2e6169ee",
+    "stale_with_cooldown-160.svg": "9181bf6c43b94edd7c7a47bd873e7dc1691bdddea014b6e3021ecb37fa89f7fe",
+    "stale_with_cooldown.json": "92f570429b232cc6bbd9ee29cf4b8543c4753e620a127f2239de308dbb7740c0"
+  },
+  "limits": "Actual legacy receipt-inspection menu with disposable SQL and synthetic typed/legacy data. No live provider request, automatic scheduler, all-menu certification or scientific readiness."
+}

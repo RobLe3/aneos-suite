@@ -3011,3 +3011,43 @@ chronology inputs, while original snapshot locators remain context references.
 Reconciliation metadata is not assumed to exist at the snapshot root. Old context-
 reference reports retain replay/IDs with a limitation label; no silent history rewrite
 or external path resolution. This does not add another context or scientific model.
+
+## ADR-089 — Review adapter receipt age and refresh through existing acquisition
+
+**Date:** 2026-11-13. **Status:** implemented in draft stack, integration tests and
+exact-head CI required before delivery; see [receipt review](../engineering/source-freshness.md).
+
+The legacy stale-source query guessed compatibility column names, excluded missing
+values, compared SQLite naive dates with aware dates and leaked sessions on errors.
+Its re-poll path only queried SBDB and could announce updates without replayable
+commit evidence. These paths cannot establish source freshness or completeness.
+
+Use the shared fixed installed-source plan and replay-checked acquisition/assertion
+history. Derive receipt age from original explicit-offset adapter reads, not local
+ledger ingestion, compatibility DateTime columns or astronomical epochs. Keep legacy
+clocks unknown and retain their literal values. Validated empty responses differ
+from data contributions. Report clock anomalies and source failures explicitly.
+
+A read-only policy uses a 30-day adapter-read review interval and one-hour failed-
+attempt cooldown. These are operational defaults, not scientific validity bounds or
+provider-mandated limits. A bounded explicit refresh rechecks stored eligibility,
+then invokes the existing DataFetcher and SQL evidence repository with query-cache
+bypass. It does not bypass transport pacing/cooldowns or promise fresh wire data;
+an underlying SDK may cache its response. Block the whole-object refresh when a
+planned installed source is deferred, rather than silently shrinking the denominator.
+
+Only a new replay-verified committed query is reported as recorded; distinguish full
+source contributions, partial contributions, no data, deferred and failed outcomes.
+Preserve prior measurements and history. Inspection writes no schema or records;
+refresh writes remain repository-owned. Session/resource closure is explicit.
+
+Extend acquisition, persistence and presentation responsibilities; no new bounded
+context, engine, endpoint or scheduler. Automatic selective partial-cache backfill,
+provider eligibility discovery, distributed refresh admission and broad legacy polling
+are not completed by this change (#40/#16). Add a 90% component gate, preserve all
+existing gates and capture the actual SQL-backed receipt menu at 80/120/160 columns.
+
+ADR-089 QA clarification (#69): requested width is not measured width. The shared
+capture helper now supplies both dimensions and verifies the Rich console width;
+a TERM=dumb regression checks actual SVG geometry. Historical bundles are retained
+with a public limitation note, not silently re-captured or reclassified.

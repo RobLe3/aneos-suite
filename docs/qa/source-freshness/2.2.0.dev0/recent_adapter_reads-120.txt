@@ -1,0 +1,23 @@
+╭─────────────────────────────────────────────── Source receipt review ────────────────────────────────────────────────╮
+│ Objects checked: 1; need review: 0; 0 eligible for an explicit whole-plan refresh.                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Object       ┃ Source      ┃ Last outcome     ┃ Receipt age status       ┃ Adapter read    ┃ Retry review            ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ SYNTHETIC    │ SBDB        │ available        │ recent adapter read      │ 2026-11-13      │ recent adapter read     │
+│              │             │                  │                          │ 11:30:00Z       │                         │
+├──────────────┼─────────────┼──────────────────┼──────────────────────────┼─────────────────┼─────────────────────────┤
+│ SYNTHETIC    │ Horizons    │ available        │ recent adapter read      │ 2026-11-13      │ recent adapter read     │
+│              │             │                  │                          │ 11:30:00Z       │                         │
+├──────────────┼─────────────┼──────────────────┼──────────────────────────┼─────────────────┼─────────────────────────┤
+│ SYNTHETIC    │ NEODyS      │ available        │ recent adapter read      │ 2026-11-13      │ recent adapter read     │
+│              │             │                  │                          │ 11:30:00Z       │                         │
+├──────────────┼─────────────┼──────────────────┼──────────────────────────┼─────────────────┼─────────────────────────┤
+│ SYNTHETIC    │ MPC         │ available        │ recent adapter read      │ 2026-11-13      │ recent adapter read     │
+│              │             │                  │                          │ 11:30:00Z       │                         │
+├──────────────┼─────────────┼──────────────────┼──────────────────────────┼─────────────────┼─────────────────────────┤
+│ SYNTHETIC    │ CAD         │ available        │ recent adapter read      │ 2026-11-13      │ recent adapter read     │
+│              │             │                  │                          │ 11:30:00Z       │                         │
+└──────────────┴─────────────┴──────────────────┴──────────────────────────┴─────────────────┴─────────────────────────┘
+Adapter receipt age is not observation age or proof of fresh network data. Unknown legacy timestamps are not assigned 
+UTC. Runtime provider admission still applies.

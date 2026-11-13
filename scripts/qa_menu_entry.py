@@ -43,12 +43,14 @@ def capture(menu,width,path,method="_print_banner"):
     svg_format=re.sub(r'@font-face\s*\{\{.*?\}\}', '', CONSOLE_SVG_FORMAT, flags=re.S)
     if '@font-face' in svg_format:raise RuntimeError('Unexpected remote font export template')
     svg_format=svg_format.replace('font-family: Fira Code, monospace','font-family: monospace')
-    output=io.StringIO();menu.console=Console(file=output,width=width,record=True,force_terminal=True,color_system='truecolor')
+    output=io.StringIO();menu.console=Console(file=output,width=width,height=25,record=True,force_terminal=True,color_system='truecolor')
+    if menu.console.width != width:raise RuntimeError('Requested rich capture width was not honored')
     getattr(menu,method)()
     menu.console.save_svg(str(path.with_suffix('.svg')),title='Actual Rich menu render',clear=False,code_format=svg_format)
     menu.console.save_html(str(path.with_suffix('.html')),clear=False)
     # Export plain text from a separate actual render, not ANSI regex removal.
-    plain=io.StringIO();menu.console=Console(file=plain,width=width,color_system=None)
+    plain=io.StringIO();menu.console=Console(file=plain,width=width,height=25,color_system=None)
+    if menu.console.width != width:raise RuntimeError('Requested plain capture width was not honored')
     getattr(menu,method)();path.with_suffix('.txt').write_text(plain.getvalue())
 
 

@@ -2738,17 +2738,17 @@ class ANEOSMenu(ANEOSMenuBase):
             # Check for outdated database entries and suggest re-polling
             if not enrichment_stats.get('error'):
                 outdated_check = await self._check_outdated_database_entries(api_sources, period)
-                if outdated_check.get('outdated_count', 0) > 0:
+                if outdated_check.get('eligible_count', 0) > 0:
                     if self.console:
-                        self.console.print(f"\n🔄 [yellow]Found {outdated_check['outdated_count']} outdated database entries[/yellow]")
+                        self.console.print(f"\n🔄 [yellow]Found {outdated_check['outdated_count']} objects needing receipt review[/yellow]")
                         from rich.prompt import Confirm
-                        if Confirm.ask("🔄 Re-poll outdated objects for fresh data?", default=True):
-                            await self._repoll_outdated_entries(outdated_check['outdated_objects'])
+                        if Confirm.ask("🔄 Request a whole-plan adapter refresh (up to 10 objects; not guaranteed new observations)?", default=True):
+                            await self._repoll_outdated_entries([obj for obj in outdated_check['outdated_objects'] if obj['retry_eligible']])
                     else:
-                        print(f"\n🔄 Found {outdated_check['outdated_count']} outdated database entries")
-                        repoll = input("Re-poll outdated objects for fresh data? [Y/n]: ").strip().lower()
+                        print(f"\n🔄 Found {outdated_check['outdated_count']} objects needing receipt review")
+                        repoll = input("Request a whole-plan adapter refresh (up to 10 objects; not guaranteed new observations)? [Y/n]: ").strip().lower()
                         if repoll != 'n':
-                            await self._repoll_outdated_entries(outdated_check['outdated_objects'])
+                            await self._repoll_outdated_entries([obj for obj in outdated_check['outdated_objects'] if obj['retry_eligible']])
             
             if enrichment_stats.get('error'):
                 if self.console:
@@ -2841,114 +2841,51 @@ class ANEOSMenu(ANEOSMenuBase):
                 db.close()
 
     async def _check_outdated_database_entries(self, api_sources: list, period: str) -> dict:
-        """Check for outdated database entries that need re-polling."""
+        """Read stored adapter receipts, never guessed compatibility timestamp columns."""
+        db = None
         try:
-            from aneos_api.database import db_manager, EnrichedNEO
-            from datetime import datetime, timedelta, timezone as _tz
-            UTC = _tz.utc
-
-            # Get database session
+            from aneos_api.database import db_manager
+            from aneos_api.source_freshness import inspect_freshness
+            from aneos_core.analysis.freshness_view import render_freshness
             db = db_manager.get_db()
-
-            # Define "outdated" as older than 30 days for most sources
-            cutoff_date = datetime.now(UTC) - timedelta(days=30)
-            
-            # Find NEOs that haven't been updated recently from any of the polling sources
-            outdated_objects = []
-            for source in api_sources:
-                source_field = f"{source.lower()}_last_update"
-                
-                # Query for objects with outdated or missing data from this source
-                query = db.query(EnrichedNEO).filter(
-                    getattr(EnrichedNEO, source_field, None) < cutoff_date
-                )
-                
-                outdated_from_source = query.limit(50).all()  # Limit to prevent overwhelming
-                
-                for neo in outdated_from_source:
-                    if neo.designation not in [obj['designation'] for obj in outdated_objects]:
-                        outdated_objects.append({
-                            'designation': neo.designation,
-                            'last_updated': neo.last_updated,
-                            'missing_sources': []
-                        })
-                
-                # Add missing source info
-                for obj in outdated_objects:
-                    neo = next((n for n in outdated_from_source if n.designation == obj['designation']), None)
-                    if neo:
-                        source_update = getattr(neo, source_field, None)
-                        if not source_update or source_update < cutoff_date:
-                            obj['missing_sources'].append(source)
-            
-            db.close()
-            
-            return {
-                'outdated_count': len(outdated_objects),
-                'outdated_objects': outdated_objects
-            }
-            
-        except Exception as e:
-            return {'error': f'Failed to check outdated entries: {e}'}
+            report = inspect_freshness(db, api_sources)
+            render_freshness(report, self.console)
+            return report
+        except Exception:
+            message = 'Source receipt review unavailable; no freshness or refresh eligibility established.'
+            if self.console:
+                from rich.text import Text
+                self.console.print(Text(message))
+            else:
+                print(message)
+            return {'error': 'SOURCE_FRESHNESS_UNAVAILABLE', 'outdated_count': 0, 'outdated_objects': []}
+        finally:
+            if db is not None:
+                db.close()
 
     async def _repoll_outdated_entries(self, outdated_objects: list):
-        """Re-poll specific outdated NEO entries."""
+        """Explicit shared acquisition, with stored eligibility rechecked before querying."""
         try:
-            from neo_poller import NEOPoller
-            
+            import asyncio
+            from aneos_api.database import db_manager
+            from aneos_api.source_freshness import refresh_objects
+            from aneos_core.analysis.freshness_view import render_refresh
+            from aneos_core.config.settings import get_config
+            designations = list(dict.fromkeys(o['designation'] for o in outdated_objects))[:10]
+            if not designations:
+                return {'results': [], 'recorded_count': 0}
+            report = await asyncio.to_thread(refresh_objects, db_manager.engine, designations,
+                                            list(get_config().api.data_sources_priority))
+            render_refresh(report, self.console)
+            return report
+        except Exception:
+            message = 'Explicit refresh unavailable; no successful refresh has been verified.'
             if self.console:
-                self.console.print(f"\n🔄 [bold yellow]Re-polling {len(outdated_objects)} outdated objects[/bold yellow]")
+                from rich.text import Text
+                self.console.print(Text(message))
             else:
-                print(f"\n🔄 Re-polling {len(outdated_objects)} outdated objects")
-            
-            poller = NEOPoller()
-            fresh_results = []
-            
-            # For each outdated object, try to get fresh data from missing sources
-            for obj in outdated_objects[:10]:  # Limit to prevent API overload
-                designation = obj['designation']
-                missing_sources = obj.get('missing_sources', [])
-                
-                if self.console:
-                    self.console.print(f"  📡 [cyan]Re-polling {designation} from {', '.join(missing_sources)}[/cyan]")
-                else:
-                    print(f"  📡 Re-polling {designation} from {', '.join(missing_sources)}")
-                
-                # Try SBDB first as it's most comprehensive
-                if 'NASA_SBDB' in missing_sources:
-                    try:
-                        sbdb_data = poller.fetch_sbdb_data(designation)
-                        if sbdb_data:
-                            analysis = poller.analyze_sbdb_data_for_artificial_signatures(sbdb_data)
-                            analysis['data_source'] = 'NASA_SBDB'
-                            fresh_results.append(analysis)
-                    except Exception as e:
-                        if self.console:
-                            self.console.print(f"    ❌ [red]SBDB error for {designation}: {e}[/red]")
-                        else:
-                            print(f"    ❌ SBDB error for {designation}: {e}")
-            
-            if fresh_results:
-                # Re-enrich database with fresh data
-                import uuid
-                session_id = f"repoll_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
-                enrichment_stats = await self._enrich_database_with_polling_results(fresh_results, ['NASA_SBDB'], 'repoll')
-                
-                if self.console:
-                    self.console.print(f"✅ [green]Re-polling complete: Updated {enrichment_stats.get('updated_neos', 0)} objects[/green]")
-                else:
-                    print(f"✅ Re-polling complete: Updated {enrichment_stats.get('updated_neos', 0)} objects")
-            else:
-                if self.console:
-                    self.console.print("⚠️ [yellow]No fresh data obtained from re-polling[/yellow]")
-                else:
-                    print("⚠️ No fresh data obtained from re-polling")
-            
-        except Exception as e:
-            if self.console:
-                self.console.print(f"❌ [red]Re-polling error: {e}[/red]")
-            else:
-                print(f"❌ Re-polling error: {e}")
+                print(message)
+            return {'error': 'SOURCE_REFRESH_UNAVAILABLE', 'recorded_count': 0}
 
     def _analyze_data_freshness(self, source: str, results: list) -> str:
         """Analyze if data appears to be live API data or cached/mock data."""

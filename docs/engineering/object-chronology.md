@@ -53,7 +53,7 @@ source assertions and historical analyses remain accessible.
 Internal compatibility `DateTime` columns are still timezone-lossy caches. The
 append-only ledger stores authoritative receipt strings with explicit UTC offsets;
 this change does **not** migrate or certify every timestamp column in the suite.
-Re-polling predicates still need the separate source-freshness repair in #66.
+The source-freshness repair in #66 now uses original adapter receipts through ADR-089; see [receipt review and explicit refresh](source-freshness.md). Automatic selective backfill remains #40.
 
 ## What the provider actually supplies
 
@@ -123,9 +123,9 @@ documentation; method self-review is not independent scientific certification.
 
 ## Remaining work
 
-#66/#40: source freshness must use original adapter receipts and real installed-source
-mappings, not naive compatibility dates or local rehydration time. Automatic partial
-cache backfill remains pending. #41/#44: every remaining menu, document and example
+#66 receipt review and explicit refresh are implemented separately in ADR-089 using
+original adapter receipts and canonical installed-source mappings, not naive compatibility
+dates or local rehydration time. Automatic selective partial-cache backfill remains #40. #41/#44: every remaining menu, document and example
 still requires scope-matched QA. #7–11/#43: complete dated KY26 source investigation,
 physical model fits, uncertainty propagation, conditional populations and independent
 calibration remain necessary. No five-sigma or artificial-origin claim follows from

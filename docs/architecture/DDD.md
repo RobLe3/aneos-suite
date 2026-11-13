@@ -1470,6 +1470,24 @@ not DST selection, propagation or source authentication.
 
 No second lifecycle database or bounded context is introduced. Compatibility columns
 remain caches, not authoritative scientific dates. Verified-format ledger timestamps
-are distinct from original source freshness; polling/backfill is a separate pending
-responsibility (#66/#40). Frozen source histories and review-v1 assessments remain
+are distinct from original source freshness. ADR-089 below implements receipt review
+and explicit refresh (#66); automatic selective backfill remains pending (#40). Frozen source histories and review-v1 assessments remain
 available; new rendered context is not a rewritten historical scientific result.
+
+## Source-receipt review and explicit refresh — 2026-11-13 / ADR-089
+
+Acquisition owns the canonical installed-source plan, typed outcome and original
+adapter-read timestamp. Persistence owns ordered immutable queries/assertions and
+replay verification. A pure receipt-age policy consumes that history; it does not
+interpret orbital epochs, retag legacy dates or authenticate providers. Its current
+30-day review/one-hour failure cooldown are operational policy, not scientific age
+limits. A repository read adapter includes failed-query-only objects, keeps unknown
+legacy values and reports bounded coverage. No read-path schema mutation is allowed.
+
+The explicit refresh coordinator rechecks stored eligibility and uses the existing
+DataFetcher/repository/transport path. Whole-plan refresh is distinct from selective
+backfill; commit receipt replay precedes a recorded result. Presentation owns clear
+recent/stale/unknown/deferred/partial labels and safe rendering. Existing menu entry
+points delegate here instead of the legacy SBDB-only re-poll. No additional bounded
+context or database is needed. All-source backfill, eligibility/health discovery and
+a durable scheduling lifecycle remain pending; this is not scientific completeness.
