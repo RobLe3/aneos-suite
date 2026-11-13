@@ -130,3 +130,11 @@ tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is creat
   missing values and matrix/model records retain their distinct meanings.
   Legacy HTTP projection no longer manufactures zeroes. ADR087 documents limits;
   G fitting, covariance conversion, global aliases and scientific calibration remain open.
+
+- Object chronology now distinguishes sourced discovery days, observation-window
+  labels/partial dates, native epochs, fit-production labels, adapter receipts and
+  UTC ledger receipts. Local intake no longer populates discovery. Ambiguous
+  exported timestamps are deprecated with old values/history retained. SBDB
+  discovery metadata is requested where available; no missing date, UTC offset
+  or mixed-scale timeline is invented (ADR088, #65). Source freshness/backfill
+  remains separate work (#66/#40).

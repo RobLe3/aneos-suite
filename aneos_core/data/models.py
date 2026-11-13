@@ -407,6 +407,8 @@ class NEOData:
         verify_neo_physical(self)
         from .epoch_evidence import verify_neo_epoch
         verify_neo_epoch(self)
+        from .chronology import verify_neo_discovery
+        verify_neo_discovery(self)
 
         # Predicted encounters are not observations of the fitted orbit.
         # Only source first_obs/last_obs may establish the observation arc.

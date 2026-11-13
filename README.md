@@ -966,3 +966,13 @@ NEODyS-specific source identity, H/G photometry, native matrix retention and
 reproducible object-review examples are described in the
 [NEODyS evidence guide](docs/engineering/neodys-evidence.md). Typed H enrichment
 does not imply a fitted phase law, transformed covariance or complete scientific data.
+
+### Dates and chronology (2.2.0.dev0)
+
+Object detail/export now separates source discovery days, observations, dynamical
+epochs and local receipts. The ambiguous `first_discovered` / `last_updated` export
+aliases are deprecated; use sourced `discovery_date` or explicit ledger receipt
+fields. Old values remain preserved and unverified, not silently retagged UTC.
+See the [chronology guide](docs/engineering/object-chronology.md) for the provider's
+numbered-object discovery limitation, Pacific-local fit dates, partial observations,
+compatibility changes and reproducible display examples.

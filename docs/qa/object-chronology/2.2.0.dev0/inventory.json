@@ -1,0 +1,88 @@
+{
+  "schema_version": "object-chronology-qa-v1",
+  "synthetic": true,
+  "metrics": {
+    "sourced_discovery-80": {
+      "lines": 155,
+      "max_columns": 80
+    },
+    "sourced_discovery-120": {
+      "lines": 130,
+      "max_columns": 120
+    },
+    "sourced_discovery-160": {
+      "lines": 124,
+      "max_columns": 160
+    },
+    "partial_observation-80": {
+      "lines": 154,
+      "max_columns": 80
+    },
+    "partial_observation-120": {
+      "lines": 128,
+      "max_columns": 120
+    },
+    "partial_observation-160": {
+      "lines": 122,
+      "max_columns": 160
+    },
+    "legacy_unverified-80": {
+      "lines": 34,
+      "max_columns": 80
+    },
+    "legacy_unverified-120": {
+      "lines": 26,
+      "max_columns": 120
+    },
+    "legacy_unverified-160": {
+      "lines": 26,
+      "max_columns": 160
+    }
+  },
+  "source_sha256": {
+    "aneos_core/data/chronology.py": "617792ba406a2125c0c752bb5393cab9ea669ae19e0b2b5d1cf7a5bf83e5f69f",
+    "aneos_core/analysis/chronology_view.py": "79b3a359727a6cabd4013bcf4451e50e34a5ad13d723e868c2ecf16992256ca6",
+    "aneos_core/data/models.py": "0e1733cf2c6a931aaab08e5d790d34b35b4208455607b0ae5e6ae75b7f87a24b",
+    "aneos_core/data/sources/sbdb.py": "db94456b2172a2b9d352dbb40112b8c8c67fe8a374d127f8429d18e6a6647963",
+    "aneos_core/data/fetcher.py": "9cfc97a3002f0dc927baa8abf0ca21d1821b28e7a96fad4bae001dce001a6cff",
+    "aneos_core/analysis/object_review.py": "ded064664a2f5c007fcedaefdf12208b4c0fd0cbf467af43a943bae703fbc491",
+    "aneos_core/analysis/reporting.py": "1682d349bc890366bd0faad247ba4cc1d21786b873f223c094b17e7993b693e3",
+    "aneos_api/enrichment_store.py": "a6775c273c72f8370ee73538d028f6808c69172e43a874c8770143f568b982b6",
+    "aneos_api/database.py": "31d195df783044881bc14e161a2150e87a337d92aa7bba6b140587ffe99f1fb6",
+    "aneos_menu.py": "568922b65ca60a296a7d41b6c5d2848d0e0286ee0b61d4208404d5e880326870",
+    "scripts/qa_object_chronology.py": "d95023118a108acd5ecbae41618e6a3007028c12e6ad28f0c249d0c30928c1b5"
+  },
+  "artifact_sha256": {
+    "partial_observation-120.html": "b30c9381ef747f89f0666a310e9172ef76c1d41deb99882b2b7200ae87af76dc",
+    "sourced_discovery-80.txt": "856dd84726c37c9c13fe6c480a671198ef4075006ebe4c7182634991d3af048f",
+    "partial_observation-120.txt": "5ca16bd00f2d55f17bba6186e8fb64cb282f35ddbb0bdde16d1480127876a504",
+    "sourced_discovery-80.html": "0b1119e1e2eaa824b8de4a6307bd434080b491615f1623f71b5131e84bdd282b",
+    "sourced_discovery-160.html": "0b1119e1e2eaa824b8de4a6307bd434080b491615f1623f71b5131e84bdd282b",
+    "legacy_unverified-80.html": "a1c354aa52b181355ee04ed44f352ff65e578e9d25af054676bf2a320daa5734",
+    "sourced_discovery-120.html": "0b1119e1e2eaa824b8de4a6307bd434080b491615f1623f71b5131e84bdd282b",
+    "partial_observation-120.svg": "22ae65ea12756641ecf0ca252af5b1d66106cdce181a2d17140241b7f8fbc075",
+    "sourced_discovery-80.svg": "2d08984ee77893075a8d69a916149b4a802f5447b82eaff2370bc477576af38e",
+    "partial_observation-160.html": "b30c9381ef747f89f0666a310e9172ef76c1d41deb99882b2b7200ae87af76dc",
+    "legacy_unverified-120.html": "a1c354aa52b181355ee04ed44f352ff65e578e9d25af054676bf2a320daa5734",
+    "sourced_discovery-160.svg": "2d08984ee77893075a8d69a916149b4a802f5447b82eaff2370bc477576af38e",
+    "legacy_unverified-160.svg": "4955fa800bf734b9304a48f26ab8667469ee16892585e1f150c10c963f5649c5",
+    "partial_observation-object.json": "fadd6ebe517b5f2d1753a06fc04b7fb7ac70442d93feb03eb2b710cce3b574a5",
+    "sourced_discovery-object.json": "e54e6e92b55d2a997b59de8e6860bcf8a2941b586a765a8fbb07ab507693e108",
+    "legacy_unverified-160.txt": "6613ed8aa9b7ec790c1fb3eeb868d06f52b163acf71190015a49a1cef9e89c5f",
+    "sourced_discovery-160.txt": "8bd8c8124aff56e07ce81a90fdeeee5e5e0d4ed9e947d0a526e571ee84a14136",
+    "legacy_unverified-object.json": "bf44f3325161bdea372b648561212db08570c0eb6287ee4255127626f4305efc",
+    "legacy_unverified-160.html": "a1c354aa52b181355ee04ed44f352ff65e578e9d25af054676bf2a320daa5734",
+    "legacy_unverified-80.svg": "4955fa800bf734b9304a48f26ab8667469ee16892585e1f150c10c963f5649c5",
+    "partial_observation-160.txt": "14f40e405d219a10e69d370c44282dc08a8fed8b5bfd95dcaba8d82ea73f9a55",
+    "legacy_unverified-80.txt": "6c09133c10c8b980251188b1eb1219501bdabc8545af2324fbc897e45ee329f5",
+    "partial_observation-160.svg": "22ae65ea12756641ecf0ca252af5b1d66106cdce181a2d17140241b7f8fbc075",
+    "legacy_unverified-120.svg": "4955fa800bf734b9304a48f26ab8667469ee16892585e1f150c10c963f5649c5",
+    "sourced_discovery-120.svg": "2d08984ee77893075a8d69a916149b4a802f5447b82eaff2370bc477576af38e",
+    "partial_observation-80.txt": "886e9821f51d9218582ca769a6ab58371a621b28d6e3e61f2c709b61c77f0f63",
+    "partial_observation-80.svg": "22ae65ea12756641ecf0ca252af5b1d66106cdce181a2d17140241b7f8fbc075",
+    "partial_observation-80.html": "b30c9381ef747f89f0666a310e9172ef76c1d41deb99882b2b7200ae87af76dc",
+    "sourced_discovery-120.txt": "6a0ad9a68d98e08700115f4b8819c8da73e9e180b1f117b73933f930c91b88cd",
+    "legacy_unverified-120.txt": "15b8b50d685c56800f989bc484288df5634b3cd20b7984c2f5e1fb1142bfa487"
+  },
+  "limits": "Actual public fetch/SQL/export and stored-object menu paths with synthetic sourced/partial/legacy dates; no live observations, independent source certification, time-scale conversion or all-menu certification."
+}

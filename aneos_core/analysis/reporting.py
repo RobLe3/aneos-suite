@@ -36,7 +36,7 @@ def _software_metadata():
         'aneos_core/data/orbit_evidence.py', 'aneos_core/data/fetcher.py',
         'aneos_core/data/sources/sbdb.py', 'aneos_core/data/sources/horizons.py',
         'aneos_core/data/sources/mpc.py', 'aneos_core/data/sources/neodys.py',
-        'aneos_core/data/acquisition.py', 'aneos_core/data/neodys_evidence.py', 'aneos_core/data/reconciliation.py',
+        'aneos_core/data/acquisition.py', 'aneos_core/data/chronology.py', 'aneos_core/analysis/chronology_view.py', 'aneos_core/data/neodys_evidence.py', 'aneos_core/data/reconciliation.py',
         'aneos_core/data/enrichment.py', 'aneos_core/data/cache.py',
         'aneos_api/enrichment_store.py', 'aneos_api/acquisition_repository.py',
         'aneos_core/detection/validated_sigma5_artificial_neo_detector.py']

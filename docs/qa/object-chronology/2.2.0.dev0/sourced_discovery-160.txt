@@ -1,0 +1,124 @@
+SYNTHETIC CHRONOLOGY QA — NOT LIVE OBSERVATIONS
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Stored evidence — SYNTHETIC                                                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+Storage: verified_ledger_projection; artificial-origin probability: not calibrated.
+╭────────────────────────────────────────────────────────── Object chronology — distinct date roles ───────────────────────────────────────────────────────────╮
+│ Discovery day: 1998-05-31 (catalogued day, not an instant).                                                                                                  │
+│ SBDB documents discovery circumstances only for numbered asteroids/comets; an omitted date is not evidence of non-discovery.                                 │
+│ UTC receipts may display Z instead of +00:00; original literals and complete meanings remain in JSON.                                                        │
+│ Source labels, local receipts and dynamical epochs are different roles; no common UTC time axis is inferred.                                                 │
+│ Consistency/replay does not authenticate sources, verify clock synchronization or establish scientific readiness.                                            │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Role / source                    ┃ Recorded value / scale                        ┃ Meaning                                                               ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ First observation in fit         │ 1998-05-30                                    │ Earliest observation in fit; not discovery.                           │ │
+│ │ SBDB                             │ scale not declared                            │                                                                       │ │
+│ │ Last observation in fit          │ 2024-05-06                                    │ Latest observation in fit; not discovery.                             │ │
+│ │ SBDB                             │ scale not declared                            │                                                                       │ │
+│ │ Orbital-element epoch            │ 2461200.50000000001                           │ Element reference epoch; not converted or propagated.                 │ │
+│ │ SBDB                             │ JD                                            │                                                                       │ │
+│ │                                  │ TDB                                           │                                                                       │ │
+│ │ Covariance epoch                 │ 2457098.500000000001                          │ Covariance reference epoch; not propagated.                           │ │
+│ │ SBDB                             │ JD                                            │                                                                       │ │
+│ │                                  │ TDB                                           │                                                                       │ │
+│ │ Orbit fit produced               │ 2024-May-07 06:44:30                          │ Fit-production label; no UTC/DST offset inferred.                     │ │
+│ │ SBDB                             │ Pacific local; offset not supplied            │                                                                       │ │
+│ │ Adapter receipt                  │ 2026-11-13                                    │ Adapter read time; not an observation.                                │ │
+│ │ SBDB                             │ 06:52:34.067700Z                              │                                                                       │ │
+│ │                                  │ UTC                                           │                                                                       │ │
+│ │ Discovery day                    │ 1998-05-31                                    │ Catalogue day label, not a time instant.                              │ │
+│ │ SBDB                             │ scale not declared                            │                                                                       │ │
+│ │ First ledger receipt             │ 2026-11-13                                    │ Local ledger append, not discovery.                                   │ │
+│ │                                  │ 06:52:34.127721Z                              │                                                                       │ │
+│ │                                  │ UTC                                           │                                                                       │ │
+│ │ Last ledger receipt              │ 2026-11-13                                    │ Local ledger append, not discovery.                                   │ │
+│ │                                  │ 06:52:34.127721Z                              │                                                                       │ │
+│ │                                  │ UTC                                           │                                                                       │ │
+│ └──────────────────────────────────┴───────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────┘ │
+│ Compatibility dates — semantics/time basis unverified; preserved, not silently relabelled UTC.                                                               │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Compatibility field                                           ┃ Stored value (not discovery)                                                             ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ last_updated                                                  │ 2026-11-13                                                                               │ │
+│ │                                                               │ 06:52:34.127721                                                                          │ │
+│ └───────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────┘ │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────────────────────────────────────────── Input data — SYNTHETIC ───────────────────────────────────────────────────────────────────╮
+│ Basic catalogue field presence 7/15; not total completeness or readiness.                                                                                    │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Field                ┃ Recorded value                                                          ┃ Units / status                                          ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis      │ 1.23                                                                    │ AU; present                                             │ │
+│ │ Eccentricity         │ 0.2                                                                     │ dimensionless; present                                  │ │
+│ │ Inclination          │ 1.49                                                                    │ degrees; present                                        │ │
+│ │ Ascending node       │ not available                                                           │ degrees; not_available                                  │ │
+│ │ Periapsis argument   │ not available                                                           │ degrees; not_available                                  │ │
+│ │ Mean anomaly         │ not available                                                           │ degrees; not_available                                  │ │
+│ │ Orbit epoch          │ 2461200.50000000001; native scale not converted to UTC                  │ JD TDB; present                                         │ │
+│ │ Diameter             │ not available                                                           │ km; not_available                                       │ │
+│ │ Absolute magnitude H │ not available                                                           │ mag; not_available                                      │ │
+│ │ Albedo               │ not available                                                           │ dimensionless; not_available                            │ │
+│ │ Spectral label       │ not available                                                           │ catalogue label; not_available                          │ │
+│ │ Rotation period      │ not available                                                           │ h; not_available                                        │ │
+│ │ First observation    │ 1998-05-30T00:00:00; timezone unspecified                               │ catalogue timestamp; source precision retained; present │ │
+│ │ Last observation     │ 2024-05-06T00:00:00; timezone unspecified                               │ catalogue timestamp; source precision retained; present │ │
+│ │ Retrieved at         │ 2026-11-13T06:52:34.067700+00:00; offset recorded not time scale        │ retrieval timestamp; present                            │ │
+│ │                      │ conversion                                                              │                                                         │ │
+│ └──────────────────────┴─────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────┘ │
+│ Orbital element epoch: 2461200.50000000001 JD TDB (SBDB).                                                                                                    │
+│ This legacy inventory does not link a covariance epoch; see source-specific chronology/native JSON.                                                          │
+│ Native times retained; not propagated, converted to UTC or treated as observation dates.                                                                     │
+│ SBDB photometry: not available; no physical parameter records supplied in this source snapshot.                                                              │
+│ Catalogue assertions, not independently verified measurements. Physical measurement epoch: not available; retrieval/container orbit dates are not            │
+│ measurement dates.                                                                                                                                           │
+│ Non-gravitational evidence: not available.                                                                                                                   │
+│ Overall completeness and source coverage: not established. Native solutions/uncertainties remain in the JSON.                                                │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────────────────────────────────────── Recorded acquisition outcomes ────────────────────────────────────────────────────────────────╮
+│ Data contributed: 1/5 planned adapters. Typed data or explicit empty responses: 1/5.                                                                         │
+│ ┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Source         ┃ Outcome             ┃ Recorded at (UTC)             ┃ Meaning                                                                           ┃ │
+│ ┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ SBDB           │ available           │ 2026-11-13                    │ Typed data contribution; not independently verified                               │ │
+│ │                │                     │ 06:52:34.067700Z              │                                                                                   │ │
+│ │ NEODyS         │ unavailable         │ 2026-11-13                    │ Source could not initialize                                                       │ │
+│ │                │                     │ 06:52:34.063073Z              │                                                                                   │ │
+│ │ MPC            │ unavailable         │ 2026-11-13                    │ Source could not initialize                                                       │ │
+│ │                │                     │ 06:52:34.063100Z              │                                                                                   │ │
+│ │ Horizons       │ unavailable         │ 2026-11-13                    │ Source could not initialize                                                       │ │
+│ │                │                     │ 06:52:34.063112Z              │                                                                                   │ │
+│ │ CAD            │ unavailable         │ 2026-11-13                    │ Adapter/result unavailable; no substitute data                                    │ │
+│ │                │                     │ 06:52:34.069017Z              │                                                                                   │ │
+│ └────────────────┴─────────────────────┴───────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────┘ │
+│ Installed catalogue + bounded CAD profile only. Counts are not total completeness, independent evidence, source authenticity or scientific readiness.        │
+│ Recorded times are adapter-result receipts, not observation epochs. Native/adapter packets where available and query IDs remain in local JSON history.       │
+│ Query: 74be33c8-f49d-4c16-b100-260a6ded541e                                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+Stored projection may include earlier source receipts; a successful query does not refresh every stored measurement.
+        Stored projection / latest query binding         
+┏━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ Source ┃ Selected receipt (short) ┃ From latest query ┃
+┡━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ SBDB   │ ce7074a3b16a             │ yes               │
+└────────┴──────────────────────────┴───────────────────┘
+Showing 6/6 source receipts; full payloads remain in JSON export.
+      Dated source assertion history — not independent observations      
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Source   ┃ Recorded at           ┃ Kind             ┃ Receipt (short) ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ SBDB     │ 2026-11-13            │ source_assertion │ ce7074a3b16a    │
+│          │ 06:52:34.127721+00:00 │                  │                 │
+│ SBDB     │ 2026-11-13            │ query_attempt    │ e91de3685ddd    │
+│          │ 06:52:34.127721+00:00 │                  │                 │
+│ NEODyS   │ 2026-11-13            │ query_attempt    │ 729eadb2b074    │
+│          │ 06:52:34.127721+00:00 │                  │                 │
+│ MPC      │ 2026-11-13            │ query_attempt    │ f4ebb7eeb875    │
+│          │ 06:52:34.127721+00:00 │                  │                 │
+│ Horizons │ 2026-11-13            │ query_attempt    │ 9d198590841d    │
+│          │ 06:52:34.127721+00:00 │                  │                 │
+│ CAD      │ 2026-11-13            │ query_attempt    │ 9a164bc49f6d    │
+│          │ 06:52:34.127721+00:00 │                  │                 │
+└──────────┴───────────────────────┴──────────────────┴─────────────────┘
+Full receipt IDs and unknown/alternative measurements remain in JSON source history. No source authentication, physical fit or calibrated origin inference is 
+established.

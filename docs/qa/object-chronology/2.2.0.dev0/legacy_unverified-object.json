@@ -1,0 +1,84 @@
+{
+  "acquisition_history": [],
+  "artificial_probability": null,
+  "chronology": {
+    "chronology_id": "751714cf26cc9dfe88c577ee0f90cdd0d1104a2a4fcebad9bafdb429d3b42830",
+    "designation": "SYNTHETIC",
+    "discovery": {
+      "claims": [],
+      "selected": null,
+      "status": "not_available"
+    },
+    "events": [],
+    "inputs": {
+      "designation": "SYNTHETIC",
+      "ledger_records": [],
+      "legacy_dates": {
+        "first_discovered": "2020-01-02T03:04:00",
+        "last_updated": "2021-02-03T04:05:00"
+      },
+      "sources": []
+    },
+    "legacy_dates": {
+      "first_discovered": {
+        "meaning": "Preserved compatibility value; not accepted as discovery or a UTC ledger receipt.",
+        "status": "semantics_and_time_scale_unverified",
+        "time_scale": "not_declared",
+        "value": "2020-01-02T03:04:00"
+      },
+      "last_updated": {
+        "meaning": "Preserved compatibility value; not accepted as discovery or a UTC ledger receipt.",
+        "status": "semantics_and_time_scale_unverified",
+        "time_scale": "not_declared",
+        "value": "2021-02-03T04:05:00"
+      }
+    },
+    "limitations": [
+      "Source labels, local receipts and dynamical epochs are different roles; no common UTC time axis is inferred.",
+      "Consistency/replay does not authenticate sources, verify clock synchronization or establish scientific readiness."
+    ],
+    "local_receipts": {
+      "clock_order": "not_established",
+      "first_ledger_recorded_at": null,
+      "last_ledger_recorded_at": null,
+      "records": [],
+      "scope": "verified ledger sequence only; earlier local intake may predate this ledger",
+      "unverified_count": 0
+    },
+    "schema_version": "object-chronology-v1"
+  },
+  "close_approaches": null,
+  "completeness_score": 0.0,
+  "completeness_semantics": "legacy heuristic, not validated completeness",
+  "data_quality_score": null,
+  "data_sources": null,
+  "deprecated_timestamp_fields": {
+    "first_discovered": "Not a trustworthy discovery timestamp; use sourced discovery_date/chronology. Legacy values are retained, not silently reinterpreted.",
+    "last_updated": "Use last_ledger_recorded_at for a verified local receipt, not the last scientific observation. Compatibility values remain in chronology."
+  },
+  "designation": "SYNTHETIC",
+  "discovery_data": null,
+  "discovery_date": null,
+  "evidence_history": [],
+  "first_discovered": null,
+  "first_ledger_recorded_at": null,
+  "last_ledger_recorded_at": null,
+  "last_updated": null,
+  "latest_acquisition": null,
+  "legacy_discovery_data": null,
+  "legacy_origin_output": {
+    "status": "uncalibrated_legacy_not_current_probability",
+    "value": 0.0
+  },
+  "orbital_elements": null,
+  "orbital_elements_source": null,
+  "origin_status": "not_assessed",
+  "overall_data_completeness": null,
+  "physical_properties": null,
+  "projection_receipt": null,
+  "source_acquisition_coverage": null,
+  "source_data": {},
+  "storage_status": "legacy_unverified",
+  "total_detections": 1,
+  "total_detections_semantics": "distinct stored source assertions, not observations or artificial detections"
+}

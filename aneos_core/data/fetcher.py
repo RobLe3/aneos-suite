@@ -106,7 +106,7 @@ class DataFetcher:
         )
         scope = {
             "workspace": str(Path.cwd().resolve()),
-            "adapter_contract_revision": "object-acquisition-v2-neodys-oef2-photometry",
+            "adapter_contract_revision": "object-acquisition-v3-discovery-chronology",
             "endpoint_scope": (
                 "default-public-v1" if default_endpoints else str(uuid4())
             ),

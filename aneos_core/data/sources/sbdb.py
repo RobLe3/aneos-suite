@@ -43,6 +43,7 @@ class SBDBSource(HTTPDataSource):
             params = {
                 "sstr": designation,
                 "phys-par": "true",
+                "discovery": "true",
                 "full-prec": "true",
                 "cov": "mat",
             }
@@ -60,7 +61,7 @@ class SBDBSource(HTTPDataSource):
                 )
             
             # Parse SBDB response format
-            orbital_data = self._parse_sbdb_response(response_data, designation)
+            orbital_data = self._parse_sbdb_response(response_data, designation, discovery_requested=True)
             
             return FetchResult(
                 success=True,
@@ -78,7 +79,7 @@ class SBDBSource(HTTPDataSource):
                 source=self.name, outcome="invalid" if response_data is not None else "unavailable", raw_response=response_data
             )
     
-    def _parse_sbdb_response(self, data: Dict[str, Any], designation: str) -> Dict[str, Any]:
+    def _parse_sbdb_response(self, data: Dict[str, Any], designation: str, *, discovery_requested=False) -> Dict[str, Any]:
         """Parse SBDB API response into standardized format."""
         if not isinstance(data, dict):
             raise ValueError('SBDB payload must be an object')
@@ -191,6 +192,17 @@ class SBDBSource(HTTPDataSource):
             'physical_measurements': copy.deepcopy(phys_list),
             'physical_evidence':physical_evidence,
         }
+
+        if discovery_requested or 'discovery' in data:
+            from ..chronology import build_sbdb_discovery
+            orbital_data['_evidence_metadata']['discovery_evidence'] = build_sbdb_discovery(data.get('discovery'), {
+                'requested_designation': designation,
+                'source_response_sha256': solution['canonical_response_sha256'],
+                'source_schema_version': signature.get('version'),
+                'retrieved_at': solution['retrieved_at'],
+                'object': copy.deepcopy(data.get('object', {})),
+                'requested': discovery_requested,
+            })
 
         # Observation window (first_obs / last_obs from orbit section)
         orbit_section = data.get("orbit", {})

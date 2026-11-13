@@ -321,6 +321,9 @@ def render_object_review(review,*,console=None,verbose=True):
     for text in review['follow_up']+review['limitations']:items.append(Text('• '+text))
     console.print(Panel(Group(*items),title=Text(f"Object review — {literal(review['designation'])}"),border_style='blue',padding=(1,1)))
     if review['inventory']:
+        from aneos_core.data.chronology import build_object_chronology
+        from .chronology_view import render_chronology
+        render_chronology(build_object_chronology(review['inventory']['source_snapshot']),console=console)
         summary=(review['inventory']['source_snapshot'].get('evidence_metadata') or {}).get('acquisition')
         if summary:
             from .acquisition_view import render_acquisition_summary
@@ -350,6 +353,10 @@ def object_review_markdown(review,*,verbose=True):
         if summary:
             from .acquisition_view import acquisition_markdown
             lines.extend(['',acquisition_markdown(summary)])
+    if review['inventory']:
+        from aneos_core.data.chronology import build_object_chronology
+        from .chronology_view import chronology_markdown
+        lines.extend(['',chronology_markdown(build_object_chronology(review['inventory']['source_snapshot']))])
     return '\n'.join(lines)+'\n'
 
 
@@ -365,7 +372,7 @@ def _epoch_inventory_text(inventory):
         lines.append('Epoch values differ; covariance is not propagated to the display epoch.' if equal is False else
             'Epoch values match; this alone does not establish solution/frame compatibility.' if equal is True else
             'Epoch compatibility not established across these representations/time scales.')
-    else:lines.append('Covariance epoch: not available in this inventory.')
+    else:lines.append('This legacy inventory does not link a covariance epoch; see source-specific chronology/native JSON.')
     lines.append('Native times retained; not propagated, converted to UTC or treated as observation dates.')
     return '\n'.join(lines)
 

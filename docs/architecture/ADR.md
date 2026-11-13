@@ -2976,3 +2976,32 @@ no new bounded context or engine. Scientific covariance transformations, global
 aliases, all-source field accounting and observational fits remain open. Add a
 90% NEODyS component gate; expand the existing physical-evidence gate's test inputs,
 not its threshold. The whole scientific goal is not certified by these tests.
+
+## ADR-088 — Separate astronomical date roles from local intake and compatibility dates
+
+**Date:** 2026-11-13. **Status:** implemented in draft stack; see
+[chronology contract and QA](../engineering/object-chronology.md).
+
+A reproduced SQL-backed export mislabeled the local append clock as discovery and
+lost its UTC offset through a compatibility DateTime column. Stop populating new
+`first_discovered` rows from intake. Deprecate ambiguous exported timestamp aliases;
+retain old values/history but do not reassign their semantics or blanket-retag them UTC.
+
+Derive a replayable role-separated chronology from the existing verified ledger and
+frozen source snapshots. Use native observation labels/partial dates, JD/MJD scales,
+covariance epochs, documented fit-production basis, adapter receipts and UTC ledger
+append receipts separately. Sequence order is authoritative for ledger order; report
+clock regression and unverified precision. There is no inferred common UTC axis.
+
+Extend the existing SBDB query with documented discovery circumstances and a source-
+native day-label assertion. Preserve provenance, unavailable/malformed records and
+conflicting claims. State provider limits: discovery circumstances only for numbered
+objects; fit-production dates are Pacific local; partial observation dates are possible.
+Do not invent discovery, offset/DST, midnight UTC, physical-measurement dates or fits.
+
+The repository continues to own transactions; the new chronology is a pure read
+projection, not a new bounded context/lifecycle store. Existing review-v1 assessments
+remain replayable; additional rendered chronology derives from their frozen inputs.
+Partition new acquisition caches by normalization revision without rewriting history.
+Add a 90% chronology component gate; retain every existing quality gate. The separate
+legacy freshness-polling defects remain #66/#40, and scientific readiness remains open.

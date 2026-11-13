@@ -4128,6 +4128,9 @@ class ANEOSMenu(ANEOSMenuBase):
                     print('No stored object evidence found.')
                 else:
                     print('Storage: '+data['storage_status']+'; artificial-origin probability: not calibrated.')
+                    if data.get('chronology'):
+                        from aneos_core.analysis.chronology_view import render_chronology
+                        render_chronology(data['chronology'])
                     if data.get('data_inventory'):
                         render_data_inventory(data['data_inventory'])
                     if data.get('latest_acquisition'):
@@ -4149,6 +4152,9 @@ class ANEOSMenu(ANEOSMenuBase):
                 from aneos_core.analysis.object_review import render_data_inventory,literal
                 self.console.print(Panel(Text('Stored evidence — '+literal(designation)),border_style='blue'))
                 self.console.print(Text('Storage: '+data['storage_status']+'; artificial-origin probability: not calibrated.'))
+                if data.get('chronology'):
+                    from aneos_core.analysis.chronology_view import render_chronology
+                    render_chronology(data['chronology'],console=self.console)
                 if data.get('data_inventory'):render_data_inventory(data['data_inventory'],console=self.console)
                 else:self.console.print(Text('No admitted catalogue snapshot; query outcomes remain available below. Missing is not zero.' if data['storage_status']=='attempts_only' else 'Legacy unverified snapshot; overall completeness and source coverage not established.'))
                 if data.get('neo_data'):
@@ -4177,7 +4183,7 @@ class ANEOSMenu(ANEOSMenuBase):
                 self.console.print(Text(f'Showing {min(20,len(history))}/{len(history)} source receipts; full payloads remain in JSON export.'))
                 for record in history[-20:]:
                     table.add_row(Text(literal(record['source'])),Text(record['recorded_at'].replace('T','\n',1)),Text(record['kind']),Text(record['assertion_id'][:12]))
-                self.console.print(table)
+                if history:self.console.print(table)
                 self.console.print(Text('Full receipt IDs and unknown/alternative measurements remain in JSON source history. No source authentication, physical fit or calibrated origin inference is established.'))
             self.console.input('Press Enter to return to database browser...')
         except Exception:

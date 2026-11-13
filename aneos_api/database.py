@@ -604,8 +604,8 @@ class EnrichedNEOService:
             return None
         data = {
             "designation": designation,
-            "first_discovered": row.first_discovered if row else None,
-            "last_updated": row.last_updated if row else None,
+            "first_discovered": None,  # Deprecated ambiguous timestamp, preserved in chronology legacy values.
+            "last_updated": None,
             "data_sources": row.data_sources if row else [],
             "data_quality_score": None,
             "orbital_elements": row.orbital_elements if row else None,
@@ -684,6 +684,32 @@ class EnrichedNEOService:
                 'query_id': lookup[key]['payload'].get('acquisition_query_id'),
                 'from_latest_query': lookup[key]['payload'].get('acquisition_query_id') == latest['bundle']['query_id'] if lookup[key]['payload'].get('acquisition_query_id') is not None else None,
             } for source, key in selected.items()]
+        from aneos_core.data.chronology import build_chronology, source_input
+        selected = receipt['projection']['selected_source_assertions'] if receipt else {}
+        indexed = {r['assertion_id']: (i, r) for i, r in enumerate(history)}
+        sources = []
+        for source, assertion_id in selected.items():
+            index, record = indexed[assertion_id]
+            sources.append(source_input(record['normalized']['normalized_neo'], source,
+                f'/evidence_history/{index}/normalized/normalized_neo'))
+        legacy_dates = {name: (getattr(row, name).isoformat() if isinstance(getattr(row, name), datetime) else getattr(row, name))
+            for name in ('first_discovered', 'last_updated')} if row else {}
+        chronology = build_chronology(designation, sources,
+            [{'sequence': r['sequence'], 'recorded_at': r['recorded_at'],
+              'assertion_id': r['assertion_id'], 'kind': r['kind'], 'reference': f'/evidence_history/{i}'}
+             for i, r in enumerate(history)], legacy_dates)
+        data['chronology'] = chronology
+        data['first_ledger_recorded_at'] = chronology['local_receipts']['first_ledger_recorded_at']
+        data['last_ledger_recorded_at'] = chronology['local_receipts']['last_ledger_recorded_at']
+        choice = chronology['discovery']['selected']
+        data['discovery_date'] = choice['value'] if choice else None
+        data['legacy_discovery_data'] = data['discovery_data']
+        data['discovery_data'] = next((s['discovery_evidence']['native'] for s in sources
+            if choice and s['discovery_evidence'] and s['discovery_evidence']['status'] == 'available'
+            and s['reference'] + '/evidence_metadata/discovery_evidence' == choice['reference']), None)
+        data['deprecated_timestamp_fields'] = {
+            'first_discovered': 'Not a trustworthy discovery timestamp; use sourced discovery_date/chronology. Legacy values are retained, not silently reinterpreted.',
+            'last_updated': 'Use last_ledger_recorded_at for a verified local receipt, not the last scientific observation. Compatibility values remain in chronology.'}
         return data
 
     def export_enriched_json(self, designation, path):

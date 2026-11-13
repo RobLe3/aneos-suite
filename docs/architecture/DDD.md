@@ -1457,3 +1457,19 @@ presentation displays the source/uncertainty/alternatives. A normalization revis
 changes new cache contexts, not historical records. These responsibilities fit
 existing boundaries. A global canonical alias registry and scientific fit/covariance
 models remain separate pending requirements, not newly implemented contexts.
+
+## Date-role contracts — 2026-11-13 / ADR-088
+
+Acquisition owns the SBDB discovery request/native assertion and adapter receipts.
+The scientific evidence boundary owns literal discovery/observation labels and
+native orbital/covariance scales, not invented UTC instants. The repository owns
+local append receipts and sequence order; it does not infer discovery from intake.
+A pure chronology read model references these inputs and keeps legacy date semantics
+unverified. Presentation owns compact role/scale labels and safe literal output,
+not DST selection, propagation or source authentication.
+
+No second lifecycle database or bounded context is introduced. Compatibility columns
+remain caches, not authoritative scientific dates. Verified-format ledger timestamps
+are distinct from original source freshness; polling/backfill is a separate pending
+responsibility (#66/#40). Frozen source histories and review-v1 assessments remain
+available; new rendered context is not a rewritten historical scientific result.

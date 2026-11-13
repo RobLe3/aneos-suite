@@ -539,7 +539,7 @@ def enrich(
             if row is None:
                 row = EnrichedNEO(
                     designation=designation,
-                    first_discovered=datetime.fromisoformat(stamp),
+                    first_discovered=None,  # Local intake is not an astronomical discovery.
                 )
                 db.add(row)
                 stats["new_neos"] += 1
