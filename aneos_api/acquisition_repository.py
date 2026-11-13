@@ -17,6 +17,7 @@ from .enrichment_store import (
     ObjectAcquisition,
     initialize_schema,
     schema_ready,
+    require_writable_acquisition_uri,
     enrich,
     _record,
 )
@@ -210,6 +211,10 @@ class SQLEvidenceRepository:
             return _query_record(db, row) if row is not None else None
 
     def prepare_acquisition(self):
+        try:
+            require_writable_acquisition_uri(self.engine)
+        except ValueError as exc:
+            raise EvidencePersistenceError("Acquisition URI configuration is not writable; sources not queried") from exc
         if not acquisition_schema_ready(self.engine):
             initialize_acquisition_schema(self.engine)
         return {

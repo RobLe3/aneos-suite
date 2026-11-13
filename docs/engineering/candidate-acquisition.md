@@ -122,3 +122,19 @@ into a disposable test database; when explicitly enabled, an unavailable source 
 failed check, not silently skipped success. Neither establishes scientific validation,
 full source eligibility, physical fits, an artificial-origin probability or five-sigma
 performance. Root restoration and broader enrichment remain #73 work.
+
+### Declared read-only SQLite URIs
+
+Fresh collection and ordinary named-object acquisition reject `mode=ro` before
+provider work, even when a fully initialized schema already exists. For the fresh
+write profile, `immutable` must be omitted or explicitly false (`0`, `false`,
+`off`, `no`, or empty; words are case-insensitive). Enabled or nonstandard values
+are not assumed writable. Normal file paths and `mode=rw`/`rwc` remain supported.
+These configuration checks do not prove OS permissions, custom VFS behavior,
+locking, disk space or future commit success.
+
+Historical query readback/replay remains available through read-only connections;
+no evidence is overwritten or copied to a fallback database. SQLite's
+[URI documentation](https://www.sqlite.org/uri.html) specifies that `immutable=1`
+also disables locking/change detection: use it only for genuinely fixed snapshots,
+not as an authenticity guarantee or on a database another process might modify.

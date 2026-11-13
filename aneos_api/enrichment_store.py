@@ -72,6 +72,20 @@ def _file_sqlite(engine):
     )
 
 
+def require_writable_acquisition_uri(engine):
+    """Reject declared read-only/unsupported immutable settings, not future IO faults.
+
+    Read/replay paths deliberately do not call this guard. For fresh acquisition,
+    immutable must be omitted or a documented explicit false token; custom boolean
+    spellings are not assumed writable. This does not inspect OS permissions/VFS.
+    """
+    if engine.dialect.name == 'sqlite':
+        immutable = engine.url.query.get('immutable', '0')
+        writable_flag = isinstance(immutable, str) and immutable.lower() in ('0', 'false', 'off', 'no', '')
+        if engine.url.query.get('mode') == 'ro' or not writable_flag:
+            raise ValueError('Fresh acquisition requires a writable SQLite URI; read-only/unsupported immutable settings')
+
+
 def _columns_ready(connection, tables=TABLES):
     inspector = inspect(connection)
     for table in tables:
