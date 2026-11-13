@@ -52,3 +52,15 @@ A dependency discovered during ownership review is separately tracked in
 [#47](https://github.com/RobLe3/aneos-suite/issues/47): remaining legacy credential
 grants and success-only/password-incomplete user lifecycle. The persistent job and
 admin authority boundary is strengthened, not a claim that all auth is corrected.
+
+## Every-feature prerequisite QA
+
+Issue41/46 additionally require a per-option purpose/input/dispatch -> prerequisite
+(permission, runtime/version, DB/cache/storage, source and scientific data quality)
+-> enforcement -> actual positive and missing/invalid/denied cases -> side effects/
+execution -> computation/export -> real rendered output matrix. Importability or a
+successful display call is not proof of capability. Compare expected/actual behavior
+and values; unmet prerequisites must block or yield explicit inconclusive/error,
+not fabricated data or success-shaped output. Re-run affected gates when code/data/
+configuration changes and retain before/after baselines. This full-menu QA is still
+pending; current API tests do not satisfy it by implication.
