@@ -1,249 +1,75 @@
-# aNEOS Installation Guide
+# Install an isolated aNEOS beta
 
-Complete installation and setup guide for aNEOS v1.2.0.
+Use the published **v2.2.0b2 engineering beta** for initial testing. It is not a
+scientifically calibrated detector or a production warning service. The development
+checkout includes additional work that the tag does not contain.
 
----
+## Requirements
 
-## Quick Start (5 minutes)
+Use Python **3.11**, Git and network access to install dependencies. CI uses Python
+3.11; this guide does not establish support for every Python/OS combination or a
+minimum memory/performance guarantee. The shell commands below use macOS/Linux
+syntax. Windows installation has not been requalified in this documentation pass.
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/RobLe3/aneos-suite.git
-cd aneos-suite
-
-# 2. Install core dependencies
-pip install -r requirements-core.txt
-
-# 3. Verify the environment
-python aneos.py status
-
-# 4. Launch the interactive menu
-python aneos.py
-```
-
-That's it. No database initialisation step is required for the core research workflow —
-aNEOS uses SQLite and creates `aneos.db` automatically on first run.
-
----
-
-## System Requirements
-
-### Minimum
-
-| Requirement | Value |
-|-------------|-------|
-| Python | 3.10 or later |
-| RAM | 4 GB |
-| Storage | 2 GB free (for NEO data cache) |
-| Network | Internet — JPL, NASA, ESA APIs queried live |
-| OS | Linux, macOS, or Windows |
-
-### Recommended
-
-| Requirement | Value |
-|-------------|-------|
-| Python | 3.11 (used in CI) |
-| RAM | 8 GB (200-year pipeline poll processes ~30,000 objects) |
-| Storage | 10 GB (full cache + DB after extended use) |
-| CPU | 4+ cores (batch detection uses ThreadPoolExecutor) |
-
----
-
-## Dependency Profiles
-
-aNEOS ships three requirements files:
-
-| File | Purpose | Install command |
-|------|---------|----------------|
-| `requirements-core.txt` | Science + testing — covers all menu options | `pip install -r requirements-core.txt` |
-| `requirements.txt` | Full stack: API + ML + Docker + monitoring | `pip install -r requirements.txt` |
-| `requirements-minimal.txt` | Absolute minimum (no API, no ML) | `pip install -r requirements-minimal.txt` |
-
-**For research use** (the interactive menu, all 15 options): `requirements-core.txt` is sufficient.
-
-**For API deployment** (REST endpoints, Prometheus monitoring): use `requirements.txt`.
-
-### Key packages in `requirements-core.txt`
-
-| Package | Purpose |
-|---------|---------|
-| `astropy`, `astroquery` | Astronomical calculations, JPL Horizons queries |
-| `numpy`, `scipy`, `pandas` | Numerical analysis |
-| `scikit-learn` | DBSCAN clustering, anomaly detection |
-| `requests`, `aiohttp` | HTTP calls to JPL/NASA/ESA APIs |
-| `rich` | Terminal UI (progress bars, panels, tables) |
-| `skyfield` | Orbital mechanics |
-| `pytest`, `pytest-cov`, `pytest-mock` | Test suite |
-| `hypothesis` | Property-based testing |
-
----
-
-## Virtual Environment (recommended)
+Create a new checkout rather than updating an existing research working tree:
 
 ```bash
-python -m venv aneos-env
-source aneos-env/bin/activate   # Linux / macOS
-# aneos-env\Scripts\activate    # Windows
-
-pip install -r requirements-core.txt
-python aneos.py status
+git clone --branch v2.2.0b2 https://github.com/RobLe3/aneos-suite.git aneos-suite-beta
+cd aneos-suite-beta
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements-core.txt
 ```
 
----
+Run subsequent commands from this checkout with the environment activated. The
+core profile includes numerical, astronomy, visualization and API dependencies.
+The optional full ML profile is not required for the introductory workflow and
+does not enable a validated artificial-origin model.
 
-## Full Installation (includes REST API + monitoring)
+## Keep test data separate
 
 ```bash
-pip install -r requirements.txt
-
-# Optional: initialise PostgreSQL (SQLite is used by default)
-# export ANEOS_DATABASE_URL=postgresql://user:pass@localhost/aneos
-
-python aneos.py api --dev
-# API available at http://localhost:8000
-# Interactive docs at http://localhost:8000/docs
+mkdir -p beta-runtime
+export ANEOS_DATABASE_URL="sqlite:///$PWD/beta-runtime/aneos-beta.sqlite"
 ```
 
----
+This selects a new **file-backed SQLite** database. Set the variable in each new
+shell before querying. The commands neither migrate nor back up an existing
+database. Do not point them at a live investigation or assume Docker's default
+PostgreSQL service is a qualified replacement for this evidence-store workflow.
+Database receipts, source payloads, exports and caches can contain research data;
+review them before sharing or deleting anything.
 
-## Configuration
-
-aNEOS works out of the box without any configuration file. Optional overrides:
+## Check the installation without polling
 
 ```bash
-# Copy the example environment file
-cp .env.example .env
-
-# Edit as needed — all fields are optional
-# ANEOS_DATABASE_URL=sqlite:///./aneos.db   (default)
-# ANEOS_ENV=development                      (default)
-# ANEOS_HOST=0.0.0.0                        (API only)
-# ANEOS_PORT=8000                            (API only)
-# ANEOS_SECRET_KEY=<random-string>          (API auth, dev mode only)
+python aneos.py --version
+python aneos.py help
+python aneos.py analyze --help
 ```
 
-Admin-level config overrides (Option 12 → API Server → Admin panel) are stored in
-`aneos_config_override.json` and take precedence over `.env`.
+The version should be `aNEOS 2.2.0b2 (beta)`. Help commands do not query astronomical
+providers. They establish that the selected entry point loads, not that every
+provider is reachable or every scientific model is installed.
 
----
+Continue with the [quick start](quick-start.md). For tag-specific limits, read
+[the beta release guide](../releases/2.2.0b2.md).
 
-## Verification
+## If something fails
 
-```bash
-# Preflight check (8 components: pipeline, detection, API modules, DB, cache…)
-python aneos.py status
+- **Wrong interpreter or missing import:** check `python --version` and reinstall
+  the core requirements in the activated environment. Record the failing package
+  and error rather than installing an unrelated global package.
+- **Wrong directory:** run from the folder containing `aneos.py` and `aneos_core/`.
+- **Database error:** verify the configured path and parent directory permissions.
+  Fresh acquisition needs a writable file-backed SQLite database. Historical
+  read-only inspection is a different operation; do not remove read-only protections
+  from research originals just to run a test.
+- **Provider unavailable:** installation can be valid while a source is unavailable.
+  Keep the recorded source outcome; do not replace missing measurements with zeros.
+- **Output already exists:** choose a new filename. Report creation refuses to
+  overwrite existing work; this is not a complete backup or recovery guarantee.
 
-# Run the full test suite
-python -m pytest tests/ aneos_core/tests/ -m "not network" -q
-# Expected: 308 passed, 0 failed
-
-# Smoke test — import core modules
-python -c "import aneos_core; print('Core OK')"
-python -c "from aneos_menu_v2 import ANEOSMenuV2; print('Menu OK')"
-
-# If you installed the full stack, verify the API
-python aneos.py api --dev &
-curl http://localhost:8000/api/v1/health
-```
-
----
-
-## Docker (optional)
-
-```bash
-# Build and start all services
-make bootstrap   # creates certs and init.sql
-docker-compose up -d
-
-# API:       http://localhost:8000
-# Dashboard: http://localhost:3000 (Grafana — admin/aneos)
-```
-
-Docker includes: aNEOS API, PostgreSQL, Redis, Nginx, Prometheus, Grafana.
-
----
-
-## Troubleshooting Installation
-
-### Python version
-
-```bash
-python --version   # must be 3.10 or later
-python3 --version
-```
-
-If you have multiple Python versions, use `python3.11 -m pip install ...` and
-`python3.11 aneos.py`.
-
-### Dependency conflicts
-
-```bash
-# Start clean in a fresh virtual environment
-python -m venv fresh-env
-source fresh-env/bin/activate
-pip install -r requirements-core.txt
-```
-
-### `astropy` or `scikit-learn` install fails
-
-```bash
-# Install with binary wheels (avoids compilation)
-pip install --prefer-binary astropy scikit-learn numpy scipy
-```
-
-### API server won't start (missing `torch`, `redis`, etc.)
-
-The REST API requires the full `requirements.txt` stack. If you only installed
-`requirements-core.txt`, the interactive menu (all 15 options) works fully but
-the API server needs:
-
-```bash
-pip install fastapi uvicorn sqlalchemy pydantic httpx
-```
-
-### Database issues
-
-```bash
-# Reset the SQLite database (deletes all stored results)
-rm aneos.db
-python -c "from aneos_api.database import init_database; init_database()"
-```
-
-### Network / firewall
-
-aNEOS queries these external APIs — ensure they are reachable:
-
-| API | URL | Used for |
-|-----|-----|---------|
-| JPL SBDB | `ssd-api.jpl.nasa.gov` | Orbital elements, physical properties |
-| JPL CAD | `ssd-api.jpl.nasa.gov` | Close-approach data (200-year poll) |
-| JPL Horizons | `ssd.jpl.nasa.gov` | Orbital history time-series |
-| NEODyS | `newton.spacedys.com` | Orbital elements (fallback) |
-| MPC | `minorplanetcenter.net` | Orbital elements (fallback) |
-
-All external calls have circuit-breaker protection and graceful fallback — a single
-unavailable API will not break the workflow.
-
----
-
-## Next Steps
-
-After a successful install:
-
-1. `python aneos.py` — opens the 15-option interactive menu
-2. Choose **Option 1** (Detect NEO — single) → enter `99942` (Apophis)
-3. Choose **Option 7** (Live Pipeline Dashboard) → run the 200-year historical poll
-4. Choose **Option 11** (System Health) → verify all components are online
-5. Read `docs/scientific/theory.md` — the theoretical foundation
-6. Read `docs/scientific/scientific-documentation.md` — the full statistical methodology
-7. See `CONTRIBUTING.md` for how to run tests and extend the system
-
----
-
-## Related Documentation
-
-- [Quick Start Guide](quick-start.md)
-- [Menu System Guide](menu-system.md)
-- [Artificial NEOs Theory](../scientific/theory.md)
-- [CONTRIBUTING.md](../../CONTRIBUTING.md)
-- [Troubleshooting Guide](../troubleshooting/troubleshooting-guide.md)
+Authentication and deployment hardening remain separate work. Start development
+API servers on explicit loopback only; do not expose them as a public service.

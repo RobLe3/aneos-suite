@@ -1,415 +1,87 @@
-# aNEOS Menu System Guide
+# Use the aNEOS menu
 
-## Quick Start
+Run `python aneos.py` from the installed checkout. The primary menu uses the
+shared [option catalogue](../../aneos_menu_catalog.py). The application label is
+**2.2.0b2**; it is not a scientific-model or dataset version.
 
-The aNEOS system now provides a comprehensive menu system that combines all functionality into a single, user-friendly interface.
+The menu supports Rich and plain terminal output. Navigation/banner controls are
+tested at selected widths; that does not establish that every detailed view and
+legacy workflow has completed behavioral or scientific QA.
 
-### 🚀 Launch Options
+## Options and prerequisites
 
-#### 1. Interactive Menu (Recommended)
-```bash
-# Start the full interactive menu system
-python aneos.py
+| Choice | Displayed label | What to check before interpreting it |
+|---|---|---|
+| 1 | Screen one object | Requires a designation and acquisition or admissible cached evidence; rank is uncalibrated |
+| 2 | Inspect screening evidence | Review inputs, proxy contributions, dependencies and unavailable inference |
+| 3 | Screen a batch | Supply a designation file; examine each object's failures rather than only aggregate counts |
+| 4 | Inspect orbital history | Catalogue/solution history is not proof of a manoeuvre; epochs and models matter |
+| 5 | Inspect impact evidence | Scoped external Sentry results; an unlisted object does not mean zero risk |
+| 6 | Inspect encounter history | Computed encounters are not observations or intentional targeting |
+| 7 | Run historical polling | Check actual configured source/window and coverage; not every bulk route is restored |
+| 8 | Inspect population patterns | Descriptive grouping is not calibrated significance |
+| 15 | Screen orbital proximity | Pairwise catalogue prefilter, not rendezvous proof |
+| 9 | Browse results | Distinguish current-session results, persisted evidence and frozen reports |
+| 10 | Export results | Select an available result and preserve its provenance; avoid reusing an output path |
+| 11 | Check components | Imports/reachability are not independent scientific certification |
+| 12 | Start API server | For controlled local testing, prefer the explicit-loopback CLI below |
+| 13 | Inspect session analytics | Session counts are not population detection accuracy |
+| 14 | Read scientific help | Definitions and scientific limits, not a validated origin model |
+| 0 | Exit | Return without starting another feature |
 
-# Or explicitly start the menu
-python aneos.py menu
-```
+Use option 14 before interpreting screening results. **Follow-up candidate**, **not
+flagged** and **inconclusive** describe the installed screening policy and evidence,
+not artificial/natural ground truth. The score threshold is in ranking units.
 
-#### 2. Direct Commands
-```bash
-# Quick NEO analysis
-python aneos.py analyze "2024 AB123"
+## First object workflow
 
-# Start API server
-python aneos.py api
+1. Set `ANEOS_DATABASE_URL` to a separate file-SQLite test database as described in
+   [installation](installation.md).
+2. Start the menu, choose **1**, and enter a real designation such as `1998 KY26`.
+   This may query providers; source failures must remain visible.
+3. Read the measurement and source-quality details. Distinguish native observations,
+   fitted quantities, computed predictions and heuristic proxies.
+4. Browse the result with **9** and use **10** for the available export choices.
+   Preserve the evidence/policy identifiers and do not infer new observations from
+   a different display of the same result.
 
-# Start API in development mode
-python aneos.py api --dev
+For repeatable file-based work, use the CLI examples in the
+[quick start](quick-start.md); they give an explicit designation and output path.
+No example here promises a particular score or 100% measurement completeness.
 
-# Start with Docker Compose
-python aneos.py docker
+## Polling differs by release
 
-# Check system status
-python aneos.py status
-```
+The published v2.2.0b2 quarantines the known-bad root bulk discovery paths. This
+development checkout restores **bounded NASA_CAD collection** through the shared
+adapters and existing ledger; it does not restore every provider's bulk interface.
+See the [root CAD guide](../engineering/root-cad-workflow.md) for native row limits,
+explicit object-enrichment budgets, partial coverage and replay.
 
-#### 3. Legacy Scripts (Still Available)
-```bash
-# Original analysis script
-python neos_o3high_v6.19.1.py
+A collection of predicted encounters does not, by itself, provide the orbit,
+physical measurements or observations needed for a complete assessment. No browser
+opens in the development direct CAD command unless explicitly requested.
 
-# API startup script
-python start_api.py --dev
+## Local API and legacy menu
 
-# Testing script
-python test_phase2.py
-```
-
----
-
-## 📋 Menu System Overview
-
-### Main Menu Categories
-
-1. **🔬 Scientific Analysis**
-   - Single NEO Analysis
-   - Batch Processing
-   - Interactive Analysis Mode
-   - Results Viewer
-   - Configuration Management
-
-2. **🤖 Machine Learning**
-   - Model Training
-   - Real-time Predictions
-   - Model Management
-   - Feature Analysis
-   - Performance Monitoring
-
-3. **🌐 API Services**
-   - REST API Server
-   - Web Dashboard
-   - Streaming Services
-   - Development Mode
-   - API Documentation
-
-4. **📊 Monitoring & Diagnostics**
-   - Live System Monitor
-   - Alert Management
-   - Performance Metrics
-   - Health Checks
-   - System Diagnostics
-
-5. **⚙️ System Management**
-   - Database Management
-   - System Cleanup
-   - Configuration
-   - User Management
-   - Maintenance Tasks
-
-6. **🛠️ Development Tools**
-   - Testing Suites
-   - Debug Mode
-   - Code Analysis
-   - Performance Profiling
-   - Documentation Generation
-
-7. **🐳 Docker & Deployment**
-   - Container Management
-   - Kubernetes Deployment
-   - Service Scaling
-   - Log Management
-   - Production Deployment
-
-8. **📚 Help & Documentation**
-   - User Guides
-   - API Documentation
-   - Troubleshooting
-   - System Requirements
-
----
-
-## 🎯 Common Use Cases
-
-### For Scientists and Researchers
-
-#### Quick NEO Analysis
-```bash
-# Command line (fastest)
-python aneos.py analyze "2024 AB123"
-
-# Or through menu
-python aneos.py
-# → Select 1 (Scientific Analysis)
-# → Select 1 (Single NEO Analysis)
-# → Enter designation
-```
-
-#### Batch Analysis
-```bash
-# Through menu system
-python aneos.py
-# → Select 1 (Scientific Analysis)
-# → Select 2 (Batch Analysis)
-# → Provide file with NEO designations
-```
-
-#### Interactive Analysis
-```bash
-python aneos.py
-# → Select 1 (Scientific Analysis)
-# → Select 3 (Interactive Analysis)
-# → Follow guided analysis process
-```
-
-### For Developers
-
-#### Development API Server
-```bash
-# Quick start
-python aneos.py api --dev
-
-# Or through menu
-python aneos.py
-# → Select 3 (API Services)
-# → Select 4 (Development Mode)
-```
-
-#### System Testing
-```bash
-python aneos.py
-# → Select 6 (Development Tools)
-# → Select 1 (Run Tests)
-```
-
-#### Code Analysis
-```bash
-python aneos.py
-# → Select 6 (Development Tools)
-# → Select 3 (Code Analysis)
-```
-
-### For System Administrators
-
-#### Production Deployment
-```bash
-# Docker Compose
-python aneos.py docker
-
-# Or through menu
-python aneos.py
-# → Select 7 (Docker & Deployment)
-# → Select 2 (Docker Compose Up)
-```
-
-#### System Monitoring
-```bash
-python aneos.py
-# → Select 4 (Monitoring & Diagnostics)
-# → Select 1 (Live System Monitor)
-```
-
-#### Health Checks
-```bash
-# Quick check
-python aneos.py status
-
-# Detailed check through menu
-python aneos.py
-# → Select 4 (Monitoring & Diagnostics)
-# → Select 4 (Health Check)
-```
-
-### For ML Engineers
-
-#### Model Training
-```bash
-python aneos.py
-# → Select 2 (Machine Learning)
-# → Select 1 (Model Training)
-# → Configure training parameters
-```
-
-#### Real-time Predictions
-```bash
-python aneos.py
-# → Select 2 (Machine Learning)
-# → Select 2 (Real-time Predictions)
-# → Enter NEO designation
-```
-
-#### Model Management
-```bash
-python aneos.py
-# → Select 2 (Machine Learning)
-# → Select 3 (Model Management)
-# → View/activate models
-```
-
----
-
-## 🔧 Configuration and Setup
-
-### First-Time Setup
-
-1. **Check System Status**
-   ```bash
-   python aneos.py status
-   ```
-
-2. **Install Dependencies** (if needed)
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Initialize Database**
-   ```bash
-   python aneos.py
-   # → Select 5 (System Management)
-   # → Select 1 (Database Management)
-   ```
-
-4. **Start Services**
-   ```bash
-   # Development
-   python aneos.py api --dev
-   
-   # Production
-   python aneos.py docker
-   ```
-
-### Environment Variables
-
-The system supports various environment variables:
+For API testing, use an explicit loopback address rather than relying on server
+startup defaults:
 
 ```bash
-# Database
-export ANEOS_DATABASE_URL="postgresql://user:pass@localhost/aneos"
-
-# API Configuration
-export ANEOS_LOG_LEVEL="INFO"
-export ANEOS_ENV="production"
-
-# Redis (for caching)
-export ANEOS_REDIS_URL="redis://localhost:6379/0"
+python aneos.py api --dev --host 127.0.0.1 --port 8000
 ```
 
----
+The original grouped menu remains accessible with `python aneos.py --legacy-menu`.
+Its labels and option count are not promises that all historical features or
+inference methods remain available. Some functions are deliberately unavailable
+or controlled-deprecated to prevent fabricated measurements and certainty.
 
-## 🌐 Web Interfaces
+## Report a presentation or behavior defect
 
-When the API server is running, you have access to:
+Include the commit/version, option and sub-option, terminal width, Rich/plain mode,
+designation, source status, expected/actual result and a redacted output capture.
+Check narrow and wide views as well as missing/partial/error states. A polished
+normal-case screenshot is not proof that a failure state is understandable.
 
-- **Interactive API Documentation**: http://localhost:8000/docs
-- **Web Dashboard**: http://localhost:8000/dashboard
-- **Health Check**: http://localhost:8000/health
-- **Metrics**: http://localhost:8000/api/v1/monitoring/metrics
-
-With Docker Compose, additional services are available:
-- **Grafana Dashboard**: http://localhost:3000 (admin/aneos)
-- **Prometheus Metrics**: http://localhost:9090
-
----
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-1. **Import Errors**
-   ```bash
-   # Check system status
-   python aneos.py status
-   
-   # Install missing dependencies
-   pip install -r requirements.txt
-   ```
-
-2. **Database Connection Issues**
-   ```bash
-   python aneos.py
-   # → Select 5 (System Management)
-   # → Select 1 (Database Management)
-   # → Initialize database
-   ```
-
-3. **Port Already in Use**
-   ```bash
-   # Use different port
-   python aneos.py api --port 8001
-   
-   # Or check what's using the port
-   lsof -i :8000
-   ```
-
-4. **Docker Issues**
-   ```bash
-   # Check Docker status
-   docker --version
-   docker-compose --version
-   
-   # Clean up containers
-   python aneos.py
-   # → Select 7 (Docker & Deployment)
-   # → Select 8 (Cleanup Containers)
-   ```
-
-### Getting Help
-
-1. **In-Menu Help**
-   ```bash
-   python aneos.py
-   # → Select 8 (Help & Documentation)
-   ```
-
-2. **Command Line Help**
-   ```bash
-   python aneos.py --help
-   ```
-
-3. **System Diagnostics**
-   ```bash
-   python aneos.py
-   # → Select 4 (Monitoring & Diagnostics)
-   # → Select 5 (System Diagnostics)
-   ```
-
----
-
-## 🔄 Migration from Legacy Scripts
-
-### Old Way → New Way
-
-| Old Command | New Command |
-|-------------|-------------|
-| `python neos_o3high_v6.19.1.py` | `python aneos.py` → Scientific Analysis |
-| `python start_v1.01.py` | `python aneos.py api` |
-| `python test_phase2.py` | `python aneos.py` → Development Tools → Run Tests |
-| Manual Docker commands | `python aneos.py docker` |
-
-### Legacy Scripts Still Work
-
-All original scripts remain functional:
-- `neos_o3high_v6.19.1.py` - Original analysis script
-- `start_v1.01.py` - Original startup script
-- `test_phase2.py` - Phase 2 testing
-- `start_api.py` - API server startup
-
----
-
-## 🎉 Quick Examples
-
-### 1. Analyze a NEO (Command Line)
-```bash
-python aneos.py analyze "2024 BX1"
-```
-
-### 2. Start Development Server
-```bash
-python aneos.py api --dev
-# Opens: http://localhost:8000/docs
-```
-
-### 3. Production Deployment
-```bash
-python aneos.py docker
-# Services available at:
-# - API: http://localhost:8000
-# - Dashboard: http://localhost:8000/dashboard  
-# - Grafana: http://localhost:3000
-```
-
-### 4. System Health Check
-```bash
-python aneos.py status
-```
-
-### 5. Interactive Analysis Session
-```bash
-python aneos.py
-# → 1 (Scientific Analysis)
-# → 3 (Interactive Analysis)
-# Follow prompts for guided analysis
-```
-
----
-
-**The aNEOS menu system provides a unified interface for all functionality while maintaining backward compatibility with existing scripts. Choose the method that best fits your workflow!**
+Full option-by-option QA remains
+[issue #41](https://github.com/RobLe3/aneos-suite/issues/41), with presentation work
+tracked in [#42](https://github.com/RobLe3/aneos-suite/issues/42).

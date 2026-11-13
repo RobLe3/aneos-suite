@@ -123,57 +123,39 @@ def main():
 def print_help():
     """Print help information."""
     help_text = """
-🚀 aNEOS - Advanced Near Earth Object detection System
+aNEOS — Advanced Near Earth Object Suite
 
 Usage: python aneos.py [command] [options]
+Run from the checkout root with the installed environment activated.
 
 Commands:
-  (no command)    Start aNEOS menu (v2 — screening, evidence, results, system)
-  menu, m         Start aNEOS menu (v2)
-  --legacy-menu   Start legacy grouped menu (feature QA remains pending)
-  
-  install, setup  Install/setup aNEOS system
-    --full        Full installation with all components
-    --minimal     Minimal installation (core only)
-    --check       Check system requirements
-    --fix-deps    Fix dependency issues
-  
-  api, server     Start API server
-    --dev, -d     Start in development mode
-    --host HOST   Specify host (default: 0.0.0.0)
-    --port PORT   Specify port (default: 8000)
-  
-  analyze DESIGNATION    Screen actual evidence (uncalibrated ranking)
-    --json             Machine-readable report instead of Markdown
-    --force-refresh    Bypass source cache
-    --output PATH      Create report file without overwriting existing work
-    Example: python aneos.py analyze "2024 AB123"
-  
-  simple, detect DESIGNATION  Aliases for the same actual screening pipeline
-    Example: python aneos.py simple "1998 KY26"
-  
-  poll [PERIOD]          Poll NEO APIs for artificial signatures
-    Example: python aneos.py poll 1m
-    Example: python aneos.py poll --api NASA_CAD --period 6m
-  
-  docker, up      Start Docker Compose services
-  status, health  Check system status
-  help, -h        Show this help message
+  (no command), menu, m  Start primary menu; full feature QA remains pending
+  --legacy-menu         Start the original grouped menu
+  analyze DESIGNATION   Screen actual evidence using an uncalibrated ranking
+    --json              Machine-readable report instead of Markdown
+    --force-refresh     Bypass application source cache, not upstream caches
+    --output PATH       Create report without overwriting an existing file
+  simple, detect        Aliases for the same named-object screening pipeline
+  poll [PERIOD]         Bounded NASA_CAD encounter collection (development)
+    Explicit source: python aneos.py poll --api NASA_CAD --period 1d
+    Native row/enrichment limits: python neo_poller.py --help
+    Other root bulk discovery routes remain unavailable.
+  api, server           Start API; default host 0.0.0.0, port 8000
+    Local testing: python aneos.py api --dev --host 127.0.0.1 --port 8000
+  status, health        Component checks, not scientific certification
+  install, setup        Legacy installer; prefer the isolated installation guide
+  docker, up            Legacy Compose launcher; deployment is not qualified here
+  help, -h              Show this help without polling providers
 
 Examples:
-  python aneos.py                           # Interactive menu
-  python aneos.py simple "1998 KY26"             # Actual evidence screening; no origin confirmation
-  python aneos.py poll 30                   # Poll last 30 days for artificial NEOs
-  python aneos.py analyze "2024 XY123"      # Actual evidence screening
-  python aneos.py api --dev                 # Development API server
-  python aneos.py docker                    # Start with Docker
-  python aneos.py status                    # System health check
-
-For full functionality, use the interactive menu:
+  python aneos.py analyze "1998 KY26" --json --output beta-runtime/ky26.json
+  python aneos.py analyze --help
   python aneos.py menu
 
-📚 Documentation: Available at /docs when API server is running
-🌐 Web Dashboard: Available at /dashboard when API server is running
+Queries may be partial or unavailable. NOT_FLAGGED does not mean natural origin.
+The 5.0 ranking threshold is not Gaussian sigma; origin probability is not calibrated.
+See README.md and docs/README.md for current scope and release differences.
+API schema: http://127.0.0.1:8000/docs when the local server is running.
 """
     print(f'aNEOS {APPLICATION_VERSION} ({BUILD_CHANNEL})')
     print('  --version, version    Show application version without starting services')
