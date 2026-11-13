@@ -1,7 +1,15 @@
 # Architecture Decision Records — aNEOS Suite
 
-_Derived: 2026-03-06 | Last updated: 2026-03-10 | Codebase Version: 1.1.0_
+_Historical design basis: 2026-03-06–10 / v1.1.0. Current-status review: 2026-11-13 / v2.2.0b2 plus main 3dd47f1._
 _Concept document: README.md + docs/scientific/scientific-documentation.md_
+
+**Current-status note (2026-11-13):** this cumulative record includes historical
+claims, not universal implementation or scientific-validation evidence. ADR-065/068/069
+and later acquisition/persistence decisions govern installed screening. The
+[discovery/integrity review](../engineering/discovery-integrity-roadmap-review-2026-11-13.md)
+proposes #86/#87 within existing boundaries; it accepts no incompatible contract or
+new bounded context. Review material contracts before implementation; do not reuse
+a concurrent PR's ADR number.
 
 ADRs capture every significant architectural decision found in the aNEOS codebase,
 including implicit decisions and identified risks. Status values:

@@ -1,4 +1,47 @@
 # aNEOS Development Roadmap
+
+## Active plan — 2026-11-13
+
+Programme [#2](https://github.com/RobLe3/aneos-suite/issues/2). The
+[evidence-backed discovery/integrity review](docs/engineering/discovery-integrity-roadmap-review-2026-11-13.md)
+is the current dependency map, proposed-contract specification and verification plan.
+The older 2025 plan below is historical design, **not current readiness evidence**.
+
+| Horizon | Work / dependencies | Exit gate |
+|---|---|---|
+| Short term | #83 receipts → #84 bounded root/menu/CLI polling (#73); #16/#40 source retention/eligibility; #86 exploratory inventory/contract; #87 lineage/threat model; #17/#41/#44/#46 docs and QA | Existing CI gates plus native positive, empty/missing/invalid/outage/replay controls; preserved histories/rankings. No science/accuracy claim |
+| Medium term | Qualified #86 groups → #10 conditional/dependency-aware follow-up; #40/#13 → #87 compatible comparisons → #7 KY26 history; #5/#7 → #8 valid fits → #9 hypothesis tests; #11 independent controls; #12/#42 presentation | Measured useful coverage, reproducibility and false-positive control, with operation-specific scientific prerequisites and unresolved outcomes |
+| Long term | #10/#11 prospective targets, object/time holdouts, Brier/reliability/PR; calibrated search-wide significance only if supportable; #87 independent checkpoints/security/recovery; #13/#14 cases/predictions | Independent generalization/review, provenance and recoverability within explicit threat-model limits |
+
+Horizons express prerequisites, not dates. Beta **2.2.0b2** is published; main has
+later scoped improvements. PR85's foundation is separate from #84 integration and
+scientific qualification. The next integrated polling version needs a scope/CI
+check after #84; no calendar ETA is substantiated yet. Do not delay qualified
+engineering increments for all future science, or label them scientifically validated.
+
+### Rules for every horizon
+
+- Preserve ranking policies and the 5.0 ranking-unit threshold. No tuning to KY26;
+  never call an uncalibrated rank five sigma.
+- Separate exploratory anomalies, quality/completeness, calibrated residual
+  significance, follow-up priority, physical origin and historical integrity.
+- Restore diagnostics, not unsafe legacy origin classification. No parallel engine,
+  persistence system or new bounded context without demonstrated necessity.
+- Preserve revisions append-only. Hashes prove consistency with saved bytes, not
+  initial authenticity. A revised orbit/discrepancy/outage alone is not tampering.
+- 100% query coverage needs an explicit eligible denominator. Scientific completeness
+  cannot be manufactured: unavailable measurements stay missing.
+- Brier scoring needs a defined independently verifiable outcome/window. Unknown
+  origin is not natural truth; synthetic tests are not independent validation.
+- No hidden polling during scoring/visualization. Provider budgets/licensing, actual
+  menu tests, uncertainty/provenance and existing quality gates remain required.
+
+## Historical plan — August 2025 (superseded as current status)
+
+<details>
+<summary>Archived aspirations and original phase claims; not acceptance evidence</summary>
+
+# aNEOS Development Roadmap
 **Advanced Near Earth Object detection System**
 
 This document outlines the completed development phases and future enhancements for the aNEOS platform, building upon the foundational work from the [neo-analyzer-repo](https://github.com/RobLe3/neo-analyzer-repo).
@@ -160,3 +203,4 @@ validations are documented.
 
 *This roadmap reflects the stabilization goals for aNEOS and outlines the work
 still needed to reach publication-grade artificial NEO detection.*
+</details>
