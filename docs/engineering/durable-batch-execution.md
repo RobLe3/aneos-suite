@@ -9,7 +9,9 @@ production deployment or scientifically calibrated inference.
 Use an explicit, separate writable file-SQLite database, as in the installation
 guide. Primary menu option 3 first asks for a saved job ID or recovery key. Press
 Enter to choose a new designation file; enter a saved token to resume/inspect the
-original request without rereading a mutable file.
+original request without rereading a mutable file. Printed tokens use `job:ID` and
+`key:KEY`; plain tokens still work when unambiguous. If a key happens to equal a
+different job ID, an unqualified lookup is refused rather than selecting one silently.
 
 Before submission, the menu prints a recovery key. Retain it even if the following
 acknowledgement fails. Submission, readback and queue admission must succeed before

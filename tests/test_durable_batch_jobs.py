@@ -490,3 +490,16 @@ def test_rehashed_owned_metadata_cannot_override_canonical_inference(field,value
 def test_invalid_report_shape_is_controlled_not_attribute_error(raw):
     from aneos_core.analysis.reporting import verify_screening_report
     with pytest.raises(ValueError):verify_screening_report(raw)
+
+
+def test_recovery_token_ambiguity_cannot_silently_select_another_job(store):
+    s,_=store;p=pipeline();runtime=BatchRuntime(s,owner_scope='local-test',handler=BatchJobHandler(
+        pipeline_factory=lambda:p,source_profile=lambda:PROFILE))
+    first=runtime.submit(parse_input(b'A\n','a.txt'),'first-key')
+    second=runtime.submit(parse_input(b'B\n','b.txt'),first['job_id'])
+    assert first['job_id']!=second['job_id']
+    with pytest.raises(ValueError,match='Ambiguous'):runtime.read(first['job_id'])
+    assert runtime.read('job:'+first['job_id'])['job_id']==first['job_id']
+    assert runtime.read('key:'+first['job_id'])['job_id']==second['job_id']
+    assert runtime.run('job:'+first['job_id'])['status']=='completed'
+    assert s.get('local-test',second['job_id'])['status']=='queued'

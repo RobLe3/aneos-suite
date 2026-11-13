@@ -158,19 +158,19 @@ class ANEOSMenuV2(ANEOSMenuBase):
             from uuid import uuid4
             token = uuid4().hex
             self._last_batch_recovery_key = token
-            self.show_info(f"Recovery key (retain even if acknowledgement fails): {token}")
+            self.show_info(f"Recovery key (retain even if acknowledgement fails): key:{token}")
         runtime = None
         try:
             runtime = self._open_batch_runtime()
             job = runtime.submit(source, token) if source is not None else runtime.read(token)
             self._last_batch_job_id = job['job_id']
             already_completed = job['status'] == 'completed'
-            self.show_info(f"Acknowledged SQL batch job: {job['job_id']}")
+            self.show_info(f"Acknowledged SQL batch job: job:{job['job_id']}")
             if self.console:
                 with self.console.status("Executing/resuming SQL batch; provider timeouts apply…"):
-                    job = runtime.run(job['job_id'])
+                    job = runtime.run('job:'+job['job_id'])
             else:
-                job = runtime.run(job['job_id'])
+                job = runtime.run('job:'+job['job_id'])
             if job['status'] != 'completed':
                 from datetime import datetime, timezone
                 from aneos_core.analysis.batch_reporting import render_batch_progress

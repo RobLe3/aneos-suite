@@ -238,14 +238,23 @@ class BatchRuntime:
             candidate=clone(request);candidate['created_at']=old['request']['created_at']
             if candidate!=old['request'] or old['max_attempts']!=max_attempts:raise
             job=old
-        return self.read(job['job_id'])
+        return self.read('job:'+job['job_id'])
 
     def read(self,token):
-        if not isinstance(token,str) or not token or len(token)>128 or any(ord(c)<32 for c in token):
+        if not isinstance(token,str) or not token or len(token)>132 or any(ord(c)<32 for c in token):
             raise ValueError('Invalid batch recovery token')
-        job=self.store.get(self.owner_scope,token)
-        if job is None:job=self.store.find_submission(self.owner_scope,KIND,token)
-        if job is None or job['kind']!=KIND:raise LookupError('Batch job/recovery key not found in this local scope')
+        mode='auto'
+        for prefix in ('job:', 'key:'):
+            if token.startswith(prefix):
+                mode=prefix[:-1];token=token[len(prefix):];break
+        if not token or len(token)>128:raise ValueError('Invalid batch recovery token')
+        by_id=self.store.get(self.owner_scope,token) if mode!='key' else None
+        if by_id is not None and by_id['kind']!=KIND:by_id=None
+        by_key=self.store.find_submission(self.owner_scope,KIND,token) if mode!='job' else None
+        if by_id is not None and by_key is not None and by_id['job_id']!=by_key['job_id']:
+            raise ValueError('Ambiguous recovery token; use job:ID or key:KEY explicitly')
+        job=by_id or by_key
+        if job is None:raise LookupError('Batch job/recovery key not found in this local scope')
         validate_request(job['request'])
         if job['request']['max_attempts']!=job['max_attempts']:raise JobIntegrityError('Stored retry budget differs')
         checkpoints=self.store.read_checkpoints(self.owner_scope,job['job_id'])
@@ -265,7 +274,7 @@ class BatchRuntime:
         if job['status'] not in ('completed','cancelled','failed'):
             if self.read_only:raise ValueError('Read-only job inspection cannot resume provider work')
             self.worker.run_once(job_id=job['job_id'])
-        return self.read(job['job_id'])
+        return self.read('job:'+job['job_id'])
 
     def close(self):
         self.worker.stop.set()
