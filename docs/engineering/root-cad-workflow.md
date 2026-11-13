@@ -52,6 +52,12 @@ The optional source-plan profile records that reference and preserves the origin
 read timestamp. Other provider outcomes remain available/missing/unavailable/invalid
 or ambiguous; `no_new_source_data` means no non-CAD adapter contributed new data.
 
+The collector announces its committed query before waiting on optional providers,
+then reports progress for requested objects only. A live one-object check on
+2026-11-13 waited roughly 75 seconds for MPC's failed request: provider latency is
+not an instant-completion guarantee, and the default additional-object budget stays
+zero. This one check is not a universal latency bound or availability estimate.
+
 Object acquisition must commit and read back successfully before analysis. The
 controller then reads the existing verified combined ledger projection; original
 candidate snapshots and all encounter rows remain separately preserved. Provider

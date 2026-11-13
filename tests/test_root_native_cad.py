@@ -582,3 +582,66 @@ def test_acquisition_software_context_includes_driver_and_controller_hashes(env,
     for software in (p.last_poll_result['receipt']['software'],bundle['software']):
         for name in ('neo_poller.py','aneos_core/polling/root_candidate_controller.py'):
             assert software['source_hashes_at_report_time'][name]==sha256((root/name).read_bytes()).hexdigest()
+
+
+def test_collection_is_announced_before_any_optional_provider_wait(env,tmp_path,monkeypatch):
+    p=env[0];f=make_fetcher(env,tmp_path);events=[]
+    original=p._collection_committed
+    def acknowledged(saved):
+        assert env[1].load(saved['receipt']['query_id'])==saved
+        events.append('committed');original(saved)
+    monkeypatch.setattr(p,'_collection_committed',acknowledged)
+    actual=f.fetch_neo_data
+    def fetch(name):
+        assert events==['committed','started']
+        events.append('fetch');return actual(name)
+    monkeypatch.setattr(f,'fetch_neo_data',fetch)
+    def progress(event):events.append(event['phase'])
+    monkeypatch.setattr(p,'_object_progress',progress)
+    p.fetcher_factory=lambda:f
+    p.poll_and_analyze('NASA_CAD','1d',10,enrich_objects=1)
+    assert events==['committed','started','fetch','completed']
+
+
+def test_collection_callback_cannot_mutate_evidence_for_analysis(env):
+    from aneos_core.polling.root_candidate_controller import RootCandidateController
+    def view(saved):saved['records'].clear()
+    saved,rows=RootCandidateController(env[0].candidate_service,on_collection=view).poll('2026-11-12','2026-11-13',10)
+    assert len(saved['records'])==1 and len(rows)==1
+
+
+def test_failed_presentation_keeps_committed_collection_recovery_reference(env):
+    from aneos_core.polling.root_candidate_controller import RootCandidateController
+    def view(saved):raise RuntimeError('controlled output failure')
+    with pytest.raises(RuntimeError) as caught:
+        RootCandidateController(env[0].candidate_service,on_collection=view).poll('2026-11-12','2026-11-13',10)
+    saved=caught.value.candidate_query
+    assert env[1].load(saved['receipt']['query_id'])==saved
+
+
+def test_progress_uses_actual_work_count_and_reports_missing_source_outcomes(env,tmp_path,capsys):
+    p=env[0];f=make_fetcher(env,tmp_path);p.fetcher_factory=lambda:f
+    rows=p.poll_and_analyze('NASA_CAD','1d',10,enrich_objects=20)
+    text=capsys.readouterr().out
+    assert 'Object acquisition 1/1 (budget 20)' in text
+    assert 'Data-contributing adapters: 2/5' in text and 'Other source outcomes:' in text
+    assert 'NEODyS: unavailable' in text
+    assert rows[0]['enrichment']['source_outcomes'][-1]['basis']=='reused_committed_catalogue_prediction_not_new_observation'
+
+
+@pytest.mark.parametrize('rich',[False,True])
+def test_explicit_cli_browser_uses_existing_summary_once_and_opens_detail(env,monkeypatch,capsys,rich):
+    import sys,neo_poller,io
+    from rich.console import Console
+    p=env[0];stream=io.StringIO()
+    if rich:p.console=Console(file=stream,width=80,record=True)
+    commands=iter(['1','Q'])
+    monkeypatch.setattr('rich.prompt.Prompt.ask',lambda *a,**kw:next(commands))
+    monkeypatch.setattr('builtins.input',lambda *a:next(commands))
+    monkeypatch.setattr(neo_poller,'NEOPoller',lambda:p)
+    monkeypatch.setattr(sys,'argv',['neo_poller.py','--api','NASA_CAD','--period','1d','--browse'])
+    assert neo_poller.main() is None
+    text=p.console.export_text() if rich else capsys.readouterr().out
+    assert text.count('Candidate screening dashboard')==1
+    assert 'CAD catalogue' in text and 'Root poller screening records' in text
+    assert len(env[3])==1

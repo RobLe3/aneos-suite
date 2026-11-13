@@ -13,14 +13,18 @@ def validate_enrichment_budget(value):
 
 
 class RootCandidateController:
-    def __init__(self, service=None, fetcher_factory=None):
+    def __init__(self, service=None, fetcher_factory=None, *, on_collection=None, on_object=None):
         self.service = service if service is not None else CADCandidateService()
         self.fetcher_factory = fetcher_factory
+        self.on_collection = on_collection
+        self.on_object = on_object
 
     def poll(self, start, end, limit, *, enrich_objects=0):
         validate_enrichment_budget(enrich_objects)
         saved = self.service.poll(start, end, limit=limit, object_policy='cad-physical-v1')
         try:
+            if self.on_collection is not None:
+                self.on_collection(clone(saved))
             return saved, self.consume(saved, enrich_objects=enrich_objects)
         except Exception as exc:
             exc.candidate_query = clone(saved)
@@ -48,6 +52,10 @@ class RootCandidateController:
             enrichment = {'status': 'not_requested', 'object_invocation_budget': enrich_objects,
                           'provider_requests': 'separate installed source plan, caching and retry policy'}
             if index < enrich_objects:
+                if self.on_object is not None:
+                    self.on_object({'designation': candidate.designation, 'phase': 'started',
+                                    'position': index + 1, 'object_budget': enrich_objects,
+                                    'planned_objects': min(enrich_objects, len(saved['records']))})
                 if fetcher is None:
                     if self.fetcher_factory is None:
                         from ..data.fetcher import DataFetcher
@@ -82,11 +90,20 @@ class RootCandidateController:
                                if o['source'] != 'CAD' and o['status'] == 'available']
                 enrichment = {**enrichment, 'status': 'committed' if new_sources else 'no_new_source_data',
                               'new_source_contributions': new_sources, 'coverage': clone(persisted['bundle']['coverage']),
-                              'cad_acquisition': 'reused_committed_collection_no_new_cad_request', 'receipt': clone(receipt)}
+                              'cad_acquisition': 'reused_committed_collection_no_new_cad_request',
+                              'source_outcomes': [{k:o[k] for k in ('source', 'status', 'reason_code', 'basis')}
+                                                  for o in persisted['bundle']['outcomes']],
+                              'receipt': clone(receipt)}
                 # Persistence or validation failure propagates; no successful scientific fallback.
             elif enrich_objects:
                 enrichment['status'] = 'outside_object_budget'
             assessment = ScreeningAnalysisService().analyze_neo(neo).to_payload()
+            if index < enrich_objects and self.on_object is not None:
+                self.on_object({'designation': candidate.designation, 'phase': 'completed',
+                                'status': enrichment['status'],
+                                'new_source_contributions': list(enrichment['new_source_contributions']),
+                                'coverage': clone(enrichment['coverage']),
+                                'source_outcomes': clone(enrichment['source_outcomes'])})
             result.append({**clone(packet), 'neo_data': neo.to_dict(),
                 'candidate_neo_data': candidate.to_dict(),
                 'candidate_query_id': saved['receipt']['query_id'],

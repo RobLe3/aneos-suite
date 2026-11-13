@@ -411,14 +411,16 @@ class NEOPoller:
             raise ValueError('Choose a positive period of at most 200 calendar years')
         from aneos_core.polling.root_candidate_controller import RootCandidateController
         controller = RootCandidateController(getattr(self, 'candidate_service', None),
-                                             getattr(self, 'fetcher_factory', None))
+                                             getattr(self, 'fetcher_factory', None),
+                                             on_collection=self._collection_committed,
+                                             on_object=self._object_progress)
         try:
             saved, rows = controller.poll(start.isoformat(), end.isoformat(), max_results,
                                           enrich_objects=enrich_objects)
         except Exception as exc:
             if getattr(exc, 'candidate_query', None) is not None:
-                self.last_poll_result = exc.candidate_query
-                self._show_collection_receipt(self.last_poll_result)
+                if self.last_poll_result is None:
+                    self._collection_committed(exc.candidate_query)
                 print('Object enrichment/analysis failed; collection is archived, no completed analysis returned.')
             raise
         self.last_poll_result = saved
@@ -426,14 +428,30 @@ class NEOPoller:
         self._last_candidate_rows = clone(rows)
         self._last_invocation = (api_choice, time_period)
         self._last_enrichment_budget = enrich_objects
-        self._show_collection_receipt(saved)
         if enrich_objects:
             from aneos_core.analysis.dashboard_view import message
-            message(f"Additional acquisition budget: {enrich_objects} objects; CAD reused from the committed collection, not polled again.", self.console)
-            for row in rows:
-                e = row['enrichment']
-                message(f"{row['designation']}: {e['status']}; new contributing adapters: {', '.join(e.get('new_source_contributions', [])) or 'none'}.", self.console)
+            outside = max(0, len(rows) - enrich_objects)
+            message(f"Additional acquisition budget: {enrich_objects}; objects outside budget: {outside}. CAD was reused, not polled again.", self.console)
         return rows
+
+    def _collection_committed(self, saved):
+        """Acknowledge durable input before potentially slow optional providers."""
+        from aneos_core.data.enrichment import clone
+        self.last_poll_result = clone(saved)
+        self._show_collection_receipt(saved)
+
+    def _object_progress(self, event):
+        from aneos_core.analysis.dashboard_view import message
+        if event['phase'] == 'started':
+            message(f"Object acquisition {event['position']}/{event['planned_objects']} (budget {event['object_budget']}): {event['designation']} started; waiting on configured providers. CAD is reused.", self.console)
+        else:
+            names = ', '.join(event['new_source_contributions']) or 'none'
+            message(f"{event['designation']}: {event['status']}; new contributing adapters: {names}.", self.console)
+            c = event['coverage']
+            message(f"Data-contributing adapters: {c['contributing_sources']}/{c['planned_sources']} (CAD reused); not scientific completeness.", self.console)
+            states = ', '.join(o['source']+': '+o['status'] for o in event['source_outcomes'] if o['status'] != 'available')
+            if states:
+                message('Other source outcomes: '+states+'.', self.console)
 
     def replay_candidate_query(self, query_id):
         """Read committed collection evidence only; never poll or enrich."""
@@ -644,7 +662,7 @@ Examples:
         except (ValueError, EvidencePersistenceError, NotImplementedError) as exc:
             print(f"Collection unavailable: {exc}", file=sys.stderr)
             return 2
-        poller.display_results(results)
+        dashboard = poller.display_results(results)
         if poller.save_results(results, args.api, args.period) is None:
             return 1
         
@@ -654,8 +672,7 @@ Examples:
             return 2
         if results and args.browse:
             try:
-                import asyncio
-                asyncio.run(poller.launch_analysis_dashboard(results))
+                poller._interactive_object_explorer(dashboard)
             except Exception as e:
                 print(f"⚠️ Dashboard launch failed: {e}")
     else:
