@@ -562,3 +562,24 @@ def test_idempotent_recommit_does_not_silently_ignore_contradictory_archive_argu
     assert service[1].commit(result['receipt'],native_body=body) == result
     with pytest.raises(EvidencePersistenceError): service[1].commit(result['receipt'],native_body=b'changed')
     assert service[1].load_native_body(result['receipt']['query_id']) == body
+
+
+@pytest.mark.parametrize('marker', ['top','nested','column'])
+def test_explicit_synthetic_source_markers_are_archived_not_promoted(service, marker):
+    payload = native()
+    if marker == 'top': payload['synthetic'] = True
+    elif marker == 'nested': payload['provenance'] = {'demo':True}
+    else: payload['fields'].append('mock');payload['data'][0].append(True)
+    service[2]['value'] = Response(payload)
+    result = poll(service)
+    assert result['receipt']['diagnostic'] == 'DECLARED_SYNTHETIC_SOURCE'
+    assert result['receipt']['outcome'] == 'invalid' and result['records'] == []
+    assert service[1].load_native_body(result['receipt']['query_id']) == service[2]['value'].content
+
+
+def test_deep_unusable_json_is_retained_instead_of_escaping_without_a_receipt(service):
+    body = b'['*2000+b'0'+b']'*2000
+    service[2]['value'] = Response(body=body)
+    result = poll(service)
+    assert result['receipt']['outcome'] == 'invalid' and result['records'] == []
+    assert service[1].load_native_body(result['receipt']['query_id']) == body

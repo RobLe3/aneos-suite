@@ -53,6 +53,25 @@ def _unique_pairs(pairs):
     return result
 
 
+class _DeclaredSynthetic(ValueError):
+    pass
+
+
+def _declared_synthetic(value):
+    """Known explicit markers only; names/absence of a marker are not authenticity tests."""
+    markers = ('synthetic', 'is_synthetic', 'mock', 'demo')
+    if isinstance(value, dict):
+        if any(value.get(k) is True for k in markers):
+            return True
+        fields, rows = value.get('fields'), value.get('data')
+        if isinstance(fields, list) and isinstance(rows, list):
+            for i, name in enumerate(fields):
+                if name in markers and any(isinstance(row, list) and len(row)>i and row[i] is True for row in rows):
+                    return True
+        return any(_declared_synthetic(v) for v in value.values())
+    return isinstance(value, list) and any(_declared_synthetic(v) for v in value)
+
+
 def capture_response(response):
     """Describe buffered entity bytes; large complete bodies are archived separately in SQL."""
     if response is None:
@@ -109,6 +128,8 @@ def make_receipt(query_id, parameters, started_at, received_at, response, transp
     else:
         try:
             payload = json.loads(raw, object_pairs_hook=_unique_pairs)
+            if _declared_synthetic(payload):
+                raise _DeclaredSynthetic('Declared synthetic response')
             parsed = parse_cad_payload(payload, query=parameters, retrieved_at=received_at,
                                        received_at=received_at, require_complete=False)
             if parsed['metadata']['count'] > parameters['limit']:
@@ -126,7 +147,9 @@ def make_receipt(query_id, parameters, started_at, received_at, response, transp
             outcome = ('partial' if parsed['metadata']['completeness_status'] == 'partial' else
                        'missing' if not parsed['records'] else 'available')
             diagnostic = None
-        except (ValueError, TypeError, KeyError, OverflowError, UnicodeError):
+        except _DeclaredSynthetic:
+            outcome, diagnostic, parsed = 'invalid', 'DECLARED_SYNTHETIC_SOURCE', None
+        except (ValueError, TypeError, KeyError, OverflowError, UnicodeError, RecursionError):
             outcome, diagnostic, parsed = 'invalid', 'CAD_PAYLOAD_INVALID', None
     records = parsed['records'] if parsed else []
     grouped = defaultdict(list)
