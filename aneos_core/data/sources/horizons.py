@@ -122,7 +122,9 @@ class HorizonsSource(HTTPDataSource):
             if not elements:
                 return None
 
-            return self._attach_orbit_metadata(elements,result_text,designation,data.get('signature'))
+            result = self._attach_orbit_metadata(elements,result_text,designation,data.get('signature'))
+            result['_native_response'] = data
+            return result
 
         except requests.HTTPError as e:
             self.logger.error(f"Horizons HTTP error for {designation}: {e}")
@@ -150,7 +152,11 @@ class HorizonsSource(HTTPDataSource):
             if not result_text or "No matches found" in result_text:
                 return None
             elements = self._parse_obj_data(result_text)
-            return self._attach_orbit_metadata(elements,result_text,designation,data.get('signature')) if elements else None
+            if not elements:
+                return None
+            result = self._attach_orbit_metadata(elements,result_text,designation,data.get('signature'))
+            result['_native_response'] = data
+            return result
         except Exception as e:
             self.logger.error(f"Horizons DES fetch error for {designation}: {e}")
             return None

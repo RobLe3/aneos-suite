@@ -127,7 +127,10 @@ class NEODySSource(DataSourceBase):
         try:
             resp = requests.get(url, timeout=self.config.request_timeout)
             resp.raise_for_status()
-            return self._parse_eq0(resp.text, number)
+            parsed = self._parse_eq0(resp.text, number)
+            if parsed is not None:
+                parsed["_native_response"] = {"equinoctial_text": resp.text}
+            return parsed
         except requests.HTTPError as e:
             self.logger.warning(f"NEODyS .eq0 not found for {number}: {e}")
             return None

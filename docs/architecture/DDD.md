@@ -1426,3 +1426,19 @@ rejected updates/reloads but does not persist settings, synchronize workers or v
 all consumer behavior. Direct accessors still expose mutable objects. Acquisition source
 eligibility and polling, observational fitting/calibration and whole-menu readiness remain
 separate requirements. Existing boundaries suffice; no new context or global policy store.
+
+## Ordinary query acquisition — 2026-11-13 / ADR-086
+
+Acquisition owns the frozen installed source plan and typed source outcomes;
+normalization owns explicit adapter mappings/native identity checks; reconciliation
+owns atomic evidence selection, not a physical model. The existing repository
+owns one transaction for query, source assertions, projection and compatibility
+view. Presentation owns counts, timestamps and stale-source bindings, not inferred
+scientific certainty. Repeated bodies are not additional independent evidence.
+
+An acquisition receipt is local committed provenance, not source authentication.
+The exact requested identity remains the warehouse key; cross-query canonical
+alias resolution is still required. A cached query retains its original receipt
+and evidence dates; partial-cache backfill, all observation/history roles and a
+full research-case lifecycle remain open. No new bounded context is necessary for
+this increment. File-SQLite is validated; other backend transactions are not.

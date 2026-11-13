@@ -363,25 +363,33 @@ def test_spectral_assertions_unknown_parameters_and_unsupported_units_retained()
     assert "diameter" not in p["_physical"]
 
 
-def test_new_fetch_cache_key_does_not_relabel_or_overwrite_old_snapshots():
+def test_new_fetch_cache_key_does_not_relabel_or_overwrite_old_snapshots(tmp_path):
     from unittest.mock import Mock
     import logging
-
+    from sqlalchemy import create_engine
+    from aneos_api.acquisition_repository import SQLEvidenceRepository
+    from aneos_core.data.acquisition import plan, outcome, build_bundle
+    p = plan(['SBDB'])
+    source = NEOData('SYNTHETIC', orbital_elements=OrbitalElements(semi_major_axis=1.2,eccentricity=.2,inclination=1.5))
+    outcomes = [outcome(name, 'SYNTHETIC', status='available' if name=='SBDB' else 'unavailable',
+                        neo=source if name=='SBDB' else None, basis='controlled_synthetic_fixture') for name in p['sources']]
+    bundle = build_bundle('SYNTHETIC', p, outcomes)
+    n = NEOData.from_dict(bundle['neo_data']);n._acquisition_bundle=bundle
+    engine = create_engine('sqlite:///'+str(tmp_path/'cache-receipt.sqlite'))
     f = DataFetcher.__new__(DataFetcher)
-    f.logger = logging.getLogger("cache-fixture")
-    f.fetch_stats = {"total_requests": 0, "cache_hits": 0, "cache_misses": 0}
-    f.cache_ttl = 30
-    f.cache_manager = Mock()
-    f.cache_manager.get.return_value = None
-    n = NEOData("SYNTHETIC")
-    f._fetch_from_all_sources = Mock(return_value=n)
-    assert f.fetch_neo_data("SYNTHETIC") == n
-    assert (
-        f.cache_manager.get.call_args.args[0] == "neo_data:atomic-physical-v1-native-epoch-v1-source-projection-v2:SYNTHETIC"
-    )
-    assert (
-        f.cache_manager.set.call_args.args[0] == "neo_data:atomic-physical-v1-native-epoch-v1-source-projection-v2:SYNTHETIC"
-    )
+    f.logger = logging.getLogger('cache-fixture')
+    f.source_plan=p;f.evidence_repository=SQLEvidenceRepository(engine)
+    f.fetch_stats = {'total_requests': 0, 'cache_hits': 0, 'cache_misses': 0}
+    f.cache_ttl = 30;f.cache_manager=Mock();f.cache_manager.get.return_value=None
+    f._fetch_from_all_sources=Mock(return_value=n)
+    result=f.fetch_neo_data('SYNTHETIC')
+    assert result.orbital_elements.to_dict()==source.orbital_elements.to_dict()
+    assert result.evidence_metadata['acquisition']['storage_receipt']['commit_status']=='committed'
+    key='neo-query:object-acquisition-v1:'+p['plan_id']+':SYNTHETIC'
+    assert f.cache_manager.get.call_args.args[0]==key
+    assert f.cache_manager.set.call_args.args[0]==key
+    assert f.cache_manager.set.call_args.args[1]['schema_version']=='object-query-cache-v1'
+    engine.dispose()
 
 
 def test_modified_provider_projection_is_not_accepted_as_successful_source():

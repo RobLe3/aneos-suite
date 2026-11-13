@@ -58,6 +58,12 @@ jobs:
       - name: Verify truthful policy inspection and actual configuration-menu QA
         run: python -m pytest tests/test_policy_configuration_menu.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-policy-inspection.ini --cov-report=term-missing --cov-fail-under=95
 
+      - name: Verify fixed-profile acquisition and presentation coverage
+        run: python -m pytest tests/test_object_acquisition_ledger.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-acquisition.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify atomic acquisition repository coverage
+        run: python -m pytest tests/test_object_acquisition_ledger.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-acquisition-repository.ini --cov-report=term-missing --cov-fail-under=90
+
   docker-build:
     name: Docker build
     runs-on: ubuntu-latest

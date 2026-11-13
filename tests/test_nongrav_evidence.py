@@ -237,24 +237,26 @@ async def test_actual_api_get_and_batch_preserve_a3_without_scalar_thrust(payloa
     assert get.evidence_snapshot["additional"]["non_gravitational_evidence"] == ng.evidence_report()
 
 
-@pytest.mark.parametrize('fastest', ['SBDB', 'secondary'])
+@pytest.mark.parametrize('fastest', ['SBDB', 'MPC'])
 def test_source_timing_cannot_discard_fitted_acceleration(payload, tmp_path, fastest):
     import time
     from aneos_core.data.fetcher import DataFetcher
     from aneos_core.data.cache import CacheManager
     from aneos_core.data.models import OrbitalElements
     ng, _ = parsed_ng(payload)
-    fetcher = DataFetcher(cache_manager=CacheManager(tmp_path), source_priority=['SBDB', 'secondary'])
-    fetcher.sources = {'SBDB': object(), 'secondary': object()}
-    fetcher.fetch_stats['source_successes']['secondary'] = 0
-    fetcher.fetch_stats['source_failures']['secondary'] = 0
+    fetcher = DataFetcher(cache_manager=CacheManager(tmp_path), source_priority=['SBDB', 'MPC'])
+    fetcher.sources = {'SBDB': object(), 'MPC': object()}
+    fetcher.fetch_stats['source_successes']['MPC'] = 0
+    fetcher.fetch_stats['source_failures']['MPC'] = 0
     fetcher._fetch_close_approaches = lambda *a: []
     def fetch(name, *args):
         time.sleep(.001 if name == fastest else .02)
-        return NEOData('SYNTHETIC', orbital_elements=OrbitalElements(
+        neo = NEOData('SYNTHETIC', orbital_elements=OrbitalElements(
             semi_major_axis=1.2, eccentricity=.2, inclination=1.5),
             nongrav=ng if name == 'SBDB' else None)
-    fetcher._fetch_from_source = fetch
+        from aneos_core.data.acquisition import outcome
+        return outcome(name, 'SYNTHETIC', status='available', neo=neo, basis='controlled_synthetic_fixture')
+    fetcher._read_source = fetch
     neo = fetcher._fetch_from_all_sources('SYNTHETIC')
     assert neo.nongrav.to_dict() == ng.to_dict()
     assert neo.evidence_metadata['field_sources']['nongrav'] == 'SBDB'

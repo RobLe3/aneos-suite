@@ -4121,6 +4121,28 @@ class ANEOSMenu(ANEOSMenuBase):
         """Read verified stored evidence; do not rerun or invent an origin analysis."""
         try:
             data=neo_service.get_enriched_neo(designation)
+            if self.console is None:
+                from aneos_core.analysis.object_review import render_data_inventory,literal
+                print('Stored evidence — '+literal(designation))
+                if data is None:
+                    print('No stored object evidence found.')
+                else:
+                    print('Storage: '+data['storage_status']+'; artificial-origin probability: not calibrated.')
+                    if data.get('data_inventory'):
+                        render_data_inventory(data['data_inventory'])
+                    if data.get('latest_acquisition'):
+                        from aneos_core.analysis.acquisition_view import render_acquisition_summary
+                        render_acquisition_summary(data['latest_acquisition']['summary'])
+                        print('Stored projection may contain earlier source receipts; latest-query coverage does not refresh every stored field.')
+                    for binding in data.get('projection_query_bindings',[]):
+                        state='latest query' if binding['from_latest_query'] is True else 'earlier query' if binding['from_latest_query'] is False else 'legacy / not established'
+                        print(literal(binding['source'])+': selected receipt '+binding['assertion_id'][:12]+'; '+state)
+                    history=data.get('evidence_history',[])
+                    print(f'Source history: showing {min(20,len(history))}/{len(history)} receipts; full payloads remain in JSON export.')
+                    for record in history[-20:]:
+                        print(literal(record['source'])+' | '+record['recorded_at']+' | '+record['kind']+' | '+record['assertion_id'][:12])
+                self.wait_for_input()
+                return
             if data is None:
                 self.console.print(Text('No stored object evidence found.'))
             else:
@@ -4128,7 +4150,7 @@ class ANEOSMenu(ANEOSMenuBase):
                 self.console.print(Panel(Text('Stored evidence — '+literal(designation)),border_style='blue'))
                 self.console.print(Text('Storage: '+data['storage_status']+'; artificial-origin probability: not calibrated.'))
                 if data.get('data_inventory'):render_data_inventory(data['data_inventory'],console=self.console)
-                else:self.console.print(Text('Legacy unverified snapshot; overall completeness and source coverage not established.'))
+                else:self.console.print(Text('No admitted catalogue snapshot; query outcomes remain available below. Missing is not zero.' if data['storage_status']=='attempts_only' else 'Legacy unverified snapshot; overall completeness and source coverage not established.'))
                 if data.get('neo_data'):
                     from aneos_core.analysis.object_review import number
                     selection=data['neo_data']['evidence_metadata'].get('physical_selection',{})
@@ -4138,16 +4160,33 @@ class ANEOSMenu(ANEOSMenuBase):
                         for field,selected in selection.items():
                             lineage.add_row(Text(field),Text(literal(selected['source'])),Text(number(selected['uncertainty'])),Text(literal(selected.get('reference_source') or 'not supplied')))
                         self.console.print(lineage)
+                if data.get('latest_acquisition'):
+                    from aneos_core.analysis.acquisition_view import render_acquisition_summary
+                    render_acquisition_summary(data['latest_acquisition']['summary'],console=self.console)
+                    self.console.print(Text('Stored projection may include earlier source receipts; a successful query does not refresh every stored measurement.'))
+                    bindings=Table(title='Stored projection / latest query binding')
+                    for label in ('Source','Selected receipt (short)','From latest query'):
+                        bindings.add_column(label,overflow='fold')
+                    for binding in data.get('projection_query_bindings',[]):
+                        state='yes' if binding['from_latest_query'] is True else 'earlier query' if binding['from_latest_query'] is False else 'legacy / not established'
+                        bindings.add_row(Text(literal(binding['source'])),Text(binding['assertion_id'][:12]),Text(state))
+                    self.console.print(bindings)
                 table=Table(title='Dated source assertion history — not independent observations')
                 for name in ('Source','Recorded at','Kind','Receipt (short)'):table.add_column(name,overflow='fold')
-                for record in data.get('evidence_history',[]):
+                history=data.get('evidence_history',[])
+                self.console.print(Text(f'Showing {min(20,len(history))}/{len(history)} source receipts; full payloads remain in JSON export.'))
+                for record in history[-20:]:
                     table.add_row(Text(literal(record['source'])),Text(record['recorded_at'].replace('T','\n',1)),Text(record['kind']),Text(record['assertion_id'][:12]))
                 self.console.print(table)
                 self.console.print(Text('Full receipt IDs and unknown/alternative measurements remain in JSON source history. No source authentication, physical fit or calibrated origin inference is established.'))
             self.console.input('Press Enter to return to database browser...')
         except Exception:
-            self.console.print(Text('Stored evidence could not be verified; no scientific assessment displayed.'))
-            self.console.input('Press Enter to continue...')
+            if self.console is None:
+                print('Stored evidence could not be verified; no scientific assessment displayed.')
+                self.wait_for_input()
+            else:
+                self.console.print(Text('Stored evidence could not be verified; no scientific assessment displayed.'))
+                self.console.input('Press Enter to continue...')
 
     def _policy_message(self, message):
         """Literal output in Rich and plain terminals."""

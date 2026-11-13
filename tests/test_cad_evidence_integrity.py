@@ -253,8 +253,10 @@ def test_data_fetcher_uses_labels_preserves_native_tdb_and_reports_query_coverag
     assert CloseApproach.from_dict(ca.to_dict()).to_dict() == ca.to_dict()
     response.raise_for_status.side_effect = requests.HTTPError('synthetic 503')
     from aneos_core.utils.errors import DataSourceUnavailableError
-    with pytest.raises(DataSourceUnavailableError, match='synthetic 503'):
+    with pytest.raises(DataSourceUnavailableError, match='CAD query unavailable') as caught:
         fetcher._fetch_close_approaches('synthetic-marker')
+    assert isinstance(caught.value.__cause__, requests.HTTPError)
+    assert str(caught.value.__cause__) == 'synthetic 503'
 
 
 @pytest.mark.asyncio

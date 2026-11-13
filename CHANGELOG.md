@@ -116,3 +116,10 @@ tag; later files had inconsistent1.2.2/1.0.0 labels. No new tag/release is creat
 
 *(Future versions will be added here as development progresses.)*
 
+
+- Ordinary object queries now commit a fixed-profile source/outcome history and
+  correlated local evidence before returning results. Detail/export distinguish
+  source coverage from scientific completeness and expose stale-source bindings.
+  MPC native identity/ambiguity and missing-value defects, whole-key cache
+  collisions and constructor pickle deletion are corrected (ADR086, #59/#60).
+  Partial-cache backfill and full source/menu/scientific readiness remain open.

@@ -2917,3 +2917,36 @@ thread/process synchronization, persistent hot-reload or protection against dire
 of returned config objects. Existing Config.save still overwrites its explicit target;
 the new menu export is a different, exclusive-create operation. No new bounded context
 or independently calibrated scientific model is introduced.
+
+## ADR-086 — Commit fixed-profile acquisition evidence before returning query results
+
+**Date:** 2026-11-13. **Status:** implemented in draft stack; file-SQLite validated.
+
+Ordinary queries previously merged available source values without committing a
+per-query source plan/history; failed initialization could shrink apparent coverage.
+MPC discarded available physical detail, allowed an incorrect provisional-year
+fallback and selected the first ambiguous match. Cache filenames could collide.
+
+Extend existing Acquisition → Reconciliation → Evidence Repository boundaries.
+Freeze the installed source profile before polling, retain every outcome and native
+packet where available, and commit the query, assertions and projection in one owned
+SQL transaction before returning/caching a result. Persistence failure is distinct
+from source failure. Reuse the existing Base, immutable ledger and detail/export;
+no second engine or bounded context. Lazy repository construction avoids importing
+the web application. Explicit additive schema preparation is a query prerequisite,
+not an import-time side effect or a backup. Unsupported stores fail closed.
+
+Keep source/response coverage separate from field presence and scientific readiness.
+Store latest-received-per-source projections with query bindings, not fabricated
+freshness. Exact request identity is not canonical alias resolution. MPC requires
+native identity binding and rejects ambiguous results. Native calendar labels do
+not gain an invented time scale. Whole-key cache hashes and frozen envelopes prevent
+known key/plan collisions; old cache bytes are ignored, not migrated as evidence.
+Partial cache records remain reusable until TTL or explicit refresh; automatic
+backfill and additional scientific source roles remain pending (#40/#16).
+
+See [acquisition contract and reproducible QA](../engineering/object-acquisition-ledger.md)
+for persistence, preservation, UI and scientific limits. No calibrated sigma/origin
+claim follows from a complete source profile. Existing evidence and scientific
+quality gates remain unchanged; two new acquisition/repository coverage gates add
+90% component thresholds. Draft delivery is not whole-application certification.

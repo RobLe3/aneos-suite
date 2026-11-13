@@ -951,3 +951,13 @@ Physical source normalization, paired uncertainty and compatibility limits: [ato
 Native orbital/covariance epoch handling and computed-history limits: [native orbital epochs](docs/engineering/native-orbital-epochs.md).
 
 HTTP history/native-epoch and raw-input contracts: [HTTP evidence parity](docs/engineering/http-evidence-parity.md).
+
+### Acquisition history and honest completeness (2.2.0.dev0)
+
+Ordinary queries now retain a fixed-profile source plan, source outcomes and local
+correlated evidence before returning a result. Object detail and JSON export keep
+acquisition dates and provenance visible. A complete response profile is not proof
+of complete scientific evidence. See the [acquisition guide and reproducible
+80/120/160-column QA](docs/engineering/object-acquisition-ledger.md) for usage,
+cache/persistence behavior and remaining limits. This is unreleased draft work;
+independent five-sigma/origin calibration is not claimed.

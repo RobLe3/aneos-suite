@@ -190,13 +190,15 @@ async def detect_neo(
     """Screen a named object; unavailable significance/origin remain null."""
     import asyncio
     from aneos_core.data.fetcher import DataFetcher
-    from aneos_core.utils.errors import DataSourceUnavailableError
+    from aneos_core.utils.errors import DataSourceUnavailableError, EvidencePersistenceError
     try:
         neo = await asyncio.to_thread(DataFetcher().fetch_neo_data, designation, force_refresh=force_refresh)
         payload = _screening_payload(neo)
         _detection_cache[designation] = payload
         await asyncio.to_thread(_persist_detection_result, designation, payload)
         return DetectionResponse(**payload)
+    except EvidencePersistenceError as exc:
+        raise HTTPException(status_code=503, detail="Required local evidence storage unavailable; no scientific result published") from exc
     except DataSourceUnavailableError as exc:
         raise HTTPException(status_code=503, detail=f"Source data unavailable: {exc}")
     except ValueError as exc:

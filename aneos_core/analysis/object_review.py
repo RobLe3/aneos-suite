@@ -320,6 +320,11 @@ def render_object_review(review,*,console=None,verbose=True):
     items.extend([Text('Follow-up and limits',style='bold cyan')])
     for text in review['follow_up']+review['limitations']:items.append(Text('• '+text))
     console.print(Panel(Group(*items),title=Text(f"Object review — {literal(review['designation'])}"),border_style='blue',padding=(1,1)))
+    if review['inventory']:
+        summary=(review['inventory']['source_snapshot'].get('evidence_metadata') or {}).get('acquisition')
+        if summary:
+            from .acquisition_view import render_acquisition_summary
+            render_acquisition_summary(summary,console=console)
 
 
 def _cell(value):
@@ -340,6 +345,11 @@ def object_review_markdown(review,*,verbose=True):
     for item in review['insights']:lines.extend([item['text'],'References: '+', '.join(item['references']),''])
     lines+=['## Follow-up and limits']+['- '+s for s in review['follow_up']+review['limitations']]
     if verbose:lines+=['','## Complete unrounded review','```json',json.dumps(review,indent=2,allow_nan=False),'```']
+    if review['inventory']:
+        summary=(review['inventory']['source_snapshot'].get('evidence_metadata') or {}).get('acquisition')
+        if summary:
+            from .acquisition_view import acquisition_markdown
+            lines.extend(['',acquisition_markdown(summary)])
     return '\n'.join(lines)+'\n'
 
 
@@ -409,7 +419,12 @@ def render_data_inventory(inventory,*,console=None):
         if actual.get('orbital_epoch_evidence'):print(_epoch_inventory_text(actual))
         if actual.get('physical_measurement_evidence'):print(_physical_inventory_text(actual))
         print(_nongrav_inventory_text(actual))
-        print('Overall completeness and source coverage: not established.');return
+        print('Overall completeness and source coverage: not established.')
+        summary=(actual['source_snapshot'].get('evidence_metadata') or {}).get('acquisition')
+        if summary:
+            from .acquisition_view import render_acquisition_summary
+            render_acquisition_summary(summary)
+        return
     from rich.console import Group
     from rich.panel import Panel
     from rich.table import Table
@@ -420,3 +435,7 @@ def render_data_inventory(inventory,*,console=None):
     console.print(Panel(Group(Text(f"Basic catalogue field presence {basic['present']}/{basic['required']}; not total completeness or readiness."),
         table,Text(_epoch_inventory_text(actual)),Text(_physical_inventory_text(actual)),Text(_nongrav_inventory_text(actual)),Text('Overall completeness and source coverage: not established. Native solutions/uncertainties remain in the JSON.')),
         title=Text(literal(title)),border_style='blue'))
+    summary=(actual['source_snapshot'].get('evidence_metadata') or {}).get('acquisition')
+    if summary:
+        from .acquisition_view import render_acquisition_summary
+        render_acquisition_summary(summary,console=console)

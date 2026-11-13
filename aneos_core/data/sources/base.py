@@ -54,6 +54,9 @@ class FetchResult:
     source: Optional[str] = None
     response_time_ms: Optional[float] = None
     cached: bool = False
+    outcome: Optional[str] = None  # Explicit structured outcome when the adapter can establish it.
+    raw_response: Optional[Any] = None  # Native payload, not an authentication claim.
+    error_code: Optional[str] = None  # Safe adapter-defined diagnostic, never raw exception text.
 
 class DataSourceException(Exception):
     """Base exception for data source operations."""

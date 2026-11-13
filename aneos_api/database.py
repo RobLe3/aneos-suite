@@ -329,7 +329,7 @@ class DatabaseManager:
                 Base.metadata.create_all(
                     bind=self.engine,
                     tables=[t for t in Base.metadata.sorted_tables
-                            if t not in enrichment_store.TABLES],
+                            if t not in enrichment_store.TABLES + enrichment_store.ACQUISITION_TABLES],
                 )
             logger.info("Database initialized successfully")
             return True
@@ -667,6 +667,23 @@ class EnrichedNEOService:
             data["data_inventory"] = build_data_inventory(
                 NEOData.from_dict(data["neo_data"])
             )
+        from .acquisition_repository import query_history
+        data['acquisition_history'] = query_history(self.db, designation)
+        data['latest_acquisition'] = (data['acquisition_history'][-1]['receipt'] | {
+            'coverage': data['acquisition_history'][-1]['bundle']['coverage'],
+            'source_plan': data['acquisition_history'][-1]['bundle']['source_plan'],
+        }) if data['acquisition_history'] else None
+        if data['acquisition_history']:
+            from aneos_core.data.acquisition import summarize_bundle
+            latest = data['acquisition_history'][-1]
+            data['latest_acquisition']['summary'] = summarize_bundle(latest['bundle'], latest['receipt'])
+            lookup = {r['assertion_id']: r for r in history}
+            selected = receipt['projection']['selected_source_assertions'] if receipt else {}
+            data['projection_query_bindings'] = [{
+                'source': source, 'assertion_id': key,
+                'query_id': lookup[key]['payload'].get('acquisition_query_id'),
+                'from_latest_query': lookup[key]['payload'].get('acquisition_query_id') == latest['bundle']['query_id'] if lookup[key]['payload'].get('acquisition_query_id') is not None else None,
+            } for source, key in selected.items()]
         return data
 
     def export_enriched_json(self, designation, path):

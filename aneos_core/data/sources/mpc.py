@@ -12,18 +12,26 @@ from datetime import datetime
 from .base import DataSourceBase
 from ...config.settings import APIConfig
 from ..cache import CacheManager
+from ..provider_http import APPLICATION_HEADERS
 
 logger = logging.getLogger(__name__)
 
 
 def _safe_float(v: Any) -> Optional[float]:
     """Convert value to float, returning None on failure."""
-    if v is None or v == "" or v != v:  # last check: NaN
+    if isinstance(v, bool) or v is None or v == "" or v != v:  # last check: NaN
         return None
     try:
-        return float(v)
+        import math
+
+        number = float(v)
+        return number if math.isfinite(number) else None
     except (ValueError, TypeError):
         return None
+
+
+class _MPCIdentityRow(dict):
+    """Native row with separate lookup-binding metadata; no native fields invented."""
 
 
 class MPCSource(DataSourceBase):
@@ -34,7 +42,11 @@ class MPCSource(DataSourceBase):
     from the IAU Minor Planet Center database.
     """
 
-    def __init__(self, config: Optional[APIConfig] = None, cache_manager: Optional[CacheManager] = None):
+    def __init__(
+        self,
+        config: Optional[APIConfig] = None,
+        cache_manager: Optional[CacheManager] = None,
+    ):
         if config is None:
             config = APIConfig()
         super().__init__(name="MPC", config=config, cache_manager=cache_manager)
@@ -46,8 +58,11 @@ class MPCSource(DataSourceBase):
     async def health_check(self) -> bool:
         """Connectivity check — try fetching a known object."""
         import aiohttp
+
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=8)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=8)
+            ) as session:
                 async with session.get(self.base_url) as response:
                     return response.status in (200, 301, 302)
         except Exception:
@@ -57,28 +72,104 @@ class MPCSource(DataSourceBase):
     # Synchronous implementation (overrides the abstract async stub)      #
     # ------------------------------------------------------------------ #
 
-    def fetch_orbital_elements(self, designation: str) -> Optional[Dict[str, Any]]:
-        """Fetch orbital elements from MPC via astroquery."""
+    def fetch_acquisition(self, designation):
+        """One bounded catalogue query, including its native outcome and all fields."""
+        from .base import FetchResult
+        from ...utils.errors import AmbiguousObjectError, SourceIdentityError
+
+        row = None
         try:
             row = self._query_mpc(designation)
             if row is None:
-                return None
-
+                return FetchResult(False, source=self.name, outcome="missing")
             result = {
-                "semi_major_axis":      _safe_float(row.get("semimajor_axis")),
-                "eccentricity":         _safe_float(row.get("eccentricity")),
-                "inclination":          _safe_float(row.get("inclination")),
+                "semi_major_axis": _safe_float(row.get("semimajor_axis")),
+                "eccentricity": _safe_float(row.get("eccentricity")),
+                "inclination": _safe_float(row.get("inclination")),
                 "ra_of_ascending_node": _safe_float(row.get("ascending_node")),
-                "arg_of_periapsis":     _safe_float(row.get("argument_of_perihelion")),
-                "mean_anomaly":         _safe_float(row.get("mean_anomaly")),
+                "arg_of_periapsis": _safe_float(row.get("argument_of_perihelion")),
+                "mean_anomaly": _safe_float(row.get("mean_anomaly")),
             }
-            albedo = _safe_float(row.get("albedo"))
-            if albedo is not None:
-                result["_physical"] = {"albedo": albedo}
-            return result
-        except Exception as e:
-            self.logger.error(f"MPC fetch_orbital_elements error for {designation}: {e}")
-            return None
+            physical = {
+                "albedo": _safe_float(row.get("albedo")),
+                "absolute_magnitude_h": _safe_float(row.get("absolute_magnitude")),
+            }
+            result["_physical"] = {k: v for k, v in physical.items() if v is not None}
+            numeric = (
+                "semimajor_axis",
+                "eccentricity",
+                "inclination",
+                "ascending_node",
+                "argument_of_perihelion",
+                "mean_anomaly",
+                "albedo",
+                "absolute_magnitude",
+            )
+            result["_evidence_metadata"] = {
+                "native_catalogue_row": dict(row),
+                "identity_assessment": getattr(
+                    row,
+                    "identity_assessment",
+                    {
+                        "status": "not_established",
+                        "basis": "caller_supplied_catalogue_row",
+                    },
+                ),
+                "unparsed_numeric_fields": [
+                    k
+                    for k in numeric
+                    if row.get(k) not in (None, "") and _safe_float(row[k]) is None
+                ],
+                "source_documentation": "https://astroquery.readthedocs.io/en/stable/api/astroquery.mpc.MPCClass.html",
+                "normalization_status": "named_catalogue_fields_not_independently_verified",
+                "additional_native_fields": "MOID, delta_v, observation arc and other fields remain native; delta_v is a transfer estimate, not a measured acceleration",
+            }
+            return FetchResult(
+                True,
+                data=result,
+                source=self.name,
+                outcome="available",
+                raw_response=dict(row),
+            )
+        except AmbiguousObjectError as exc:
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="ambiguous",
+                raw_response=getattr(exc, "native_response", None),
+                error_code="MPC_AMBIGUOUS_IDENTITY",
+            )
+        except SourceIdentityError as exc:
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="invalid",
+                raw_response=getattr(exc, "native_response", None),
+                error_code="MPC_NATIVE_IDENTITY_MISMATCH",
+            )
+        except (ValueError, TypeError):
+            return FetchResult(
+                False, source=self.name, outcome="invalid", raw_response=row
+            )
+        except ImportError:
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="unavailable",
+                error_code="MPC_DEPENDENCY_UNAVAILABLE",
+            )
+        except Exception:
+            return FetchResult(
+                False,
+                source=self.name,
+                outcome="unavailable",
+                error_code="MPC_QUERY_UNAVAILABLE",
+            )
+
+    def fetch_orbital_elements(self, designation: str) -> Optional[Dict[str, Any]]:
+        """Compatibility projection; the acquisition packet retains detailed outcomes."""
+        result = self.fetch_acquisition(designation)
+        return result.data if result.success else None
 
     def fetch_physical_properties(self, designation: str) -> Optional[Dict[str, Any]]:
         """Fetch absolute magnitude and MOID from MPC."""
@@ -89,11 +180,13 @@ class MPCSource(DataSourceBase):
 
             return {
                 "absolute_magnitude": _safe_float(row.get("absolute_magnitude")),
-                "earth_moid":         _safe_float(row.get("earth_moid")),
-                "delta_v":            _safe_float(row.get("delta_v")),
+                "earth_moid": _safe_float(row.get("earth_moid")),
+                "delta_v": _safe_float(row.get("delta_v")),
             }
         except Exception as e:
-            self.logger.error(f"MPC fetch_physical_properties error for {designation}: {e}")
+            self.logger.error(
+                f"MPC fetch_physical_properties error for {designation}: {e}"
+            )
             return None
 
     # ------------------------------------------------------------------ #
@@ -101,35 +194,110 @@ class MPCSource(DataSourceBase):
     # ------------------------------------------------------------------ #
 
     def _query_mpc(self, designation: str) -> Optional[Dict[str, Any]]:
+        """Use documented exact lookup fields and at most two rows to detect ambiguity.
+
+        A provisional year is never a numbered asteroid. Native identity is checked
+        before returning a row; unknown alias equivalence is not guessed.
         """
-        Query MPC via astroquery for a single object.
+        import re
+        from urllib.parse import unquote_plus
+        from astroquery.mpc import MPC as _MPC
+        from ...utils.errors import AmbiguousObjectError, SourceIdentityError
+        from ..enrichment import identifier
 
-        Tries by name first; falls back to parsing the designation as a
-        catalogue number (e.g. '99942' or '99942 Apophis').
-        """
-        from astroquery.mpc import MPC as _MPC  # lazy import
+        stripped = identifier(designation, "designation")
+        provisional = re.fullmatch(
+            r"(?:1[89]\d\d|2[012]\d\d)\s+[A-Z]{2}\d*", stripped, flags=re.I
+        )
+        numbered = re.fullmatch(r"(\d+)(?:\s+([A-Za-z]+))?", stripped)
+        if provisional:
+            lookup = {"designation": "+".join(stripped.upper().split())}
+            basis = "exact_native_provisional_designation"
+        elif numbered:
+            lookup = {"number": int(numbered.group(1))}
+            basis = "exact_native_number"
+        else:
+            lookup = {"name": stripped}
+            basis = "exact_native_name"
+        rows = _MPC.query_objects("asteroid", limit=2, **lookup)
+        return self._bind_mpc_rows(designation, rows)
 
-        result_list = None
+    @staticmethod
+    def _bind_mpc_rows(designation, rows):
+        import re
+        from urllib.parse import unquote_plus
+        from ...utils.errors import AmbiguousObjectError, SourceIdentityError
+        from ..enrichment import identifier
 
-        # Try as a name string
-        try:
-            result_list = _MPC.query_object("asteroid", name=designation)
-        except Exception:
-            pass
-
-        # Try as a number (handles '99942', '99942 Apophis', etc.)
-        if not result_list:
-            try:
-                number = int(designation.strip().split()[0])
-                result_list = _MPC.query_object("asteroid", number=number)
-            except Exception:
-                pass
-
-        if not result_list:
-            self.logger.warning(f"MPC: no result for {designation!r}")
+        stripped = identifier(designation, "designation")
+        provisional = re.fullmatch(
+            r"(?:1[89]\d\d|2[012]\d\d)\s+[A-Z]{2}\d*", stripped, flags=re.I
+        )
+        numbered = re.fullmatch(r"(\d+)(?:\s+([A-Za-z]+))?", stripped)
+        lookup = (
+            {"designation": "+".join(stripped.upper().split())}
+            if provisional
+            else {"number": int(numbered.group(1))} if numbered else {"name": stripped}
+        )
+        basis = (
+            "exact_native_provisional_designation"
+            if provisional
+            else "exact_native_number" if numbered else "exact_native_name"
+        )
+        if rows is None:
+            raise ValueError("MPC returned no structured response")
+        if len(rows) == 0:
             return None
-
-        return result_list[0]  # astroquery returns a list of dicts
+        if len(rows) != 1:
+            error = AmbiguousObjectError("MPC returned multiple candidate identities")
+            error.native_response = rows
+            raise error
+        row = rows[0]
+        if not isinstance(row, dict):
+            raise SourceIdentityError("Unsupported MPC row structure")
+        if provisional:
+            native = row.get("designation")
+            match = (
+                isinstance(native, str)
+                and "".join(unquote_plus(native).split()).casefold()
+                == "".join(stripped.split()).casefold()
+            )
+        elif numbered:
+            native = row.get("number")
+            if (
+                native is None
+                and isinstance(row.get("designation"), str)
+                and row["designation"].isdigit()
+            ):
+                native = row["designation"]
+            match = (
+                type(native) is int or isinstance(native, str) and native.isdigit()
+            ) and int(native) == lookup["number"]
+            if numbered.group(2):
+                match = (
+                    match
+                    and isinstance(row.get("name"), str)
+                    and row["name"].strip().casefold() == numbered.group(2).casefold()
+                )
+        else:
+            match = (
+                isinstance(row.get("name"), str)
+                and row["name"].strip().casefold() == stripped.casefold()
+            )
+        if not match:
+            error = SourceIdentityError(
+                "MPC native identifiers do not match requested identity"
+            )
+            error.native_response = row
+            raise error
+        result = _MPCIdentityRow(row)
+        result.identity_assessment = {
+            "status": "matched_native_identifier_not_authenticated",
+            "basis": basis,
+            "lookup": lookup,
+            "requested_designation": stripped,
+        }
+        return result
 
     def _make_request(self, designation: str) -> Optional[Dict]:
         """Query the MPC web service for a designation.
@@ -138,27 +306,31 @@ class MPCSource(DataSourceBase):
         independent of astroquery. Returns a Keplerian element dict or None.
         """
         import requests as _req
+
         try:
             resp = _req.get(
                 "https://minorplanetcenter.net/web_service/search_orbits",
                 params={"object_designation": designation},
                 timeout=10,
-                headers={"User-Agent": "aNEOS/0.7 scientific research",
-                         "Accept": "application/json"},
+                headers=APPLICATION_HEADERS,
             )
             resp.raise_for_status()
             data = resp.json()
             if not data:
                 return None
-            obj = data[0] if isinstance(data, list) else data
+            obj = self._bind_mpc_rows(
+                designation, data if isinstance(data, list) else [data]
+            )
+            if obj is None:
+                return None
             return {
-                "a":     float(obj.get("a",    0)),
-                "e":     float(obj.get("e",    0)),
-                "i":     float(obj.get("i",    0)),
-                "omega": float(obj.get("Node", 0)),
-                "w":     float(obj.get("Peri", 0)),
-                "M":     float(obj.get("M",    0)),
-                "H":     float(obj["H"]) if obj.get("H") else None,
+                "a": _safe_float(obj.get("a", obj.get("semimajor_axis"))),
+                "e": _safe_float(obj.get("e", obj.get("eccentricity"))),
+                "i": _safe_float(obj.get("i", obj.get("inclination"))),
+                "omega": _safe_float(obj.get("Node", obj.get("ascending_node"))),
+                "w": _safe_float(obj.get("Peri", obj.get("argument_of_perihelion"))),
+                "M": _safe_float(obj.get("M", obj.get("mean_anomaly"))),
+                "H": _safe_float(obj.get("H", obj.get("absolute_magnitude"))),
                 "source": "MPC",
             }
         except Exception as exc:

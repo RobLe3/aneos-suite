@@ -33,7 +33,7 @@ from .indicators.physical import (
 )
 from .scoring import ScoreCalculator, StatisticalAnalyzer, AnomalyScore
 from .screening import ScreeningAnalysisService
-from ..utils.errors import DataSourceUnavailableError
+from ..utils.errors import DataSourceUnavailableError, EvidencePersistenceError
 from ..data.models import NEOData, AnalysisResult
 from ..data.sources.base import DataSourceManager
 from ..data.sources.sbdb import SBDBSource
@@ -244,8 +244,13 @@ class AnalysisPipeline:
                 warnings=list(assessment.limitations), neo_data=neo_data,
                 screening_assessment=payload,
                 status='completed' if assessment.screening_score is not None else 'inconclusive')
+        except EvidencePersistenceError as exc:
+            return self._failure_result(designation, 'evidence_persistence_unavailable', str(exc), start)
         except DataSourceUnavailableError as exc:
-            return self._failure_result(designation, 'source_unavailable', str(exc), start)
+            result = self._failure_result(designation, 'source_unavailable', str(exc), start)
+            if getattr(exc, 'acquisition_receipt', None):
+                result.analysis_metadata['acquisition_receipt'] = exc.acquisition_receipt
+            return result
         except ValueError as exc:
             return self._failure_result(designation, 'invalid_evidence', str(exc), start)
         except Exception as exc:

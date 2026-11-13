@@ -145,22 +145,23 @@ class TestFetcherObservationDateWiring:
         # Build a fake source that returns orbital_elements_data with observation dates
         fake_source = MagicMock()
         fake_source.health_check = MagicMock(return_value=True)
-        fetch_result = MagicMock()
-        fetch_result.success = True
-        fetch_result.data = {
+        from aneos_core.data.sources.base import FetchResult
+        fetch_result = FetchResult(success=True, data={
             "semi_major_axis": 1.0,
             "eccentricity": 0.2,
             "inclination": 5.0,
             "first_observation_date": "1990-Jan-01",
             "last_observation_date":  "2024-Mar-15",
             "_physical": {},
-        }
+        })
         fake_source.fetch_orbital_elements = MagicMock(return_value=fetch_result)
 
         result = fetcher._fetch_from_source("TestSource", fake_source, "99942")
         assert result is not None, "_fetch_from_source returned None"
         assert result.first_observation is not None, "first_observation not wired"
         assert result.first_observation.year == 1990
+        assert result.first_observation.tzinfo is None
+        assert result.evidence_metadata['native_observation_window']['first_observation']['time_scale']=='not_declared'
 
     def test_last_observation_wired(self):
         from aneos_core.data.fetcher import DataFetcher
@@ -170,22 +171,22 @@ class TestFetcherObservationDateWiring:
 
         fake_source = MagicMock()
         fake_source.health_check = MagicMock(return_value=True)
-        fetch_result = MagicMock()
-        fetch_result.success = True
-        fetch_result.data = {
+        from aneos_core.data.sources.base import FetchResult
+        fetch_result = FetchResult(success=True, data={
             "semi_major_axis": 1.0,
             "eccentricity": 0.2,
             "inclination": 5.0,
             "first_observation_date": "1990-Jan-01",
             "last_observation_date":  "2024-Mar-15",
             "_physical": {},
-        }
+        })
         fake_source.fetch_orbital_elements = MagicMock(return_value=fetch_result)
 
         result = fetcher._fetch_from_source("TestSource", fake_source, "99942")
         assert result is not None
         assert result.last_observation is not None, "last_observation not wired"
         assert result.last_observation.year == 2024
+        assert result.last_observation.tzinfo is None
 
 
 # ===========================================================================

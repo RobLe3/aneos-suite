@@ -38,6 +38,7 @@ class SBDBSource(HTTPDataSource):
     
     async def fetch_orbital_elements(self, designation: str) -> FetchResult:
         """Fetch orbital elements from SBDB API."""
+        response_data = None
         try:
             params = {
                 "sstr": designation,
@@ -55,7 +56,7 @@ class SBDBSource(HTTPDataSource):
                 return FetchResult(
                     success=False,
                     error_message=f"No orbital data found for {designation}",
-                    source=self.name
+                    source=self.name, outcome="invalid", raw_response=response_data
                 )
             
             # Parse SBDB response format
@@ -64,7 +65,7 @@ class SBDBSource(HTTPDataSource):
             return FetchResult(
                 success=True,
                 data=orbital_data,
-                source=self.name
+                source=self.name, outcome="available", raw_response=response_data
             )
             
         except Exception as e:
@@ -74,7 +75,7 @@ class SBDBSource(HTTPDataSource):
             return FetchResult(
                 success=False,
                 error_message=error_msg,
-                source=self.name
+                source=self.name, outcome="invalid" if response_data is not None else "unavailable", raw_response=response_data
             )
     
     def _parse_sbdb_response(self, data: Dict[str, Any], designation: str) -> Dict[str, Any]:

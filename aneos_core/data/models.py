@@ -520,11 +520,11 @@ class NEOData:
             dynamic_anomaly_score=data.get("dynamic_TAS"),
             anomaly_category=data.get("dynamic_category"),
             score_components=data.get("score_components", {}),
-            first_observation=_ensure_utc(parse_datetime(data.get("first_observation"))),
-            last_observation=_ensure_utc(parse_datetime(data.get("last_observation"))),
+            first_observation=parse_datetime(data.get("first_observation")),
+            last_observation=parse_datetime(data.get("last_observation")),
             created_at=_ensure_utc(parse_datetime(data.get("created_at")) or _utcnow()),
             updated_at=_ensure_utc(parse_datetime(data.get("updated_at")) or _utcnow()),
-            fetched_at=_ensure_utc(parse_datetime(data.get("fetched_at"))),
+            fetched_at=parse_datetime(data.get("fetched_at")),
             nongrav=nongrav,
         )
 

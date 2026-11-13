@@ -1,0 +1,2084 @@
+{
+  "acquisition_history": [
+    {
+      "bundle": {
+        "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+        "coverage": {
+          "contributing_fraction": 0.4,
+          "contributing_sources": 2,
+          "network_request_count": null,
+          "planned_sources": 5,
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "scientific_completeness": null,
+          "semantics": "fixed planned adapters; empty validated responses differ from data contributions; not scientific readiness or independent evidence",
+          "status_counts": {
+            "ambiguous": 0,
+            "available": 2,
+            "invalid": 0,
+            "missing": 1,
+            "not_supported": 0,
+            "unavailable": 2
+          },
+          "validated_response_fraction": 0.6,
+          "validated_response_sources": 3
+        },
+        "designation": "SYNTHETIC",
+        "neo_data": {
+          "close_approaches": [],
+          "completeness": 0.42857142857142855,
+          "created_at": "2026-11-13T05:05:00.074696+00:00",
+          "designation": "SYNTHETIC",
+          "dynamic_TAS": null,
+          "dynamic_category": null,
+          "evidence_metadata": {
+            "conflicts": {},
+            "encounter_source_assertions": [],
+            "field_sources": {
+              "orbital_elements": "SBDB",
+              "physical_properties.absolute_magnitude_h": "MPC"
+            },
+            "orbit_selection_policy": "first-priority-complete-screening-orbit-else-first-present",
+            "physical_selection": {
+              "absolute_magnitude_h": {
+                "basis": "source_projection_not_independently_verified",
+                "measurement_method": null,
+                "reference_source": null,
+                "source": "MPC",
+                "uncertainty": null,
+                "uncertainty_field": null,
+                "value": 25.9
+              }
+            },
+            "physical_source_snapshots": {
+              "MPC": {
+                "physical_properties": {
+                  "absolute_magnitude_h": 25.9,
+                  "albedo": null,
+                  "albedo_uncertainty": null,
+                  "color_indices": {},
+                  "data_quality_flag": null,
+                  "density_g_cm3": null,
+                  "diameter_km": null,
+                  "diameter_uncertainty": null,
+                  "emissivity": null,
+                  "mass_kg": null,
+                  "measurement_method": null,
+                  "pole_ecliptic_lat": null,
+                  "pole_ecliptic_lon": null,
+                  "reference_source": null,
+                  "rotation_period_hours": null,
+                  "rotation_period_uncertainty": null,
+                  "spectral_class": null,
+                  "spectral_type": null,
+                  "thermal_inertia": null
+                },
+                "source_metadata": {
+                  "synthetic": true
+                }
+              },
+              "SBDB": {
+                "physical_properties": null,
+                "source_metadata": {
+                  "synthetic": true
+                }
+              }
+            },
+            "schema_version": "source-reconciliation-v2",
+            "source_solutions": {
+              "MPC": {
+                "synthetic": true
+              },
+              "SBDB": {
+                "synthetic": true
+              }
+            }
+          },
+          "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+          "first_observation": null,
+          "last_observation": null,
+          "nongrav": null,
+          "orbital_elements": {
+            "arg_of_periapsis": null,
+            "argument_of_perihelion": null,
+            "ascending_node": null,
+            "eccentricity": 0.2,
+            "epoch": null,
+            "inclination": 1.49,
+            "mean_anomaly": null,
+            "ra_of_ascending_node": null,
+            "semi_major_axis": 1.23
+          },
+          "physical_properties": {
+            "absolute_magnitude_h": 25.9,
+            "albedo": null,
+            "albedo_uncertainty": null,
+            "color_indices": {},
+            "data_quality_flag": null,
+            "density_g_cm3": null,
+            "diameter_km": null,
+            "diameter_uncertainty": null,
+            "emissivity": null,
+            "mass_kg": null,
+            "measurement_method": null,
+            "pole_ecliptic_lat": null,
+            "pole_ecliptic_lon": null,
+            "reference_source": null,
+            "rotation_period_hours": null,
+            "rotation_period_uncertainty": null,
+            "spectral_class": null,
+            "spectral_type": null,
+            "thermal_inertia": null
+          },
+          "raw_TAS": null,
+          "score_components": {},
+          "source_contributions": {},
+          "sources_used": [
+            "SBDB",
+            "MPC"
+          ],
+          "updated_at": "2026-11-13T05:05:00.074696+00:00"
+        },
+        "outcomes": [
+          {
+            "adapter_payload": {
+              "_evidence_metadata": {
+                "synthetic": true
+              },
+              "eccentricity": 0.2,
+              "inclination": 1.49,
+              "semi_major_axis": 1.23
+            },
+            "basis": "typed_adapter_projection_not_independently_verified",
+            "completed_at": "2026-11-13T05:05:00.074696+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": {
+              "close_approaches": [],
+              "completeness": 0.42857142857142855,
+              "created_at": "2026-11-13T05:05:00.074696+00:00",
+              "designation": "SYNTHETIC",
+              "dynamic_TAS": null,
+              "dynamic_category": null,
+              "evidence_metadata": {
+                "synthetic": true
+              },
+              "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+              "first_observation": null,
+              "last_observation": null,
+              "nongrav": null,
+              "orbital_elements": {
+                "arg_of_periapsis": null,
+                "argument_of_perihelion": null,
+                "ascending_node": null,
+                "eccentricity": 0.2,
+                "epoch": null,
+                "inclination": 1.49,
+                "mean_anomaly": null,
+                "ra_of_ascending_node": null,
+                "semi_major_axis": 1.23
+              },
+              "physical_properties": null,
+              "raw_TAS": null,
+              "score_components": {},
+              "source_contributions": {},
+              "sources_used": [
+                "SBDB"
+              ],
+              "updated_at": "2026-11-13T05:05:00.074696+00:00"
+            },
+            "reason_code": null,
+            "source": "SBDB",
+            "started_at": "2026-11-13T05:05:00.074646+00:00",
+            "status": "available"
+          },
+          {
+            "adapter_payload": null,
+            "basis": "source_initialization",
+            "completed_at": "2026-11-13T05:05:00.074815+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": null,
+            "reason_code": "SOURCE_INITIALIZATION_FAILED",
+            "source": "NEODyS",
+            "started_at": "2026-11-13T05:05:00.074815+00:00",
+            "status": "unavailable"
+          },
+          {
+            "adapter_payload": {
+              "_evidence_metadata": {
+                "synthetic": true
+              },
+              "_physical": {
+                "absolute_magnitude_h": 25.9
+              }
+            },
+            "basis": "typed_adapter_projection_not_independently_verified",
+            "completed_at": "2026-11-13T05:05:00.074900+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": {
+              "close_approaches": [],
+              "completeness": 0.0,
+              "created_at": "2026-11-13T05:05:00.074900+00:00",
+              "designation": "SYNTHETIC",
+              "dynamic_TAS": null,
+              "dynamic_category": null,
+              "evidence_metadata": {
+                "synthetic": true
+              },
+              "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+              "first_observation": null,
+              "last_observation": null,
+              "nongrav": null,
+              "orbital_elements": null,
+              "physical_properties": {
+                "absolute_magnitude_h": 25.9,
+                "albedo": null,
+                "albedo_uncertainty": null,
+                "color_indices": {},
+                "data_quality_flag": null,
+                "density_g_cm3": null,
+                "diameter_km": null,
+                "diameter_uncertainty": null,
+                "emissivity": null,
+                "mass_kg": null,
+                "measurement_method": null,
+                "pole_ecliptic_lat": null,
+                "pole_ecliptic_lon": null,
+                "reference_source": null,
+                "rotation_period_hours": null,
+                "rotation_period_uncertainty": null,
+                "spectral_class": null,
+                "spectral_type": null,
+                "thermal_inertia": null
+              },
+              "raw_TAS": null,
+              "score_components": {},
+              "source_contributions": {},
+              "sources_used": [
+                "MPC"
+              ],
+              "updated_at": "2026-11-13T05:05:00.074900+00:00"
+            },
+            "reason_code": null,
+            "source": "MPC",
+            "started_at": "2026-11-13T05:05:00.074886+00:00",
+            "status": "available"
+          },
+          {
+            "adapter_payload": null,
+            "basis": "adapter_result",
+            "completed_at": "2026-11-13T05:05:00.074988+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": null,
+            "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+            "source": "Horizons",
+            "started_at": "2026-11-13T05:05:00.074984+00:00",
+            "status": "unavailable"
+          },
+          {
+            "adapter_payload": {
+              "query_metadata": {
+                "api_version": "1.5",
+                "canonical_response_sha256": "40298830645c6449ce1a35f08d57125a02eaa7bc66c3de96f3a513d249ce9b69",
+                "completeness_status": "complete",
+                "count": 0,
+                "query": {
+                  "des": "SYNTHETIC",
+                  "limit": 10
+                },
+                "received_at": "2026-11-13T05:05:00.066814+00:00",
+                "retrieval_timestamp_status": "available",
+                "retrieved_at": "2026-11-13T05:05:00.066792+00:00",
+                "signature": {
+                  "source": "SYNTHETIC QA",
+                  "version": "1.5"
+                },
+                "source_documentation": "https://ssd-api.jpl.nasa.gov/doc/cad.html",
+                "total": 0
+              }
+            },
+            "basis": "computed_encounters_not_observations",
+            "completed_at": "2026-11-13T05:05:00.075325+00:00",
+            "designation": "SYNTHETIC",
+            "native_response_sha256": null,
+            "neo_data": null,
+            "reason_code": "VALIDATED_EMPTY_ENCOUNTER_QUERY",
+            "source": "CAD",
+            "started_at": "2026-11-13T05:05:00.075285+00:00",
+            "status": "missing"
+          }
+        ],
+        "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "schema_version": "object-acquisition-v1",
+        "software": {
+          "application_version": "2.2.0.dev0",
+          "build_channel": "development",
+          "float_epsilon": 2.220446049250313e-16,
+          "float_mantissa_bits": 53,
+          "limitations": "Source-file hashes describe files at report time, not loaded bytecode, authentication or a complete environment lock. Dirty code must be preserved separately to reproduce it.",
+          "package_versions": {
+            "SQLAlchemy": "2.1.8",
+            "astroquery": "0.4.9.post1",
+            "numpy": "2.2.2",
+            "pydantic": "2.11.10",
+            "requests": "2.32.3",
+            "scipy": "1.15.1"
+          },
+          "python_version": "3.11.9",
+          "repository_commit": "ad0ee9937c5820b0eb0e096a57540fdbe43b1a48",
+          "source_hashes_at_report_time": {
+            "aneos_api/acquisition_repository.py": "5edfe7919e80926a486524997940f5a152d32e82628a221a7a13886d972fa2b1",
+            "aneos_api/enrichment_store.py": "c9f1936ba89442fe22fcde2198ba53a17ffa12bd08a184a1d52dfcf267d44085",
+            "aneos_core/analysis/advanced_aneos_analyzer.py": "ecfd7b43db434d990bae486f28904c0c7e95a60052d5299e4daa795abc7f10a0",
+            "aneos_core/analysis/impact_evidence.py": "ecf8820b8ecb5f87d45fdb22e71bbfca2bcba6b51217f8152452903462010552",
+            "aneos_core/analysis/object_review.py": "e56818d1e58bd11198b88ff050e43c4bd79e3728b865a11ed57190bc2bfe8e35",
+            "aneos_core/analysis/pipeline.py": "effb2fe26d1734b7c8b8cfdc1e458ed3a556c8d2dc6851d0e23e80c622600aa9",
+            "aneos_core/analysis/reporting.py": "987db2390d001d36482c1141d965ff5abd5aac4e014854913bc0dfa754f6ee30",
+            "aneos_core/analysis/screening.py": "f442ec4ef601f7cb432fdb6c230eeefb63c75519afd11afa298d2e18d62c8345",
+            "aneos_core/data/acquisition.py": "d76c767d358a64f9a0931d18bb13aca96fa9317de9672d7085deefcee770c6b7",
+            "aneos_core/data/cache.py": "7e4b6d40f9a9c1b1bb1fc7ffdbcec479b3d3f2f622dfc1fafb4373899bc0e1a3",
+            "aneos_core/data/enrichment.py": "500ec6b89f7f225cd815a46f0720bc36e7e771c2bcff1d63cb3c5fae25b4017a",
+            "aneos_core/data/epoch_evidence.py": "5ca2e443a536eeb0bffa220b69133f05c322cd65ed5fbb44df28d546abc473f5",
+            "aneos_core/data/fetcher.py": "325c621f6d0f4eb959933116755551d53a3ae2045a0b9e665aaa36e8c76743d0",
+            "aneos_core/data/models.py": "2fd137c793a104b44a4c7b3384daa7fc6c8accb84d81cfd7c555d040ed7ab752",
+            "aneos_core/data/orbit_evidence.py": "5498738f9879c53ec3712e41da267fdf5652b1b36c883f697a33d4a3f3567e4b",
+            "aneos_core/data/physical_evidence.py": "1ddd0d83ad44c49b48cdd1823e153d021a511179cbd305e59aeec4a695af27ef",
+            "aneos_core/data/reconciliation.py": "68d674619778cca17cc8d45d201a35daa2fc58a827001bd2021118613c1f80cb",
+            "aneos_core/data/sources/horizons.py": "2dac6abb39d21866426674d0a3dee3835d01183e936ec9f86589c0d1368dbd3a",
+            "aneos_core/data/sources/mpc.py": "7a86211cbf4a2adc618fc098057e786f14534d85eac186adb11fb3dd314277f0",
+            "aneos_core/data/sources/neodys.py": "76bc6521efb9c1abecc4f7e2ab9b690942a7db7ad44cd389be6bfdfcd51ee62d",
+            "aneos_core/data/sources/sbdb.py": "29e74ae3b455180697b97533569d04f058bf38cd8d1985f9d80338c7db39b05a",
+            "aneos_core/detection/validated_sigma5_artificial_neo_detector.py": "f0eea68f79dc1f672314e2dbb422387d842ed33fbd6055ca738e1c0dde8e1a06",
+            "aneos_core/interfaces/unified_analysis.py": "4a399420f42d19bf11c28eb2ee664631a591d0c090c7041c2d0d6eb310ee5687",
+            "aneos_version.py": "1ad0b715d491c5d2a2cd53c41be2283df34164c1b4b98b1f935a4b5c0b3ea3fd",
+            "simple_neo_analyzer.py": "6d98166232b34290631ce1868da2e9e91ea8b09854976ade5341f85cc6bdcab6"
+          },
+          "working_tree_dirty": true
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "started_at": "2026-11-13T05:05:00.074483+00:00"
+      },
+      "native_response_repeat_checks": [],
+      "receipt": {
+        "assertion_count": 7,
+        "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+        "commit_status": "committed",
+        "committed_at": "2026-11-13T05:05:00.124385+00:00",
+        "consistency_status": "replayed_not_authenticated",
+        "projection_id": "117bfb9011b2120b4feea131d5b5c888cbb2da217ca0524ab8721ad910c4593b",
+        "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "query_sequence": 1,
+        "schema_version": "acquisition-storage-receipt-v1"
+      }
+    }
+  ],
+  "artificial_probability": null,
+  "close_approaches": [],
+  "completeness_score": 0.3333333333333333,
+  "completeness_semantics": "named catalogue field presence, not scientific completeness",
+  "data_inventory": {
+    "catalogue_solutions": [],
+    "coverage": {
+      "basic_catalogue": {
+        "fraction_present": 0.3333333333333333,
+        "present": 5,
+        "required": 15
+      },
+      "eligible_source_coverage": null,
+      "meaning": "Field presence in the declared profile only; not full data completeness, source coverage, accuracy or scientific readiness.",
+      "overall_data_completeness": null,
+      "profile_id": "basic-catalogue-presence-15-v1",
+      "screening_orbit": {
+        "present": 3,
+        "required": 3
+      }
+    },
+    "designation": "SYNTHETIC",
+    "encounters": [],
+    "measurements": [
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "semi_major_axis",
+        "label": "Semi-major axis",
+        "references": [
+          "/source_snapshot/orbital_elements/semi_major_axis"
+        ],
+        "source_assertion": "SBDB",
+        "status": "present",
+        "units": "AU",
+        "value": 1.23
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "eccentricity",
+        "label": "Eccentricity",
+        "references": [
+          "/source_snapshot/orbital_elements/eccentricity"
+        ],
+        "source_assertion": "SBDB",
+        "status": "present",
+        "units": "dimensionless",
+        "value": 0.2
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "inclination",
+        "label": "Inclination",
+        "references": [
+          "/source_snapshot/orbital_elements/inclination"
+        ],
+        "source_assertion": "SBDB",
+        "status": "present",
+        "units": "degrees",
+        "value": 1.49
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "ascending_node",
+        "label": "Ascending node",
+        "references": [
+          "/source_snapshot/orbital_elements/ra_of_ascending_node"
+        ],
+        "source_assertion": "SBDB",
+        "status": "not_available",
+        "units": "degrees",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "periapsis_argument",
+        "label": "Periapsis argument",
+        "references": [
+          "/source_snapshot/orbital_elements/arg_of_periapsis"
+        ],
+        "source_assertion": "SBDB",
+        "status": "not_available",
+        "units": "degrees",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "mean_anomaly",
+        "label": "Mean anomaly",
+        "references": [
+          "/source_snapshot/orbital_elements/mean_anomaly"
+        ],
+        "source_assertion": "SBDB",
+        "status": "not_available",
+        "units": "degrees",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "orbit_epoch",
+        "label": "Orbit epoch",
+        "references": [
+          "/source_snapshot/orbital_elements/epoch"
+        ],
+        "source_assertion": "SBDB",
+        "status": "not_available",
+        "time_status": "not_available",
+        "units": "model timestamp; native solution retained",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "diameter",
+        "label": "Diameter",
+        "references": [
+          "/source_snapshot/physical_properties/diameter_km"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "km",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "absolute_magnitude",
+        "label": "Absolute magnitude H",
+        "references": [
+          "/source_snapshot/physical_properties/absolute_magnitude_h"
+        ],
+        "source_assertion": "MPC",
+        "status": "present",
+        "units": "mag",
+        "value": 25.9
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "albedo",
+        "label": "Albedo",
+        "references": [
+          "/source_snapshot/physical_properties/albedo"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "dimensionless",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "spectral_type",
+        "label": "Spectral label",
+        "references": [
+          "/source_snapshot/physical_properties/spectral_type"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "catalogue label",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "rotation_period",
+        "label": "Rotation period",
+        "references": [
+          "/source_snapshot/physical_properties/rotation_period_hours"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "h",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "first_observation",
+        "label": "First observation",
+        "references": [
+          "/source_snapshot/first_observation"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "time_status": "not_available",
+        "units": "catalogue timestamp; source precision retained",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "last_observation",
+        "label": "Last observation",
+        "references": [
+          "/source_snapshot/last_observation"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "time_status": "not_available",
+        "units": "catalogue timestamp; source precision retained",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "fetched_at",
+        "label": "Retrieved at",
+        "references": [
+          "/source_snapshot/fetched_at"
+        ],
+        "source_assertion": null,
+        "status": "present",
+        "time_status": "offset_recorded_not_time_scale_conversion",
+        "units": "retrieval timestamp",
+        "value": "2026-11-13T05:05:00.074696+00:00"
+      }
+    ],
+    "missing_fields": [
+      {
+        "key": "ascending_node",
+        "status": "not_available"
+      },
+      {
+        "key": "periapsis_argument",
+        "status": "not_available"
+      },
+      {
+        "key": "mean_anomaly",
+        "status": "not_available"
+      },
+      {
+        "key": "orbit_epoch",
+        "status": "not_available"
+      },
+      {
+        "key": "diameter",
+        "status": "not_available"
+      },
+      {
+        "key": "albedo",
+        "status": "not_available"
+      },
+      {
+        "key": "spectral_type",
+        "status": "not_available"
+      },
+      {
+        "key": "rotation_period",
+        "status": "not_available"
+      },
+      {
+        "key": "first_observation",
+        "status": "not_available"
+      },
+      {
+        "key": "last_observation",
+        "status": "not_available"
+      }
+    ],
+    "non_gravitational": null,
+    "query_coverage": {},
+    "raw_physical_assertions": [],
+    "schema_version": "object-field-inventory-v1",
+    "source_differences": {},
+    "source_id": "312eef555f7d30bad3d08d6c099134cdb23ee9db2801bf0782ca41e2ac9a113f",
+    "source_snapshot": {
+      "close_approaches": [],
+      "completeness": 0.42857142857142855,
+      "created_at": "2026-11-13T05:05:00.074696+00:00",
+      "designation": "SYNTHETIC",
+      "dynamic_TAS": null,
+      "dynamic_category": null,
+      "evidence_metadata": {
+        "conflicts": {},
+        "encounter_source_assertions": [],
+        "field_sources": {
+          "orbital_elements": "SBDB",
+          "physical_properties.absolute_magnitude_h": "MPC"
+        },
+        "orbit_selection_policy": "first-priority-complete-screening-orbit-else-first-present",
+        "physical_selection": {
+          "absolute_magnitude_h": {
+            "basis": "source_projection_not_independently_verified",
+            "measurement_method": null,
+            "reference_source": null,
+            "source": "MPC",
+            "uncertainty": null,
+            "uncertainty_field": null,
+            "value": 25.9
+          }
+        },
+        "physical_source_snapshots": {
+          "MPC": {
+            "physical_properties": {
+              "absolute_magnitude_h": 25.9,
+              "albedo": null,
+              "albedo_uncertainty": null,
+              "color_indices": {},
+              "data_quality_flag": null,
+              "density_g_cm3": null,
+              "diameter_km": null,
+              "diameter_uncertainty": null,
+              "emissivity": null,
+              "mass_kg": null,
+              "measurement_method": null,
+              "pole_ecliptic_lat": null,
+              "pole_ecliptic_lon": null,
+              "reference_source": null,
+              "rotation_period_hours": null,
+              "rotation_period_uncertainty": null,
+              "spectral_class": null,
+              "spectral_type": null,
+              "thermal_inertia": null
+            },
+            "source_metadata": {
+              "synthetic": true
+            }
+          },
+          "SBDB": {
+            "physical_properties": null,
+            "source_metadata": {
+              "synthetic": true
+            }
+          }
+        },
+        "schema_version": "source-reconciliation-v2",
+        "source_solutions": {
+          "MPC": {
+            "synthetic": true
+          },
+          "SBDB": {
+            "synthetic": true
+          }
+        }
+      },
+      "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+      "first_observation": null,
+      "last_observation": null,
+      "nongrav": null,
+      "orbital_elements": {
+        "arg_of_periapsis": null,
+        "argument_of_perihelion": null,
+        "ascending_node": null,
+        "eccentricity": 0.2,
+        "epoch": null,
+        "inclination": 1.49,
+        "mean_anomaly": null,
+        "ra_of_ascending_node": null,
+        "semi_major_axis": 1.23
+      },
+      "physical_properties": {
+        "absolute_magnitude_h": 25.9,
+        "albedo": null,
+        "albedo_uncertainty": null,
+        "color_indices": {},
+        "data_quality_flag": null,
+        "density_g_cm3": null,
+        "diameter_km": null,
+        "diameter_uncertainty": null,
+        "emissivity": null,
+        "mass_kg": null,
+        "measurement_method": null,
+        "pole_ecliptic_lat": null,
+        "pole_ecliptic_lon": null,
+        "reference_source": null,
+        "rotation_period_hours": null,
+        "rotation_period_uncertainty": null,
+        "spectral_class": null,
+        "spectral_type": null,
+        "thermal_inertia": null
+      },
+      "raw_TAS": null,
+      "score_components": {},
+      "source_contributions": {},
+      "sources_used": [
+        "SBDB",
+        "MPC"
+      ],
+      "updated_at": "2026-11-13T05:05:00.074696+00:00"
+    },
+    "sources_recorded": [
+      "SBDB",
+      "MPC"
+    ],
+    "typed_physical_uncertainty_fields": {
+      "albedo_uncertainty": null,
+      "diameter_uncertainty": null,
+      "rotation_period_uncertainty": null
+    },
+    "uncertainty_note": "Scalar-model uncertainty fields and raw assertions are retained; unit/measurement reconciliation is not inferred."
+  },
+  "data_quality_score": null,
+  "data_sources": [
+    "SBDB",
+    "MPC"
+  ],
+  "designation": "SYNTHETIC",
+  "discovery_data": null,
+  "evidence_history": [
+    {
+      "assertion_id": "f7ff40dc690fa87f770ac12e35530e15018779d6957b73e51b234fb929f85efe",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "source_assertion",
+      "normalized": {
+        "calibrated_artificial_probability": null,
+        "designation": "SYNTHETIC",
+        "native_payload": {
+          "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+          "data_source": "SBDB",
+          "designation": "SYNTHETIC",
+          "neo_data": {
+            "close_approaches": [],
+            "completeness": 0.42857142857142855,
+            "created_at": "2026-11-13T05:05:00.074696+00:00",
+            "designation": "SYNTHETIC",
+            "dynamic_TAS": null,
+            "dynamic_category": null,
+            "evidence_metadata": {
+              "synthetic": true
+            },
+            "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+            "first_observation": null,
+            "last_observation": null,
+            "nongrav": null,
+            "orbital_elements": {
+              "arg_of_periapsis": null,
+              "argument_of_perihelion": null,
+              "ascending_node": null,
+              "eccentricity": 0.2,
+              "epoch": null,
+              "inclination": 1.49,
+              "mean_anomaly": null,
+              "ra_of_ascending_node": null,
+              "semi_major_axis": 1.23
+            },
+            "physical_properties": null,
+            "raw_TAS": null,
+            "score_components": {},
+            "source_contributions": {},
+            "sources_used": [
+              "SBDB"
+            ],
+            "updated_at": "2026-11-13T05:05:00.074696+00:00"
+          },
+          "snapshot_schema": "neo-data-v1"
+        },
+        "normalization_status": "typed_snapshot_not_independently_verified",
+        "normalization_timestamp": "2026-11-13T05:05:00.117318+00:00",
+        "normalized_neo": {
+          "close_approaches": [],
+          "completeness": 0.42857142857142855,
+          "created_at": "2026-11-13T05:05:00.074696+00:00",
+          "designation": "SYNTHETIC",
+          "dynamic_TAS": null,
+          "dynamic_category": null,
+          "evidence_metadata": {
+            "synthetic": true
+          },
+          "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+          "first_observation": null,
+          "last_observation": null,
+          "nongrav": null,
+          "orbital_elements": {
+            "arg_of_periapsis": null,
+            "argument_of_perihelion": null,
+            "ascending_node": null,
+            "eccentricity": 0.2,
+            "epoch": null,
+            "inclination": 1.49,
+            "mean_anomaly": null,
+            "ra_of_ascending_node": null,
+            "semi_major_axis": 1.23
+          },
+          "physical_properties": null,
+          "raw_TAS": null,
+          "score_components": {},
+          "source_contributions": {},
+          "sources_used": [
+            "SBDB"
+          ],
+          "updated_at": "2026-11-13T05:05:00.074696+00:00"
+        },
+        "origin_status": "not_assessed",
+        "schema_version": "normalized-source-assertion-v1",
+        "source": "SBDB",
+        "uninterpreted_or_legacy_fields": [
+          "acquisition_query_id"
+        ]
+      },
+      "payload": {
+        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "data_source": "SBDB",
+        "designation": "SYNTHETIC",
+        "neo_data": {
+          "close_approaches": [],
+          "completeness": 0.42857142857142855,
+          "created_at": "2026-11-13T05:05:00.074696+00:00",
+          "designation": "SYNTHETIC",
+          "dynamic_TAS": null,
+          "dynamic_category": null,
+          "evidence_metadata": {
+            "synthetic": true
+          },
+          "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+          "first_observation": null,
+          "last_observation": null,
+          "nongrav": null,
+          "orbital_elements": {
+            "arg_of_periapsis": null,
+            "argument_of_perihelion": null,
+            "ascending_node": null,
+            "eccentricity": 0.2,
+            "epoch": null,
+            "inclination": 1.49,
+            "mean_anomaly": null,
+            "ra_of_ascending_node": null,
+            "semi_major_axis": 1.23
+          },
+          "physical_properties": null,
+          "raw_TAS": null,
+          "score_components": {},
+          "source_contributions": {},
+          "sources_used": [
+            "SBDB"
+          ],
+          "updated_at": "2026-11-13T05:05:00.074696+00:00"
+        },
+        "snapshot_schema": "neo-data-v1"
+      },
+      "payload_sha256": "7f5afacbe1c03af80dce72a2ce0aa55a50f0bff4e7b5da59d0e1023f08a94d1e",
+      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "sequence": 1,
+      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "source": "SBDB"
+    },
+    {
+      "assertion_id": "7d1bd8fc1c617b3b1e75356ce7767831c49842386b04ea89c1b755cafb61b851",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "source_assertion",
+      "normalized": {
+        "calibrated_artificial_probability": null,
+        "designation": "SYNTHETIC",
+        "native_payload": {
+          "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+          "data_source": "MPC",
+          "designation": "SYNTHETIC",
+          "neo_data": {
+            "close_approaches": [],
+            "completeness": 0.0,
+            "created_at": "2026-11-13T05:05:00.074900+00:00",
+            "designation": "SYNTHETIC",
+            "dynamic_TAS": null,
+            "dynamic_category": null,
+            "evidence_metadata": {
+              "synthetic": true
+            },
+            "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+            "first_observation": null,
+            "last_observation": null,
+            "nongrav": null,
+            "orbital_elements": null,
+            "physical_properties": {
+              "absolute_magnitude_h": 25.9,
+              "albedo": null,
+              "albedo_uncertainty": null,
+              "color_indices": {},
+              "data_quality_flag": null,
+              "density_g_cm3": null,
+              "diameter_km": null,
+              "diameter_uncertainty": null,
+              "emissivity": null,
+              "mass_kg": null,
+              "measurement_method": null,
+              "pole_ecliptic_lat": null,
+              "pole_ecliptic_lon": null,
+              "reference_source": null,
+              "rotation_period_hours": null,
+              "rotation_period_uncertainty": null,
+              "spectral_class": null,
+              "spectral_type": null,
+              "thermal_inertia": null
+            },
+            "raw_TAS": null,
+            "score_components": {},
+            "source_contributions": {},
+            "sources_used": [
+              "MPC"
+            ],
+            "updated_at": "2026-11-13T05:05:00.074900+00:00"
+          },
+          "snapshot_schema": "neo-data-v1"
+        },
+        "normalization_status": "typed_snapshot_not_independently_verified",
+        "normalization_timestamp": "2026-11-13T05:05:00.117318+00:00",
+        "normalized_neo": {
+          "close_approaches": [],
+          "completeness": 0.0,
+          "created_at": "2026-11-13T05:05:00.074900+00:00",
+          "designation": "SYNTHETIC",
+          "dynamic_TAS": null,
+          "dynamic_category": null,
+          "evidence_metadata": {
+            "synthetic": true
+          },
+          "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+          "first_observation": null,
+          "last_observation": null,
+          "nongrav": null,
+          "orbital_elements": null,
+          "physical_properties": {
+            "absolute_magnitude_h": 25.9,
+            "albedo": null,
+            "albedo_uncertainty": null,
+            "color_indices": {},
+            "data_quality_flag": null,
+            "density_g_cm3": null,
+            "diameter_km": null,
+            "diameter_uncertainty": null,
+            "emissivity": null,
+            "mass_kg": null,
+            "measurement_method": null,
+            "pole_ecliptic_lat": null,
+            "pole_ecliptic_lon": null,
+            "reference_source": null,
+            "rotation_period_hours": null,
+            "rotation_period_uncertainty": null,
+            "spectral_class": null,
+            "spectral_type": null,
+            "thermal_inertia": null
+          },
+          "raw_TAS": null,
+          "score_components": {},
+          "source_contributions": {},
+          "sources_used": [
+            "MPC"
+          ],
+          "updated_at": "2026-11-13T05:05:00.074900+00:00"
+        },
+        "origin_status": "not_assessed",
+        "schema_version": "normalized-source-assertion-v1",
+        "source": "MPC",
+        "uninterpreted_or_legacy_fields": [
+          "acquisition_query_id"
+        ]
+      },
+      "payload": {
+        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "data_source": "MPC",
+        "designation": "SYNTHETIC",
+        "neo_data": {
+          "close_approaches": [],
+          "completeness": 0.0,
+          "created_at": "2026-11-13T05:05:00.074900+00:00",
+          "designation": "SYNTHETIC",
+          "dynamic_TAS": null,
+          "dynamic_category": null,
+          "evidence_metadata": {
+            "synthetic": true
+          },
+          "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+          "first_observation": null,
+          "last_observation": null,
+          "nongrav": null,
+          "orbital_elements": null,
+          "physical_properties": {
+            "absolute_magnitude_h": 25.9,
+            "albedo": null,
+            "albedo_uncertainty": null,
+            "color_indices": {},
+            "data_quality_flag": null,
+            "density_g_cm3": null,
+            "diameter_km": null,
+            "diameter_uncertainty": null,
+            "emissivity": null,
+            "mass_kg": null,
+            "measurement_method": null,
+            "pole_ecliptic_lat": null,
+            "pole_ecliptic_lon": null,
+            "reference_source": null,
+            "rotation_period_hours": null,
+            "rotation_period_uncertainty": null,
+            "spectral_class": null,
+            "spectral_type": null,
+            "thermal_inertia": null
+          },
+          "raw_TAS": null,
+          "score_components": {},
+          "source_contributions": {},
+          "sources_used": [
+            "MPC"
+          ],
+          "updated_at": "2026-11-13T05:05:00.074900+00:00"
+        },
+        "snapshot_schema": "neo-data-v1"
+      },
+      "payload_sha256": "0094914de058a4c253284573bfb305dc9a9571526b16999484b7e631abdd6a73",
+      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "sequence": 2,
+      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "source": "MPC"
+    },
+    {
+      "assertion_id": "fb2b10285db1c650dead3fcdf7cd1fac3e98848588da280cc1c1fc2b4b5f4f37",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "available"
+      },
+      "payload": {
+        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "data_source": "SBDB",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": {
+            "_evidence_metadata": {
+              "synthetic": true
+            },
+            "eccentricity": 0.2,
+            "inclination": 1.49,
+            "semi_major_axis": 1.23
+          },
+          "basis": "typed_adapter_projection_not_independently_verified",
+          "completed_at": "2026-11-13T05:05:00.074696+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": {
+            "close_approaches": [],
+            "completeness": 0.42857142857142855,
+            "created_at": "2026-11-13T05:05:00.074696+00:00",
+            "designation": "SYNTHETIC",
+            "dynamic_TAS": null,
+            "dynamic_category": null,
+            "evidence_metadata": {
+              "synthetic": true
+            },
+            "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+            "first_observation": null,
+            "last_observation": null,
+            "nongrav": null,
+            "orbital_elements": {
+              "arg_of_periapsis": null,
+              "argument_of_perihelion": null,
+              "ascending_node": null,
+              "eccentricity": 0.2,
+              "epoch": null,
+              "inclination": 1.49,
+              "mean_anomaly": null,
+              "ra_of_ascending_node": null,
+              "semi_major_axis": 1.23
+            },
+            "physical_properties": null,
+            "raw_TAS": null,
+            "score_components": {},
+            "source_contributions": {},
+            "sources_used": [
+              "SBDB"
+            ],
+            "updated_at": "2026-11-13T05:05:00.074696+00:00"
+          },
+          "reason_code": null,
+          "source": "SBDB",
+          "started_at": "2026-11-13T05:05:00.074646+00:00",
+          "status": "available"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "available"
+      },
+      "payload_sha256": "fb5435b2288202236e4e55b8eabd34967eefe227a741b223460811bac4757908",
+      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "sequence": 3,
+      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "source": "SBDB"
+    },
+    {
+      "assertion_id": "3d86facf5f3725f895849b3674c677da7152597d6d07251ed181eed94985102a",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "unavailable"
+      },
+      "payload": {
+        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "data_source": "NEODyS",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": null,
+          "basis": "source_initialization",
+          "completed_at": "2026-11-13T05:05:00.074815+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": null,
+          "reason_code": "SOURCE_INITIALIZATION_FAILED",
+          "source": "NEODyS",
+          "started_at": "2026-11-13T05:05:00.074815+00:00",
+          "status": "unavailable"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "unavailable"
+      },
+      "payload_sha256": "13fde180ad5ac09df3002e23f263a150995481cb97d26056815cbc856eb8a010",
+      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "sequence": 4,
+      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "source": "NEODyS"
+    },
+    {
+      "assertion_id": "c309778164ae1b44e9a15c7bf7ac6093531e933a4a066a859295c2a90f49f2b9",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "available"
+      },
+      "payload": {
+        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "data_source": "MPC",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": {
+            "_evidence_metadata": {
+              "synthetic": true
+            },
+            "_physical": {
+              "absolute_magnitude_h": 25.9
+            }
+          },
+          "basis": "typed_adapter_projection_not_independently_verified",
+          "completed_at": "2026-11-13T05:05:00.074900+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": {
+            "close_approaches": [],
+            "completeness": 0.0,
+            "created_at": "2026-11-13T05:05:00.074900+00:00",
+            "designation": "SYNTHETIC",
+            "dynamic_TAS": null,
+            "dynamic_category": null,
+            "evidence_metadata": {
+              "synthetic": true
+            },
+            "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+            "first_observation": null,
+            "last_observation": null,
+            "nongrav": null,
+            "orbital_elements": null,
+            "physical_properties": {
+              "absolute_magnitude_h": 25.9,
+              "albedo": null,
+              "albedo_uncertainty": null,
+              "color_indices": {},
+              "data_quality_flag": null,
+              "density_g_cm3": null,
+              "diameter_km": null,
+              "diameter_uncertainty": null,
+              "emissivity": null,
+              "mass_kg": null,
+              "measurement_method": null,
+              "pole_ecliptic_lat": null,
+              "pole_ecliptic_lon": null,
+              "reference_source": null,
+              "rotation_period_hours": null,
+              "rotation_period_uncertainty": null,
+              "spectral_class": null,
+              "spectral_type": null,
+              "thermal_inertia": null
+            },
+            "raw_TAS": null,
+            "score_components": {},
+            "source_contributions": {},
+            "sources_used": [
+              "MPC"
+            ],
+            "updated_at": "2026-11-13T05:05:00.074900+00:00"
+          },
+          "reason_code": null,
+          "source": "MPC",
+          "started_at": "2026-11-13T05:05:00.074886+00:00",
+          "status": "available"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "available"
+      },
+      "payload_sha256": "71abd8b4912e8074e0f0d8449d255c85f6faa5fcddb2371464f79689df8db4b3",
+      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "sequence": 5,
+      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "source": "MPC"
+    },
+    {
+      "assertion_id": "4e8cd962c4f2d4585eb2e7efd46d2e45fa41bc49ddca4fdafb114a02b14fb545",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "unavailable"
+      },
+      "payload": {
+        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "data_source": "Horizons",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": null,
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:05:00.074988+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": null,
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "Horizons",
+          "started_at": "2026-11-13T05:05:00.074984+00:00",
+          "status": "unavailable"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "unavailable"
+      },
+      "payload_sha256": "81f7206ee3eb59982d3c93b6b5027a4035ffb1aa026dda8631d06ddbaa72384a",
+      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "sequence": 6,
+      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "source": "Horizons"
+    },
+    {
+      "assertion_id": "d826883d1cc6d582416322805e6bd9d059dff18169d319f1fd8e15b32e63c764",
+      "designation": "SYNTHETIC",
+      "exact_payload_repeat_of": null,
+      "kind": "query_attempt",
+      "normalized": {
+        "status": "missing"
+      },
+      "payload": {
+        "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "data_source": "CAD",
+        "designation": "SYNTHETIC",
+        "source_outcome": {
+          "adapter_payload": {
+            "query_metadata": {
+              "api_version": "1.5",
+              "canonical_response_sha256": "40298830645c6449ce1a35f08d57125a02eaa7bc66c3de96f3a513d249ce9b69",
+              "completeness_status": "complete",
+              "count": 0,
+              "query": {
+                "des": "SYNTHETIC",
+                "limit": 10
+              },
+              "received_at": "2026-11-13T05:05:00.066814+00:00",
+              "retrieval_timestamp_status": "available",
+              "retrieved_at": "2026-11-13T05:05:00.066792+00:00",
+              "signature": {
+                "source": "SYNTHETIC QA",
+                "version": "1.5"
+              },
+              "source_documentation": "https://ssd-api.jpl.nasa.gov/doc/cad.html",
+              "total": 0
+            }
+          },
+          "basis": "computed_encounters_not_observations",
+          "completed_at": "2026-11-13T05:05:00.075325+00:00",
+          "designation": "SYNTHETIC",
+          "native_response_sha256": null,
+          "neo_data": null,
+          "reason_code": "VALIDATED_EMPTY_ENCOUNTER_QUERY",
+          "source": "CAD",
+          "started_at": "2026-11-13T05:05:00.075285+00:00",
+          "status": "missing"
+        },
+        "source_plan": {
+          "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+          "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+          "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+          "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+          "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+          "roles": {
+            "CAD": "computed_earth_encounters_bounded_10_rows",
+            "Horizons": "catalogue_orbit_and_available_physical_fields",
+            "MPC": "catalogue_orbit_and_available_physical_fields",
+            "NEODyS": "catalogue_orbit_and_available_physical_fields",
+            "SBDB": "catalogue_orbit_and_available_physical_fields"
+          },
+          "schema_version": "object-source-plan-v1",
+          "source_priority": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons"
+          ],
+          "sources": [
+            "SBDB",
+            "NEODyS",
+            "MPC",
+            "Horizons",
+            "CAD"
+          ]
+        },
+        "status": "missing"
+      },
+      "payload_sha256": "262f4cb97a726399b2027f6317617366563801aadbfaeffbea458ef43eaf7a08",
+      "recorded_at": "2026-11-13T05:05:00.117318+00:00",
+      "sequence": 7,
+      "session_id": "acquisition-c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "source": "CAD"
+    }
+  ],
+  "first_discovered": "2026-11-13T05:05:00.117318",
+  "last_updated": "2026-11-13T05:05:00.117318",
+  "latest_acquisition": {
+    "assertion_count": 7,
+    "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+    "commit_status": "committed",
+    "committed_at": "2026-11-13T05:05:00.124385+00:00",
+    "consistency_status": "replayed_not_authenticated",
+    "coverage": {
+      "contributing_fraction": 0.4,
+      "contributing_sources": 2,
+      "network_request_count": null,
+      "planned_sources": 5,
+      "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+      "scientific_completeness": null,
+      "semantics": "fixed planned adapters; empty validated responses differ from data contributions; not scientific readiness or independent evidence",
+      "status_counts": {
+        "ambiguous": 0,
+        "available": 2,
+        "invalid": 0,
+        "missing": 1,
+        "not_supported": 0,
+        "unavailable": 2
+      },
+      "validated_response_fraction": 0.6,
+      "validated_response_sources": 3
+    },
+    "projection_id": "117bfb9011b2120b4feea131d5b5c888cbb2da217ca0524ab8721ad910c4593b",
+    "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+    "query_sequence": 1,
+    "schema_version": "acquisition-storage-receipt-v1",
+    "source_plan": {
+      "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+      "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+      "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+      "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+      "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+      "roles": {
+        "CAD": "computed_earth_encounters_bounded_10_rows",
+        "Horizons": "catalogue_orbit_and_available_physical_fields",
+        "MPC": "catalogue_orbit_and_available_physical_fields",
+        "NEODyS": "catalogue_orbit_and_available_physical_fields",
+        "SBDB": "catalogue_orbit_and_available_physical_fields"
+      },
+      "schema_version": "object-source-plan-v1",
+      "source_priority": [
+        "SBDB",
+        "NEODyS",
+        "MPC",
+        "Horizons"
+      ],
+      "sources": [
+        "SBDB",
+        "NEODyS",
+        "MPC",
+        "Horizons",
+        "CAD"
+      ]
+    },
+    "summary": {
+      "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+      "coverage": {
+        "contributing_fraction": 0.4,
+        "contributing_sources": 2,
+        "network_request_count": null,
+        "planned_sources": 5,
+        "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+        "scientific_completeness": null,
+        "semantics": "fixed planned adapters; empty validated responses differ from data contributions; not scientific readiness or independent evidence",
+        "status_counts": {
+          "ambiguous": 0,
+          "available": 2,
+          "invalid": 0,
+          "missing": 1,
+          "not_supported": 0,
+          "unavailable": 2
+        },
+        "validated_response_fraction": 0.6,
+        "validated_response_sources": 3
+      },
+      "outcomes": [
+        {
+          "basis": "typed_adapter_projection_not_independently_verified",
+          "completed_at": "2026-11-13T05:05:00.074696+00:00",
+          "reason_code": null,
+          "source": "SBDB",
+          "started_at": "2026-11-13T05:05:00.074646+00:00",
+          "status": "available"
+        },
+        {
+          "basis": "source_initialization",
+          "completed_at": "2026-11-13T05:05:00.074815+00:00",
+          "reason_code": "SOURCE_INITIALIZATION_FAILED",
+          "source": "NEODyS",
+          "started_at": "2026-11-13T05:05:00.074815+00:00",
+          "status": "unavailable"
+        },
+        {
+          "basis": "typed_adapter_projection_not_independently_verified",
+          "completed_at": "2026-11-13T05:05:00.074900+00:00",
+          "reason_code": null,
+          "source": "MPC",
+          "started_at": "2026-11-13T05:05:00.074886+00:00",
+          "status": "available"
+        },
+        {
+          "basis": "adapter_result",
+          "completed_at": "2026-11-13T05:05:00.074988+00:00",
+          "reason_code": "SOURCE_QUERY_UNAVAILABLE",
+          "source": "Horizons",
+          "started_at": "2026-11-13T05:05:00.074984+00:00",
+          "status": "unavailable"
+        },
+        {
+          "basis": "computed_encounters_not_observations",
+          "completed_at": "2026-11-13T05:05:00.075325+00:00",
+          "reason_code": "VALIDATED_EMPTY_ENCOUNTER_QUERY",
+          "source": "CAD",
+          "started_at": "2026-11-13T05:05:00.075285+00:00",
+          "status": "missing"
+        }
+      ],
+      "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "schema_version": "object-acquisition-v1",
+      "source_plan": {
+        "context_id": "2e994691cfcd72c51b9d6d95044007d4ab791d4983b001417a9c68f0c2020dcc",
+        "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
+        "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
+        "plan_id": "aba5ed329374748d9573e88bbefdebb0e8300eab51839baa2db077e43463e4f9",
+        "profile": "installed-object-catalogue-and-bounded-earth-encounters-v1",
+        "roles": {
+          "CAD": "computed_earth_encounters_bounded_10_rows",
+          "Horizons": "catalogue_orbit_and_available_physical_fields",
+          "MPC": "catalogue_orbit_and_available_physical_fields",
+          "NEODyS": "catalogue_orbit_and_available_physical_fields",
+          "SBDB": "catalogue_orbit_and_available_physical_fields"
+        },
+        "schema_version": "object-source-plan-v1",
+        "source_priority": [
+          "SBDB",
+          "NEODyS",
+          "MPC",
+          "Horizons"
+        ],
+        "sources": [
+          "SBDB",
+          "NEODyS",
+          "MPC",
+          "Horizons",
+          "CAD"
+        ]
+      },
+      "storage_receipt": {
+        "assertion_count": 7,
+        "bundle_id": "102292bce8388a20ac10dfd75737d02aab55744c10e6cd1d16400a1bc3cd72ce",
+        "commit_status": "committed",
+        "committed_at": "2026-11-13T05:05:00.124385+00:00",
+        "consistency_status": "replayed_not_authenticated",
+        "projection_id": "117bfb9011b2120b4feea131d5b5c888cbb2da217ca0524ab8721ad910c4593b",
+        "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+        "query_sequence": 1,
+        "schema_version": "acquisition-storage-receipt-v1"
+      }
+    }
+  },
+  "legacy_origin_output": null,
+  "neo_data": {
+    "close_approaches": [],
+    "completeness": 0.42857142857142855,
+    "created_at": "2026-11-13T05:05:00.074696+00:00",
+    "designation": "SYNTHETIC",
+    "dynamic_TAS": null,
+    "dynamic_category": null,
+    "evidence_metadata": {
+      "conflicts": {},
+      "encounter_source_assertions": [],
+      "field_sources": {
+        "orbital_elements": "SBDB",
+        "physical_properties.absolute_magnitude_h": "MPC"
+      },
+      "orbit_selection_policy": "first-priority-complete-screening-orbit-else-first-present",
+      "physical_selection": {
+        "absolute_magnitude_h": {
+          "basis": "source_projection_not_independently_verified",
+          "measurement_method": null,
+          "reference_source": null,
+          "source": "MPC",
+          "uncertainty": null,
+          "uncertainty_field": null,
+          "value": 25.9
+        }
+      },
+      "physical_source_snapshots": {
+        "MPC": {
+          "physical_properties": {
+            "absolute_magnitude_h": 25.9,
+            "albedo": null,
+            "albedo_uncertainty": null,
+            "color_indices": {},
+            "data_quality_flag": null,
+            "density_g_cm3": null,
+            "diameter_km": null,
+            "diameter_uncertainty": null,
+            "emissivity": null,
+            "mass_kg": null,
+            "measurement_method": null,
+            "pole_ecliptic_lat": null,
+            "pole_ecliptic_lon": null,
+            "reference_source": null,
+            "rotation_period_hours": null,
+            "rotation_period_uncertainty": null,
+            "spectral_class": null,
+            "spectral_type": null,
+            "thermal_inertia": null
+          },
+          "source_metadata": {
+            "synthetic": true
+          }
+        },
+        "SBDB": {
+          "physical_properties": null,
+          "source_metadata": {
+            "synthetic": true
+          }
+        }
+      },
+      "schema_version": "source-reconciliation-v2",
+      "source_solutions": {
+        "MPC": {
+          "synthetic": true
+        },
+        "SBDB": {
+          "synthetic": true
+        }
+      }
+    },
+    "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+    "first_observation": null,
+    "last_observation": null,
+    "nongrav": null,
+    "orbital_elements": {
+      "arg_of_periapsis": null,
+      "argument_of_perihelion": null,
+      "ascending_node": null,
+      "eccentricity": 0.2,
+      "epoch": null,
+      "inclination": 1.49,
+      "mean_anomaly": null,
+      "ra_of_ascending_node": null,
+      "semi_major_axis": 1.23
+    },
+    "physical_properties": {
+      "absolute_magnitude_h": 25.9,
+      "albedo": null,
+      "albedo_uncertainty": null,
+      "color_indices": {},
+      "data_quality_flag": null,
+      "density_g_cm3": null,
+      "diameter_km": null,
+      "diameter_uncertainty": null,
+      "emissivity": null,
+      "mass_kg": null,
+      "measurement_method": null,
+      "pole_ecliptic_lat": null,
+      "pole_ecliptic_lon": null,
+      "reference_source": null,
+      "rotation_period_hours": null,
+      "rotation_period_uncertainty": null,
+      "spectral_class": null,
+      "spectral_type": null,
+      "thermal_inertia": null
+    },
+    "raw_TAS": null,
+    "score_components": {},
+    "source_contributions": {},
+    "sources_used": [
+      "SBDB",
+      "MPC"
+    ],
+    "updated_at": "2026-11-13T05:05:00.074696+00:00"
+  },
+  "orbital_elements": {
+    "arg_of_periapsis": null,
+    "argument_of_perihelion": null,
+    "ascending_node": null,
+    "eccentricity": 0.2,
+    "epoch": null,
+    "inclination": 1.49,
+    "mean_anomaly": null,
+    "ra_of_ascending_node": null,
+    "semi_major_axis": 1.23
+  },
+  "orbital_elements_source": "SBDB",
+  "origin_status": "not_assessed",
+  "overall_data_completeness": null,
+  "physical_properties": {
+    "absolute_magnitude_h": 25.9,
+    "albedo": null,
+    "albedo_uncertainty": null,
+    "color_indices": {},
+    "data_quality_flag": null,
+    "density_g_cm3": null,
+    "diameter_km": null,
+    "diameter_uncertainty": null,
+    "emissivity": null,
+    "mass_kg": null,
+    "measurement_method": null,
+    "pole_ecliptic_lat": null,
+    "pole_ecliptic_lon": null,
+    "reference_source": null,
+    "rotation_period_hours": null,
+    "rotation_period_uncertainty": null,
+    "spectral_class": null,
+    "spectral_type": null,
+    "thermal_inertia": null
+  },
+  "projection_cache_status": "consistent",
+  "projection_query_bindings": [
+    {
+      "assertion_id": "7d1bd8fc1c617b3b1e75356ce7767831c49842386b04ea89c1b755cafb61b851",
+      "from_latest_query": true,
+      "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "source": "MPC"
+    },
+    {
+      "assertion_id": "f7ff40dc690fa87f770ac12e35530e15018779d6957b73e51b234fb929f85efe",
+      "from_latest_query": true,
+      "query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "source": "SBDB"
+    }
+  ],
+  "projection_receipt": {
+    "created_at": "2026-11-13T05:05:00.117318+00:00",
+    "input_assertions": [
+      "f7ff40dc690fa87f770ac12e35530e15018779d6957b73e51b234fb929f85efe",
+      "7d1bd8fc1c617b3b1e75356ce7767831c49842386b04ea89c1b755cafb61b851"
+    ],
+    "projection": {
+      "artificial_probability": null,
+      "designation": "SYNTHETIC",
+      "limitations": [
+        "Source priority is not scientific source authentication or calibrated model selection.",
+        "Latest receipt per source is a current projection, not deletion or averaging of previous measurements.",
+        "Full source eligibility, canonical alias resolution and physical fit readiness are not established."
+      ],
+      "neo_data": {
+        "close_approaches": [],
+        "completeness": 0.42857142857142855,
+        "created_at": "2026-11-13T05:05:00.074696+00:00",
+        "designation": "SYNTHETIC",
+        "dynamic_TAS": null,
+        "dynamic_category": null,
+        "evidence_metadata": {
+          "conflicts": {},
+          "encounter_source_assertions": [],
+          "field_sources": {
+            "orbital_elements": "SBDB",
+            "physical_properties.absolute_magnitude_h": "MPC"
+          },
+          "orbit_selection_policy": "first-priority-complete-screening-orbit-else-first-present",
+          "physical_selection": {
+            "absolute_magnitude_h": {
+              "basis": "source_projection_not_independently_verified",
+              "measurement_method": null,
+              "reference_source": null,
+              "source": "MPC",
+              "uncertainty": null,
+              "uncertainty_field": null,
+              "value": 25.9
+            }
+          },
+          "physical_source_snapshots": {
+            "MPC": {
+              "physical_properties": {
+                "absolute_magnitude_h": 25.9,
+                "albedo": null,
+                "albedo_uncertainty": null,
+                "color_indices": {},
+                "data_quality_flag": null,
+                "density_g_cm3": null,
+                "diameter_km": null,
+                "diameter_uncertainty": null,
+                "emissivity": null,
+                "mass_kg": null,
+                "measurement_method": null,
+                "pole_ecliptic_lat": null,
+                "pole_ecliptic_lon": null,
+                "reference_source": null,
+                "rotation_period_hours": null,
+                "rotation_period_uncertainty": null,
+                "spectral_class": null,
+                "spectral_type": null,
+                "thermal_inertia": null
+              },
+              "source_metadata": {
+                "synthetic": true
+              }
+            },
+            "SBDB": {
+              "physical_properties": null,
+              "source_metadata": {
+                "synthetic": true
+              }
+            }
+          },
+          "schema_version": "source-reconciliation-v2",
+          "source_solutions": {
+            "MPC": {
+              "synthetic": true
+            },
+            "SBDB": {
+              "synthetic": true
+            }
+          }
+        },
+        "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+        "first_observation": null,
+        "last_observation": null,
+        "nongrav": null,
+        "orbital_elements": {
+          "arg_of_periapsis": null,
+          "argument_of_perihelion": null,
+          "ascending_node": null,
+          "eccentricity": 0.2,
+          "epoch": null,
+          "inclination": 1.49,
+          "mean_anomaly": null,
+          "ra_of_ascending_node": null,
+          "semi_major_axis": 1.23
+        },
+        "physical_properties": {
+          "absolute_magnitude_h": 25.9,
+          "albedo": null,
+          "albedo_uncertainty": null,
+          "color_indices": {},
+          "data_quality_flag": null,
+          "density_g_cm3": null,
+          "diameter_km": null,
+          "diameter_uncertainty": null,
+          "emissivity": null,
+          "mass_kg": null,
+          "measurement_method": null,
+          "pole_ecliptic_lat": null,
+          "pole_ecliptic_lon": null,
+          "reference_source": null,
+          "rotation_period_hours": null,
+          "rotation_period_uncertainty": null,
+          "spectral_class": null,
+          "spectral_type": null,
+          "thermal_inertia": null
+        },
+        "raw_TAS": null,
+        "score_components": {},
+        "source_contributions": {},
+        "sources_used": [
+          "SBDB",
+          "MPC"
+        ],
+        "updated_at": "2026-11-13T05:05:00.074696+00:00"
+      },
+      "origin_status": "not_assessed",
+      "overall_data_completeness": null,
+      "schema_version": "enriched-object-projection-v1",
+      "selected_source_assertions": {
+        "MPC": "7d1bd8fc1c617b3b1e75356ce7767831c49842386b04ea89c1b755cafb61b851",
+        "SBDB": "f7ff40dc690fa87f770ac12e35530e15018779d6957b73e51b234fb929f85efe"
+      },
+      "source_acquisition_coverage": null,
+      "source_priority": [
+        "SBDB",
+        "NEODyS",
+        "MPC",
+        "Horizons",
+        "CAD"
+      ]
+    },
+    "projection_id": "117bfb9011b2120b4feea131d5b5c888cbb2da217ca0524ab8721ad910c4593b"
+  },
+  "source_acquisition_coverage": null,
+  "source_data": {
+    "MPC": {
+      "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "data_source": "MPC",
+      "designation": "SYNTHETIC",
+      "neo_data": {
+        "close_approaches": [],
+        "completeness": 0.0,
+        "created_at": "2026-11-13T05:05:00.074900+00:00",
+        "designation": "SYNTHETIC",
+        "dynamic_TAS": null,
+        "dynamic_category": null,
+        "evidence_metadata": {
+          "synthetic": true
+        },
+        "fetched_at": "2026-11-13T05:05:00.074900+00:00",
+        "first_observation": null,
+        "last_observation": null,
+        "nongrav": null,
+        "orbital_elements": null,
+        "physical_properties": {
+          "absolute_magnitude_h": 25.9,
+          "albedo": null,
+          "albedo_uncertainty": null,
+          "color_indices": {},
+          "data_quality_flag": null,
+          "density_g_cm3": null,
+          "diameter_km": null,
+          "diameter_uncertainty": null,
+          "emissivity": null,
+          "mass_kg": null,
+          "measurement_method": null,
+          "pole_ecliptic_lat": null,
+          "pole_ecliptic_lon": null,
+          "reference_source": null,
+          "rotation_period_hours": null,
+          "rotation_period_uncertainty": null,
+          "spectral_class": null,
+          "spectral_type": null,
+          "thermal_inertia": null
+        },
+        "raw_TAS": null,
+        "score_components": {},
+        "source_contributions": {},
+        "sources_used": [
+          "MPC"
+        ],
+        "updated_at": "2026-11-13T05:05:00.074900+00:00"
+      },
+      "snapshot_schema": "neo-data-v1"
+    },
+    "SBDB": {
+      "acquisition_query_id": "c4a4dbe0-005b-4399-bee1-1838d26e1329",
+      "data_source": "SBDB",
+      "designation": "SYNTHETIC",
+      "neo_data": {
+        "close_approaches": [],
+        "completeness": 0.42857142857142855,
+        "created_at": "2026-11-13T05:05:00.074696+00:00",
+        "designation": "SYNTHETIC",
+        "dynamic_TAS": null,
+        "dynamic_category": null,
+        "evidence_metadata": {
+          "synthetic": true
+        },
+        "fetched_at": "2026-11-13T05:05:00.074696+00:00",
+        "first_observation": null,
+        "last_observation": null,
+        "nongrav": null,
+        "orbital_elements": {
+          "arg_of_periapsis": null,
+          "argument_of_perihelion": null,
+          "ascending_node": null,
+          "eccentricity": 0.2,
+          "epoch": null,
+          "inclination": 1.49,
+          "mean_anomaly": null,
+          "ra_of_ascending_node": null,
+          "semi_major_axis": 1.23
+        },
+        "physical_properties": null,
+        "raw_TAS": null,
+        "score_components": {},
+        "source_contributions": {},
+        "sources_used": [
+          "SBDB"
+        ],
+        "updated_at": "2026-11-13T05:05:00.074696+00:00"
+      },
+      "snapshot_schema": "neo-data-v1"
+    }
+  },
+  "storage_status": "verified_ledger_projection",
+  "total_detections": 2,
+  "total_detections_semantics": "distinct stored source assertions, not observations or artificial detections"
+}

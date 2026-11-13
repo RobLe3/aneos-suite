@@ -46,7 +46,20 @@ class ObjectProjection(Base):
     payload_sha256 = Column(String(64), nullable=False)
 
 
+class ObjectAcquisition(Base):
+    __tablename__ = "neo_acquisitions_v1"
+    sequence = Column(Integer, primary_key=True, autoincrement=True)
+    query_id = Column(String(100), unique=True, nullable=False)
+    designation = Column(String(100), index=True, nullable=False)
+    bundle_id = Column(String(64), unique=True, nullable=False)
+    bundle_json = Column(Text, nullable=False)
+    assertion_ids_json = Column(Text, nullable=False)
+    projection_id = Column(String(64), nullable=True)
+    committed_at = Column(String(40), nullable=False)
+
+
 TABLES = (SourceAssertion.__table__, ObjectProjection.__table__)
+ACQUISITION_TABLES = (ObjectAcquisition.__table__,)
 
 
 def _file_sqlite(engine):
@@ -59,9 +72,9 @@ def _file_sqlite(engine):
     )
 
 
-def _columns_ready(connection):
+def _columns_ready(connection, tables=TABLES):
     inspector = inspect(connection)
-    for table in TABLES:
+    for table in tables:
         if table.name not in inspector.get_table_names():
             return False
         if not {c.name for c in table.columns}.issubset(
@@ -69,14 +82,14 @@ def _columns_ready(connection):
         ):
             return False
         if inspector.get_pk_constraint(table.name).get("constrained_columns") != [
-            "sequence"
+            c.name for c in table.primary_key
         ]:
             return False
-        expected = (
-            "assertion_id"
-            if table.name == SourceAssertion.__tablename__
-            else "projection_id"
-        )
+        expected = {
+            SourceAssertion.__tablename__: "assertion_id",
+            ObjectProjection.__tablename__: "projection_id",
+            ObjectAcquisition.__tablename__: "bundle_id",
+        }[table.name]
         if not any(
             u["column_names"] == [expected]
             for u in inspector.get_unique_constraints(table.name)
@@ -93,13 +106,14 @@ def initialize_schema(engine, *, include_all=False):
     with engine.begin() as connection:
         connection.exec_driver_sql("BEGIN IMMEDIATE")
         Base.metadata.create_all(
-            connection, tables=None if include_all else list(TABLES)
+            connection,
+            tables=None if include_all else list(TABLES + ACQUISITION_TABLES),
         )
-        if not _columns_ready(connection):
+        if not _columns_ready(connection, TABLES + ACQUISITION_TABLES):
             raise RuntimeError(
                 "Incompatible evidence schema; explicit migration required"
             )
-        for table in TABLES:
+        for table in TABLES + ACQUISITION_TABLES:
             for action in ("UPDATE", "DELETE"):
                 name = f"{table.name}_no_{action.lower()}"
                 connection.exec_driver_sql(
@@ -272,6 +286,38 @@ def _import_legacy(db, row, stamp):
         "MPC": "mpc_data",
         "NEODyS": "neodys_data",
     }
+
+    def archive_source(source, payload):
+        from aneos_core.data.models import NEOData
+        from aneos_core.data.acquisition import has_material
+
+        try:
+            normalized = normalize_assertion(payload, stamp)
+            if not has_material(NEOData.from_dict(normalized["normalized_neo"])):
+                raise ValueError("No interpretable legacy fields")
+        except (ValueError, TypeError, KeyError, AttributeError):
+            _append(
+                db,
+                row.designation,
+                source,
+                "legacy-source-" + str(row.id),
+                "legacy_source_uninterpretable",
+                payload,
+                stamp,
+                normalized={"status": "legacy_uninterpretable_not_current_measurement"},
+            )
+            return False
+        _append(
+            db,
+            row.designation,
+            source,
+            "legacy-source-" + str(row.id),
+            "source_assertion",
+            payload,
+            stamp,
+        )
+        return True
+
     imported = False
     for source, column in slots.items():
         original = getattr(row, column)
@@ -284,16 +330,7 @@ def _import_legacy(db, row, stamp):
             "source_column": column,
             "status": "legacy_unverified_import",
         }
-        _append(
-            db,
-            row.designation,
-            source,
-            "legacy-source-" + str(row.id),
-            "source_assertion",
-            payload,
-            stamp,
-        )
-        imported = True
+        imported = archive_source(source, payload) or imported
     if not imported:
         payload = {
             "designation": row.designation,
@@ -305,15 +342,7 @@ def _import_legacy(db, row, stamp):
                 "status": "legacy_unverified_aggregate_not_individual_source"
             },
         }
-        _append(
-            db,
-            row.designation,
-            "LEGACY_AGGREGATE",
-            "legacy-source-" + str(row.id),
-            "source_assertion",
-            payload,
-            stamp,
-        )
+        archive_source("LEGACY_AGGREGATE", payload)
 
 
 def _update_materialized(row, projection, history, stamp):
@@ -374,7 +403,16 @@ def _update_materialized(row, projection, history, stamp):
             setattr(row, updated, datetime.fromisoformat(latest[source]["recorded_at"]))
 
 
-def enrich(db, rows, session_id, *, query_attempts=None, priority=SOURCE_PRIORITY):
+def enrich(
+    db,
+    rows,
+    session_id,
+    *,
+    query_attempts=None,
+    priority=SOURCE_PRIORITY,
+    _before_commit=None,
+    _after_begin=None,
+):
     """Own one fresh transaction; acknowledge only after assertions+projection commit."""
     if db.in_transaction():
         return {
@@ -445,6 +483,10 @@ def enrich(db, rows, session_id, *, query_attempts=None, priority=SOURCE_PRIORIT
             prepared.append((designation, source, "query_attempt", attempt))
         db.execute(text("BEGIN IMMEDIATE"))
         began = True
+        if _after_begin is not None and _after_begin(db) is False:
+            db.commit()
+            stats["commit_status"] = "committed"
+            return stats
         changed = set()
         for designation, source, kind, payload in prepared:
             row = db.scalar(
@@ -505,6 +547,8 @@ def enrich(db, rows, session_id, *, query_attempts=None, priority=SOURCE_PRIORIT
                 stats["updated_neos"] += 1
             _update_materialized(row, projection, history, stamp)
             stats["enriched_neos"] += 1
+        if _before_commit is not None:
+            _before_commit(db)
         db.commit()
         stats["commit_status"] = "committed"
         return stats

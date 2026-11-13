@@ -23,7 +23,7 @@ def _software_metadata():
     except (OSError, subprocess.SubprocessError):
         pass  # A packaged/non-Git installation is explicitly unknown, never clean.
     packages = {}
-    for name in ('numpy', 'scipy', 'pydantic'):
+    for name in ('numpy', 'scipy', 'pydantic', 'SQLAlchemy', 'requests', 'astroquery'):
         try:
             packages[name] = version(name)
         except PackageNotFoundError:
@@ -35,6 +35,10 @@ def _software_metadata():
         'aneos_core/interfaces/unified_analysis.py', 'aneos_core/data/models.py',
         'aneos_core/data/orbit_evidence.py', 'aneos_core/data/fetcher.py',
         'aneos_core/data/sources/sbdb.py', 'aneos_core/data/sources/horizons.py',
+        'aneos_core/data/sources/mpc.py', 'aneos_core/data/sources/neodys.py',
+        'aneos_core/data/acquisition.py', 'aneos_core/data/reconciliation.py',
+        'aneos_core/data/enrichment.py', 'aneos_core/data/cache.py',
+        'aneos_api/enrichment_store.py', 'aneos_api/acquisition_repository.py',
         'aneos_core/detection/validated_sigma5_artificial_neo_detector.py']
     hashes = {name:sha256((root/name).read_bytes()).hexdigest() if (root/name).is_file() else None
         for name in modules}
