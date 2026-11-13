@@ -1586,4 +1586,16 @@ assessment. Reporting owns the versioned batch envelope of existing per-object
 reports, input/occurrence provenance, duplicate reuse and request-vs-identity counts.
 The primary menu holds session history and renders/exports that envelope through
 existing presentation/reporting boundaries. It is not a new persistence context,
-a calibrated population evaluation or a durable batch-job claim.
+a calibrated population evaluation. ADR-094 alone did not qualify durable jobs;
+the subsequent ADR-095 execution host adds the scoped SQL recovery described below.
+
+
+### Durable primary batch execution (ADR-095)
+
+Execution infrastructure owns admission, leases, immutable object checkpoints and
+terminal acknowledgement through the existing JobStore/shared worker. Core Analysis
+owns the canonical assessment and critical checkpoint/pre-item callback boundaries;
+Reporting owns the existing per-object reports and batch envelope. Primary-menu
+adapters submit/resume and render only verified terminal results. The fixed local
+owner is not a new authentication context. No new database or bounded context is
+introduced; other job families and independent scientific validation remain separate.

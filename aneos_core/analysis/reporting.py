@@ -66,12 +66,25 @@ def _report_hash(report):
 
 
 def verify_screening_report(report):
+    if not isinstance(report, dict):
+        raise ValueError('Expected a versioned screening report object')
     if report.get('schema_version') != 'scientific-screening-report-v1' or report.get('report_id') != _report_hash(report):
         raise ValueError('Report fingerprint/schema mismatch')
     for key in ('is_artificial', 'artificial_probability', 'confidence_level', 'confidence', 'sigma_statistical_level'):
         if key in report and report[key] is not None:
             raise ValueError('Unsupported standalone scientific claim in screening report')
+    if (report.get('five_sigma_claim_permitted') is not False or
+        report.get('scientific_validation_status') != 'unavailable_uncalibrated' or
+        report.get('validation_status') != 'unavailable_uncalibrated'):
+        raise ValueError('No calibrated discovery/validation contract is installed')
+    metadata = report.get('analysis_metadata')
+    if not isinstance(metadata, dict) or metadata.get('five_sigma_claim_permitted', False) is not False:
+        raise ValueError('Report metadata cannot authorize uncalibrated discovery claims')
     assessment = report.get('screening_assessment')
+    if assessment is not None and not isinstance(assessment, dict):
+        raise ValueError('Expected a canonical assessment object or unavailable')
+    if assessment is not None and report.get('designation') != assessment.get('designation'):
+        raise ValueError('Report object identity differs from assessment')
     errors = report.get('errors')
     if not isinstance(errors, list) or any(not isinstance(error, str) for error in errors):
         raise ValueError('Report errors must be an explicit list of messages')
@@ -88,10 +101,15 @@ def verify_screening_report(report):
         replay = service.replay(assessment['evidence_snapshot'], assessment['evidence_id'])
         if replay.policy_id != assessment['policy_id'] or replay.to_payload() != assessment:
             raise ValueError('Report assessment cannot be replayed under the current policy')
+        for key, value in assessment['analysis_metadata'].items():
+            if key in metadata and metadata[key] != value:
+                raise ValueError('Report metadata contradicts its canonical assessment')
     if report.get('neo_data') is not None:
         from aneos_core.data.models import NEOData
         from aneos_core.validation.review_evidence import freeze_review_inputs
         neo = NEOData.from_dict(report['neo_data'])
+        if neo.designation != report.get('designation'):
+            raise ValueError('Report object identity differs from source snapshot')
         _, review_id = freeze_review_inputs(neo)
         if review_id != report.get('review_input_id'):
             raise ValueError('Report review-input fingerprint mismatch')

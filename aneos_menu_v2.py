@@ -135,55 +135,109 @@ class ANEOSMenuV2(ANEOSMenuBase):
         self._display_detection_result(designation, result, verbose=True)
         self._persist_detection_result_async(designation, result)
 
+    def _open_batch_runtime(self):
+        from aneos_api.batch_jobs import default_runtime
+        return default_runtime()
+
     def _detect_batch(self) -> None:
-        """Option 3: shared bounded execution, retaining every requested occurrence."""
-        path = self.browse_files(search_dirs=[".", "neo_data", "data", "tests"],
-            extensions=[".txt", ".csv"], prompt="Designation file")
-        if not path:
-            self.show_error("No path provided.")
-            return
+        """Option 3: acknowledge SQL job before work; resume by job ID/recovery key."""
+        from aneos_core.analysis.batch_reporting import read_input, verify_batch_report
+        token = self._ask("Resume batch job ID/recovery key (Enter=new file)").strip()
+        source = None
+        if not token:
+            path = self.browse_files(search_dirs=[".", "neo_data", "data", "tests"],
+                extensions=[".txt", ".csv"], prompt="Designation file")
+            if not path:
+                self.show_error("No path provided.")
+                return
+            try:
+                source = read_input(path)
+            except (OSError, ValueError, UnicodeError) as exc:
+                self.show_error(f"Batch input unavailable or invalid: {exc}")
+                return
+            from uuid import uuid4
+            token = uuid4().hex
+            self._last_batch_recovery_key = token
+            self.show_info(f"Recovery key (retain even if acknowledgement fails): {token}")
+        runtime = None
         try:
-            from aneos_core.analysis.batch_reporting import read_input, build_batch_report, render_batch_report
-            source = read_input(path)
-        except (OSError, ValueError, UnicodeError) as exc:
-            self.show_error(f"Batch input unavailable or invalid: {exc}")
-            return
-        names = list(dict.fromkeys(r['designation'] for r in source['requests']))
-        self.show_info(f"Requested {len(source['requests'])} rows; {len(names)} exact designation labels. "
-                       "Exact repeats reuse one acquisition; aliases are not merged.")
-        try:
-            import asyncio
-            from aneos_core.analysis.pipeline import AnalysisPipeline
-            from aneos_core.analysis.reporting import build_screening_report
-            pipeline = AnalysisPipeline()
+            runtime = self._open_batch_runtime()
+            job = runtime.submit(source, token) if source is not None else runtime.read(token)
+            self._last_batch_job_id = job['job_id']
+            already_completed = job['status'] == 'completed'
+            self.show_info(f"Acknowledged SQL batch job: {job['job_id']}")
             if self.console:
-                with self.console.status("Screening requested objects; provider timeouts apply…"):
-                    results = asyncio.run(pipeline.analyze_batch(names))
+                with self.console.status("Executing/resuming SQL batch; provider timeouts apply…"):
+                    job = runtime.run(job['job_id'])
             else:
-                results = asyncio.run(pipeline.analyze_batch(names))
-            if len(results) != len(names) or any(r.designation != name for r, name in zip(results, names)):
-                raise ValueError('Batch pipeline returned incomplete or reordered identities')
-            reports = {r.designation: build_screening_report(r) for r in results}
-            report = build_batch_report(source, reports)
+                job = runtime.run(job['job_id'])
+            if job['status'] != 'completed':
+                from datetime import datetime, timezone
+                from aneos_core.analysis.batch_reporting import render_batch_progress
+                progress = job['request_progress']
+                render_batch_progress(job, self.console)
+                self.show_info(f"Job {job['job_id']}: {job['status']}; attempt "
+                    f"{job['attempts']}/{job['max_attempts']}; ready exact labels "
+                    f"{progress['ready_exact_labels']}/{progress['required_exact_labels']}. "
+                    f"Execution code: {job['error_code'] or 'not available'}. No completed batch published.")
+                if job['status'] in ('failed', 'cancelled'):
+                    self.show_info('Terminal execution state: retained history remains inspectable; '
+                                   'new work needs a new explicit submission, not a retry-budget bypass.')
+                else:
+                    when = job['lease_until'] if job['status'] == 'running' else job['available_at']
+                    timing = datetime.fromtimestamp(when, timezone.utc).isoformat(timespec='seconds') if when is not None else 'not available'
+                    self.show_info(f"Execution lease/queue eligibility (UTC, not an observation date): {timing}. "
+                                   "Resume with the same ID/key; eligibility does not predict provider completion.")
+                selected = self._ask('Retained request row # for details (Enter to skip)').strip()
+                if selected:
+                    index = int(selected) - 1
+                    if not 0 <= index < len(job['request_outcomes']):
+                        raise ValueError('Request row is outside this job')
+                    item = job['request_outcomes'][index]['report']
+                    if item is None:
+                        self.show_info('Not assessed: no acknowledged object report; no scientific conclusion.')
+                    else:
+                        self._display_batch_request_report(item)
+                return
+            report = verify_batch_report(job['result']['batch_report'])
+            self._accept_batch_report(report, persist_latest=not already_completed)
         except Exception as exc:
-            self.show_error(f"Batch execution unavailable: {exc}. No completed batch published.")
-            return
-        self._batch_reports = getattr(self, '_batch_reports', [])
-        self._batch_reports.append(report)
-        # Latest-object compatibility views do not replace the ordered request history.
+            self.show_error(f"Batch storage/execution unavailable: {exc}. "
+                            "No unacknowledged session fallback; retain the recovery key/job ID.")
+        finally:
+            if runtime is not None:
+                runtime.close()
+
+    def _accept_batch_report(self, report, *, persist_latest=True) -> None:
+        """Render an already committed terminal report without another acquisition."""
+        from aneos_core.analysis.batch_reporting import verify_batch_report, render_batch_report
         from aneos_core.analysis.object_review import build_assessment_review
-        for result in results:
-            payload = result.screening_assessment
+        from aneos_core.analysis.screening import ScreeningAnalysisService
+        from aneos_core.data.models import NEOData
+        report = verify_batch_report(report)
+        self._batch_reports = getattr(self, '_batch_reports', [])
+        if not any(r['batch_report_id'] == report['batch_report_id'] for r in self._batch_reports):
+            self._batch_reports.append(report)
+        seen = set()
+        for entry in report['requests']:
+            name = entry['designation']
+            if name in seen:
+                continue
+            seen.add(name)
+            item = entry['report']; payload = item['screening_assessment']
             if payload is None:
                 continue
-            assessment = pipeline.screening_service.replay(payload['evidence_snapshot'], payload['evidence_id'])
+            assessment = ScreeningAnalysisService().replay(payload['evidence_snapshot'], payload['evidence_id'])
             view = assessment.to_detection_result()
-            view.object_review = build_assessment_review(payload, neo=result.neo_data)
+            neo = NEOData.from_dict(item['neo_data']) if item['neo_data'] is not None else None
+            view.object_review = build_assessment_review(payload, neo=neo)
             view.analysis['object_review'] = view.object_review
-            self._detection_results[result.designation] = view
-            self._persist_detection_result_async(result.designation, view)
+            self._detection_results[name] = view
+            if persist_latest:
+                self._persist_detection_result_async(name, view)
         render_batch_report(report, self.console)
-        self.show_info("Batch history is session-only until explicitly exported with option 10.")
+        self.show_info("SQL batch result is committed. Exports are portable copies; "
+                       "resume by job ID/key after restart without polling completed work.")
 
     def _browse_batch_reports(self) -> None:
         """Browse frozen request history; never fetch or recompute scientific inputs."""
@@ -202,22 +256,26 @@ class ANEOSMenuV2(ANEOSMenuBase):
             row_index = int(row) - 1
             if not 0 <= row_index < len(report['requests']):
                 raise ValueError('Request row number is outside this batch')
-            item = report['requests'][row_index]['report']
-            if item['screening_assessment'] is not None:
-                from aneos_core.analysis.object_review import build_assessment_review, render_object_review
-                from aneos_core.data.models import NEOData
-                neo = NEOData.from_dict(item['neo_data']) if item['neo_data'] is not None else None
-                review = build_assessment_review(item['screening_assessment'], neo=neo)
-                render_object_review(review, console=self.console, verbose=True)
-                return
-            text = render_screening_markdown(item)
-            if self.console:
-                from rich.markdown import Markdown
-                self.console.print(Markdown(text))
-            else:
-                print(text)
+            self._display_batch_request_report(report['requests'][row_index]['report'])
         except (ValueError, TypeError, KeyError) as exc:
             self.show_error(f"Batch review unavailable: {exc}")
+
+    def _display_batch_request_report(self, item) -> None:
+        from aneos_core.analysis.reporting import verify_screening_report, render_screening_markdown
+        verify_screening_report(item)
+        if item['screening_assessment'] is not None:
+            from aneos_core.analysis.object_review import build_assessment_review, render_object_review
+            from aneos_core.data.models import NEOData
+            neo = NEOData.from_dict(item['neo_data']) if item['neo_data'] is not None else None
+            review = build_assessment_review(item['screening_assessment'], neo=neo)
+            render_object_review(review, console=self.console, verbose=True)
+            return
+        text = render_screening_markdown(item)
+        if self.console:
+            from rich.markdown import Markdown
+            self.console.print(Markdown(text))
+        else:
+            print(text)
 
     def _export_batch_report(self) -> None:
         """Existing exporter owns exclusive files; all requests and errors remain."""

@@ -246,8 +246,9 @@ class TestOption3BatchDetection:
             return NEOData(name, orbital_elements=OrbitalElements(semi_major_axis=1.23,eccentricity=.2,inclination=1.49))
         p.data_fetcher.fetch_neo_data.side_effect = fetch
         path = tmp_path/'objects.txt'; path.write_text('99942\n2020 SO\n')
-        menu = _make_menu(); menu._persist_detection_result_async = MagicMock()
-        with patch.object(menu,'browse_files',return_value=str(path)), \
+        menu = _make_menu(); menu._persist_detection_result_async = MagicMock(); menu._ask = MagicMock(return_value='')
+        with patch.dict('os.environ',{'ANEOS_DATABASE_URL':f'sqlite:///{tmp_path}/jobs.sqlite'}), \
+             patch.object(menu,'browse_files',return_value=str(path)), \
              patch('aneos_core.analysis.pipeline.AnalysisPipeline',return_value=p):
             menu._detect_batch()
         assert p.data_fetcher.fetch_neo_data.call_count == 2
@@ -255,8 +256,9 @@ class TestOption3BatchDetection:
 
     def test_results_contain_both_designations(self, tmp_path):
         path = tmp_path/'objects.txt'; path.write_text('99942\n2020 SO\n')
-        p = self._pipeline(); menu = _make_menu(); menu._persist_detection_result_async = MagicMock()
-        with patch.object(menu,'browse_files',return_value=str(path)), \
+        p = self._pipeline(); menu = _make_menu(); menu._persist_detection_result_async = MagicMock(); menu._ask = MagicMock(return_value='')
+        with patch.dict('os.environ',{'ANEOS_DATABASE_URL':f'sqlite:///{tmp_path}/jobs.sqlite'}), \
+             patch.object(menu,'browse_files',return_value=str(path)), \
              patch('aneos_core.analysis.pipeline.AnalysisPipeline',return_value=p):
             menu._detect_batch()
         assert [r['designation'] for r in menu._batch_reports[0]['requests']] == ['99942','2020 SO']
@@ -266,8 +268,9 @@ class TestOption3BatchDetection:
         from aneos_core.data.models import NEOData
         path = tmp_path/'objects.txt'; path.write_text('MISSING\n')
         p = self._pipeline(); p.data_fetcher.fetch_neo_data.side_effect = lambda d,**kw: NEOData(d)
-        menu = _make_menu(); menu._persist_detection_result_async = MagicMock()
-        with patch.object(menu,'browse_files',return_value=str(path)), \
+        menu = _make_menu(); menu._persist_detection_result_async = MagicMock(); menu._ask = MagicMock(return_value='')
+        with patch.dict('os.environ',{'ANEOS_DATABASE_URL':f'sqlite:///{tmp_path}/jobs.sqlite'}), \
+             patch.object(menu,'browse_files',return_value=str(path)), \
              patch('aneos_core.analysis.pipeline.AnalysisPipeline',return_value=p):
             menu._detect_batch()
         result = menu._batch_reports[0]['requests'][0]['report']
@@ -276,7 +279,7 @@ class TestOption3BatchDetection:
         assert menu._detection_results['MISSING'].classification == 'INCONCLUSIVE'
 
     def test_missing_file_shows_error(self):
-        menu = _make_menu(); menu._persist_detection_result_async = MagicMock()
+        menu = _make_menu(); menu._persist_detection_result_async = MagicMock(); menu._ask = MagicMock(return_value='')
         with patch.object(menu, 'browse_files', return_value='/nonexistent/path.txt'), \
              patch.object(menu, 'show_error') as error:
             menu._detect_batch()

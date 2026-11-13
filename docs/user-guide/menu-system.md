@@ -102,7 +102,10 @@ and request row to inspect its full report and errors without polling. In option
 Full JSON reports retain unrounded values and null inference. CSV includes those
 reports as JSON fields; formula-like display labels are escaped for spreadsheets.
 
-History remains in this session until explicitly exported. The existing best-effort
-analysis DB write is not a restart-safe batch archive. A saved batch JSON can be
+Option 3 now prints a SQL job ID and recovery key before provider work. Retain the
+key even if acknowledgement fails; enter it at option 3 after restart to resume or
+inspect the original request. Completed replay does not poll or append another
+compatibility analysis row. Explicit file-SQLite configuration is required; see the
+[durable batch guide](../engineering/durable-batch-execution.md). A saved batch JSON can be
 loaded by the existing dashboard file command, without new acquisition. See the
 [batch contract and replay guide](../engineering/batch-request-accounting.md).

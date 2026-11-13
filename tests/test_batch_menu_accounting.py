@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from unittest.mock import Mock
 import pytest
+from rich.cells import cell_len
 from aneos_core.analysis.batch_reporting import read_input,parse_input,build_batch_report,verify_batch_report,render_batch_report
 from aneos_core.analysis.pipeline import AnalysisPipeline
 from aneos_core.data.models import NEOData,OrbitalElements,PhysicalProperties
@@ -45,6 +46,7 @@ def menu_for_file(monkeypatch,path,p,width=None):
     if width:
         from rich.console import Console
         menu.console=Console(file=io.StringIO(),width=width,color_system=None,record=True)
+    menu._ask=Mock(return_value='')
     menu.browse_files=Mock(return_value=str(path))
     menu._persist_detection_result_async=Mock()
     monkeypatch.setattr('aneos_core.analysis.pipeline.AnalysisPipeline',lambda:p)
@@ -136,7 +138,7 @@ def test_rich_and_plain_accounting_are_readable(bundle,width,capsys):
     out=io.StringIO();console=Console(file=out,width=width,color_system=None,record=True)
     render_batch_report(bundle,console)
     text=out.getvalue()
-    assert max(map(len,text.splitlines()))<=width
+    assert max(map(cell_len,text.splitlines()))<=width
     assert '[bold]' not in text
     assert 'not independent evidence' in ' '.join(text.split())
     assert 'INCONCLUSIVE' in text and 'candidate' in text
@@ -255,7 +257,7 @@ def test_reproducible_actual_before_after_capture_script(tmp_path):
     for width in (80,120,160):
         after=(target/f'after-{width}.txt').read_text()
         assert 'SYNTHETIC QA CONTROLS' in after
-        assert max(map(len,after.splitlines()))<=width
+        assert max(map(cell_len,after.splitlines()))<=width
         assert 'source_unavailable' in after and 'INCONCLUSIVE' in after
         assert '@font-face' not in (target/f'after-{width}.svg').read_text()
     assert 'skipped' in (target/'before-plain.txt').read_text()
@@ -335,7 +337,7 @@ def test_batch_request_details_use_existing_bound_measurement_insights(monkeypat
     menu._browse_batch_reports()
     text=menu.console.file.getvalue() if width else capsys.readouterr().out
     if width:
-        assert max(map(len,text.splitlines()))<=width
+        assert max(map(cell_len,text.splitlines()))<=width
     normalized=' '.join(' '.join(line.strip(' │╭╮╰╯').split()) for line in text.splitlines())
     assert '800' in normalized and 'fixed global prototype reference' in normalized
     if name=='candidate':

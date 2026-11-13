@@ -136,7 +136,7 @@ def render_batch_report(report, console=None):
         rows.append([f"{entry['request_index']} / {entry['source_line']}",entry['designation'],
                      r['status']+reuse,f"{r['classification']}\n{score}"])
     footer=('Rank: uncalibrated ranking units, not sigma. Origin probability and significance: unavailable. Missing is not zero. '
-            'Repeated rows are not independent evidence. Session history requires explicit export.')
+            'Repeated rows are not independent evidence. This view alone is not a storage acknowledgement; export portable copies explicitly.')
     if console is None:
         print(title);print(' | '.join(columns))
         from .object_review import literal
@@ -150,3 +150,26 @@ def render_batch_report(report, console=None):
         from .object_review import literal
         for row in rows:table.add_row(*(Text(literal(cell)) if i!=3 else Text(cell) for i,cell in enumerate(row)))
         console.print(table);console.print(Text(footer));console.print(Text('Batch report ID: '+report['batch_report_id']))
+
+
+def render_batch_progress(job, console=None):
+    """Display the host's verified execution read model; no invented pending reports."""
+    from .object_review import literal
+    title=f"Stored batch progress — {job['status']} (not a terminal batch report)"
+    rows=[[str(item['request_index']),item['designation'],item['execution_status'],
+           'ready checkpoint' if item['checkpoint_ready'] else 'not ready']
+          for item in job['request_outcomes']]
+    footer='Not assessed means no acknowledged report, not zero anomaly. No origin or significance conclusion.'
+    if console is None:
+        print(title)
+        print('Row | Designation | Retained execution | Checkpoint')
+        for row in rows:print(' | '.join(literal(cell) for cell in row))
+        print(footer)
+    else:
+        from rich.table import Table
+        from rich.text import Text
+        table=Table(title=Text(title),expand=True)
+        for name in ('Row','Designation','Retained execution','Checkpoint'):
+            table.add_column(name,overflow='fold')
+        for row in rows:table.add_row(*(Text(literal(cell)) for cell in row))
+        console.print(table);console.print(Text(footer))

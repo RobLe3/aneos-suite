@@ -3283,3 +3283,43 @@ No new bounded context, database, inference engine, origin probability or incomp
 API contract. Existing best-effort background analysis persistence remains for compatible object
 views; it is not made durable by this change. Users must explicitly export full
 session request history. Durable execution remains #15.
+
+## ADR-095 — Recover batch execution in the existing SQL job queue
+
+**2026-11-13; #15/#2/#41.** Reuse JobStore's admission, owner-scoped reads,
+idempotency, immutable checkpoints, leases and retry budget for primary batch work.
+Extract the existing network worker's execution/heartbeat/fencing machinery into a
+shared driver; keep NetworkWorker's registered contract and behavior. Batch is a
+new registered handler, not another queue, database, classifier or bounded context.
+
+A batch request freezes original input/line policy, source configuration fingerprint,
+canonical analysis/policy versions, report creation time and retry budget before
+provider work. Print a recovery/idempotency key before submission; acknowledge a
+job only after its SQL readback. The local-menu owner is a fixed trusted application
+scope, not authentication or OS-user isolation. No untrusted request chooses it.
+Require explicit writable file-SQLite configuration rather than silently initializing
+the checked-in research database. Read-only historical inspection remains separate.
+
+Extend canonical batch execution with an optional result-checkpoint callback. Unlike
+an observational progress callback, failure of this acknowledgement is fatal: it
+cannot be swallowed into success. Preserve existing bounded concurrent scheduling.
+Commit each report before acknowledging it; retries reuse ready checkpoints and
+reacquire only transient failures. Retain every attempted outcome immutably. On
+retry exhaustion, a processed source failure remains an explicit unavailable report,
+not zero or a natural verdict. Interrupted/incomplete execution never claims a
+complete scientific report. Terminal output must reproduce the stored input and
+selected committed report checkpoints; fully checkpointed recovery needs no provider.
+
+Owner-scoped checkpoint inspection supports partial progress and completed readback.
+Targeted queue claims select a known job without executing unrelated queued work.
+Lease attempt limits are fenced along with request/kind/token. Cancellation and stale
+workers cannot checkpoint/finish; in-flight provider calls may still complete but
+cannot commit after loss of authority. There is no exactly-once remote-I/O promise.
+
+Primary option 3 may submit or resume by saved job ID/recovery key. Existing batch
+browser/export receives only verified committed terminal reports. Queue retries and
+partial states remain visible, not promoted to completed screening. Synchronous local
+execution and non-daemon heartbeats are explicitly hosted; imports start no work.
+No automatic daemon service, source monitoring, external backup or version bump.
+Scientific inference/calibration and other job families remain unqualified until
+their separate acceptance evidence exists.

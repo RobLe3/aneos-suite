@@ -66,3 +66,18 @@ not just a generic score summary. Candidate and not-flagged controls are inspect
 at all three Rich widths and in plain text. A first assertion incorrectly expected
 the low-inclination enhancement for the 180-degree candidate fixture; the expanded
 controls now check the actual policy conditions separately, without changing scores.
+
+
+## Durability follow-up, ADR-095
+
+Current development option 3 uses the existing SQL queue and asks for a resume token
+before new-file selection. QA uses an explicit disposable SQLite database; it must
+not initialize a research default. Existing before/after inputs remain synthetic.
+Static Rich exports explicitly disable interactive animation: repeated Live spinner
+frames were concatenated by `export_text()` and are not a single viewport row.
+Width assertions use display cells (including Unicode width), not codepoint counts.
+This does not qualify live animation, TERM=dumb, or every terminal/font combination.
+Fresh-instance primary-menu resume and killed-process recovery are covered by
+`test_durable_batch_jobs.py`; see the durable batch guide for acknowledgement and
+cancellation limits. Earlier session-only statements describe PR92's evidence horizon,
+not current primary-menu storage behavior.

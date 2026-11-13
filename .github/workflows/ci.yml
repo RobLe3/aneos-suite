@@ -26,7 +26,7 @@ jobs:
         run: python -m pytest tests/ aneos_core/tests/ -m "not network" -v --tb=short --cov=aneos_core --cov-report=term-missing --cov-fail-under=30
 
       - name: Verify durable job store component coverage
-        run: python -m pytest tests/test_durable_job_store.py -q --tb=short --cov=aneos_api.job_store --cov-report=term-missing --cov-fail-under=85
+        run: python -m pytest tests/test_durable_job_store.py tests/test_durable_batch_jobs.py -q --tb=short --cov=aneos_api.job_store --cov-report=term-missing --cov-fail-under=85
 
       - name: Verify population report component coverage
         run: python -m pytest tests/test_network_evidence_report.py tests/test_pattern_api.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-network-report.ini --cov-report=term-missing --cov-fail-under=90
@@ -37,8 +37,11 @@ jobs:
       - name: Verify durable network API component coverage
         run: python -m pytest tests/test_durable_network_api.py tests/test_pattern_api.py tests/test_api_bootstrap_contract.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-api.ini --cov-report=term-missing --cov-fail-under=85
 
+      - name: Verify durable batch execution, recovery and shared lease driver
+        run: python -m pytest tests/test_durable_batch_jobs.py tests/test_network_job_worker.py tests/test_batch_menu_accounting.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-batch-jobs.ini --cov-report=term-missing --cov-fail-under=90
+
       - name: Verify canonical batch request accounting and actual menu history
-        run: python -m pytest tests/test_batch_menu_accounting.py tests/test_menu_v2_e2e.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-batch-report.ini --cov-report=term-missing --cov-fail-under=95
+        run: python -m pytest tests/test_batch_menu_accounting.py tests/test_menu_v2_e2e.py tests/test_durable_batch_jobs.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-batch-report.ini --cov-report=term-missing --cov-fail-under=95
 
       - name: Verify application identity and real menu-entry renders
         run: python -m pytest tests/test_application_identity.py -q --tb=short

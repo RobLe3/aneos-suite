@@ -94,6 +94,7 @@ class JobLease:
     request: dict
     kind: str
     lease_until: float
+    max_attempts: int = 3
 
 
 MAX_PAYLOAD_BYTES = 16 * 1024 * 1024
@@ -353,6 +354,15 @@ class JobStore:
             if not session.query(DurableJob).filter_by(job_id=job_id,owner_scope=owner).first():return None
             return [self._event_view(r) for r in session.query(JobEvent).filter_by(job_id=job_id).order_by(JobEvent.revision)]
 
+    def read_checkpoints(self, owner_scope, job_id):
+        """Verified owner-scoped inspection, including completed and partial jobs."""
+        owner=_scope(owner_scope)
+        with self._transaction(read_only=True) as session:
+            row=session.query(DurableJob).filter_by(job_id=job_id,owner_scope=owner).first()
+            if row is None:return None
+            self._view(session,row)
+            return {r.key:self._checkpoint_view(r) for r in session.query(JobCheckpoint).filter_by(job_id=job_id)}
+
     def _release(self, session):
         changed=session.execute(update(DurableQueue).where(DurableQueue.name==self.QUEUE,
             DurableQueue.active>0,DurableQueue.active<=DurableQueue.capacity,DurableQueue.schema_version==1).values(active=DurableQueue.active-1)).rowcount
@@ -374,11 +384,12 @@ class JobStore:
             self._release(session);self._event(session,job_id,returned.revision,'cancelled',now,returned.attempts)
             return True
 
-    def claim(self, worker_id, *, lease_seconds=30, kinds=None):
+    def claim(self, worker_id, *, lease_seconds=30, kinds=None, job_id=None):
         worker_id=_identifier(worker_id,'worker ID',100);duration=_positive(lease_seconds,'lease');now=self._now()
         if kinds is not None:
             if not kinds:raise ValueError('An empty worker kind scope is not a wildcard')
             kinds=[_identifier(kind,'kind',80) for kind in kinds]
+        if job_id is not None:_identifier(job_id,'job ID',64)
         eligible=or_(and_(DurableJob.status.in_(['queued','retry_wait']),DurableJob.available_at<=now),
                      and_(DurableJob.status=='running',DurableJob.lease_until<=now))
         for _ in range(20):
@@ -386,6 +397,7 @@ class JobStore:
                 self._queue(session)
                 query=select(DurableJob).where(eligible)
                 if kinds is not None:query=query.where(DurableJob.kind.in_(kinds))
+                if job_id is not None:query=query.where(DurableJob.job_id==job_id)
                 row=session.execute(query.order_by(DurableJob.available_at,DurableJob.created_at,DurableJob.job_id).limit(1)).scalar_one_or_none()
                 if row is None:return None
                 # Lock the selected revision without changing its event revision.
@@ -413,15 +425,17 @@ class JobStore:
                 if returned:
                     self._event(session,row.job_id,returned.revision,'claimed',now,returned.attempts,
                                 {'recovered_expired_lease':recovering})
-                    return JobLease(row.job_id,token,returned.attempts,request,row.kind,now+duration)
+                    return JobLease(row.job_id,token,returned.attempts,request,row.kind,now+duration,row.max_attempts)
         return None  # Contention, not evidence of an empty scientific population.
 
     def _fenced_update(self, session, lease, now, *, lease_seconds=None, **values):
-        if not isinstance(lease,JobLease):raise LostLease('Invalid execution lease')
+        if not isinstance(lease,JobLease) or type(lease.max_attempts) is not int:
+            raise LostLease('Invalid execution lease')
         request_digest=_json(lease.request)[1]
         identity=[DurableJob.job_id==lease.job_id,DurableJob.status=='running',
             DurableJob.lease_token==lease.token,DurableJob.attempts==lease.attempt,
-            DurableJob.request_sha256==request_digest,DurableJob.kind==lease.kind]
+            DurableJob.request_sha256==request_digest,DurableJob.kind==lease.kind,
+            DurableJob.max_attempts==lease.max_attempts]
         # Acquire the row's write lock first. A timestamp sampled before waiting
         # for a database lock must not authorize a now-expired worker to commit.
         locked=session.execute(update(DurableJob).where(*identity)
@@ -460,13 +474,15 @@ class JobStore:
             self._event(session,lease.job_id,row.revision,'checkpoint',row.at,row.attempts,{'key':key,'sha256':digest})
 
     def checkpoints(self, lease):
-        if not isinstance(lease,JobLease):raise LostLease('Invalid execution lease')
+        if not isinstance(lease,JobLease) or type(lease.max_attempts) is not int:
+            raise LostLease('Invalid execution lease')
         request_digest=_json(lease.request)[1]
         now=self._now()
         with self._transaction(read_only=True) as session:
             active=session.query(DurableJob).filter(DurableJob.job_id==lease.job_id,DurableJob.status=='running',
                 DurableJob.lease_token==lease.token,DurableJob.attempts==lease.attempt,DurableJob.lease_until>now,
-                DurableJob.request_sha256==request_digest,DurableJob.kind==lease.kind).first()
+                DurableJob.request_sha256==request_digest,DurableJob.kind==lease.kind,
+                DurableJob.max_attempts==lease.max_attempts).first()
             if not active:raise LostLease('Execution lease is stale, expired or cancelled')
             return {r.key:self._checkpoint_view(r) for r in session.query(JobCheckpoint).filter_by(job_id=lease.job_id)}
 
@@ -478,7 +494,8 @@ class JobStore:
             self._release(session);self._event(session,lease.job_id,row.revision,'completed',row.at,row.attempts,{'result_sha256':digest})
 
     def fail(self, lease, code, *, retry_at=None):
-        if not isinstance(lease,JobLease):raise LostLease('Invalid execution lease')
+        if not isinstance(lease,JobLease) or type(lease.max_attempts) is not int:
+            raise LostLease('Invalid execution lease')
         code=_identifier(code,'error code',80);now=self._now()
         if not re.fullmatch('[A-Z][A-Z0-9_]*',code):raise ValueError('Use a bounded public error code, not exception/URL/credential text')
         if retry_at is not None and (isinstance(retry_at,bool) or not isinstance(retry_at,(int,float)) or not math.isfinite(retry_at) or retry_at<=now):

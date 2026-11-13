@@ -1,8 +1,8 @@
 # Batch screening: requests are not independent objects
 
 Development increment under #41/#12/#15/#44; ADR-094. Not in the published
-v2.2.0b2 tag. The primary menu's option 3 now uses the existing bounded
-`AnalysisPipeline.analyze_batch`. It does not restore a legacy origin classifier.
+v2.2.0b2 tag. The primary menu's option 3 uses the existing bounded
+`AnalysisPipeline.analyze_batch` through the [SQL job host](durable-batch-execution.md). It does not restore a legacy origin classifier.
 
 ## Input and execution
 
@@ -72,9 +72,11 @@ not acquire observations. Request context and the original frozen report remain
 in each imported record. Dashboard counts distinguish input records from distinct
 exact labels; repeats are not independent evidence.
 
-Session batch history is not automatically restart-safe. Existing best-effort object
-analysis DB writes are preserved, but a successful screen is not a durable batch
-archive acknowledgement. Explicitly export full history; durable jobs remain #15.
+The current development primary-menu path acknowledges a SQL batch job before
+execution and materializes only a committed result. Resume using its job ID/recovery
+key after restart; completed replay does not poll. Standalone report construction
+does not persist anything. Existing best-effort object-analysis summaries are not
+the authoritative batch archive. Other job families and operational recovery remain #15.
 Checksums establish consistency, not initial source authenticity or tamper-proofing.
 
 ## Verification and remaining limits
