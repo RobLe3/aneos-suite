@@ -202,7 +202,15 @@ class ANEOSMenuV2(ANEOSMenuBase):
             row_index = int(row) - 1
             if not 0 <= row_index < len(report['requests']):
                 raise ValueError('Request row number is outside this batch')
-            text = render_screening_markdown(report['requests'][row_index]['report'])
+            item = report['requests'][row_index]['report']
+            if item['screening_assessment'] is not None:
+                from aneos_core.analysis.object_review import build_assessment_review, render_object_review
+                from aneos_core.data.models import NEOData
+                neo = NEOData.from_dict(item['neo_data']) if item['neo_data'] is not None else None
+                review = build_assessment_review(item['screening_assessment'], neo=neo)
+                render_object_review(review, console=self.console, verbose=True)
+                return
+            text = render_screening_markdown(item)
             if self.console:
                 from rich.markdown import Markdown
                 self.console.print(Markdown(text))
