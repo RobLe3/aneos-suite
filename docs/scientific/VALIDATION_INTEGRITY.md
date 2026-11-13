@@ -1,3 +1,19 @@
+> **Pause checkpoint — 2026-11-13:** main contains the qualified engineering work
+> through PR95, not independently calibrated science. Retained legacy Monte Carlo
+> harnesses have confirmed counting/generation/interpretation defects and must not
+> support FPR or five-sigma claims. Remediation is preserved on a separate unqualified
+> WIP branch, not merged. See the [current milestone/resume record](../engineering/development-pause-2026-11-13.md).
+
+> **Active status — 2026-11-13:** dated audits/review-branch notes below preserve
+> their original evidence horizons. Several engineering changes are now on main;
+> older draft/migration labels are not current release status. See the
+> [gap/dependency review](../engineering/discovery-integrity-roadmap-review-2026-11-13.md)
+> and #2/#6/#10/#11/#86/#87. No independently calibrated artificial-origin
+> probability, search-wide five-sigma procedure or general historical-authenticity
+> guarantee is established. Suggested sample counts in old plans are not universal
+> sufficiency thresholds. Unknown origin is not a natural control label; Brier
+> evaluation requires a predefined independently verifiable target.
+
 > **ADR-072 review-branch update (2026-11-12):** simple/advanced standalone
 > facades now use actual core screening, nullable inference and no fabricated
 > name/hash/failure fallbacks. Their impact bridge inventories prerequisites,

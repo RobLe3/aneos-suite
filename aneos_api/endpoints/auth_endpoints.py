@@ -41,10 +41,12 @@ if HAS_FASTAPI:
             python -c "import secrets; print(secrets.token_hex(32))"
         """
         if audience is not None:
-            from ..network_access import AUDIENCE, get_runtime, issue_token
-            if audience != AUDIENCE:raise HTTPException(422,'Unsupported token audience')
+            from ..network_access import ISSUERS, get_runtime, issue_token
+            if audience not in ISSUERS:raise HTTPException(422,'Unsupported token audience')
+            if len(request.headers.getlist('x-api-key'))!=1 or request.headers.get('authorization') is not None:
+                raise HTTPException(401,'Use one API key for scoped token issuance')
             runtime=get_runtime(request)
-            return TokenResponse(access_token=issue_token(runtime.store.sessions,api_key))
+            return TokenResponse(access_token=issue_token(runtime.store.sessions,api_key,audience=audience))
         if not api_key:
             raise HTTPException(status_code=401, detail='X-API-Key header required')
         user = API_KEY_MAP.get(api_key)

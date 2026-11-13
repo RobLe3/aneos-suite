@@ -208,14 +208,17 @@ def test_actual_source_adapter_to_cache_to_menu_detector_and_api_report(payload,
 
 
 @pytest.mark.asyncio
-async def test_actual_api_get_and_batch_preserve_a3_without_scalar_thrust(payload, monkeypatch):
+async def test_actual_api_get_and_batch_preserve_a3_without_scalar_thrust(payload, monkeypatch,tmp_path):
     from aneos_core.data.models import OrbitalElements
     from aneos_api.endpoints import analysis
     from aneos_core.detection.validated_sigma5_artificial_neo_detector import ValidatedSigma5ArtificialNEODetector
     ng, _ = parsed_ng(payload)
     neo = NEOData('SYNTHETIC', orbital_elements=OrbitalElements(
         semi_major_axis=1.2, eccentricity=.2, inclination=1.5), nongrav=ng)
-    monkeypatch.setattr('aneos_core.data.fetcher.DataFetcher.fetch_neo_data', lambda *a, **kw: neo)
+    acquisitions=[]
+    def fetch(self,designation,**kwargs):
+        acquisitions.append(designation);return neo
+    monkeypatch.setattr('aneos_core.data.fetcher.DataFetcher.fetch_neo_data',fetch)
     monkeypatch.setattr('aneos_core.data.fetcher.DataFetcher.fetch_multiple', lambda *a, **kw: {'SYNTHETIC': neo})
     monkeypatch.setattr('aneos_core.data.sources.horizons.HorizonsSource.fetch_orbital_history', lambda *a, **kw: [])
     monkeypatch.setattr(analysis, '_persist_detection_result', lambda *a: None)
@@ -227,12 +230,22 @@ async def test_actual_api_get_and_batch_preserve_a3_without_scalar_thrust(payloa
         return original(self, evidence, *args, **kwargs)
     monkeypatch.setattr(ScreeningAnalysisService, 'analyze_neo', spy)
     get = await analysis.detect_neo('SYNTHETIC', False, None)
-    monkeypatch.setitem(analysis._batch_store, 'ng-test', {'results': [], 'completed': 0, 'failed': 0})
-    await analysis._run_batch_detection('ng-test', ['SYNTHETIC'])
-    batch = analysis._batch_store['ng-test']['results'][0]
+    import asyncio
+    from aneos_api.batch_jobs import default_runtime
+    from aneos_core.analysis.batch_reporting import parse_input
+    monkeypatch.setenv('ANEOS_DATABASE_URL',f'sqlite:///{tmp_path}/nongrav.db')
+    runtime=default_runtime()
+    try:
+        submitted=runtime.submit(parse_input(b'SYNTHETIC\n','ng.txt'),'ng-test')
+        saved=await asyncio.to_thread(runtime.run,'job:'+submitted['job_id'])
+        assert saved['status']=='completed'
+        batch=saved['result']['batch_report']['requests'][0]['report']['screening_assessment']
+    finally:runtime.close()
     assert get.non_gravitational_evidence['components']['A3']['native']['value'] == 1e-12
     assert batch['non_gravitational_evidence'] == get.non_gravitational_evidence
-    assert calls == [ng.to_dict(), ng.to_dict()]
+    # Durable report generation/readback adds replays of the same frozen evidence.
+    assert len(calls)>=2 and all(value==ng.to_dict() for value in calls)
+    assert acquisitions==['SYNTHETIC','SYNTHETIC']
     assert get.sigma_confidence is None
     assert get.evidence_snapshot["additional"]["non_gravitational_evidence"] == ng.evidence_report()
 

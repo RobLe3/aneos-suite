@@ -223,75 +223,67 @@ class TestOption2MultiEvidence:
 # ===========================================================================
 
 class TestOption3BatchDetection:
-    """Batch detection reads a file, uses fetch_multiple (concurrent), runs detector on each."""
+    """Actual canonical batch execution; no fabricated legacy detector mocks."""
 
-    def test_fetch_multiple_called_not_sequential(self, tmp_path):
-        """Must use DataFetcher.fetch_multiple, not fetch_neo_data in a loop."""
-        dfile = tmp_path / "desgs.txt"
-        dfile.write_text("99942\n2020 SO\n# comment\n\n")
-        menu = _make_menu()
+    @staticmethod
+    def _pipeline():
+        from aneos_core.analysis.pipeline import AnalysisPipeline
+        from aneos_core.data.models import NEOData, OrbitalElements
+        p = AnalysisPipeline()
+        p.data_fetcher = MagicMock()
+        p.data_fetcher.fetch_neo_data.side_effect = lambda d, **kw: NEOData(d,
+            orbital_elements=OrbitalElements(semi_major_axis=1.23, eccentricity=.2, inclination=1.49))
+        return p
 
-        neo_map = {
-            "99942": make_fake_neo_data("99942"),
-            "2020 SO": make_fake_neo_data("2020 SO"),
-        }
-        det_result = make_fake_detection_result()
-
-        with patch.object(menu, "_ask", return_value=str(dfile)), \
-             patch("aneos_core.data.fetcher.DataFetcher.fetch_multiple", return_value=neo_map) as mock_fm, \
-             patch.object(menu, "_run_detection", return_value=det_result), \
-             patch.object(menu, "_persist_detection_result_async"), \
-             patch.object(menu, "display_table") as mock_table:
+    def test_shared_batch_pipeline_is_bounded_and_concurrent(self, tmp_path):
+        import threading
+        from aneos_core.data.models import NEOData, OrbitalElements
+        p = self._pipeline()
+        p.analysis_parallel = True; p.analysis_queue_size = 2; p.pipeline_config.max_workers = 2
+        barrier = threading.Barrier(2)
+        def fetch(name, **kw):
+            barrier.wait(timeout=10)
+            return NEOData(name, orbital_elements=OrbitalElements(semi_major_axis=1.23,eccentricity=.2,inclination=1.49))
+        p.data_fetcher.fetch_neo_data.side_effect = fetch
+        path = tmp_path/'objects.txt'; path.write_text('99942\n2020 SO\n')
+        menu = _make_menu(); menu._persist_detection_result_async = MagicMock(); menu._ask = MagicMock(return_value='')
+        with patch.dict('os.environ',{'ANEOS_DATABASE_URL':f'sqlite:///{tmp_path}/jobs.sqlite'}), \
+             patch.object(menu,'browse_files',return_value=str(path)), \
+             patch('aneos_core.analysis.pipeline.AnalysisPipeline',return_value=p):
             menu._detect_batch()
+        assert p.data_fetcher.fetch_neo_data.call_count == 2
+        assert len(menu._batch_reports[0]['requests']) == 2
 
-        mock_fm.assert_called_once_with(["99942", "2020 SO"])
-
-    def test_results_table_contains_both_designations(self, tmp_path):
-        dfile = tmp_path / "desgs.txt"
-        dfile.write_text("99942\n2020 SO\n")
-        menu = _make_menu()
-
-        neo_map = {
-            "99942": make_fake_neo_data("99942"),
-            "2020 SO": make_fake_neo_data("2020 SO"),
-        }
-        det_result = make_fake_detection_result()
-
-        with patch.object(menu, "_ask", return_value=str(dfile)), \
-             patch("aneos_core.data.fetcher.DataFetcher.fetch_multiple", return_value=neo_map), \
-             patch.object(menu, "_run_detection", return_value=det_result), \
-             patch.object(menu, "_persist_detection_result_async"), \
-             patch.object(menu, "display_table") as mock_table:
+    def test_results_contain_both_designations(self, tmp_path):
+        path = tmp_path/'objects.txt'; path.write_text('99942\n2020 SO\n')
+        p = self._pipeline(); menu = _make_menu(); menu._persist_detection_result_async = MagicMock(); menu._ask = MagicMock(return_value='')
+        with patch.dict('os.environ',{'ANEOS_DATABASE_URL':f'sqlite:///{tmp_path}/jobs.sqlite'}), \
+             patch.object(menu,'browse_files',return_value=str(path)), \
+             patch('aneos_core.analysis.pipeline.AnalysisPipeline',return_value=p):
             menu._detect_batch()
+        assert [r['designation'] for r in menu._batch_reports[0]['requests']] == ['99942','2020 SO']
+        assert set(menu._detection_results) == {'99942','2020 SO'}
 
-        assert mock_table.called
-        # rows arg is positional or keyword — check either
-        call_kwargs = mock_table.call_args
-        rows = call_kwargs[1].get("rows") or (call_kwargs[0][1] if len(call_kwargs[0]) > 1 else [])
-        designations_in_rows = [r[0] for r in rows]
-        assert "99942" in designations_in_rows or len(rows) == 2
-
-    def test_none_orbital_data_skipped(self, tmp_path):
-        dfile = tmp_path / "desgs.txt"
-        dfile.write_text("MISSING\n")
-        menu = _make_menu()
-        bad_neo = MagicMock()
-        bad_neo.orbital_elements = None
-
-        with patch.object(menu, "_ask", return_value=str(dfile)), \
-             patch("aneos_core.data.fetcher.DataFetcher.fetch_multiple", return_value={"MISSING": bad_neo}), \
-             patch.object(menu, "_run_detection") as mock_det, \
-             patch.object(menu, "show_info"):
+    def test_missing_orbit_is_retained_as_inconclusive(self, tmp_path):
+        from aneos_core.data.models import NEOData
+        path = tmp_path/'objects.txt'; path.write_text('MISSING\n')
+        p = self._pipeline(); p.data_fetcher.fetch_neo_data.side_effect = lambda d,**kw: NEOData(d)
+        menu = _make_menu(); menu._persist_detection_result_async = MagicMock(); menu._ask = MagicMock(return_value='')
+        with patch.dict('os.environ',{'ANEOS_DATABASE_URL':f'sqlite:///{tmp_path}/jobs.sqlite'}), \
+             patch.object(menu,'browse_files',return_value=str(path)), \
+             patch('aneos_core.analysis.pipeline.AnalysisPipeline',return_value=p):
             menu._detect_batch()
-
-        mock_det.assert_not_called()
+        result = menu._batch_reports[0]['requests'][0]['report']
+        assert result['status'] == 'inconclusive'
+        assert result['screening_assessment']['screening_score'] is None
+        assert menu._detection_results['MISSING'].classification == 'INCONCLUSIVE'
 
     def test_missing_file_shows_error(self):
-        menu = _make_menu()
-        with patch.object(menu, "_ask", return_value="/nonexistent/path.txt"), \
-             patch.object(menu, "show_error") as mock_err:
+        menu = _make_menu(); menu._persist_detection_result_async = MagicMock(); menu._ask = MagicMock(return_value='')
+        with patch.object(menu, 'browse_files', return_value='/nonexistent/path.txt'), \
+             patch.object(menu, 'show_error') as error:
             menu._detect_batch()
-        mock_err.assert_called_once()
+        error.assert_called_once()
 
 
 # ===========================================================================

@@ -1,92 +1,96 @@
-# aNEOS Documentation
+> **Development paused, 2026-11-13:** see the [main milestone, excluded WIP and resume checklist](engineering/development-pause-2026-11-13.md). Main is newer than published v2.2.0b2; the scientific programme is incomplete.
 
-Welcome to the comprehensive documentation for the aNEOS (Advanced Near Earth Object detection System) platform.
+# aNEOS documentation
 
-## Documentation Structure
+Start here to install the engineering beta, investigate an object and understand
+what the result does—and does not—support. Application identity: **2.2.0b2**.
+The published tag and the development checkout have different capabilities.
 
-### Getting Started
-- **[Installation Guide](user-guide/installation.md)** — Complete installation and setup
-- **[Quick Start Guide](user-guide/quick-start.md)** — Get up and running quickly
-- **[Menu System Guide](user-guide/menu-system.md)** — 15-option interactive menu usage
-- **[User Guide](user-guide/user-guide.md)** — Full feature reference
-- **[Profession Guide](user-guide/profession-guide.md)** — Use-case guides by role
+## Start using the suite
 
-### Scientific Foundation
-- **[Scientific Documentation](scientific/scientific-documentation.md)** — Full methodology: Bayesian framework, Fisher's method, sigma-5 threshold, indicator categories
-- **[Artificial NEOs Theory](scientific/theory.md)** — The core hypothesis: statistical signatures of artificial vs natural heliocentric objects
-- **[Validation Integrity Audit](scientific/VALIDATION_INTEGRITY.md)** — Honest uncertainty assessment: what the F1=1.00 on N=4 actually means
+1. [Installation](user-guide/installation.md): isolated Python environment and database.
+2. [Quick start](user-guide/quick-start.md): query, save, inspect and interpret a result.
+3. [Menu guide](user-guide/menu-system.md): actual option labels and prerequisites.
+4. [Beta release guide](releases/2.2.0b2.md): workflows supported by the published tag.
 
-### Architecture
-- **[Architecture Decision Records](architecture/ADR.md)** — 60 ADRs documenting every significant design choice
-- **[Domain-Driven Design](architecture/DDD.md)** — 11 Bounded Contexts: entities, value objects, domain events, context boundaries
+The development-only [root CAD workflow](engineering/root-cad-workflow.md) is not
+in v2.2.0b2. Follow its explicit request and enrichment budgets when testing that
+checkout. Other root bulk discovery routes remain unavailable.
 
-### API Reference
-- **[REST API Reference](api/rest-api.md)** — Key endpoint documentation
-- **[OpenAPI Specification](api/openapi.json)** — Machine-readable, auto-generated (regenerate: `make spec`)
+## Interpret evidence and results
 
-### Engineering
-- **[Maturity Assessment](engineering/maturity_assessment.md)** — Stabilization findings and outstanding risks
-- **[Sigma-5 Success Criteria](engineering/sigma5_success_criteria.md)** — Acceptance criteria for detection quality
+| Question | Scoped contract reference |
+|---|---|
+| What does the ranking mean? | [Screening result semantics](engineering/screening-result-contract.md) |
+| Which application paths share analysis? | [Core analysis](engineering/core-analysis-contract.md) and [legacy adapters](engineering/legacy-menu-contract.md) |
+| What was queried and what is missing? | [Acquisition receipts and coverage](engineering/object-acquisition-ledger.md) |
+| Do value and uncertainty belong together? | [Atomic physical evidence](engineering/atomic-physical-evidence.md) |
+| How are A1/A2/A3 represented? | [Non-gravitational evidence](engineering/nongrav-evidence-contract.md) |
+| What do dates and epochs mean? | [Object chronology](engineering/object-chronology.md) and [native orbital epochs](engineering/native-orbital-epochs.md) |
+| How is local history retained? | [Evidence ledger](engineering/durable-enrichment-ledger.md) |
+| Can I replay a saved report? | [Dashboard/report loading](engineering/polling-dashboard-screening.md) |
+| What impact claims are supported? | [External Sentry evidence](engineering/sentry-impact-contract.md) and [entry-point limits](engineering/impact-entrypoint-contract.md) |
+| Which statistical claims are withheld? | [Validation integrity](scientific/VALIDATION_INTEGRITY.md) |
 
-### Deployment
-- **[Deployment Guide](deployment/deployment-guide.md)** — Docker and production setup
+Some engineering notes retain their original branch/version labels. They describe
+scoped contracts, not the installation status of every checkout; use the release
+guide and actual installed behavior to determine availability.
 
-### Troubleshooting
-- **[Installation Issues](troubleshooting/installation.md)** — Installation-specific troubleshooting
-- **[Troubleshooting Guide](troubleshooting/troubleshooting-guide.md)** — Common issues and fixes
+No current score alone establishes origin, calibrated discovery significance or
+impact risk. Completeness percentages need an explicit denominator; field presence
+is not scientific fitness. See the [README](../README.md#understand-a-result) for
+a plain-language interpretation of candidate, not-flagged and inconclusive results.
 
-### Release Notes
-- **[Current State Summary](current-state-summary.md)** — v1.2.2 capabilities, limitations, and architecture overview
-- **[v0.7.0 Release Notes](releases/v0.7.0.md)** — Legacy branch information
+## API and configuration
 
-### Archive
-- **[docs/archive/](archive/)** — Superseded phase plans and gap analyses (kept for historical reference)
+Start the local API with an explicit loopback host as described in the
+[quick start](user-guide/quick-start.md). Its running `/docs` and `/openapi.json`
+describe the installed routes. They are not guarantees of authentication or science
+readiness. The checked-in [REST reference](api/rest-api.md) and
+[OpenAPI snapshot](api/openapi.json) may lag the running application; verify the
+route before integrating it. Do not infer deployment readiness from a schema.
 
-## Quick Navigation
+- [Configuration reference](reference/configuration-reference.md)
+- [Policy inspection and controlled configuration](engineering/truthful-policy-menu.md)
+- [Primary-menu durable batch jobs](engineering/durable-batch-execution.md)
+- [Owned durable REST batches](engineering/durable-batch-api.md)
+- [Statistical utility inputs and limits](engineering/statistical-utility-contract.md)
+- [Durable job storage](engineering/durable-job-store.md) and
+  [resumable network worker](engineering/resumable-network-worker.md): scoped families,
+  not proof that every legacy task survives failure.
 
-### For Scientists and Researchers
-- Start with: [Artificial NEOs Theory](scientific/theory.md)
-- Methodology: [Scientific Documentation](scientific/scientific-documentation.md)
-- Honest caveats: [Validation Integrity Audit](scientific/VALIDATION_INTEGRITY.md)
-- Menu guide: [Menu System Guide](user-guide/menu-system.md)
+## Research and architecture
 
-### For Developers / Contributors
-- Start with: [CONTRIBUTING.md](../CONTRIBUTING.md) in the project root
-- Architecture: [ADR.md](architecture/ADR.md) + [DDD.md](architecture/DDD.md)
-- API: [REST API Reference](api/rest-api.md)
+- [1998 KY26 historical baseline](case-studies/1998-KY26/baseline.md)
+- [Programme #2](https://github.com/RobLe3/aneos-suite/issues/2)
+- [Current roadmap](../ROADMAP.md) and
+  [discovery/integrity review](engineering/discovery-integrity-roadmap-review-2026-11-13.md)
+- [Architecture decisions](architecture/ADR.md) and [DDD](architecture/DDD.md)
 
-### For New Users
-- [Quick Start Guide](user-guide/quick-start.md)
-- [Installation Guide](user-guide/installation.md)
-- [Troubleshooting Guide](troubleshooting/troubleshooting-guide.md)
+Architecture documents include historical designs and future contracts. Read their
+status notes before treating a design as implemented or independently validated.
+The roadmap keeps exploratory anomalies, data integrity, follow-up ranking and
+physical-origin inference separate.
 
-## Getting Help
+## Historical and not-yet-reconciled pages
 
-1. **Run the menu** — `python aneos.py` then choose Option 14 (Scientific Help) or Option 11 (System Health)
-2. **Check the documentation** — most questions are answered in [Scientific Documentation](scientific/scientific-documentation.md)
-3. **Community forum** — https://community.openastronomy.org/t/open-source-python-tool-for-checking-neo-anomalies-aneos/1374
-4. **GitHub issues** — https://github.com/RobLe3/aneos-suite/issues
+The older [scientific methodology](scientific/scientific-documentation.md),
+[theory](scientific/theory.md), [full user reference](user-guide/user-guide.md),
+[profession guide](user-guide/profession-guide.md),
+[deployment guide](deployment/deployment-guide.md) and
+[current-state summary](current-state-summary.md) have **not** completed the current
+claim-by-claim review. Their probability, sigma, maturity, route and deployment
+claims are not current validation evidence. Prefer the scoped references and release guide above.
+These pages remain available for history and the continuing documentation audit.
 
-## 📖 Documentation Conventions
+The [entry-guide archive](archive/entry-guides-2026-11-13/README.md) preserves the
+superseded README, index and introductory guides. The
+[review record](engineering/entry-documentation-review-2026-11-13.md) states the
+checked scope, example results and remaining gaps; it does not certify every page.
 
-- **Code blocks** - Executable commands and code examples
-- **File paths** - Relative to project root unless specified
-- **Environment variables** - Configuration options
-- **Menu paths** - Interactive menu navigation (e.g., Menu → Scientific Analysis → Single NEO Analysis)
+## Contribute or report a problem
 
-## 🔄 Keeping Documentation Updated
-
-The documentation is version-controlled with the code. When contributing:
-
-1. Update relevant documentation with code changes
-2. Follow the existing documentation structure
-3. Include examples and use cases
-4. Test all command examples
-5. Update this index when adding new documentation
-
----
-
-**Project Version**: 1.2.2 (Phase 24)
-**Documentation Last Updated**: 2026-03-11
-**Maintainer**: aNEOS Development Team
-**Community**: https://community.openastronomy.org/t/open-source-python-tool-for-checking-neo-anomalies-aneos/1374
+Follow [CONTRIBUTING.md](../CONTRIBUTING.md). Include the version/commit, exact
+command or menu option, expected/actual behavior and source availability. Redact
+credentials and private observations. Link changed examples to executable tests;
+label synthetic controls and network-dependent steps explicitly.

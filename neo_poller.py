@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
-"""
-NEO Poller - Comprehensive NEO API Polling and Analysis System
+"""Root CAD candidate collection, persisted evidence and shared screening.
 
-This module provides menu-driven access to multiple NEO data sources
-with configurable time periods for systematic artificial NEO detection.
-
-Based on the original neos_o3high_v6.19.1.py approach but simplified
-and focused on the core mission of finding artificial NEOs.
+Other bulk source discovery paths remain withdrawn; named-object acquisition uses
+shared adapters. Ranking is uncalibrated and cannot establish physical origin.
 """
 
 from aneos_core.data.provider_http import session_get as provider_session_get
@@ -59,14 +55,10 @@ except ImportError:
 
 
 class NEOPoller:
-    """
-    Comprehensive NEO polling system with multiple API sources and time periods.
-    
-    Supports:
-    - Multiple NEO APIs (NASA CAD, SBDB, NEODyS, MPC)
-    - Flexible time periods (1m to 200y)
-    - Artificial NEO detection
-    - Batch processing with progress tracking
+    """Compatibility entrypoint for bounded CAD collection and shared screening.
+
+    Rich/plain menus, explicit exports and source-aware missing states are retained.
+    Other root bulk source paths remain unavailable pending their own qualification.
     """
     
     def __init__(self):
@@ -88,21 +80,21 @@ class NEOPoller:
             'NASA_SBDB': {
                 'name': 'NASA Small Body Database',
                 'url': 'https://ssd-api.jpl.nasa.gov/sbdb.api',
-                'description': 'Detailed orbital and physical data',
+                'description': 'Bulk discovery unavailable; use named-object adapters',
                 'time_support': False,
                 'batch_capable': False
             },
             'MPC': {
                 'name': 'Minor Planet Center',
                 'url': 'https://www.minorplanetcenter.net/iau/MPCORB.html',
-                'description': 'Comprehensive orbital elements',
+                'description': 'Bulk discovery unavailable; use named-object adapters',
                 'time_support': False,
                 'batch_capable': True
             },
             'NEODyS': {
                 'name': 'NEODyS Database',
                 'url': 'https://newton.spacedys.com/neodys/',
-                'description': 'NEO orbital dynamics',
+                'description': 'Bulk discovery unavailable; use named-object adapters',
                 'time_support': False,
                 'batch_capable': True
             }
@@ -126,7 +118,7 @@ class NEOPoller:
             'max': {'name': 'Maximum (200 Years)', 'delta': relativedelta(years=200)}
         }
         
-        # Artificial NEO detection thresholds (from original script)
+        # Retained legacy configuration only; never used for canonical classification.
         self.detection_thresholds = {
             'orbital_eccentricity': 0.95,
             'retrograde_inclination': 150,
@@ -136,7 +128,7 @@ class NEOPoller:
         }
         
         print(f"aNEOS {APPLICATION_VERSION} — NEO poller")
-        print("Bulk polling temporarily unavailable; shared per-object screening is available.")
+        print("Bounded CAD collection available; other bulk discovery paths remain temporarily unavailable. No calibrated origin inference.")
     
     def parse_custom_time_period(self, input_str: str) -> Optional[relativedelta]:
         """
@@ -176,44 +168,24 @@ class NEOPoller:
             
         return None
     
-    def fetch_cad_data(self, start_date: str, end_date: str, limit: int = 5000) -> Optional[Dict[str, Any]]:
+    def fetch_cad_data(self, start_date: str, end_date: str, limit: int = 1000) -> Optional[Dict[str, Any]]:
+        """Compatibility native payload, now committed through shared acquisition.
+
+        Row budget is 1..1000. Valid empty is a source payload, not an outage.
+        Failed outcomes remain archived and are returned as unavailable, not fake rows.
         """
-        Fetch Close Approach Data from NASA API.
-        
-        Args:
-            start_date: Start date (YYYY-MM-DD)
-            end_date: End date (YYYY-MM-DD)
-            limit: Maximum number of records
-            
-        Returns:
-            CAD data dictionary or None if failed
-        """
-        try:
-            params = {
-                'date-min': start_date,
-                'date-max': end_date,
-                'sort': 'date',
-                'limit': limit
-            }
-            
-            response = provider_session_get(self.session, self.apis['NASA_CAD']['url'], params=params, timeout=30)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            if 'data' in data and len(data['data']) > 0:
-                return data
-            else:
-                print(f"⚠️  No NEO data found for period {start_date} to {end_date}")
-                return None
-                
-        except requests.RequestException as e:
-            print(f"❌ Error fetching CAD data: {e}")
-            return None
-        except json.JSONDecodeError as e:
-            print(f"❌ Invalid JSON response: {e}")
-            return None
-    
+        from aneos_core.data.candidate_discovery import CADCandidateService
+        import base64
+        service = getattr(self, 'candidate_service', None) or CADCandidateService()
+        saved = service.poll(start_date, end_date, limit=limit, object_policy='cad-physical-v1')
+        self.last_poll_result = saved
+        self._last_candidate_rows = None
+        self._last_invocation = None
+        self._show_collection_receipt(saved)
+        if saved['receipt']['outcome'] in ('available', 'partial', 'missing'):
+            return json.loads(base64.b64decode(saved['receipt']['response']['body_base64'], validate=True))
+        return None
+
     def fetch_sbdb_data(self, designation: str) -> Optional[Dict[str, Any]]:
         """
         Fetch detailed data from NASA Small Body Database.
@@ -319,15 +291,16 @@ class NEOPoller:
         """Display API selection menu and return selected API."""
         if self.console:
             # Rich interface
-            table = Table(title="🌐 Available NEO APIs", show_header=True, header_style="bold blue")
+            table = Table(title="🌐 Root discovery sources", show_header=True, header_style="bold blue")
             table.add_column("ID", style="cyan", no_wrap=True)
             table.add_column("API Name", style="green")
-            table.add_column("Description", style="white")
-            table.add_column("Time Support", style="yellow")
+            table.add_column("Bulk discovery", style="yellow", min_width=11)
+            table.add_column("Use", style="white")
             
             for api_id, api_info in self.apis.items():
-                time_support = "✅" if api_info['time_support'] else "❌"
-                table.add_row(api_id, api_info['name'], api_info['description'], time_support)
+                status = 'Bounded CAD' if api_id == 'NASA_CAD' else 'Unavailable'
+                meaning = 'Native Earth encounter collection' if api_id == 'NASA_CAD' else 'Named-object adapters remain separate'
+                table.add_row(api_id, api_info['name'], status, meaning)
             
             console.print(table)
             console.print("\n💡 [bold cyan]Recommendation:[/bold cyan] Use NASA_CAD for time-based polling")
@@ -336,14 +309,14 @@ class NEOPoller:
             
         else:
             # Basic interface
-            print("\n🌐 Available NEO APIs:")
+            print("\n🌐 Root discovery sources:")
             print("=" * 60)
             for i, (api_id, api_info) in enumerate(self.apis.items(), 1):
                 time_support = "✅" if api_info['time_support'] else "❌"
                 print(f"{i}. {api_id}")
                 print(f"   Name: {api_info['name']}")
                 print(f"   Description: {api_info['description']}")
-                print(f"   Time Support: {time_support}")
+                print(f"   Bulk discovery: {'Bounded CAD' if api_id == 'NASA_CAD' else 'Unavailable'}")
                 print()
             
             print("💡 Recommendation: Use NASA_CAD for time-based polling")
@@ -415,19 +388,99 @@ class NEOPoller:
         
         return period
     
-    def poll_and_analyze(self, api_choice: str, time_period: str, max_results: int = 1000) -> List[Dict[str, Any]]:
-        """Controlled deprecation: root legacy candidate inference is not scientific evidence.
+    def _poll_date(self):
+        return datetime.datetime.now(datetime.timezone.utc).date()
 
-        These source-schema/missing-value/synthetic-score defects are tracked in#73.
-        Use the typed per-object DataFetcher and canonical screening path. Native
-        retrieval helpers remain available; this does not declare discovery polling fixed.
-        """
-        raise NotImplementedError(
-            'Legacy candidate polling/inference is temporarily unavailable (#73). '
-            'Use python aneos.py analyze DESIGNATION for typed per-object acquisition; '
-            'no synthetic scores or missing-as-zero measurements are returned.'
-        )
-    
+    def poll_and_analyze(self, api_choice: str, time_period: str, max_results: int = 1000,
+                         *, enrich_objects: int = 0) -> List[Dict[str, Any]]:
+        """One committed CAD query; explicit bounded enrichment, shared screening."""
+        self.last_poll_result = None
+        self._last_candidate_rows = None
+        self._last_replay = False
+        if api_choice != 'NASA_CAD':
+            raise NotImplementedError('This bulk discovery source is temporarily unavailable (#73); '
+                                      'named-object acquisition uses the shared adapters.')
+        if not HAS_DATEUTIL:
+            raise ValueError('Exact calendar periods require installed python-dateutil')
+        delta = self.parse_custom_time_period(time_period)
+        end = self._poll_date()
+        if delta is None:
+            raise ValueError('Invalid requested calendar period')
+        start = end - delta
+        if not end - relativedelta(years=200) <= start < end:
+            raise ValueError('Choose a positive period of at most 200 calendar years')
+        from aneos_core.polling.root_candidate_controller import RootCandidateController
+        controller = RootCandidateController(getattr(self, 'candidate_service', None),
+                                             getattr(self, 'fetcher_factory', None),
+                                             on_collection=self._collection_committed,
+                                             on_object=self._object_progress)
+        try:
+            saved, rows = controller.poll(start.isoformat(), end.isoformat(), max_results,
+                                          enrich_objects=enrich_objects)
+        except Exception as exc:
+            if getattr(exc, 'candidate_query', None) is not None:
+                if self.last_poll_result is None:
+                    self._collection_committed(exc.candidate_query)
+                print('Object enrichment/analysis failed; collection is archived, no completed analysis returned.')
+            raise
+        self.last_poll_result = saved
+        from aneos_core.data.enrichment import clone
+        self._last_candidate_rows = clone(rows)
+        self._last_invocation = (api_choice, time_period)
+        self._last_enrichment_budget = enrich_objects
+        if enrich_objects:
+            from aneos_core.analysis.dashboard_view import message
+            outside = max(0, len(rows) - enrich_objects)
+            message(f"Additional acquisition budget: {enrich_objects}; objects outside budget: {outside}. CAD was reused, not polled again.", self.console)
+        return rows
+
+    def _collection_committed(self, saved):
+        """Acknowledge durable input before potentially slow optional providers."""
+        from aneos_core.data.enrichment import clone
+        self.last_poll_result = clone(saved)
+        self._show_collection_receipt(saved)
+
+    def _object_progress(self, event):
+        from aneos_core.analysis.dashboard_view import message
+        if event['phase'] == 'started':
+            message(f"Object acquisition {event['position']}/{event['planned_objects']} (budget {event['object_budget']}): {event['designation']} started; waiting on configured providers. CAD is reused.", self.console)
+        else:
+            names = ', '.join(event['new_source_contributions']) or 'none'
+            message(f"{event['designation']}: {event['status']}; new contributing adapters: {names}.", self.console)
+            c = event['coverage']
+            message(f"Data-contributing adapters: {c['contributing_sources']}/{c['planned_sources']} (CAD reused); not scientific completeness.", self.console)
+            states = ', '.join(o['source']+': '+o['status'] for o in event['source_outcomes'] if o['status'] != 'available')
+            if states:
+                message('Other source outcomes: '+states+'.', self.console)
+
+    def replay_candidate_query(self, query_id):
+        """Read committed collection evidence only; never poll or enrich."""
+        from aneos_core.polling.root_candidate_controller import RootCandidateController
+        saved, rows = RootCandidateController(getattr(self, 'candidate_service', None)).replay(query_id)
+        self.last_poll_result = saved
+        from aneos_core.data.enrichment import clone
+        self._last_candidate_rows = clone(rows)
+        self._last_invocation = None
+        self._last_replay = True
+        self._show_collection_receipt(saved)
+        return rows
+
+    def _show_collection_receipt(self, saved):
+        from aneos_core.analysis.dashboard_view import message
+        r = saved['receipt']
+        count = 'not available' if r['native_count'] is None else str(r['native_count'])
+        total = 'not available' if r['native_total'] is None else str(r['native_total'])
+        message(f"CAD collection: {r['outcome']} | rows {count} / matching {total} | "
+                f"objects admitted {r['object_count']} | coverage {r['selection_coverage']}", self.console)
+        parameters = r['request']['parameters']
+        message(f"Window: {parameters['date-min']} to {parameters['date-max']} (native calendar); requested row cap: {parameters['limit']}.", self.console)
+        message(f"Committed query {r['query_id']} | native body: {saved['native_body_status']}", self.console)
+        if r['diagnostic']:
+            message('Recorded diagnostic: '+r['diagnostic']+'; no substitute object measurements.', self.console)
+        message('Selection: predicted Earth encounters within 0.05 au; native TDB calendar dates. '
+                'UTC calendar date chooses the requested window, not a converted observation time. '
+                'One collection request; no pagination. Scientific completeness/origin not established.', self.console)
+
     async def launch_analysis_dashboard(self, results: List[Dict[str, Any]]):
         """Display supplied records; opening a dashboard does not export or poll."""
         dashboard = self.display_results(results)
@@ -455,25 +508,37 @@ class NEOPoller:
     def save_results(self, results: List[Dict[str, Any]], api_choice: str, time_period: str):
         """Explicit exclusive JSON/Markdown export, preserving requested context."""
         from aneos_core.analysis.poller_presentation import export
-        return export(results, self.console, {
+        context = {
             'requested_source': api_choice, 'requested_period': time_period,
             'semantics': 'Requested invocation context, not verified source/date coverage',
-        })
+        }
+        if (getattr(self, '_last_invocation', None) == (api_choice, time_period)
+                and getattr(self, '_last_candidate_rows', None) == results
+                and getattr(self, 'last_poll_result', None) is not None):
+            context['candidate_collection'] = self.last_poll_result
+            context['requested_additional_object_budget'] = self._last_enrichment_budget
+        elif (getattr(self, '_last_replay', False)
+                and getattr(self, '_last_candidate_rows', None) == results
+                and getattr(self, 'last_poll_result', None) is not None):
+            context['candidate_collection'] = self.last_poll_result
+            context['mode'] = 'read_only_collection_replay_not_original_invocation'
+        return export(results, self.console, context)
+
 
     def run_interactive_menu(self):
         """Run the interactive NEO polling menu."""
         if self.console:
             console.print(Panel.fit(
-                "🚀 [bold blue]NEO Poller - Artificial NEO Detection System[/bold blue] 🚀\n"
-                "Poll multiple NEO APIs across different time periods\n"
-                "Systematically search for potentially artificial objects",
+                "🚀 [bold blue]NEO Poller - Evidence-aware candidate collection[/bold blue] 🚀\n"
+                "Collect bounded CAD encounters; other bulk sources unavailable\n"
+                "Uncalibrated screening; missing prerequisites remain explicit",
                 border_style="blue"
             ))
         else:
             print("\n" + "=" * 60)
-            print("🚀 NEO Poller - Artificial NEO Detection System 🚀")
-            print("Poll multiple NEO APIs across different time periods")
-            print("Systematically search for potentially artificial objects")
+            print("🚀 NEO Poller - Evidence-aware candidate collection 🚀")
+            print("Collect bounded CAD encounters; other bulk sources unavailable")
+            print("Uncalibrated screening; missing prerequisites remain explicit")
             print("=" * 60)
         
         try:
@@ -514,7 +579,7 @@ class NEOPoller:
                 results = self.poll_and_analyze(api_choice, time_period, max_results)
                 
                 end_time = time.time()
-                print(f"⏱️  Analysis completed in {end_time - start_time:.1f} seconds")
+                print(f"⏱️  Collection workflow finished in {end_time - start_time:.1f} seconds")
                 
                 # Display results
                 self.display_results(results)
@@ -540,7 +605,7 @@ class NEOPoller:
 def main():
     """Main entry point for NEO Poller."""
     parser = argparse.ArgumentParser(
-        description="NEO Poller - Poll multiple NEO APIs for artificial object detection",
+        description="Bounded persisted CAD candidate collection and shared screening",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -556,7 +621,9 @@ Examples:
     parser.add_argument('--period', default='1m',
                        help='Time period (e.g., 1d, 1m, 1y, max)')
     parser.add_argument('--max-results', type=int, default=1000,
-                       help='Maximum results to analyze')
+                       help='Maximum native CAD rows (1..1000), not all matching objects')
+    parser.add_argument('--enrich-objects', type=int, default=0, help='Explicit additional object acquisitions (0..20), default none; each uses the installed provider plan/retries')
+    parser.add_argument('--browse', action='store_true', help='Explicitly open the interactive result browser after collection')
     parser.add_argument('--list-apis', action='store_true',
                        help='List available APIs and exit')
     parser.add_argument('--list-periods', action='store_true',
@@ -564,10 +631,12 @@ Examples:
     
     args = parser.parse_args()
     
+    if not args.api and (args.enrich_objects or args.browse):
+        parser.error('--enrich-objects/--browse require explicit --api mode')
     poller = NEOPoller()
     
     if args.list_apis:
-        print("\n🌐 Available NEO APIs:")
+        print("\n🌐 Root discovery sources:")
         for api_id, api_info in poller.apis.items():
             time_support = "✅" if api_info['time_support'] else "❌"
             print(f"  {api_id:12} - {api_info['name']}")
@@ -586,16 +655,24 @@ Examples:
     if args.api:
         # Direct execution mode
         print(f"🔄 Direct polling mode: {args.api} for period {args.period}")
-        results = poller.poll_and_analyze(args.api, args.period, args.max_results)
-        poller.display_results(results)
+        from aneos_core.utils.errors import EvidencePersistenceError
+        try:
+            results = (poller.poll_and_analyze(args.api, args.period, args.max_results, enrich_objects=args.enrich_objects)
+                       if args.enrich_objects else poller.poll_and_analyze(args.api, args.period, args.max_results))
+        except (ValueError, EvidencePersistenceError, NotImplementedError) as exc:
+            print(f"Collection unavailable: {exc}", file=sys.stderr)
+            return 2
+        dashboard = poller.display_results(results)
         if poller.save_results(results, args.api, args.period) is None:
             return 1
         
         # Launch dashboard if results are available
-        if results:
+        saved = getattr(poller, 'last_poll_result', None)
+        if saved and saved['receipt']['outcome'] not in ('available', 'partial', 'missing'):
+            return 2
+        if results and args.browse:
             try:
-                import asyncio
-                asyncio.run(poller.launch_analysis_dashboard(results))
+                poller._interactive_object_explorer(dashboard)
             except Exception as e:
                 print(f"⚠️ Dashboard launch failed: {e}")
     else:

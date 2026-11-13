@@ -134,30 +134,29 @@ print(f"Classification: {result['anomaly_score']['classification']}")
 
 ### Batch Analysis
 
-Analyze multiple NEOs in a single request.
+**Endpoint:** `POST /api/v1/analysis/analyze/batch`. Requires a verified persistent
+API key or a separately issued `batch-jobs-v1` bearer token; analyst/admin may submit.
+Use a client-retained `Idempotency-Key`. The existing `status_url` reads only the
+owning principal's SQL job, not a process dictionary. No universal duration estimate.
 
-**Endpoint**: `POST /api/v1/analysis/analyze/batch`
-
-**Request**:
 ```json
 {
-  "designations": ["2024 AB123", "2024 BX1", "2024 CY2"],
+  "designations": ["1998 KY26", "1998 KY26"],
   "force_refresh": false,
-  "include_raw_data": false,
-  "progress_webhook": "https://your-app.com/progress"
+  "include_raw_data": false
 }
 ```
 
-**Response**:
-```json
-{
-  "batch_id": "batch_20250804_103000",
-  "status": "processing",
-  "total_neos": 3,
-  "estimated_completion": "5-15 minutes",
-  "progress_url": "/api/v1/analysis/batch/batch_20250804_103000/status"
-}
-```
+Acknowledgement includes `batch_id`/`job_id`, native `execution_status`, `status`,
+`total_neos`, `status_url` and `execution_storage=sql_durable`. IDs and outcomes are
+runtime-generated, not the historical timestamp example previously shown here.
+Status preserves every request occurrence and explicit unavailable/pending states;
+exact duplicate labels reuse a frozen report. Non-null `progress_webhook` and
+unknown options are rejected, not silently implemented.
+
+See [durability, authenticated examples, counts, raw projection and recovery limits](../engineering/durable-batch-api.md).
+New owned cancellation: `DELETE /api/v1/analysis/batch/{batch_id}`; evidence is retained.
+Processing completion is not scientific validation or measurement completeness.
 
 ### Get Analysis Results
 
@@ -702,7 +701,8 @@ inputs; the full observational fit/calibration capability is still unavailable.
 `force_refresh` reaches DataFetcher. `include_indicators=false` omits descriptive
 proxy diagnostics from the compatibility score view, not the canonical assessment.
 `include_raw_data` controls the typed source-data sidecar. The existing batch
-route now forwards refresh/raw-data flags; its jobs are still in-memory.
+route forwards refresh/raw-data flags through the registered SQL batch handler
+(ADR097); see its separately authenticated scope above.
 No designation-only result cache is read by `/analyze`.
 
 Analysis JSON export retains a structured assessment and reproducibility metadata;

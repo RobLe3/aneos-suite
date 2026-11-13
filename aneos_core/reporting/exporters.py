@@ -218,6 +218,39 @@ class Exporter:
         self.logger.info(f"JSON export saved to {output_path}")
         return str(output_path)
     
+    def export_batch_report(self, report, output_file=None, format='json'):
+        """Exclusive, finite JSON/CSV batch history; no legacy origin/count summary."""
+        from aneos_core.analysis.batch_reporting import verify_batch_report
+        report = verify_batch_report(report)
+        if format not in ('json', 'csv'):
+            raise ValueError('Batch export format must be json or csv')
+        if output_file is None:
+            stamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+            output_file = f"batch_{stamp}_{report['batch_report_id'][:12]}.{format}"
+        path = self.output_dir / output_file
+        if format == 'json':
+            text = json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False) + '\n'
+            with path.open('x', encoding='utf-8') as stream:
+                stream.write(text)
+        else:
+            # Keep the full frozen envelope once, not one copy per request row.
+            fields = ['request_index','source_line','designation','reused_exact_request',
+                      'status','classification','screening_score','report_json','batch_envelope_json']
+            with path.open('x', encoding='utf-8', newline='') as stream:
+                writer = csv.DictWriter(stream, fieldnames=fields)
+                writer.writeheader()
+                for i, entry in enumerate(report['requests']):
+                    item = entry['report'];assessment = item.get('screening_assessment') or {}
+                    name = entry['designation']
+                    # Human spreadsheet cells are formula-safe; canonical JSON retains exact identity.
+                    display_name = "'" + name if name.lstrip().startswith(('=', '+', '-', '@')) else name
+                    writer.writerow({**{k:entry[k] for k in fields[:4]},'designation':display_name,
+                        'status':item['status'],'classification':item['classification'],
+                        'screening_score':assessment.get('screening_score'),
+                        'report_json':json.dumps(item, ensure_ascii=False, allow_nan=False),
+                        'batch_envelope_json':json.dumps(report, ensure_ascii=False, allow_nan=False) if i == 0 else ''})
+        return str(path)
+
     def export_to_xml(self, data: List[Dict[str, Any]], 
                      output_file: Optional[str] = None,
                      include_metadata: bool = True) -> str:

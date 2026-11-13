@@ -6,50 +6,7 @@ from hashlib import sha256
 from .screening import ScreeningAnalysisService
 
 
-def _software_metadata():
-    """Read-only run metadata; file hashes are not a dependency lock or signature."""
-    import sys
-    import subprocess
-    from importlib.metadata import version, PackageNotFoundError
-    from pathlib import Path
-    root = Path(__file__).resolve().parents[2]
-    commit, dirty = None, None
-    try:
-        revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root,
-            capture_output=True, text=True, timeout=2, check=True)
-        status = subprocess.run(['git', '--no-optional-locks', 'status', '--porcelain'], cwd=root,
-            capture_output=True, text=True, timeout=2, check=True)
-        commit, dirty = revision.stdout.strip(), bool(status.stdout.strip())
-    except (OSError, subprocess.SubprocessError):
-        pass  # A packaged/non-Git installation is explicitly unknown, never clean.
-    packages = {}
-    for name in ('numpy', 'scipy', 'pydantic', 'SQLAlchemy', 'requests', 'astroquery'):
-        try:
-            packages[name] = version(name)
-        except PackageNotFoundError:
-            packages[name] = None
-    modules = ['aneos_version.py', 'aneos_core/analysis/pipeline.py', 'aneos_core/analysis/screening.py',
-        'aneos_core/analysis/reporting.py', 'aneos_core/analysis/object_review.py',
-        'aneos_core/analysis/artificial_neo_dashboard.py', 'aneos_core/analysis/dashboard_view.py', 'aneos_core/analysis/dashboard_browser.py',
-        'aneos_core/data/physical_evidence.py', 'aneos_core/data/epoch_evidence.py', 'simple_neo_analyzer.py',
-        'aneos_core/analysis/advanced_aneos_analyzer.py', 'aneos_core/analysis/impact_evidence.py',
-        'aneos_core/interfaces/unified_analysis.py', 'aneos_core/data/models.py',
-        'aneos_core/data/orbit_evidence.py', 'aneos_core/data/fetcher.py',
-        'aneos_core/data/sources/sbdb.py', 'aneos_core/data/sources/horizons.py',
-        'aneos_core/data/sources/mpc.py', 'aneos_core/data/sources/neodys.py',
-        'aneos_core/data/acquisition.py', 'aneos_core/data/chronology.py', 'aneos_core/analysis/chronology_view.py', 'aneos_core/data/neodys_evidence.py', 'aneos_core/data/reconciliation.py',
-        'aneos_core/data/enrichment.py', 'aneos_core/data/cache.py',
-        'aneos_api/enrichment_store.py', 'aneos_api/acquisition_repository.py',
-        'aneos_core/detection/validated_sigma5_artificial_neo_detector.py']
-    hashes = {name:sha256((root/name).read_bytes()).hexdigest() if (root/name).is_file() else None
-        for name in modules}
-    return {'application_version':APPLICATION_VERSION, 'build_channel':BUILD_CHANNEL,
-        'repository_commit':commit, 'working_tree_dirty':dirty,
-        'python_version':sys.version.split()[0], 'package_versions':packages,
-        'float_mantissa_bits':sys.float_info.mant_dig, 'float_epsilon':sys.float_info.epsilon,
-        'source_hashes_at_report_time':hashes,
-        'limitations':'Source-file hashes describe files at report time, not loaded bytecode, authentication or a complete environment lock. Dirty code must be preserved separately to reproduce it.'}
-
+from ..utils.reproducibility import software_metadata as _software_metadata
 
 def build_screening_report(result, additional_evidence=None, impact_assessment=None):
     payload = getattr(result, 'screening_assessment', None)
@@ -109,21 +66,50 @@ def _report_hash(report):
 
 
 def verify_screening_report(report):
+    if not isinstance(report, dict):
+        raise ValueError('Expected a versioned screening report object')
     if report.get('schema_version') != 'scientific-screening-report-v1' or report.get('report_id') != _report_hash(report):
         raise ValueError('Report fingerprint/schema mismatch')
     for key in ('is_artificial', 'artificial_probability', 'confidence_level', 'confidence', 'sigma_statistical_level'):
         if key in report and report[key] is not None:
             raise ValueError('Unsupported standalone scientific claim in screening report')
+    if (report.get('five_sigma_claim_permitted') is not False or
+        report.get('scientific_validation_status') != 'unavailable_uncalibrated' or
+        report.get('validation_status') != 'unavailable_uncalibrated'):
+        raise ValueError('No calibrated discovery/validation contract is installed')
+    metadata = report.get('analysis_metadata')
+    if not isinstance(metadata, dict) or metadata.get('five_sigma_claim_permitted', False) is not False:
+        raise ValueError('Report metadata cannot authorize uncalibrated discovery claims')
     assessment = report.get('screening_assessment')
+    if assessment is not None and not isinstance(assessment, dict):
+        raise ValueError('Expected a canonical assessment object or unavailable')
+    if assessment is not None and report.get('designation') != assessment.get('designation'):
+        raise ValueError('Report object identity differs from assessment')
+    errors = report.get('errors')
+    if not isinstance(errors, list) or any(not isinstance(error, str) for error in errors):
+        raise ValueError('Report errors must be an explicit list of messages')
+    if assessment is None:
+        failed = {'source_unavailable', 'service_unavailable', 'evidence_persistence_unavailable', 'invalid_evidence',
+                  'failed', 'unavailable', 'inconclusive'}
+        if report.get('classification') != 'INCONCLUSIVE' or report.get('status') not in failed or not errors:
+            raise ValueError('Missing assessment cannot establish successful screening or a candidate')
     if assessment is not None:
+        expected_status = 'completed' if assessment.get('screening_score') is not None else 'inconclusive'
+        if report.get('classification') != assessment.get('classification') or report.get('status') != expected_status:
+            raise ValueError('Report execution/classification contradicts its assessment')
         service = ScreeningAnalysisService()
         replay = service.replay(assessment['evidence_snapshot'], assessment['evidence_id'])
         if replay.policy_id != assessment['policy_id'] or replay.to_payload() != assessment:
             raise ValueError('Report assessment cannot be replayed under the current policy')
+        for key, value in assessment['analysis_metadata'].items():
+            if key in metadata and metadata[key] != value:
+                raise ValueError('Report metadata contradicts its canonical assessment')
     if report.get('neo_data') is not None:
         from aneos_core.data.models import NEOData
         from aneos_core.validation.review_evidence import freeze_review_inputs
         neo = NEOData.from_dict(report['neo_data'])
+        if neo.designation != report.get('designation'):
+            raise ValueError('Report object identity differs from source snapshot')
         _, review_id = freeze_review_inputs(neo)
         if review_id != report.get('review_input_id'):
             raise ValueError('Report review-input fingerprint mismatch')

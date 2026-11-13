@@ -1,5 +1,9 @@
 # Durable authenticated network API
 
+Later extension: [ADR097 REST batch integration](durable-batch-api.md) adds a separately
+scoped batch audience and serial registered dispatch to the same execution host.
+Network tokens retain network-only authority. The original scope below remains bounded.
+
 2026-11-13. Scope: existing population job submission/status, owned cancellation,
 scoped credentials and app-managed worker lifecycle; #15/#17/#6. ADR-079.
 

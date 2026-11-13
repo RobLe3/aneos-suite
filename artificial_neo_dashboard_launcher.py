@@ -31,7 +31,7 @@ async def launch_dashboard_from_file(file_path: str):
         polling_results = records_from_file(data)
 
         print(f"📂 Loading results from: {file_path}")
-        print(f"📊 Found {len(polling_results)} objects to analyze")
+        print(f"📊 Found {len(polling_results)} input records to inspect")
         
         # Create and display dashboard
         dashboard = await create_dashboard_from_polling(

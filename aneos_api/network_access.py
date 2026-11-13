@@ -1,7 +1,7 @@
-"""Fresh, scoped credentials for persistent network jobs; never development mocks.
+"""Fresh, separately scoped credentials for persistent jobs; never development mocks.
 
 Uses existing SQL users/configured API keys and python-jose. Scoped tokens require
-explicit issuance through /auth/token?audience=network-jobs-v1. Legacy unscoped
+explicit issuance through /auth/token with network-jobs-v1 or batch-jobs-v1. Legacy unscoped
 or role-only bearer tokens cannot authorize persistent job access.
 """
 from dataclasses import dataclass
@@ -16,6 +16,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 AUDIENCE='network-jobs-v1'
 ISSUER='aneos-network-v1'
+BATCH_AUDIENCE='batch-jobs-v1'
+ISSUERS={AUDIENCE:ISSUER,BATCH_AUDIENCE:'aneos-batch-v1'}
 key_header=APIKeyHeader(name='X-API-Key',auto_error=False)
 bearer_header=HTTPBearer(auto_error=False)
 
@@ -67,21 +69,23 @@ def authenticate_key(sessions,key):
     return next(iter(unique))
 
 
-def issue_token(sessions,key):
+def issue_token(sessions,key,*,audience=AUDIENCE):
     from . import auth
+    if audience not in ISSUERS:raise HTTPException(422,'Unsupported token audience')
     principal=authenticate_key(sessions,key)
     if not auth._HAS_JOSE or not _valid_key(auth._JWT_SECRET):
         raise HTTPException(503,'Scoped token signing unavailable')
     now=int(time.time())
     return auth._jose_jwt.encode({'sub':principal.subject,'credential_id':principal.credential_id,
-        'iat':now,'exp':now+86400,'aud':AUDIENCE,'iss':ISSUER},auth._JWT_SECRET,algorithm='HS256')
+        'iat':now,'exp':now+86400,'aud':audience,'iss':ISSUERS[audience]},auth._JWT_SECRET,algorithm='HS256')
 
 
-def authenticate_token(sessions,token):
+def authenticate_token(sessions,token,*,audience=AUDIENCE):
     from . import auth
+    if audience not in ISSUERS:raise HTTPException(401,'Unsupported token audience')
     if not auth._HAS_JOSE or not _valid_key(auth._JWT_SECRET):raise HTTPException(401,'Scoped bearer authentication unavailable')
     try:
-        payload=auth._jose_jwt.decode(token,auth._JWT_SECRET,algorithms=['HS256'],audience=AUDIENCE,issuer=ISSUER,
+        payload=auth._jose_jwt.decode(token,auth._JWT_SECRET,algorithms=['HS256'],audience=audience,issuer=ISSUERS[audience],
             options={'require_exp':True,'require_sub':True,'require_iat':True,'require_aud':True,'require_iss':True})
         issued=payload['iat']
         if type(issued) not in (int,float) or not math.isfinite(issued) or issued>time.time():raise ValueError('Invalid issued time')
@@ -102,20 +106,28 @@ def authenticate_token(sessions,token):
 def get_runtime(request):
     from .network_runtime import NetworkRuntime
     runtime=getattr(request.app.state,'network_runtime',None)
-    if not isinstance(runtime,NetworkRuntime):raise HTTPException(503,'Persistent network runtime not started')
+    if not isinstance(runtime,NetworkRuntime):raise HTTPException(503,'Persistent execution runtime not started')
     return runtime
 
 
-def require_network_principal(request:Request,api_key=Security(key_header),bearer=Security(bearer_header)):
+def _request_principal(request,api_key,bearer,*,audience):
     if (len(request.headers.getlist('x-api-key'))>1 or len(request.headers.getlist('authorization'))>1 or
         (request.headers.get('x-api-key') is not None and request.headers.get('authorization') is not None)):
         raise HTTPException(401,'Use one credential mechanism')
     runtime=get_runtime(request)
     if api_key:principal=authenticate_key(runtime.store.sessions,api_key)
-    elif bearer:principal=authenticate_token(runtime.store.sessions,bearer.credentials)
+    elif bearer:principal=authenticate_token(runtime.store.sessions,bearer.credentials,audience=audience)
     else:raise HTTPException(401,'Authentication required')
     if principal.role not in ('viewer','analyst','admin'):raise HTTPException(403,'Unsupported account role')
     return principal
+
+
+def require_network_principal(request:Request,api_key=Security(key_header),bearer=Security(bearer_header)):
+    return _request_principal(request,api_key,bearer,audience=AUDIENCE)
+
+
+def require_batch_principal(request:Request,api_key=Security(key_header),bearer=Security(bearer_header)):
+    return _request_principal(request,api_key,bearer,audience=BATCH_AUDIENCE)
 
 
 def require_writer(principal):

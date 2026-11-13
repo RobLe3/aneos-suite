@@ -188,6 +188,38 @@ class PhysicalMeasurement:
         return cls(result)
 
     @classmethod
+    def from_cad(cls, native, context):
+        """Atomic labelled CAD row, not fabricated SBDB phys_par evidence."""
+        from .sources.cad import parse_cad_row
+        if (not isinstance(native, dict) or set(native) != {'fields', 'row', 'field', 'row_index'}
+                or native['field'] not in ('h', 'diameter')
+                or type(native['row_index']) is not int or native['row_index'] < 0
+                or not isinstance(context, dict)):
+            raise ValueError('Invalid CAD physical assertion')
+        native, context = clone(native), clone(context)
+        row = parse_cad_row(native['row'], native['fields'])
+        if row['designation'] != context.get('designation'):
+            raise ValueError('CAD physical identity mismatch')
+        name = native['field']
+        if name not in native['fields']:
+            raise ValueError('CAD physical field not supplied')
+        field = 'diameter_km' if name == 'diameter' else 'absolute_magnitude_h'
+        value = row[field]
+        sigma = row['diameter_uncertainty'] if name == 'diameter' else None
+        normalized = None if value is None else {
+            'field': field, 'value': value, 'sigma': sigma,
+            'units': 'km' if name == 'diameter' else 'mag',
+            'uncertainty_kind': 'provider_1sigma' if sigma is not None else 'not_available'}
+        result = {'schema_version': 'physical-measurement-v1', 'adapter': 'cad-physical-1.5-v1',
+                  'source': 'CAD', 'native': native, 'context': context, 'normalized': normalized,
+                  'measurement_epoch': None, 'estimation_status': 'not_provided',
+                  'evidence_basis': 'catalogued_external_assertion_not_independently_verified',
+                  'issues': ['value_not_available'] if value is None else [],
+                  'status': 'normalized' if normalized else 'not_normalized'}
+        result['assertion_id'] = fingerprint(result)
+        return cls(result)
+
+    @classmethod
     def from_dict(cls, record):
         if not isinstance(record, dict):
             raise ValueError("Invalid physical measurement")
@@ -196,6 +228,8 @@ class PhysicalMeasurement:
             actual = cls.from_sbdb(record["native"], record["context"])
         elif adapter == "neodys-oef2-photometry-v1":
             actual = cls.from_neodys(record["native"], record["context"])
+        elif adapter == "cad-physical-1.5-v1":
+            actual = cls.from_cad(record["native"], record["context"])
         else:
             raise ValueError("Unsupported physical measurement adapter")
         if actual.to_dict() != record:
@@ -225,7 +259,24 @@ def build_neodys_evidence(lines, context):
     return _build_evidence(parsed, context, adapter="neodys-oef2-photometry-v1")
 
 
+def build_cad_evidence(records, context):
+    if not isinstance(records, list):
+        raise ValueError('CAD physical records must be an array')
+    return _build_evidence([PhysicalMeasurement.from_cad(r, context).to_dict() for r in records],
+                           context, adapter='cad-physical-1.5-v1')
+
+
+def _cad_equivalence(native):
+    values = dict(zip(native['fields'], native['row']))
+    # Repeated catalogue quantities, not a claim of independent observations.
+    return {'field': native['field'], 'value': values[native['field']],
+            'sigma': values.get('diameter_sigma') if native['field'] == 'diameter' else None,
+            'orbit_id': values.get('orbit_id'), 'des': values['des']}
+
+
 def _record_field(record):
+    if record["adapter"] == "cad-physical-1.5-v1":
+        return "diameter_km" if record["native"]["field"] == "diameter" else "absolute_magnitude_h"
     if record["adapter"] == "neodys-oef2-photometry-v1":
         return "absolute_magnitude_h"
     name = record["native"]["name"]
@@ -240,7 +291,7 @@ def _build_evidence(parsed, context, adapter=None):
     unique = []
     for i, record in enumerate(parsed):
         # Equal native assertions at distinct positions are not independent evidence.
-        identity = fingerprint(record["native"])
+        identity = fingerprint(_cad_equivalence(record["native"]) if record["adapter"] == "cad-physical-1.5-v1" else record["native"])
         if identity in duplicates:
             duplicate_records[str(i)] = duplicates[identity]
             # Duplicate annotation is external to the atomic assertion payload.
@@ -279,6 +330,9 @@ def _build_evidence(parsed, context, adapter=None):
     }
     if adapter is not None:
         evidence["adapter"] = adapter
+    if adapter == "cad-physical-1.5-v1":
+        evidence["limitations"].append("Repeated equal native catalogue quantities with the same orbit reference share a representative; all rows remain. Neither encounter epoch nor retrieval time is a physical measurement date.")
+    if adapter == "neodys-oef2-photometry-v1":
         evidence["limitations"].append(
             "G is retained in native MAG records; no typed phase-slope model or independent photometry fit is supplied."
         )
@@ -302,6 +356,8 @@ def verify_physical_evidence(evidence):
             actual = build_neodys_evidence(
                 [r["native"]["line"] for r in records], context
             )
+        elif evidence.get("adapter") == "cad-physical-1.5-v1":
+            actual = build_cad_evidence([r["native"] for r in records], context)
         elif "adapter" not in evidence:
             actual = build_sbdb_evidence([r["native"] for r in records], context)
         else:

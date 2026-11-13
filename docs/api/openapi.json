@@ -400,7 +400,8 @@
         "type": "object"
       },
       "BatchAnalysisRequest": {
-        "description": "Request model for batch NEO analysis.",
+        "additionalProperties": false,
+        "description": "Bounded durable batch intent; unknown options must not be silently ignored.",
         "properties": {
           "designations": {
             "description": "List of NEO designations",
@@ -425,16 +426,9 @@
             "type": "boolean"
           },
           "progress_webhook": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Webhook URL for progress updates",
-            "title": "Progress Webhook"
+            "description": "Webhooks are not implemented; non-null values are rejected",
+            "title": "Progress Webhook",
+            "type": "null"
           }
         },
         "required": [
@@ -4004,7 +3998,7 @@
     }
   },
   "info": {
-    "description": "Uncalibrated NEO screening and scoped research evidence. Persistent network jobs require verified API credentials or scoped JWTs; development mock tokens do not authorize them. Authentication on other routes varies; see their documented contracts.",
+    "description": "Uncalibrated NEO screening and scoped research evidence. Persistent network and batch jobs require verified API credentials or correctly scoped JWTs; development mock tokens do not authorize them. Authentication on other routes varies; see their documented contracts.",
     "title": "aNEOS API",
     "version": "2.0.0",
     "x-application-version": "2.2.0b2",
@@ -4707,8 +4701,25 @@
     },
     "/api/v1/analysis/analyze/batch": {
       "post": {
-        "description": "Screen multiple NEOs using the same DataFetcher + shared service as GET /detect.\nResults remain in-memory; restart durability is tracked separately.",
         "operationId": "analyze_batch_api_v1_analysis_analyze_batch_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -4751,7 +4762,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Analyze Batch",
+        "summary": "Submit an authenticated durable canonical batch",
         "tags": [
           "Analysis"
         ]
@@ -4922,9 +4933,60 @@
         ]
       }
     },
+    "/api/v1/analysis/batch/{batch_id}": {
+      "delete": {
+        "operationId": "cancel_batch_api_v1_analysis_batch__batch_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Cancel Batch Api V1 Analysis Batch  Batch Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel an owned batch without deleting its evidence",
+        "tags": [
+          "Analysis"
+        ]
+      }
+    },
     "/api/v1/analysis/batch/{batch_id}/status": {
       "get": {
-        "description": "Get status and results of a batch detection job.",
         "operationId": "get_batch_status_api_v1_analysis_batch__batch_id__status_get",
         "parameters": [
           {
@@ -4969,7 +5031,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Get Batch Status",
+        "summary": "Read verified owned batch progress and results",
         "tags": [
           "Analysis"
         ]

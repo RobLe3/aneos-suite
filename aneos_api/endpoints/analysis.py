@@ -67,7 +67,6 @@ else:
 # Analysis cache for recent results
 _analysis_cache: Dict[str, AnalysisResponse] = {}
 _export_jobs: Dict[str, Dict[str, Any]] = {}
-_batch_store: Dict[str, Dict[str, Any]] = {}
 _network_store: Dict[str, Any] = {}
 # Detection result cache: designation → serializable dict
 _detection_cache: Dict[str, Dict[str, Any]] = {}
@@ -371,45 +370,24 @@ async def orbital_history(
         ) from exc
 
 
-@router.post("/analyze/batch", response_model=Dict[str, Any])
-async def analyze_batch(
-    request: BatchAnalysisRequest,
-    background_tasks: BackgroundTasks,
-    current_user: Optional[Dict] = Depends(get_current_user),
-):
-    """
-    Screen multiple NEOs using the same DataFetcher + shared service as GET /detect.
-    Results remain in-memory; restart durability is tracked separately.
-    """
-    batch_id = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
-    _batch_store[batch_id] = {
-        'batch_id': batch_id,
-        'status': 'processing',
-        'total': len(request.designations),
-        'completed': 0,
-        'failed': 0,
-        'results': [],
-        'started_at': datetime.now().isoformat(),
-    }
-    background_tasks.add_task(_run_batch_detection, batch_id, request.designations,
-        force_refresh=request.force_refresh, include_raw_data=request.include_raw_data)
-    return {
-        'batch_id': batch_id,
-        'status': 'processing',
-        'total_neos': len(request.designations),
-        'status_url': f'/api/v1/analysis/batch/{batch_id}/status',
-    }
+# Existing REST batch paths use the registered durable handler, never process dicts.
+from ..batch_routes import submit_batch, batch_status, cancel_batch
+router.post('/analyze/batch', response_model=Dict[str, Any],
+            operation_id='analyze_batch_api_v1_analysis_analyze_batch_post',
+            summary='Submit an authenticated durable canonical batch')(submit_batch)
+router.get('/batch/{batch_id}/status', response_model=Dict[str, Any],
+           operation_id='get_batch_status_api_v1_analysis_batch__batch_id__status_get',
+           summary='Read verified owned batch progress and results')(batch_status)
+router.delete('/batch/{batch_id}', response_model=Dict[str, Any],
+              summary='Cancel an owned batch without deleting its evidence')(cancel_batch)
 
 
-@router.get("/batch/{batch_id}/status", response_model=Dict[str, Any])
-async def get_batch_status(
-    batch_id: str,
-    current_user: Optional[Dict] = Depends(get_current_user)
-):
-    """Get status and results of a batch detection job."""
-    if batch_id not in _batch_store:
-        raise HTTPException(status_code=404, detail=f"Batch {batch_id} not found")
-    return _batch_store[batch_id]
+async def analyze_batch(*args, **kwargs):
+    raise NotImplementedError('Use authenticated durable REST batch submission')
+
+
+async def get_batch_status(*args, **kwargs):
+    raise NotImplementedError('Use owner-filtered persistent REST batch status')
 
 @router.get("/results/{designation}")
 async def get_analysis_result(
@@ -621,30 +599,10 @@ async def _log_analysis_completion(
         f"Time: {processing_time:.2f}s"
     )
 
-async def _run_batch_detection(batch_id: str, designations: List[str],
-                               force_refresh: bool = False, include_raw_data: bool = False):
-    """Use the same snapshot service as single-object screening."""
-    import asyncio
-    from aneos_core.data.fetcher import DataFetcher
-    from aneos_core.analysis.screening import ScreeningAnalysisService
-    store = _batch_store[batch_id]
-    fetcher = DataFetcher()
-    service = ScreeningAnalysisService()
-    for designation in designations:
-        try:
-            neo = await asyncio.to_thread(fetcher.fetch_neo_data, designation, force_refresh=force_refresh)
-            payload = _screening_payload(neo, service)
-            if include_raw_data:
-                payload['raw_neo_data'] = neo.to_dict()
-            store['results'].append({**payload, 'status': 'success'})
-            _detection_cache[designation] = payload
-            await asyncio.to_thread(_persist_detection_result, designation, payload)
-            store['completed'] += 1
-        except Exception as exc:
-            store['failed'] += 1
-            store['results'].append({'designation': designation, 'status': 'failed', 'error': str(exc)})
-    store['status'] = 'completed'
-    store['finished_at'] = datetime.now().isoformat()
+async def _run_batch_detection(*args, **kwargs):
+    """Controlled deprecation: acknowledged work cannot live only in process RAM."""
+    raise NotImplementedError('Use the registered SQL BatchWorker; dictionary/background execution withdrawn')
+
 
 def _run_network_analysis(*args, **kwargs):
     """Controlled deprecation: daemon/dictionary execution is not durable."""

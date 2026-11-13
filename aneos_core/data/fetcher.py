@@ -41,6 +41,7 @@ class DataFetcher:
         max_workers: int = 4,
         cache_ttl: int = 3600,
         evidence_repository=None,
+        candidate_query_id=None,
     ):
         """
         Initialize the data fetcher.
@@ -53,6 +54,7 @@ class DataFetcher:
         """
         self.logger = logging.getLogger(__name__)
         self.evidence_repository = evidence_repository
+        self.candidate_query_id = candidate_query_id
         from ..config.settings import get_config
 
         _cfg = get_config()
@@ -155,6 +157,9 @@ class DataFetcher:
             raise EvidencePersistenceError(
                 "Local evidence storage prerequisite unavailable; sources not queried"
             ) from exc
+        candidate_outcome = None
+        if source_plan.get('candidate_query_id') is not None:
+            candidate_outcome = self._committed_candidate_outcome(designation, source_plan['candidate_query_id'], repository)
         self.fetch_stats["total_requests"] += 1
         cache_key = (
             f"neo-query:object-acquisition-v1:{source_plan['plan_id']}:{designation}"
@@ -180,6 +185,12 @@ class DataFetcher:
                         or candidate["source_plan"] != source_plan
                     ):
                         raise ValueError("Cache query binding mismatch")
+                    if candidate_outcome is not None:
+                        cached_cad = next(o for o in candidate['outcomes'] if o['source'] == 'CAD')
+                        cached_parent = cached_cad['adapter_payload']['candidate_receipt']['receipt_id']
+                        actual_parent = candidate_outcome['adapter_payload']['candidate_receipt']['receipt_id']
+                        if cached_parent != actual_parent:
+                            raise EvidencePersistenceError('Cached candidate reference conflicts with committed parent; providers not queried')
                     bundle = candidate
                 except (ValueError, TypeError, KeyError):
                     self.logger.warning(
@@ -199,9 +210,10 @@ class DataFetcher:
                     "Local evidence storage prerequisite unavailable; sources not queried"
                 ) from exc
             try:
-                acquired = self._fetch_from_all_sources(
-                    designation, source_plan=source_plan
-                )
+                kwargs = {'source_plan': source_plan}
+                if candidate_outcome is not None:
+                    kwargs['candidate_outcome'] = candidate_outcome
+                acquired = self._fetch_from_all_sources(designation, **kwargs)
                 bundle = acquired._acquisition_bundle
             except DataSourceUnavailableError as exc:
                 bundle = getattr(exc, "acquisition_bundle", None)
@@ -254,12 +266,32 @@ class DataFetcher:
             getattr(self, "source_plan", None) or plan(list(self.source_priority))
         )
         if record != plan(
-            record["source_priority"], context_id=record.get("context_id")
+            record["source_priority"], context_id=record.get("context_id"), candidate_query_id=record.get("candidate_query_id")
         ):
             raise ValueError("Configured source plan is invalid")
+        if getattr(self, 'candidate_query_id', None) is not None:
+            record = plan(record['source_priority'], context_id=record.get('context_id'),
+                          candidate_query_id=self.candidate_query_id)
         return record
 
-    def _fetch_from_all_sources(self, designation: str, *, source_plan=None) -> NEOData:
+    def _committed_candidate_outcome(self, designation, query_id, repository):
+        from aneos_api.candidate_repository import CandidateQueryRepository
+        from .acquisition import adapter_to_neo, outcome, now
+        from ..utils.errors import EvidencePersistenceError
+        try:
+            saved = CandidateQueryRepository(repository.engine).load(query_id)
+            if saved is None:
+                raise ValueError('Committed collection query missing')
+            packet = {'candidate_receipt': saved['receipt']}
+            stamp = now()
+            neo = adapter_to_neo('CAD', designation, packet, stamp)
+            return outcome('CAD', designation, status='available', neo=neo, adapter_payload=packet,
+                           started_at=stamp, completed_at=stamp,
+                           basis='reused_committed_catalogue_prediction_not_new_observation')
+        except Exception as exc:
+            raise EvidencePersistenceError('Committed candidate prerequisite invalid; providers not queried') from exc
+
+    def _fetch_from_all_sources(self, designation: str, *, source_plan=None, candidate_outcome=None) -> NEOData:
         """Collect every fixed planned outcome, retaining partial/failed sources."""
         from .acquisition import (
             SUPPORTED,
@@ -276,6 +308,15 @@ class DataFetcher:
         source_plan = source_plan if source_plan is not None else self._query_plan()
         started = now()
         outcomes = {}
+        if source_plan.get('candidate_query_id') is not None:
+            from .acquisition import validate_outcome
+            if candidate_outcome is None:
+                raise ValueError('Committed CAD source prerequisite missing')
+            candidate_outcome = validate_outcome(candidate_outcome, 'CAD', designation)
+            if candidate_outcome['adapter_payload']['candidate_receipt']['query_id'] != source_plan['candidate_query_id']:
+                raise ValueError('Committed candidate source reference mismatch')
+        elif candidate_outcome is not None:
+            raise ValueError('Unexpected candidate source override')
         pending_sources = [s for s in source_plan["sources"] if s != "CAD"]
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             futures = {}
@@ -329,102 +370,105 @@ class DataFetcher:
                         adapter_payload=packet,
                         reason_code="SOURCE_OUTCOME_INVALID",
                     )
-        cad_started = now()
-        try:
-            approaches = self._fetch_close_approaches(designation)
-            metadata = getattr(approaches, "query_metadata", None)
-            if (
-                not isinstance(metadata, dict)
-                or metadata.get("api_version") != CAD_VERSION
-            ):
+        if candidate_outcome is not None:
+            outcomes['CAD'] = candidate_outcome
+        else:
+            cad_started = now()
+            try:
+                approaches = self._fetch_close_approaches(designation)
+                metadata = getattr(approaches, "query_metadata", None)
+                if (
+                    not isinstance(metadata, dict)
+                    or metadata.get("api_version") != CAD_VERSION
+                ):
+                    outcomes["CAD"] = outcome(
+                        "CAD",
+                        designation,
+                        status="unavailable",
+                        started_at=cad_started,
+                        reason_code="CAD_SCHEMA_UNVERIFIED",
+                        basis="legacy_adapter_outcome_unknown",
+                    )
+                elif metadata.get("count") != len(approaches):
+                    outcomes["CAD"] = outcome(
+                        "CAD",
+                        designation,
+                        status="invalid",
+                        started_at=cad_started,
+                        adapter_payload={"query_metadata": metadata},
+                        reason_code="CAD_RECORD_COUNT_MISMATCH",
+                    )
+                elif approaches and any(
+                    designation_key(event.designation)
+                    not in accepted_designations(designation, list(outcomes.values()))
+                    for event in approaches
+                ):
+                    outcomes["CAD"] = outcome(
+                        "CAD",
+                        designation,
+                        status="ambiguous",
+                        started_at=cad_started,
+                        adapter_payload={
+                            "query_metadata": metadata,
+                            "close_approaches": [event.to_dict() for event in approaches],
+                        },
+                        reason_code="CAD_IDENTITY_ALIAS_UNRESOLVED",
+                    )
+                elif approaches:
+                    stamp = now()
+                    neo = NEOData(
+                        designation,
+                        close_approaches=list(approaches),
+                        sources_used=["CAD"],
+                        evidence_metadata={"close_approach_query": metadata},
+                        fetched_at=datetime.fromisoformat(stamp),
+                        created_at=datetime.fromisoformat(stamp),
+                        updated_at=datetime.fromisoformat(stamp),
+                    )
+                    outcomes["CAD"] = outcome(
+                        "CAD",
+                        designation,
+                        status="available",
+                        neo=neo,
+                        started_at=cad_started,
+                        completed_at=stamp,
+                        basis="computed_encounters_not_observations",
+                    )
+                else:
+                    outcomes["CAD"] = outcome(
+                        "CAD",
+                        designation,
+                        status="missing",
+                        adapter_payload={"query_metadata": metadata},
+                        started_at=cad_started,
+                        reason_code="VALIDATED_EMPTY_ENCOUNTER_QUERY",
+                        basis="computed_encounters_not_observations",
+                    )
+            except SourcePayloadError as exc:
+                from .enrichment import clone
+
+                try:
+                    packet = clone(
+                        {"_native_response": exc.native_response, "query": exc.query}
+                    )
+                except (ValueError, TypeError):
+                    packet = None
+                outcomes["CAD"] = outcome(
+                    "CAD",
+                    designation,
+                    status="invalid",
+                    adapter_payload=packet,
+                    started_at=cad_started,
+                    reason_code="CAD_RESPONSE_NOT_ADMITTED",
+                )
+            except Exception:
                 outcomes["CAD"] = outcome(
                     "CAD",
                     designation,
                     status="unavailable",
                     started_at=cad_started,
-                    reason_code="CAD_SCHEMA_UNVERIFIED",
-                    basis="legacy_adapter_outcome_unknown",
+                    reason_code="CAD_QUERY_UNAVAILABLE",
                 )
-            elif metadata.get("count") != len(approaches):
-                outcomes["CAD"] = outcome(
-                    "CAD",
-                    designation,
-                    status="invalid",
-                    started_at=cad_started,
-                    adapter_payload={"query_metadata": metadata},
-                    reason_code="CAD_RECORD_COUNT_MISMATCH",
-                )
-            elif approaches and any(
-                designation_key(event.designation)
-                not in accepted_designations(designation, list(outcomes.values()))
-                for event in approaches
-            ):
-                outcomes["CAD"] = outcome(
-                    "CAD",
-                    designation,
-                    status="ambiguous",
-                    started_at=cad_started,
-                    adapter_payload={
-                        "query_metadata": metadata,
-                        "close_approaches": [event.to_dict() for event in approaches],
-                    },
-                    reason_code="CAD_IDENTITY_ALIAS_UNRESOLVED",
-                )
-            elif approaches:
-                stamp = now()
-                neo = NEOData(
-                    designation,
-                    close_approaches=list(approaches),
-                    sources_used=["CAD"],
-                    evidence_metadata={"close_approach_query": metadata},
-                    fetched_at=datetime.fromisoformat(stamp),
-                    created_at=datetime.fromisoformat(stamp),
-                    updated_at=datetime.fromisoformat(stamp),
-                )
-                outcomes["CAD"] = outcome(
-                    "CAD",
-                    designation,
-                    status="available",
-                    neo=neo,
-                    started_at=cad_started,
-                    completed_at=stamp,
-                    basis="computed_encounters_not_observations",
-                )
-            else:
-                outcomes["CAD"] = outcome(
-                    "CAD",
-                    designation,
-                    status="missing",
-                    adapter_payload={"query_metadata": metadata},
-                    started_at=cad_started,
-                    reason_code="VALIDATED_EMPTY_ENCOUNTER_QUERY",
-                    basis="computed_encounters_not_observations",
-                )
-        except SourcePayloadError as exc:
-            from .enrichment import clone
-
-            try:
-                packet = clone(
-                    {"_native_response": exc.native_response, "query": exc.query}
-                )
-            except (ValueError, TypeError):
-                packet = None
-            outcomes["CAD"] = outcome(
-                "CAD",
-                designation,
-                status="invalid",
-                adapter_payload=packet,
-                started_at=cad_started,
-                reason_code="CAD_RESPONSE_NOT_ADMITTED",
-            )
-        except Exception:
-            outcomes["CAD"] = outcome(
-                "CAD",
-                designation,
-                status="unavailable",
-                started_at=cad_started,
-                reason_code="CAD_QUERY_UNAVAILABLE",
-            )
         bundle = build_bundle(
             designation, source_plan, list(outcomes.values()), started_at=started
         )

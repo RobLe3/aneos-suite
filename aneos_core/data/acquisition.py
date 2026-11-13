@@ -34,7 +34,7 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
-def plan(priority, *, context_id=None):
+def plan(priority, *, context_id=None, candidate_query_id=None):
     if not isinstance(priority, (list, tuple)) or any(
         not isinstance(s, str) for s in priority
     ):
@@ -64,6 +64,13 @@ def plan(priority, *, context_id=None):
         "identity_policy": "exact_request_designation_native_alias_resolution_not_established",
         "limits": "Installed catalogue adapters plus bounded CAD, not every scientific provider, observation dataset or physical-fit requirement.",
     }
+    if candidate_query_id is not None:
+        import re
+        if not isinstance(candidate_query_id, str) or not re.fullmatch(r'cad-[a-f0-9]{32}', candidate_query_id):
+            raise ValueError('Candidate source reference requires a canonical query id')
+        record['candidate_query_id'] = candidate_query_id
+        record['profile'] = 'installed-object-catalogue-and-committed-cad-v1'
+        record['roles']['CAD'] = 'replayed_committed_collection_no_new_cad_request'
     record["plan_id"] = fingerprint(record)
     return record
 
@@ -120,6 +127,14 @@ def adapter_to_neo(source, designation, payload, stamp):
     """Normalize only named unit-bearing adapter fields; retain the whole packet separately."""
     if not isinstance(payload, dict):
         raise ValueError("Source adapter payload must be an object")
+    if source == 'CAD' and 'candidate_receipt' in payload:
+        from .candidate_discovery import replay_receipt
+        _, packets = replay_receipt(payload['candidate_receipt'])
+        matches = [p for p in packets if p['designation'] == designation]
+        if len(matches) != 1 or set(payload) != {'candidate_receipt'}:
+            raise ValueError('Committed candidate does not identify this exact object')
+        return NEOData.from_dict(matches[0]['neo_data'])
+
     if payload.get("_designation") not in (None, designation):
         raise ValueError("Source adapter designation mismatch")
     metadata = clone(payload.get("_evidence_metadata", {}))
@@ -398,7 +413,7 @@ def validate_bundle(document):
     identifier(document["designation"], "designation")
     p = document["source_plan"]
     if not isinstance(p, dict) or p != plan(
-        p.get("source_priority", []), context_id=p.get("context_id")
+        p.get("source_priority", []), context_id=p.get("context_id"), candidate_query_id=p.get("candidate_query_id")
     ):
         raise ValueError("Acquisition source plan does not reproduce")
     outcomes = document["outcomes"]
@@ -410,6 +425,10 @@ def validate_bundle(document):
     snapshots = {}
     for o in outcomes:
         o = validate_outcome(o, o["source"], document["designation"])
+        if o['source'] == 'CAD' and p.get('candidate_query_id') is not None:
+            if (o['status'] != 'available' or not isinstance(o['adapter_payload'], dict)
+                    or o['adapter_payload'].get('candidate_receipt', {}).get('query_id') != p['candidate_query_id']):
+                raise ValueError('Acquisition CAD source is not bound to committed collection reference')
         if o["status"] == "available":
             snapshots[o["source"]] = NEOData.from_dict(o["neo_data"])
     parsed = datetime.fromisoformat(document["started_at"])

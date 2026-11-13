@@ -1,389 +1,119 @@
-# aNEOS Quick Start Guide
+# Query, save and inspect one object
 
-Get up and running with aNEOS in under 5 minutes!
+This walkthrough uses **1998 KY26** to exercise the per-object engineering beta.
+It does not demonstrate artificial origin or calibrated significance. Start with
+an [isolated installation](installation.md), activate its environment and set
+`ANEOS_DATABASE_URL` to the separate beta file-SQLite database.
 
-## ⚡ Super Quick Start
-
-```bash
-# 1. Install aNEOS
-python install.py
-
-# 2. Analyze your first NEO
-python aneos.py analyze "2024 AB123"
-
-# 3. Start the interactive menu
-python aneos.py
-```
-
-That's it! You're ready to detect artificial NEOs. 🚀
-
-## 🎯 Common Use Cases
-
-### 1. Analyze a Single NEO
-
-**Command Line (Fastest):**
-```bash
-python aneos.py analyze "2024 BX1"
-```
-
-**Interactive Menu:**
-```bash
-python aneos.py
-# → 1 (Scientific Analysis)
-# → 1 (Single NEO Analysis)
-# → Enter: 2024 BX1
-```
-
-**Expected Output:**
-```
-🔬 Analyzing NEO: 2024 BX1
-
-📊 Analysis Results for 2024 BX1:
-Overall Score: 0.234
-Classification: natural
-Confidence: 0.891
-Processing Time: 1.45s
-```
-
-### 2. Start the Web Interface
+## 1. Check the entry point — offline
 
 ```bash
-# Development mode (auto-reload)
-python aneos.py api --dev
-
-# Production mode
-python aneos.py api
+python aneos.py --version
+python aneos.py analyze --help
 ```
 
-**Access:**
-- **API Documentation**: http://localhost:8000/docs
-- **Web Dashboard**: http://localhost:8000/dashboard
-- **Health Check**: http://localhost:8000/health
+The analysis help lists a designation, `--json`, `--force-refresh` and `--output`.
+These help commands do not fetch observations.
 
-### 3. Run with Docker
+## 2. Query the object — network required
 
 ```bash
-# Start all services
-python aneos.py docker
-
-# Check status
-docker-compose ps
+python aneos.py analyze "1998 KY26" --json --output beta-runtime/ky26.json
 ```
 
-**Access:**
-- **API**: http://localhost:8000
-- **Dashboard**: http://localhost:8000/dashboard
-- **Grafana**: http://localhost:3000 (admin/aneos)
+The configured source plan records provider outcomes and admitted evidence before
+returning a report. Some providers may fail, return no record or lack a requested
+measurement. A successful source response does not mean every field is available.
+A query may take time because provider-safe retries and timeouts still apply.
 
-### 4. Batch Analysis
+Use a new output path each time. `--force-refresh` bypasses the application source
+cache; it does not establish that a provider bypassed its own cache. Do not edit
+an older report to make it resemble a newer query.
 
-Create a file `neos.txt` with NEO designations:
+## 3. Understand the report
+
+Inspect these parts together:
+
+- **Identity and provenance:** designation, source outcomes, evidence references
+  and acquisition metadata. A retrieval date is not an observation date.
+- **Inputs:** native orbital/physical values, units, epochs, uncertainty and
+  covariance where supplied. Missing fields remain unavailable.
+- **Screening assessment:** raw ranking, policy identity, individual contributions
+  and limitations. Contributions can share underlying evidence.
+- **Scientific interpretation:** `FOLLOW_UP_CANDIDATE` calls for investigation;
+  `NOT_FLAGGED` is not proven natural origin; `INCONCLUSIVE` is not zero anomaly.
+
+The default threshold of 5.0 is in **ranking units**, not Gaussian sigma. Artificial
+origin probability is not calibrated. Neither a source count nor a basic-field
+percentage measures whether the evidence is sufficient for a physical hypothesis.
+The [screening contract](../engineering/screening-result-contract.md) defines the
+separate outputs and the remaining legacy ranking assumptions.
+
+Exit status 0 means a report without recorded errors, not a scientific finding.
+Status 1 means the report contains errors; status 2 means analysis or report
+creation failed. Preserve the error and source outcomes when reporting a problem.
+
+## 4. Inspect the saved report — no new acquisition
+
+```bash
+python artificial_neo_dashboard_launcher.py --file beta-runtime/ky26.json
 ```
-2024 AB123
-2024 BX1
-2024 CY2
+
+The existing dashboard loader reads the saved report and saves an exclusive bundle
+under `dashboard_results/` in the current directory. It leaves the input report
+unchanged in the tested loading path. Tables/graphics are views of
+that evidence, not additional observations or statistical validation. Keep the
+original file and its references. Do not expect a historical legacy-replay JSON
+file to have the same schema as a current screening report.
+
+For a human-readable Markdown assessment, make a separately recorded query:
+
+```bash
+python aneos.py analyze "1998 KY26" --output beta-runtime/ky26.md
 ```
 
-Then run:
+That command does not convert the saved JSON and can use a different cache/source
+state. Compare evidence and policy identifiers, not just displayed scores.
+
+## 5. Explore the interface
+
 ```bash
 python aneos.py
-# → 1 (Scientific Analysis)
-# → 2 (Batch Analysis)
-# → Enter file path: neos.txt
 ```
 
-### 5. System Health Check
+Choose 1 to screen one object, 2 to inspect screening evidence, 9 to browse results,
+10 to export, or 14 to read scientific help. The [menu guide](menu-system.md)
+explains the remaining options and their limits. An option's presence is not proof
+that its scientific prerequisites are available.
+
+To inspect the local API schema instead:
 
 ```bash
-# Quick check
-python aneos.py status
-
-# Detailed check
-python aneos.py
-# → 4 (Monitoring & Diagnostics)
-# → 4 (Health Check)
+python aneos.py api --dev --host 127.0.0.1 --port 8000
 ```
 
-## 🧭 Navigation Guide
+Open `http://127.0.0.1:8000/docs`. Keep the explicit loopback address; the server's
+underlying default is `0.0.0.0`. Do not publish this development server or interpret
+its generated schema as an authentication/deployment certification.
 
-### Main Menu Structure
-
-```
-aNEOS Main Menu
-├── 1. 🔬 Scientific Analysis
-│   ├── Single NEO Analysis
-│   ├── Batch Analysis
-│   ├── Interactive Analysis
-│   └── Results Viewer
-├── 2. 🤖 Machine Learning
-│   ├── Model Training
-│   ├── Real-time Predictions
-│   └── Model Management
-├── 3. 🌐 API Services
-│   ├── Start API Server
-│   ├── Web Dashboard
-│   └── Development Mode
-├── 4. 📊 Monitoring & Diagnostics
-│   ├── Live System Monitor
-│   ├── Health Check
-│   └── Performance Metrics
-├── 5. ⚙️ System Management
-│   ├── Database Management
-│   ├── System Cleanup
-│   └── Configuration
-├── 6. 🛠️ Development Tools
-│   ├── Run Tests
-│   ├── Debug Mode
-│   └── Code Analysis
-├── 7. 🐳 Docker & Deployment
-│   ├── Docker Compose
-│   ├── Container Status
-│   └── Kubernetes Deploy
-└── 8. 📚 Help & Documentation
-```
-
-### Command Line Shortcuts
-
-| Action | Command |
-|--------|---------|
-| Interactive Menu | `python aneos.py` |
-| Analyze NEO | `python aneos.py analyze "2024 AB123"` |
-| Start API | `python aneos.py api` |
-| Development API | `python aneos.py api --dev` |
-| Docker Services | `python aneos.py docker` |
-| System Status | `python aneos.py status` |
-| Help | `python aneos.py --help` |
-
-## 🔬 Understanding NEO Analysis Results
-
-### Anomaly Score Interpretation
-
-| Score Range | Classification | Meaning |
-|-------------|----------------|---------|
-| 0.0 - 0.3 | **Natural** | Typical natural NEO behavior |
-| 0.3 - 0.6 | **Suspicious** | Some unusual characteristics |
-| 0.6 - 0.8 | **Highly Suspicious** | Multiple anomalous indicators |
-| 0.8 - 1.0 | **Artificial** | Strong evidence of artificial origin |
-
-### Key Indicators
-
-aNEOS analyzes multiple indicators:
-- **Orbital Mechanics**: Unusual orbital elements
-- **Velocity Patterns**: Atypical velocity changes
-- **Temporal Behavior**: Irregular timing patterns
-- **Geographic Distribution**: Unusual approach patterns
-
-### Example Analysis Output
-
-```
-📊 Analysis Results for 2024 AB123:
-Overall Score: 0.756
-Classification: highly_suspicious
-Confidence: 0.923
-Processing Time: 2.31s
-
-🚨 Risk Factors:
-  • Unusual orbital eccentricity (3.2σ deviation)
-  • Velocity pattern anomaly detected
-  • Atypical approach geometry
-  • High artificial probability (ML): 0.834
-```
-
-## 🌐 Web Interface Overview
-
-### API Documentation (http://localhost:8000/docs)
-
-Interactive API documentation with:
-- All endpoint descriptions
-- Request/response examples
-- Try-it-yourself interface
-- Authentication examples
-
-### Web Dashboard (http://localhost:8000/dashboard)
-
-Real-time dashboard featuring:
-- System status overview
-- Recent analysis results
-- Performance metrics
-- Alert notifications
-- Quick analysis tools
-
-### Key Endpoints
-
-| Endpoint | Purpose |
-|----------|---------|
-| `GET /health` | System health check |
-| `POST /api/v1/analysis/analyze` | Analyze single NEO |
-| `GET /api/v1/monitoring/metrics` | System metrics |
-| `GET /api/v1/prediction/predict` | ML predictions |
-| `WebSocket /api/v1/stream/ws/{session}` | Real-time data |
-
-## 🛠️ Development Quick Start
-
-### Setting Up Development Environment
+## Historical regression — offline, development checkout
 
 ```bash
-# 1. Clone the repository
-git clone <repository-url>
-cd aneos-project
-
-# 2. Install in development mode
-python install.py --full
-
-# 3. Start development server
-python aneos.py api --dev
-
-# 4. Run tests
-python aneos.py
-# → 6 (Development Tools)
-# → 1 (Run Tests)
+python scripts/reproduce_ky26_baseline.py --output beta-runtime/ky26-legacy-replay.json
 ```
 
-### Making Your First Analysis
+This executes the verified frozen historical implementation against rounded inputs,
+without polling providers. Its legacy field names are archived behavior, not current
+origin inference. The rounded replay is 4.141288008229254; the original recorded
+4.142 display cannot be reproduced exactly without missing full-precision inputs.
+See the [baseline](../case-studies/1998-KY26/baseline.md). Choose a new output path;
+the script refuses replacement.
 
-```python
-# Quick Python script example
-import sys
-sys.path.append('.')
+## What to investigate next
 
-from aneos_core.analysis.pipeline import create_analysis_pipeline
-import asyncio
-
-async def analyze_neo(designation):
-    pipeline = create_analysis_pipeline()
-    result = await pipeline.analyze_neo(designation)
-    
-    if result:
-        score = result.anomaly_score.overall_score
-        classification = result.anomaly_score.classification
-        print(f"{designation}: {score:.3f} ({classification})")
-    else:
-        print(f"Analysis failed for {designation}")
-
-# Run analysis
-asyncio.run(analyze_neo("2024 AB123"))
-```
-
-## 🐳 Docker Quick Start
-
-### Development with Docker
-
-```bash
-# Build development image
-docker build -t aneos:dev .
-
-# Run development container
-docker run -it --rm -p 8000:8000 \
-  -v $(pwd):/app aneos:dev \
-  python aneos.py api --dev
-```
-
-### Production with Docker Compose
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Scale API instances
-docker-compose up -d --scale aneos-api=3
-
-# View logs
-docker-compose logs -f aneos-api
-
-# Stop services
-docker-compose down
-```
-
-## 🔧 Configuration Quick Setup
-
-### Environment Variables
-
-Create `.env` file:
-```bash
-# Basic configuration
-ANEOS_ENV=development
-ANEOS_LOG_LEVEL=INFO
-
-# Database
-ANEOS_DATABASE_URL=sqlite:///./aneos.db
-
-# API
-ANEOS_HOST=0.0.0.0
-ANEOS_PORT=8000
-
-# Security (change in production!)
-ANEOS_SECRET_KEY=dev-secret-key
-```
-
-### Quick Configuration Changes
-
-```bash
-# Through menu system
-python aneos.py
-# → 5 (System Management)
-# → 3 (Configuration Management)
-
-# Or edit directly
-nano .env
-```
-
-## 🚨 Quick Troubleshooting
-
-### Installation Issues
-
-```bash
-# Check system requirements
-python install.py --check
-
-# Fix dependency issues
-python install.py --fix-deps
-
-# Clean installation
-rm -rf __pycache__ *.pyc
-python install.py --full
-```
-
-### Runtime Issues
-
-```bash
-# Check system status
-python aneos.py status
-
-# View logs
-tail -f logs/aneos.log
-
-# Reset database
-rm aneos.db
-python -c "from aneos_api.database import init_database; init_database()"
-```
-
-### Common Error Solutions
-
-| Error | Solution |
-|-------|----------|
-| `ModuleNotFoundError` | `python install.py --fix-deps` |
-| `Database connection failed` | `python aneos.py` → System Management → Database |
-| `Port 8000 in use` | `python aneos.py api --port 8001` |
-| `Permission denied` | Use virtual environment or `--user` flag |
-
-## 📚 Next Steps
-
-Now that you're up and running:
-
-1. **Explore more features**: Try batch analysis and ML predictions
-2. **Read the documentation**: Check out [Menu System Guide](menu-system.md)
-3. **Set up monitoring**: Use Docker Compose for full monitoring stack
-4. **Customize configuration**: Modify `.env` for your needs
-5. **Contribute**: See [Development Guide](../development/setup.md)
-
-## 🆘 Getting Help
-
-- **Interactive help**: `python aneos.py` → Help & Documentation
-- **Command help**: `python aneos.py --help`
-- **System diagnostics**: `python aneos.py status`
-- **Installation check**: `python install.py --check`
-- **Documentation**: Browse `docs/` directory
-
----
-
-**You're all set!** Start exploring the universe of Near Earth Objects and detect potential artificial ones with aNEOS. 🌌✨
+For any candidate, verify identity, coverage, uncertainty and source conflicts
+before interpreting the rank. Seek compatible observations and compare natural
+forces and measurement/model artifacts before considering an origin hypothesis.
+Useful outcomes include a natural explanation or an explicitly unresolved case.
+Complete physical-model comparison and independent calibration remain programme
+work, not features enabled by a higher score.

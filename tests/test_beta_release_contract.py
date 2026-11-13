@@ -3,7 +3,9 @@ from unittest.mock import Mock
 import pytest
 
 @pytest.mark.parametrize('name,args',[
-    ('poll_and_analyze',('NASA_CAD','1d',1)),
+    ('poll_and_analyze',('NASA_SBDB','1d',1)),
+    ('poll_and_analyze',('MPC','1d',1)),
+    ('poll_and_analyze',('NEODyS','1d',1)),
     ('analyze_sbdb_data_for_artificial_signatures',({'object':{'des':'SYNTHETIC'}},)),
     ('analyze_cad_record_for_artificial_signatures',(['SYNTHETIC'],)),
     ('fetch_mpc_recent_neos',(1,)),('fetch_neodys_recent_neos',(1,)),

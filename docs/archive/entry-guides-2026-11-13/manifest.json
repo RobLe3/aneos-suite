@@ -1,0 +1,41 @@
+{
+  "source_commit": "00932e7004b5e903788ded285716cea6ec1403a0",
+  "status": "historical; not current instructions or validation evidence",
+  "records": [
+    {
+      "source_path": "README.md",
+      "archive_path": "docs/archive/entry-guides-2026-11-13/1-README.md.txt",
+      "sha256": "ac68a809c3e242a13ce7989553447db7cec8f6fbc9d2824214d558695bdbc1bf",
+      "bytes": 52895,
+      "lines": 1013
+    },
+    {
+      "source_path": "docs/README.md",
+      "archive_path": "docs/archive/entry-guides-2026-11-13/2-README.md.txt",
+      "sha256": "4c139965d8662dca739502d79a07b8d73a010c5ad9b336188914c4762f48c15b",
+      "bytes": 4589,
+      "lines": 92
+    },
+    {
+      "source_path": "docs/user-guide/installation.md",
+      "archive_path": "docs/archive/entry-guides-2026-11-13/3-installation.md.txt",
+      "sha256": "2315cc2e72dee84472f5a6fc598fe5320f750a6a66acd0055d6f6ee1ad43b23f",
+      "bytes": 6924,
+      "lines": 249
+    },
+    {
+      "source_path": "docs/user-guide/quick-start.md",
+      "archive_path": "docs/archive/entry-guides-2026-11-13/4-quick-start.md.txt",
+      "sha256": "13d3d546ab513f069e1af949943cb914ea04555639d4cd8378029720b2408501",
+      "bytes": 8645,
+      "lines": 389
+    },
+    {
+      "source_path": "docs/user-guide/menu-system.md",
+      "archive_path": "docs/archive/entry-guides-2026-11-13/5-menu-system.md.txt",
+      "sha256": "17307fd1b9eb1cbb524db075c4dd3fff572847f5b24e15df8fe9b1a4c9dbf5e1",
+      "bytes": 8080,
+      "lines": 415
+    }
+  ]
+}

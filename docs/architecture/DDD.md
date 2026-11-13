@@ -1,10 +1,25 @@
 # Domain-Driven Design — aNEOS Suite
 
-_Derived: 2026-03-06 | Last updated: 2026-03-10 | Codebase Version: 1.1.0_
+_Historical design basis: 2026-03-06–10 / v1.1.0. Current-status review: 2026-11-13 / v2.2.0b2 plus main 3dd47f1._
 _Concept documents: README.md, docs/scientific/scientific-documentation.md,
 docs/engineering/sigma5_success_criteria.md, Calibration Plan v1.2_
 
 ---
+
+## Active contract status — 2026-11-13
+
+The original diagrams/specifications below are a cumulative design record, not a
+claim that every feature is deployed or independently validated. Shared screening
+is an uncalibrated ranking policy (ADR-065/069); physical fitting, identity exclusion
+and calibrated significance may be unavailable. Legacy indicators do not execute in
+canonical analysis. Named SWARMs are historical components, not autonomous agents.
+
+The [discovery/integrity review](../engineering/discovery-integrity-roadmap-review-2026-11-13.md)
+records current ownership and proposed #86/#87 contracts. Reuse acquisition,
+ledger/normalization, analysis, validation, case-history and reporting boundaries.
+No new bounded context or incompatible runtime schema is introduced by this review.
+Implemented, integrated and independently validated are distinct. Dated later ADRs
+and contract corrections take precedence over older diagrams and capability claims.
 
 ## Ubiquitous Language
 
@@ -15,19 +30,19 @@ All developers, scientists, and stakeholders must use these terms consistently.
 |------|-----------|
 | **NEO** | Near Earth Object — any asteroid or comet with perihelion < 1.3 AU |
 | **Artificial NEO** | An object whose technological origin is independently supported; a screening rank alone cannot establish this |
-| **Natural NEO** | An NEO whose orbital and physical properties are consistent with solar system formation and gravitational evolution |
+| **Natural NEO** | An NEO consistent with natural physical processes, including gravitational and non-gravitational dynamics; not a default label for missing evidence |
 | **Screening score** | Uncalibrated legacy ranking heuristic; not a Gaussian-equivalent significance |
 | **Gaussian-equivalent significance** | A calibrated null-tail probability expressed on a specified Gaussian convention; unavailable in the installed screening model |
-| **Clue** | A single measurable anomaly contributing to the composite sigma score |
-| **SWARM** | A named, specialized analytical agent responsible for one physical domain of evidence |
-| **ATLAS** | Advanced automated first-stage screening system (used in `advanced_scoring.py`) |
+| **Clue** | A source-linked observation or diagnostic with explicit availability, dependence and limitations; not automatically independent evidence |
+| **SWARM** | Historical name for a domain-specific analysis component; not evidence of an autonomous agent running |
+| **ATLAS** | Legacy exploratory utilities in `advanced_scoring.py`; proxy stage-to-clue fusion is withdrawn from canonical inference |
 | **Candidate** | An NEO that has passed at least one stage of filtering and is under active investigation |
-| **Classification** | One of: `INCONCLUSIVE (σ<2) | EDGE CASE (σ≥2) | SUSPICIOUS (σ≥3) | ARTIFICIAL VALIDATED (σ≥5)` — INCONCLUSIVE replaces "NATURAL"; σ<2 is not evidence of natural origin |
-| **Calibrated probability** | Bayesian posterior P(artificial | evidence) using realistic 0.1% prior |
-| **Ground truth** | A verified dataset of objects with known true labels (artificial vs natural) |
-| **FPR** | False Positive Rate — probability of classifying a natural object as artificial |
+| **Classification** | Canonical screening includes FOLLOW_UP_CANDIDATE, NOT_FLAGGED and INCONCLUSIVE; none establishes origin or calibrated significance. Preserve historic labels under their original policies |
+| **Calibrated probability** | Probability for a defined target supported by independent calibration; unavailable for artificial origin in current screening. Choosing a prior is not calibration |
+| **Ground truth** | Independently established outcomes for a defined task; unknown origin must not be relabelled natural |
+| **FPR** | False positive rate for a specified decision target, population and frozen policy; report counts and uncertainty, not unsupported zero |
 | **Keyhole** | A small region of orbital space whose traversal leads to a resonant Earth-collision return |
-| **Non-Gravitational Parameter** | A1/A2/A3 Marsden coefficients encoding accelerations beyond gravity (Yarkovsky thermal drift or active propulsion) |
+| **Non-Gravitational Parameter** | Source-model A1/A2/A3 radial/transverse/normal coefficients with native units, estimation status, uncertainty and covariance; interpretation needs natural-force and artifact alternatives |
 | **MOID** | Minimum Orbital Intersection Distance — the minimum possible distance between two orbits regardless of timing; used as a pre-filter before expensive trajectory propagation |
 | **NEO Population** | The complete set of NEO objects submitted to a single pattern analysis session |
 | **Orbital Family** | A cluster of NEOs occupying a statistically non-random volume of (a, e, i, ω, Ω) element space, potentially sharing a dynamical origin |
@@ -35,7 +50,7 @@ All developers, scientists, and stakeholders must use these terms consistently.
 | **Resonant Group** | A subset of NEOs sharing a common Earth-synodic period within measurement uncertainty, as detected by Lomb-Scargle periodogram |
 | **Debiased Model** | A statistical NEO population model corrected for discovery survey selection effects; the Granvik et al. 2018 model is the reference for anomaly benchmarking |
 | **Network Report** | Population-level analysis output from a single `NetworkAnalysisSession`, covering all enabled sub-modules (clustering, harmonics, rendezvous, correlation) |
-| **Network Sigma** | Fisher-combined significance level across all population-level evidence streams; threshold ≥ 3.0 for NETWORK_ANOMALY, ≥ 5.0 for NETWORK_EXCEPTIONAL |
+| **Network Sigma** | Historical prototype terminology, not deployed discovery significance; requires calibrated nulls, dependence and search-wide control before scientific use |
 
 ---
 
@@ -76,7 +91,7 @@ All developers, scientists, and stakeholders must use these terms consistently.
                                (filter: σ ≥ 1.0)
 ```
 
-**BC11 context rules (live as of Phase 11; Stage 1 fully implemented):**
+**BC11 historical design rules (runtime/scientific status requires path-specific evidence):**
 - BC11 READS `NEOData` from BC1 and `DetectionResult` from BC5
 - BC11 NEVER modifies individual `NEOData` records (read-only consumer)
 - BC11 WRITES `NetworkReport` consumed by BC7 (Reporting) and BC8 (API)
@@ -1534,3 +1549,71 @@ browser callbacks, replay-bound source-listed impact filter and explicit export.
 Request context belongs to the export receipt, not measurement provenance or a
 claim of date/source coverage. Acquisition restoration remains #73; these read-only
 views do not fetch or repair missing observations.
+
+## Bounded candidate acquisition — 2026-11-13 / ADR-092
+
+Acquisition has two related aggregates: an object query with a known designation,
+and a candidate collection query whose object set is unknown before the response.
+The latter owns selection, transport outcome and native entity bytes, including
+empty/failed outcomes without invented object identities. Grouped object packets
+flow through the existing assertion/projection transaction; the collection receipt
+binds those storage references. Exact native row repeats and alternative predictive
+solutions remain traceable, not independent observations or averaged measurements.
+
+The CAD service performs one explicitly bounded source request and no analysis,
+automatic paging or additional-source enrichment. The SQL adapter owns atomic
+commit/readback, immutability guards and source-body archive storage. Presentation
+and scientific assessment remain existing consumers, not acquisition side effects.
+Raw catalogue physical values are retained pending their atomic physical adapter.
+Root/menu restoration #73 must consume committed receipts and explicitly budget
+further enrichment rather than multiplying provider calls or re-ingesting a source
+query as a fresh observation. This foundation does not establish full source coverage,
+alias resolution, scientific completeness or calibrated detection performance.
+
+### Root CAD collection integration — 2026-11-13 / ADR-093 / #84
+
+Data Acquisition owns bounded collection and explicit named-object enrichment;
+the existing evidence ledger owns receipts and original assertions. The physical
+anti-corruption layer admits only same-row native CAD assertions under an optional
+versioned receipt policy. Core shared screening owns all ranking decisions; the root
+controller and Rich/dashboard/export paths consume its result, not legacy origin
+scores. Receipt replay is read-only. No new bounded context is introduced.
+
+### Batch request history (ADR-094, additive)
+
+Core Analysis remains the owner of bounded per-object execution and scientific
+assessment. Reporting owns the versioned batch envelope of existing per-object
+reports, input/occurrence provenance, duplicate reuse and request-vs-identity counts.
+The primary menu holds session history and renders/exports that envelope through
+existing presentation/reporting boundaries. It is not a new persistence context,
+a calibrated population evaluation. ADR-094 alone did not qualify durable jobs;
+the subsequent ADR-095 execution host adds the scoped SQL recovery described below.
+
+
+### Durable primary batch execution (ADR-095)
+
+Execution infrastructure owns admission, leases, immutable object checkpoints and
+terminal acknowledgement through the existing JobStore/shared worker. Core Analysis
+owns the canonical assessment and critical checkpoint/pre-item callback boundaries;
+Reporting owns the existing per-object reports and batch envelope. Primary-menu
+adapters submit/resume and render only verified terminal results. The fixed local
+owner is not a new authentication context. No new database or bounded context is
+introduced; other job families and independent scientific validation remain separate.
+
+### Explicit statistical utility assumptions (ADR-096)
+
+Scientific Validation owns supplied-model tail arithmetic, multiple-testing
+adjustments and hypothetical sample-size/power planning. It does not infer a
+reference population, certify valid p-values or independently estimate deployment
+error rates. Invalid/missing prerequisites raise errors; unavailable empirical
+FDR/FWER remain null. Canonical analysis retains its ranking policy and unavailable
+calibrated significance. No new bounded context is introduced.
+
+### Durable REST batch adapter (ADR-097)
+
+The existing API execution host owns registered job scheduling and readiness;
+JobStore owns durable admission, leases, cancellation and checkpoints. Identity
+uses existing fresh persistent principals with a separate batch token audience.
+Core Analysis/Reporting retain canonical scientific decisions and report ownership.
+REST projects owned immutable checkpoints; it cannot score independently or treat
+processing completion as validated origin inference. No new bounded context.

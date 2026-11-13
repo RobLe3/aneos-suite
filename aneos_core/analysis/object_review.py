@@ -382,15 +382,16 @@ def _physical_inventory_text(inventory):
     for registration in inventory.get('physical_measurement_evidence',[]):
         evidence=registration['evidence']
         if not evidence['records']:
-            source='NEODyS' if evidence.get('adapter')=='neodys-oef2-photometry-v1' else 'SBDB'
+            source={'neodys-oef2-photometry-v1':'NEODyS','cad-physical-1.5-v1':'CAD'}.get(evidence.get('adapter'),'SBDB')
             lines.append(source+' photometry: not available; no physical parameter records supplied in this source snapshot.')
         for index,record in enumerate(evidence['records']):
             native=record['native'];n=record['normalized']
             is_neodys=record['adapter']=='neodys-oef2-photometry-v1'
-            label='H (OEF MAG)' if is_neodys else native['name']
+            is_cad=record['adapter']=='cad-physical-1.5-v1'
+            label='H (OEF MAG)' if is_neodys else native['field']+' (CAD catalogue)' if is_cad else native['name']
             text=f"{literal(record['source'])} {literal(label)}: "
             if n:
-                if is_neodys:
+                if is_neodys or (is_cad and n['sigma'] is None):
                     text+=f"{number(n['value'])} {literal(n['units'])}; uncertainty not available"
                 else:
                     text+=f"{number(n['value'])} ± {number(n['sigma'])} {literal(n['units'])}; {n['uncertainty_kind']}"
@@ -399,6 +400,9 @@ def _physical_inventory_text(inventory):
             duplicate=evidence['duplicate_records'].get(str(index))
             if duplicate is not None:text+=f'; duplicate of record {duplicate}, not additional evidence'
             lines.append(text)
+            if is_cad:
+                values=dict(zip(native['fields'],native['row']))
+                lines.append(f"Native CAD row {native['row_index']}; orbit reference {literal(values.get('orbit_id'))}. Encounter time is TDB, not a physical measurement date.")
             if is_neodys:
                 lines.append('Native H/G record: '+literal(native['line'].strip())+'. G remains native; no typed phase-law fit or independent H/G evidence is implied.')
         for field,choice in evidence['selection'].items():

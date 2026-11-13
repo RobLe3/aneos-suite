@@ -26,7 +26,10 @@ jobs:
         run: python -m pytest tests/ aneos_core/tests/ -m "not network" -v --tb=short --cov=aneos_core --cov-report=term-missing --cov-fail-under=30
 
       - name: Verify durable job store component coverage
-        run: python -m pytest tests/test_durable_job_store.py -q --tb=short --cov=aneos_api.job_store --cov-report=term-missing --cov-fail-under=85
+        run: python -m pytest tests/test_durable_job_store.py tests/test_durable_batch_jobs.py -q --tb=short --cov=aneos_api.job_store --cov-report=term-missing --cov-fail-under=85
+
+      - name: Verify supplied-model statistics and explicit unavailable error rates
+        run: python -m pytest tests/test_statistical_utility_contract.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-statistical-utilities.ini --cov-report=term-missing --cov-fail-under=95
 
       - name: Verify population report component coverage
         run: python -m pytest tests/test_network_evidence_report.py tests/test_pattern_api.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-network-report.ini --cov-report=term-missing --cov-fail-under=90
@@ -35,7 +38,16 @@ jobs:
         run: python -m pytest tests/test_network_job_worker.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-worker.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify durable network API component coverage
-        run: python -m pytest tests/test_durable_network_api.py tests/test_pattern_api.py tests/test_api_bootstrap_contract.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-api.ini --cov-report=term-missing --cov-fail-under=85
+        run: python -m pytest tests/test_durable_network_api.py tests/test_durable_batch_api.py tests/test_pattern_api.py tests/test_api_bootstrap_contract.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-network-api.ini --cov-report=term-missing --cov-fail-under=85
+
+      - name: Verify owner-scoped durable REST batches and shared host lifecycle
+        run: python -m pytest tests/test_durable_batch_api.py tests/test_durable_network_api.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-batch-api.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify durable batch execution, recovery and shared lease driver
+        run: python -m pytest tests/test_durable_batch_jobs.py tests/test_network_job_worker.py tests/test_batch_menu_accounting.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-batch-jobs.ini --cov-report=term-missing --cov-fail-under=90
+
+      - name: Verify canonical batch request accounting and actual menu history
+        run: python -m pytest tests/test_batch_menu_accounting.py tests/test_menu_v2_e2e.py tests/test_durable_batch_jobs.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-batch-report.ini --cov-report=term-missing --cov-fail-under=95
 
       - name: Verify application identity and real menu-entry renders
         run: python -m pytest tests/test_application_identity.py -q --tb=short
@@ -44,7 +56,7 @@ jobs:
         run: python -m pytest tests/test_object_evidence_review.py tests/test_native_orbital_epochs.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-review.ini --cov-report=term-missing --cov-fail-under=85
 
       - name: Verify atomic physical evidence component coverage
-        run: python -m pytest tests/test_atomic_physical_evidence.py tests/test_neodys_evidence.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-physical-evidence.ini --cov-report=term-missing --cov-fail-under=90
+        run: python -m pytest tests/test_atomic_physical_evidence.py tests/test_neodys_evidence.py tests/test_root_native_cad.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-physical-evidence.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify native orbital epoch component coverage
         run: python -m pytest tests/test_native_orbital_epochs.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-native-epochs.ini --cov-report=term-missing --cov-fail-under=90
@@ -53,16 +65,16 @@ jobs:
         run: python -m pytest tests/test_api_evidence_parity.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-api-evidence.ini --cov-report=term-missing --cov-fail-under=95
 
       - name: Verify durable enrichment ledger and SQL-backed detail
-        run: python -m pytest tests/test_durable_enrichment.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-enrichment-ledger.ini --cov-report=term-missing --cov-fail-under=90
+        run: python -m pytest tests/test_durable_enrichment.py tests/test_acquisition_readonly.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-enrichment-ledger.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify truthful policy inspection and actual configuration-menu QA
         run: python -m pytest tests/test_policy_configuration_menu.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-policy-inspection.ini --cov-report=term-missing --cov-fail-under=95
 
       - name: Verify fixed-profile acquisition and presentation coverage
-        run: python -m pytest tests/test_object_acquisition_ledger.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-acquisition.ini --cov-report=term-missing --cov-fail-under=90
+        run: python -m pytest tests/test_object_acquisition_ledger.py tests/test_root_native_cad.py tests/test_acquisition_readonly.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-acquisition.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify atomic acquisition repository coverage
-        run: python -m pytest tests/test_object_acquisition_ledger.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-acquisition-repository.ini --cov-report=term-missing --cov-fail-under=90
+        run: python -m pytest tests/test_object_acquisition_ledger.py tests/test_acquisition_readonly.py -q --tb=short --cov=aneos_api --cov-config=tests/coverage-acquisition-repository.ini --cov-report=term-missing --cov-fail-under=90
 
       - name: Verify native NEODyS identity, field accounting and photometry
         run: python -m pytest tests/test_neodys_evidence.py tests/test_phase24.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-neodys-evidence.ini --cov-report=term-missing --cov-fail-under=90
@@ -76,8 +88,14 @@ jobs:
       - name: Verify polling source retention through the actual workflow and SQLite ledger
         run: python -m pytest tests/test_polling_source_retention.py -q --tb=short
 
+      - name: Verify bounded CAD candidate acquisition and atomic query receipts
+        run: python -m pytest tests/test_candidate_discovery.py tests/test_root_native_cad.py tests/test_acquisition_readonly.py -q --tb=short --cov=aneos_core --cov=aneos_api --cov-config=tests/coverage-candidate-discovery.ini --cov-report=term-missing --cov-fail-under=95
+
       - name: Verify root poller presentation adapters and actual entrypoints
         run: python -m pytest tests/test_root_poller_presentation.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-root-poller-presentation.ini --cov-report=term-missing --cov-fail-under=95
+
+      - name: Verify bounded root CAD orchestration and committed-evidence reuse
+        run: python -m pytest tests/test_root_native_cad.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-root-native-cad.ini --cov-report=term-missing --cov-fail-under=95
 
       - name: Verify canonical polling dashboard and browser behavior
         run: python -m pytest tests/test_polling_dashboard_screening.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-polling-dashboard.ini --cov-report=term-missing --cov-fail-under=90

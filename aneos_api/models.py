@@ -10,7 +10,7 @@ from datetime import datetime
 from enum import Enum
 
 try:
-    from pydantic import BaseModel, Field, field_validator, model_validator
+    from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict, StrictBool
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
@@ -56,19 +56,20 @@ class AnalysisRequest(BaseModel):
     include_indicators: bool = Field(True, description="Include individual indicator results")
 
 class BatchAnalysisRequest(BaseModel):
-    """Request model for batch NEO analysis."""
+    """Bounded durable batch intent; unknown options must not be silently ignored."""
+    model_config = ConfigDict(extra="forbid")
     designations: List[str] = Field(..., min_length=1, max_length=100, description="List of NEO designations")
 
     @field_validator('designations')
     @classmethod
     def validate_each_designation(cls, v: list) -> list:
         for d in v:
-            if not (1 <= len(d.strip()) <= 50):
+            if any(ord(c)<32 or ord(c)==127 for c in d) or d.lstrip().startswith('#') or not (1 <= len(d.strip()) <= 50):
                 raise ValueError(f"Designation must be 1–50 chars: {d!r}")
         return [d.strip() for d in v]
-    force_refresh: bool = Field(False, description="Force refresh of cached data")
-    include_raw_data: bool = Field(False, description="Include raw NEO data in responses")
-    progress_webhook: Optional[str] = Field(None, description="Webhook URL for progress updates")
+    force_refresh: StrictBool = Field(False, description="Force refresh of cached data")
+    include_raw_data: StrictBool = Field(False, description="Include raw NEO data in responses")
+    progress_webhook: None = Field(None, description="Webhooks are not implemented; non-null values are rejected")
 
 class OrbitalElementsResponse(BaseModel):
     """Orbital elements response model."""

@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] - After 2.2.0b2
 
+- Restore bounded root/menu/CLI NASA_CAD collection through committed query receipts
+  and shared screening (#84). Retain explicit partial/empty/error states and exclusive
+  exports; direct browsing is opt-in. Other bulk discovery stays unavailable (#73).
+- Admit native CAD H/diameter/same-row1-sigma through atomic physical evidence under
+  an optional replayable policy; old raw-only receipts and beta2 remain unchanged.
+- Explicit bounded object enrichment reuses committed CAD instead of polling again,
+  verifies acquisition readback and consumes the existing combined ledger projection.
+  Source outcomes, missing prerequisites and no-new-data cases remain explicit.
+
+- Add bounded CAD candidate-query acquisition and immutable collection receipts,
+  atomically linked to existing object assertions/projections (#83). Valid empty,
+  partial, invalid and failed queries remain distinct; full buffered source entities
+  are archived even when over the parse budget. Root CAD integration is #84; other source discovery remains #73.
+
 - Root poller summary/browser/detail now use shared nullable screening views (#81).
 - Root exports use exclusive JSON/Markdown bundles and preserve requested invocation
   context without treating it as verified coverage. Display/navigation are read-only.

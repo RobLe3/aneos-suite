@@ -267,7 +267,9 @@ class AnalysisPipeline:
 
     async def analyze_batch(self, designations: List[str],
                            progress_callback: Optional[Callable[[int, int], None]] = None,
-                           force_refresh: bool = False) -> List[PipelineResult]:
+                           force_refresh: bool = False,
+                           result_callback: Optional[Callable[[PipelineResult], None]] = None,
+                           before_item_callback: Optional[Callable[[str], None]] = None) -> List[PipelineResult]:
         """Bounded async scheduling; preserve order/identity including failed items.
 
         Cancellation stops awaiting a blocking provider call, not its worker thread.
@@ -280,6 +282,8 @@ class AnalysisPipeline:
         async def run(designation):
             nonlocal completed
             async with semaphore:
+                if before_item_callback:
+                    before_item_callback(designation)
                 start = time.monotonic()
                 try:
                     result = await asyncio.wait_for(self.analyze_neo(designation,
@@ -288,6 +292,10 @@ class AnalysisPipeline:
                     result = self._failure_result(designation, 'failed', 'Analysis timeout', start)
                 except Exception as exc:
                     result = self._failure_result(designation, 'failed', str(exc), start)
+                # A durability acknowledgement is not a best-effort progress observer.
+                # Propagate failure so no caller can publish an uncommitted result.
+                if result_callback:
+                    result_callback(result)
                 completed += 1
                 if progress_callback:
                     try:

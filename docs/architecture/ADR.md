@@ -1,7 +1,15 @@
 # Architecture Decision Records — aNEOS Suite
 
-_Derived: 2026-03-06 | Last updated: 2026-03-10 | Codebase Version: 1.1.0_
+_Historical design basis: 2026-03-06–10 / v1.1.0. Current-status review: 2026-11-13 / v2.2.0b2 plus main 3dd47f1._
 _Concept document: README.md + docs/scientific/scientific-documentation.md_
+
+**Current-status note (2026-11-13):** this cumulative record includes historical
+claims, not universal implementation or scientific-validation evidence. ADR-065/068/069
+and later acquisition/persistence decisions govern installed screening. The
+[discovery/integrity review](../engineering/discovery-integrity-roadmap-review-2026-11-13.md)
+proposes #86/#87 within existing boundaries; it accepts no incompatible contract or
+new bounded context. Review material contracts before implementation; do not reuse
+a concurrent PR's ADR number.
 
 ADRs capture every significant architectural decision found in the aNEOS codebase,
 including implicit decisions and identified risks. Status values:
@@ -3147,3 +3155,245 @@ coverage. Markdown escapes executable delimiters. Existing exports without this
 field keep their original format/hash; historical files are not rewritten. This is
 an additive presentation/provenance extension, not a new scoring engine or bounded
 context. File import preserves the original file but is not a migration or backup.
+
+## ADR-092: Candidate-query receipts belong to Acquisition, not a fake object
+
+**Date:** 2026-11-13. **Status:** Implemented foundation (#83); root/controller restoration remains #73.
+
+A catalog query can return several objects, no objects, or an unusable response.
+The existing object-acquisition envelope requires an actual designation. Giving a
+failed/empty collection a placeholder designation would misrepresent evidence and
+pollute the object warehouse. A distinct collection-query aggregate fits the
+existing Acquisition bounded context; no new detector or bounded context is needed.
+
+Add `neo_candidate_queries_v1` on the existing SQLAlchemy Base and validated
+file-SQLite backend. Its immutable receipt binds the explicit request, source body,
+outcome, grouped object-packet hashes and storage links. Use the existing enrichment
+transaction owner to commit this receipt, source assertions and frozen projections
+as one unit. Acknowledgement follows native replay and assertion/projection readback.
+Replay of an existing query ID is idempotent and cannot reapply a later projection
+policy. A changed binding under the same ID fails. Imports/construction do not open
+or initialize the database; schema preparation is an explicit acquisition prerequisite.
+Incompatible existing tables require migration, not silent alteration or fallback.
+
+Acquisition and reporting share read-only software/Git/package/precision metadata
+through a common utility, avoiding a data-to-analysis dependency. This frozen context
+is included in new receipts and is not recomputed as historical source provenance.
+Older metadata-free receipts retain their original identities.
+
+The first profile is one bounded CAD request: explicit native calendar selection,
+NEO/Earth/distance filters, at most 1,000 returned encounter rows, no paging or
+additional-source enrichment. This is an application budget, not JPL's maximum.
+Group rows by exact native primary designation and retain every native row, including
+repeats and alternative orbit predictions. Existing reconciliation owns exact typed
+encounter deduplication and lineage. CAD predictions are not observed residuals,
+orbital elements or discovery dates. Other providers are not synthesized.
+
+Preserve buffered response entity bytes, not a claim of original compressed wire
+bytes. Ordinary bodies live in the receipt; larger bodies live in an immutable SQL
+BLOB in the same transaction. The 1 MiB JSON parse/prefix budget does not discard
+already-buffered data: oversized bodies are archived but not normalized, with an
+explicit `not_processed` result. The shared transport still buffers first, so this
+is not a receive/memory bound or an absolute request deadline. Failure bodies remain
+available after shared-transport HTTP errors without bypassing pacing/cooldown or
+adding retries. Source failure is not empty success; scientific completeness stays
+unestablished even when all source-declared matching query rows were returned.
+
+`started_at`/`received_at` are local UTC transport receipts; storage `recorded_at`
+is a local pre-commit write timestamp, not an exact commit/observation instant.
+Native encounter JD/calendar remain TDB. A nonmonotonic local clock is flagged, not
+silently corrected. Catalogue physical fields remain unit-labelled in native rows;
+admission to the existing atomic physical-evidence contract precedes root integration.
+
+Normal SQL updates/deletes are denied and readback checks hashes and model bindings.
+This is internal consistency, not provider authentication, protection from a database
+administrator, encryption or backup. Administrative DDL, file replacement/deletion,
+cleanup or explicit reset can remove data; preserve important research separately.
+The beta-2 tag and historical data are unchanged. Controller/enrichment budgeting,
+physical-field admission and broader source discovery remain subsequent work.
+
+## ADR-093 — Restore bounded root CAD polling through committed collection receipts
+
+Date: 2026-11-13. Status: Accepted for this incremental implementation; #84/#73.
+
+The root poller must not restore its old origin classifier or independent HTTP
+normalization. Delegate one explicitly bounded Earth/NEO/.05au candidate request to
+`CADCandidateService`, consume its committed readback, and use the existing canonical
+screening/read models. Empty, partial and failed collection outcomes remain in the
+query receipt, including exports with no object rows. No automatic paging.
+
+Add an **optional versioned object policy** to collection receipts. Absent policy
+replays the original raw-only packets exactly; `cad-physical-v1` additionally uses
+the existing atomic physical-evidence aggregate. Retain native labelled rows and
+row indices, same-row diameter/sigma and H (without invented H uncertainty), missing
+measurement dates and source-reference limits. Equal catalogue value/sigma/orbit
+references repeated across encounters share a projection representative, not an
+independent observation. Conflicting alternatives abstain, never average. Existing
+receipts/hashes are not rewritten. No incompatible schema or second ledger.
+
+A collection is not an orbit source. CAD-only objects may remain inconclusive.
+Optional per-object acquisition is an explicit separately bounded action using
+`DataFetcher` and its existing transactional receipts, before canonical analysis;
+it is never triggered by a renderer or silently enabled by default. Report object
+invocation budgets separately from provider requests/retries. Unsupported root
+SBDB/MPC/NEODyS discovery stays unavailable. Ordinary named-object acquisition remains
+available through its shared adapters; it is not proof of bulk discovery support.
+
+Replaying a collection does not re-ingest it or poll again. Scientific origin,
+calibration, historical authenticity and all-source completeness remain unavailable
+unless their own prerequisites are met. No threshold/model changes or beta2 retagging.
+
+ADR-093 acquisition clarification: an optional `candidate_query_id` source-plan
+profile replays the committed collection receipt before any named-object provider
+work or cache use. The CAD outcome embeds that frozen parent receipt and must bind
+to its exact designation/query; offline bundle validation replays it. No second CAD
+request, guessed new observation or fresh source read timestamp is created. Other
+providers retain their existing budgets/retry policy. Cache identity includes this
+reference. The ordinary default profile and historical envelopes are unchanged.
+The root analysis reads the existing verified combined ledger projection after
+acquisition; original discovery rows remain separately available. No new-source
+data is reported explicitly even when the reused CAD assertion is available.
+
+## ADR-094 — Batch request accounting reuses canonical per-object reports
+
+**2026-11-13; additive reporting contract; #41/#12/#15/#44.** Primary option 3
+must use the existing `AnalysisPipeline.analyze_batch`, not a separate detector
+loop that discards missing or failed objects. Preserve each requested occurrence,
+its file/line and exact identity. An exact duplicate may reuse one frozen result;
+this saves acquisition work, not independent observations. Do not merge aliases or
+case variants without source identity evidence. Canonical ranking/policy stay unchanged.
+
+Reporting owns `screening-batch-report-v1`: original bounded input bytes and their
+hash, parser/workload policy, local creation timestamp, ordered request/report
+bindings and reproducible counts. Each entry embeds the existing verified
+`scientific-screening-report-v1`, including explicit failed/inconclusive results.
+The whole report is content-bound; replay checks original input, order, duplicate
+reuse, counts and each existing per-object report. Hashes detect inconsistency,
+not original authenticity or adversarial administrator compromise.
+
+Acquisition remains in the existing pipeline/adapters/ledger. Session batch history
+is a read model, not a second store or restart-safe job system. Existing reporting
+export owns exclusive JSON/CSV creation; full per-object reports accompany CSV
+rows. Latest-object views remain separate from request history. Rendering, browsing
+and export never poll. File reads are UTF-8, at most 1 MiB and 1,000 request rows;
+CSV is explicitly one column with an optional `designation` header. Invalid files
+fail before provider work; limits are declared, not silently clamped.
+
+No new bounded context, database, inference engine, origin probability or incompatible
+API contract. Existing best-effort background analysis persistence remains for compatible object
+views; it is not made durable by this change. Users must explicitly export full
+session request history. Durable execution remains #15.
+
+## ADR-095 — Recover batch execution in the existing SQL job queue
+
+**2026-11-13; #15/#2/#41.** Reuse JobStore's admission, owner-scoped reads,
+idempotency, immutable checkpoints, leases and retry budget for primary batch work.
+Extract the existing network worker's execution/heartbeat/fencing machinery into a
+shared driver; keep NetworkWorker's registered contract and behavior. Batch is a
+new registered handler, not another queue, database, classifier or bounded context.
+
+A batch request freezes original input/line policy, source configuration fingerprint,
+canonical analysis/policy versions, report creation time and retry budget before
+provider work. Print a recovery/idempotency key before submission; acknowledge a
+job only after its SQL readback. The local-menu owner is a fixed trusted application
+scope, not authentication or OS-user isolation. No untrusted request chooses it.
+Require explicit writable file-SQLite configuration rather than silently initializing
+the checked-in research database. Read-only historical inspection remains separate.
+
+Extend canonical batch execution with an optional result-checkpoint callback. Unlike
+an observational progress callback, failure of this acknowledgement is fatal: it
+cannot be swallowed into success. Preserve existing bounded concurrent scheduling.
+Commit each report before acknowledging it; retries reuse ready checkpoints and
+reacquire only transient failures. Retain every attempted outcome immutably. On
+retry exhaustion, a processed source failure remains an explicit unavailable report,
+not zero or a natural verdict. Interrupted/incomplete execution never claims a
+complete scientific report. Terminal output must reproduce the stored input and
+selected committed report checkpoints; fully checkpointed recovery needs no provider.
+
+Owner-scoped checkpoint inspection supports partial progress and completed readback.
+Targeted queue claims select a known job without executing unrelated queued work.
+Lease attempt limits are fenced along with request/kind/token. Cancellation and stale
+workers cannot checkpoint/finish; in-flight provider calls may still complete but
+cannot commit after loss of authority. There is no exactly-once remote-I/O promise.
+
+Primary option 3 may submit or resume by saved job ID/recovery key. Existing batch
+browser/export receives only verified committed terminal reports. Queue retries and
+partial states remain visible, not promoted to completed screening. Synchronous local
+execution and non-daemon heartbeats are explicitly hosted; imports start no work.
+No automatic daemon service, source monitoring, external backup or version bump.
+Scientific inference/calibration and other job families remain unqualified until
+their separate acceptance evidence exists.
+
+## ADR-096 — Statistical utilities require explicit models and valid inputs
+
+**2026-11-13; #6/#10/#11.** Scientific Validation owns the existing exported
+`StatisticalTesting` utility. It is not a fitted population model or a permission
+to promote screening ranks to discovery significance. Canonical screening and
+required review gates remain unchanged.
+
+Remove fail-to-number behavior: invalid models, nonfinite measurements, invalid
+probabilities and unsupported tests raise explicit errors, not p=1, zero effect,
+50% power or zero-width uncertainty. A scalar normal-reference tail needs explicit
+mean and positive standard deviation; it is not automatically a confidence interval
+for an estimated mean. A summary Student test needs a supplied standard error and
+degrees of freedom. Withdraw the scalar median/MAD approximation under the name
+Wilcoxon; retain its callable name with a controlled NotImplementedError because
+paired observations/ranks are absent. Confidence intervals require an actual
+positive standard error and explicit degrees of freedom for a Student interval.
+
+Multiplicity helpers return adjusted p-values and conditional rejection decisions,
+not measured FDR/FWER. Existing error-rate fields become nullable; add method,
+nominal control target and assumptions separately. BH requires valid marginal
+p-values with independence or the stated positive-dependence condition. BY permits
+arbitrary dependence of valid marginal p-values; neither repairs invalid inputs
+or unrecorded selection/trials. Empty families have no estimated error rates.
+Bonferroni uses the predeclared family size, not an invented realized error rate.
+
+Power calculations are hypothetical one-sample, two-sided independent-normal
+planning calculations (known variance z, unknown variance t). Use both tails and
+solve the stated 80%-power minimum detectable effect rather than substituting the
+requested effect for t. These assumptions must remain visible. No synthetic
+planning output is an independent empirical performance estimate. Preserve old
+callable entry points where scientifically meaningful, document stricter input
+requirements, and keep historical artifacts unchanged. No new bounded context,
+database, classifier, dependency or release-version change.
+
+## ADR-097 — REST batch submission uses the registered SQL execution handler
+
+**2026-11-13; #15/#2/#6.** Replace the existing REST batch dictionary/background
+callback with the ADR-095 registered handler, checkpoints and canonical reports.
+Keep the existing submit/status paths and useful response fields. Add explicit
+owner-scoped cancellation. No parallel queue, database or scoring implementation.
+
+The existing API-owned execution host may serve registered network and batch jobs
+on the same bounded SQL queue. One non-daemon host executes them serially with
+round-robin admission; each handler retains its own bounded internal work. Readiness
+is per enabled kind. A blocked provider can delay both kinds; do not imply parallel
+job throughput, remote cancellation or deployment-wide scheduling guarantees.
+Disabled workers admit no new jobs, while verified persisted history remains readable.
+Startup/shutdown and health must reflect the actual host, not an in-memory flag.
+
+REST batch operations require fresh verified persistent principals; legacy optional
+and mock authentication is insufficient. Batch bearer tokens use an explicitly
+issued batch-jobs-v1 audience; existing network tokens do not gain batch access.
+Reuse existing identity/key-revocation checks and role semantics. Submission and
+cancellation require analyst/admin; reads require the owning active principal.
+No administrator gets implicit cross-owner scientific-result access. Reject mixed
+or duplicate credentials and unsupported webhook options rather than ignore them.
+
+Freeze the ordered API designations as a deterministic CSV through the existing
+bounded parser, preserving occurrences and exact-duplicate reuse. Verify round-trip
+identity before admission. Freeze refresh and response options alongside the existing
+request configuration; optional versioned HTTP presentation options are additive,
+so existing menu requests remain reproducible. Client idempotency keys reuse the
+first acknowledged intent/configuration; conflicting intent is rejected. Without a
+client-supplied key, uncertain acknowledgement cannot promise idempotent resubmission.
+
+A submission is acknowledged only after durable readback. Status verifies owned
+request/checkpoints/results and accounts for every occurrence, including pending,
+partial, failed and unavailable results. Processing completion is not calibrated
+scientific acceptance. Raw-data opt-out affects response projection, not preservation
+of the internal replay inputs; do not publish a modified report as hash-valid. Queue
+and submission times are explicitly execution dates, not observation epochs. Public
+responses omit leases, authentication identities and arbitrary exception strings.
+Existing stored data and archived scientific outputs remain untouched.
