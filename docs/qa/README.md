@@ -24,3 +24,10 @@ A `TERM=dumb` regression checks actual SVG geometry at 80/120/160. The new
 cell widths. Other historical bundles have not yet been re-captured or visually
 reviewed with the correction. This limitation does not demonstrate a defect in every
 production menu; it is a confirmed defect in the prior capture evidence.
+
+A read-only inventory at intermediate head `4f3f258` measured **84 labelled SVGs**:
+40 matched their advertised default Rich geometry and 44 did not. Nine matches
+belong to the new receipt bundle; older bundles are 31/75 matches and 44/75
+mismatches. Initial menu-entry graphics match; do not call all older artifacts
+broken. The per-bundle matrix and hash-linked inventory are recorded in #69.
+Geometry is not a substitute for content, navigation or scientific-data review.

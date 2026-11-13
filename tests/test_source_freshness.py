@@ -844,3 +844,27 @@ def test_failed_fetch_without_commit_receipt_is_not_recorded(repository, monkeyp
     assert report["recorded_count"] == 0
     assert report["results"][0]["status"] == "failed"
     assert f.close.call_count == 1
+
+
+def test_present_but_truncated_requested_object_is_not_reported_absent(legacy):
+    from aneos_api.source_freshness import inspect_freshness
+
+    with legacy[1]() as db:
+        db.add_all(
+            [
+                EnrichedNEO(designation="SYNTHETIC_A"),
+                EnrichedNEO(designation="SYNTHETIC_B"),
+            ]
+        )
+        db.commit()
+    with legacy[1]() as db:
+        report = inspect_freshness(
+            db,
+            [],
+            checked_at=NOW,
+            limit=1,
+            designations=["SYNTHETIC_A", "SYNTHETIC_B", "ABSENT"],
+        )
+    assert report["truncated"] is True
+    assert report["requested_designations_not_found"] == ["ABSENT"]
+    assert report["requested_designations_not_reviewed"] == ["SYNTHETIC_B"]

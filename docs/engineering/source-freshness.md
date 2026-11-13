@@ -108,8 +108,8 @@ artifacts are not overwritten or retroactively credited; see the [QA evidence no
 
 ## Delivery evidence for this block
 
-The local offline suite passed **1,638 tests**, with eight network tests excluded;
-core coverage **51.32%**, unchanged 30% floor. The **69 new cases** cover this receipt-
+The local offline suite passed **1,639 tests**, with eight network tests excluded;
+core coverage **51.32%**, unchanged 30% floor. The **70 new cases** cover this receipt-
 review/refresh component at **100% statement coverage** against its new 90% gate.
 Existing gates are retained. This includes positive SQL refreshes and deferred,
 no-data, persistence-failure, forged/old receipt and cleanup-failure paths; coverage
@@ -121,3 +121,9 @@ checks coloured SVG geometry under `TERM=dumb` and matches HTML text to plain te
 Final published-head CI/Docker results are recorded in the PR rather than inferred
 from this local result. No independent scientific calibration or complete menu audit
 is claimed.
+
+A final bounded-selection regression also distinguishes a requested object that is
+present but outside the review limit from a genuinely absent designation. Reports
+expose `requested_designations_not_reviewed` separately; truncation is not missing
+data. This correction is covered by the **70-case** component suite. Final-head CI is
+authoritative for the published correction.

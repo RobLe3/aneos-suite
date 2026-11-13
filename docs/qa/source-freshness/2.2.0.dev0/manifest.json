@@ -46,7 +46,7 @@
   },
   "source_files_sha256": {
     "aneos_core/data/freshness.py": "09a4233c16557f168e36084b4109d706686438797142f9ca4e885403c884bb69",
-    "aneos_api/source_freshness.py": "f4f257671f8859cb8107efefcb12b6ee00a5e4272a36a14583978fe5ca234a59",
+    "aneos_api/source_freshness.py": "94129d9925fd53732ac700fd142b1a253b9eed0b293c15e82e9c52471f9d36b9",
     "aneos_core/analysis/freshness_view.py": "23cb5e5f3c3c262ea2641e5e70974c3a014e39605eecee4dc97eadc5dbc8e6c0",
     "aneos_menu.py": "52fb7ed52d3401ee4b4855681863d9d2c1390d06adf4c8d8ff681ba6681dee70",
     "scripts/qa_source_freshness.py": "383726e22ac47c91f06d9bea5969c483c8b6e81c8b2cf29ec67c388994221333",
@@ -58,9 +58,9 @@
     "recent_adapter_reads-160.html": "47054987ef61e177be1825deb2dc57013b5ed50e3afd378490446be3270f81bc",
     "legacy_unknown-160.html": "19a0f5982dedf79934f2a09cbda757001572198c7b1d89b5ed31e2c30ceb11ca",
     "recent_adapter_reads-120.html": "fa59056c9dad584399fc2b3d7ac207524da4beadf8c6f5435a054eaae262e928",
-    "legacy_unknown.json": "1e95ed156c30364a28e1e2bf1e5efb6869f37110d8d4ff335f7b581275d4219c",
+    "legacy_unknown.json": "e899c2cc6a7edae619f98ceb2fc10e8de3e8a2cd9e3c04b441de9b42eca466dc",
     "legacy_unknown-120.txt": "b66eb4f9cbbbaf0fb0aa053a073bd7a80cd7e8f52bab19f2b268c770663f9e96",
-    "recent_adapter_reads.json": "6df30f3d1f4fc705a0c9b8c9665c32ec04916e0e3a07321d5ef76d34ceffa70d",
+    "recent_adapter_reads.json": "4b8f2f300405484c6669ac8e6531f0e93c97af1aa19e227502793063b487b5b1",
     "stale_with_cooldown-80.svg": "9b7f70521e11ca2d2ab57ef9669bde017b8cb1bf39d6347cb301eb190396faac",
     "recent_adapter_reads-120.svg": "14a45c5a75cd5437ab6e3c012d0d30493e0e5f6a009fad6831d24c1d3ff682c2",
     "stale_with_cooldown-120.txt": "9d23b8c5d4f345e930b35de7f148dfbb620f95b9989ef62e699c0d125b5ade62",
@@ -82,7 +82,7 @@
     "recent_adapter_reads-80.svg": "5895bf7014cb68d96875cdd9f669c20bc9483398a0c474627cd2117e114d5f9f",
     "legacy_unknown-80.svg": "0299225e38731a563340f3724792c8a5bc6ea7a48db2c22b3745b71b2e6169ee",
     "stale_with_cooldown-160.svg": "9181bf6c43b94edd7c7a47bd873e7dc1691bdddea014b6e3021ecb37fa89f7fe",
-    "stale_with_cooldown.json": "92f570429b232cc6bbd9ee29cf4b8543c4753e620a127f2239de308dbb7740c0"
+    "stale_with_cooldown.json": "d47c5dff497618942699f9f877cd2fd28c86c8e12a52ebf8dd9f16d6630f9d2a"
   },
   "limits": "Actual legacy receipt-inspection menu with disposable SQL and synthetic typed/legacy data. No live provider request, automatic scheduler, all-menu certification or scientific readiness."
 }

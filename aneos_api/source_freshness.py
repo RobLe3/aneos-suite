@@ -109,15 +109,20 @@ def inspect_freshness(db, priority, *, checked_at=None, limit=50, designations=N
             dict.fromkeys(identifier(d, "designation") for d in designations)
         )
     names = []
+    present = []
     truncated = False
     if selects:
         combined = union(*selects).subquery()
         query = select(combined.c.designation).order_by(combined.c.designation)
         if requested is not None:
             query = query.where(combined.c.designation.in_(requested))
-        names = list(db.scalars(query.limit(limit + 1)))
-        truncated = len(names) > limit
-        names = names[:limit]
+        # Explicit selections already have a hard 50-name bound. Check their
+        # presence separately from the smaller review limit: not reviewed != absent.
+        present = list(
+            db.scalars(query.limit(50 if requested is not None else limit + 1))
+        )
+        truncated = len(present) > limit
+        names = present[:limit]
     objects = []
     for name in names:
         history = query_history(db, name)
@@ -182,7 +187,10 @@ def inspect_freshness(db, priority, *, checked_at=None, limit=50, designations=N
             "truncated": truncated,
             "object_limit": limit,
             "requested_designations_not_found": [
-                d for d in requested or [] if d not in names
+                d for d in requested or [] if d not in present
+            ],
+            "requested_designations_not_reviewed": [
+                d for d in requested or [] if d in present and d not in names
             ],
             "limits": "Read-only bounded object review of replay-checked stored adapter receipts. Unknown legacy clocks are not UTC. No live health probe, scientific completeness, alias equivalence or automatic selective backfill.",
         }

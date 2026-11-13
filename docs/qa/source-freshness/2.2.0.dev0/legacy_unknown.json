@@ -238,6 +238,7 @@
     "scope": "installed_object_adapters_not_all_observations"
   },
   "requested_designations_not_found": [],
+  "requested_designations_not_reviewed": [],
   "schema_version": "object-source-freshness-v1",
   "source_plan": {
     "context_id": null,
