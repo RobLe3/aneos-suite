@@ -75,6 +75,12 @@ class ScreeningAssessment:
     def evidence_count(self):
         return sum(e['analyzed'] for e in self.evidence_sources)
 
+    def ranking_trace(self):
+        """Owned calculation trace; deliberately not added to historical v1 payloads."""
+        if not hasattr(self, '_ranking_trace_data'):
+            raise ValueError('No recorded ranking trace is available')
+        return json.loads(_canonical(self._ranking_trace_data))
+
     def to_payload(self):
         payload = asdict(self)
         payload.update(
@@ -202,9 +208,16 @@ class ScreeningAnalysisService:
                        'Legacy ranking includes dependent size/photometry features and hand-set inclination bonuses; it is retained for comparison, not calibrated inference.']
         evidence = []
         scores = []
+        terms = []
+        def add_term(name,effect,weight=1.0,dependency='orbital_catalogue'):
+            value=_ranking_term(effect,weight)
+            scores.append(value)
+            terms.append({'channel':name,'effect':float(effect),'weight':float(weight),
+                          'weighted_square':value,'dependency_group':dependency,
+                          'basis':'heuristic_proxy'})
         if set(orbit) == {'a', 'e', 'i'} and orbit['a'] > 0 and orbit['e'] < 1 and orbit['a'] * (1 - orbit['e']) < 1.3:
             raw = self.detector._calculate_orbital_anomaly_score(orbit)
-            scores.append(_ranking_term(raw.effect_size))  # complete zeros are valid
+            add_term('orbital_dynamics',raw.effect_size)  # Complete zeros remain valid.
             evidence.append(self._summary('orbital_dynamics', float(raw.effect_size), True))
         else:
             limitations.append('Incomplete or out-of-domain orbit: ranking abstained.')
@@ -215,10 +228,10 @@ class ScreeningAnalysisService:
             evidence.append(self._summary('physical_properties', float(raw.effect_size) if available else None,
                                           available, None if available else 'No supported physical measurements'))
             if available:
-                scores.append(_ranking_term(raw.effect_size, raw.quality_score))
+                add_term('physical_properties',raw.effect_size,raw.quality_score,'physical_size_photometry')
             spectral = self.detector._analyze_spectral_type(phys)
             if spectral is not None:
-                scores.append(_ranking_term(spectral.effect_size, spectral.quality_score))
+                add_term('spectral_analysis',spectral.effect_size,spectral.quality_score,'physical_size_photometry')
                 evidence.append(self._summary('spectral_analysis', float(spectral.effect_size), True))
         for name, present, reason in [
             ('course_corrections', bool(extra.get('orbital_history')), 'Requires observed residuals and a validated dynamical comparison; ephemeris changes are not manoeuvres'),
@@ -233,8 +246,17 @@ class ScreeningAnalysisService:
         score = float(math.sqrt(total)) if complete else None
         candidate = bool(score is not None and score >= self.policy.candidate_threshold)
         classification = 'FOLLOW_UP_CANDIDATE' if candidate else 'NOT_FLAGGED' if complete else 'INCONCLUSIVE'
-        return ScreeningAssessment(designation, score, candidate, classification, evidence,
+        result = ScreeningAssessment(designation, score, candidate, classification, evidence,
                                    evidence_id, policy_id, snapshot, limitations)
+        for term in terms:
+            term['share_of_squared_rank'] = term['weighted_square']/total if score is not None and total>0 else None
+        result._ranking_trace_data=json.loads(_canonical({
+            'schema_version':'ranking-trace-v1','terms':terms,'total_squared_rank':total,
+            'policy':asdict(self.policy),'reference_parameters':self.detector.neo_population_stats,
+            'manual_inclination_enhancement':bool(complete and orbit['i']<5),
+            'overall_rank_available':score is not None,
+            'interpretation':'Computation trace and assumed prototype reference parameters, not calibrated probabilities, independent evidence or population validation.'}))
+        return result
 
     def replay(self, snapshot, expected_evidence_id=None):
         if snapshot.get('schema_version') != 'screening-evidence-v1':

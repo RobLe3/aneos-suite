@@ -68,8 +68,14 @@ class TestDetectionNoteConditional:
         menu.display_panel = Mock()
         result = ScreeningAnalysisService(ScreeningPolicy(candidate_threshold=threshold)).analyze_raw(
             "marker", {"a": 1, "e": .2, "i": inclination}).to_detection_result()
-        menu._display_detection_result("marker", result)
-        return result, menu.display_panel.call_args.args[0]
+        from dataclasses import asdict
+        import io
+        from contextlib import redirect_stdout
+        result.screening_policy = asdict(ScreeningPolicy(candidate_threshold=threshold))
+        output = io.StringIO()
+        with redirect_stdout(output):
+            menu._display_detection_result("marker", result)
+        return result, output.getvalue()
 
     def test_note_inconclusive_for_sigma_below_2(self):
         result, content = self._render(15)
@@ -80,7 +86,7 @@ class TestDetectionNoteConditional:
     def test_note_interesting_for_sigma_2_to_5(self):
         result, content = self._render(35)
         assert result.screening_score is not None
-        assert "uncalibrated" in content
+        assert "uncalibrated" in content.lower()
         assert "statistically interesting" not in content
 
     def test_note_exceptional_for_sigma_5(self):

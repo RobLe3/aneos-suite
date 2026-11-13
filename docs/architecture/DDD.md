@@ -1338,3 +1338,15 @@ policy, model, API contract or readiness certificate. Preserve those independent
 identifiers and recorded historical versions. Menu navigation/labels share one
 presentation catalogue; dispatch/renders do not certify feature prerequisites or
 scientific results. No new bounded context is needed for this distinction.
+
+## Replay-bound object review — 2026-11-13 / ADR-080
+
+The existing analysis context owns the screening calculation trace and deterministic
+object-evidence review. Presentation consumes the verified review; it does not infer
+origin from rank, coefficient sign or missing evidence. The review freezes one typed
+object snapshot and retains source alternatives without reconciling incompatible
+solutions. It is not the normalized multi-source evidence ledger (#40), an append-only
+research-case lifecycle, a physical fit, or independent calibration. Coverage profiles
+have frozen named denominators and describe presence only. Full acquisition coverage
+and operation-specific scientific readiness remain separate, currently unavailable
+outputs. Existing source/domain and research boundaries remain unchanged.

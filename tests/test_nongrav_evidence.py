@@ -295,7 +295,7 @@ def test_tiny_covariance_keeps_correlation_without_product_underflow():
     assert cov.correlation('A1', 'A3') == pytest.approx(.5)
 
 
-def test_cli_displays_all_axes_and_epoch_caution(payload):
+def test_cli_displays_all_axes_and_epoch_caution(payload, capsys):
     from aneos_menu_v2 import ANEOSMenuV2
     from unittest.mock import Mock
     ng, _ = parsed_ng(payload)
@@ -304,7 +304,7 @@ def test_cli_displays_all_axes_and_epoch_caution(payload):
     menu.console = None
     menu.display_panel = Mock()
     menu._display_neo_data(neo.designation, neo)
-    panel = menu.display_panel.call_args.args[0]
+    panel = capsys.readouterr().out
     assert 'A1:' in panel and 'A2:' in panel and 'A3:' in panel
     assert 'not thrust' in panel
     assert 'Covariance epoch differs' in panel

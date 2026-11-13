@@ -1,0 +1,535 @@
+{
+  "application_version": "2.2.0.dev0",
+  "assessment": {
+    "analysis_metadata": {
+      "engine_version": "catalogue-ranking-v1",
+      "evidence_count_semantics": "analyzed_proxy_channels_not_independent_observations",
+      "evidence_id": "ee9cd968e2c1763aee7ae4247b0d60d55589f0289462a1dfbc7a5cd11ef42914",
+      "five_sigma_claim_permitted": false,
+      "human_origin_status": "not_assessed",
+      "limitations": [
+        "No calibrated null or artificial-origin model is installed.",
+        "No search-wide significance claim is available.",
+        "Human origin has not been excluded.",
+        "Legacy ranking includes dependent size/photometry features and hand-set inclination bonuses; it is retained for comparison, not calibrated inference.",
+        "Incomplete or out-of-domain orbit: ranking abstained."
+      ],
+      "origin_status": "inconclusive",
+      "policy_id": "7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37",
+      "reference_population_status": "fixed_global_prototype_not_conditioned",
+      "schema_version": "screening-assessment-v1",
+      "score_basis": "legacy_uncalibrated_dependent_features",
+      "significance_status": "unavailable_uncalibrated_model"
+    },
+    "artificial_probability": null,
+    "candidate": false,
+    "classification": "INCONCLUSIVE",
+    "combined_p_value": null,
+    "confidence": null,
+    "designation": "SYNTHETIC missing-data control",
+    "engine_version": "catalogue-ranking-v1",
+    "evidence_count": 0,
+    "evidence_id": "ee9cd968e2c1763aee7ae4247b0d60d55589f0289462a1dfbc7a5cd11ef42914",
+    "evidence_snapshot": {
+      "additional": {},
+      "designation": "SYNTHETIC missing-data control",
+      "orbital": {},
+      "physical": {},
+      "provenance": {},
+      "schema_version": "screening-evidence-v1"
+    },
+    "evidence_sources": [
+      {
+        "analyzed": false,
+        "anomaly_score": null,
+        "confidence_interval": [],
+        "data_available": false,
+        "dependency_group": "orbital_catalogue",
+        "effect_size": null,
+        "evidence_basis": "heuristic_proxy",
+        "evidence_type": "orbital_dynamics",
+        "p_value": null,
+        "quality_score": null,
+        "sample_size": 0,
+        "score_semantics": "uncalibrated_ranking_heuristic",
+        "type": "orbital_dynamics",
+        "unavailable_reason": "Incomplete or out-of-domain orbit"
+      },
+      {
+        "analyzed": false,
+        "anomaly_score": null,
+        "confidence_interval": [],
+        "data_available": false,
+        "dependency_group": "orbital_catalogue",
+        "effect_size": null,
+        "evidence_basis": "heuristic_proxy",
+        "evidence_type": "course_corrections",
+        "p_value": null,
+        "quality_score": null,
+        "sample_size": 0,
+        "score_semantics": "uncalibrated_ranking_heuristic",
+        "type": "course_corrections",
+        "unavailable_reason": "Requires observed residuals and a validated dynamical comparison; ephemeris changes are not manoeuvres"
+      },
+      {
+        "analyzed": false,
+        "anomaly_score": null,
+        "confidence_interval": [],
+        "data_available": false,
+        "dependency_group": "orbital_catalogue",
+        "effect_size": null,
+        "evidence_basis": "heuristic_proxy",
+        "evidence_type": "trajectory_patterns",
+        "p_value": null,
+        "quality_score": null,
+        "sample_size": 0,
+        "score_semantics": "uncalibrated_ranking_heuristic",
+        "type": "trajectory_patterns",
+        "unavailable_reason": "Predicted/repeated encounters are not independent artificial-origin evidence"
+      },
+      {
+        "analyzed": false,
+        "anomaly_score": null,
+        "confidence_interval": [],
+        "data_available": false,
+        "dependency_group": "orbital_catalogue",
+        "effect_size": null,
+        "evidence_basis": "heuristic_proxy",
+        "evidence_type": "propulsion_signatures",
+        "p_value": null,
+        "quality_score": null,
+        "sample_size": 0,
+        "score_semantics": "uncalibrated_ranking_heuristic",
+        "type": "propulsion_signatures",
+        "unavailable_reason": "Requires a force model, uncertainty and natural-alternative tests"
+      }
+    ],
+    "false_discovery_rate": null,
+    "human_origin_status": "not_assessed",
+    "interpretation": "SYNTHETIC missing-data control: INCONCLUSIVE; screening score is an uncalibrated ranking heuristic. Statistical significance and origin probability are unavailable.",
+    "is_artificial": null,
+    "limitations": [
+      "No calibrated null or artificial-origin model is installed.",
+      "No search-wide significance claim is available.",
+      "Human origin has not been excluded.",
+      "Legacy ranking includes dependent size/photometry features and hand-set inclination bonuses; it is retained for comparison, not calibrated inference.",
+      "Incomplete or out-of-domain orbit: ranking abstained."
+    ],
+    "non_gravitational_evidence": null,
+    "origin_status": "inconclusive",
+    "policy_id": "7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37",
+    "schema_version": "screening-assessment-v1",
+    "screening_score": null,
+    "sigma_confidence": null,
+    "sigma_tier": "UNAVAILABLE",
+    "significance_status": "unavailable_uncalibrated_model",
+    "spacecraft_veto": false,
+    "veto_reason": null
+  },
+  "decision": {
+    "status": "inconclusive",
+    "text": "Screening abstained: required orbital inputs are missing or outside this prototype domain. Missing evidence is not a negative scientific finding."
+  },
+  "designation": "SYNTHETIC missing-data control",
+  "follow_up": [
+    "Verify source identity, dated measurements, required uncertainty and compatible solutions.",
+    "Use fitted natural/human-technology/artifact comparisons and withheld observations before physical-origin inference.",
+    "Independent population calibration and search-wide error control are required before significance claims."
+  ],
+  "insights": [
+    {
+      "basis": "heuristic_proxy",
+      "key": "reference",
+      "references": [
+        "/ranking_trace/reference_parameters",
+        "/assessment/analysis_metadata"
+      ],
+      "text": "The rank uses fixed global prototype reference parameters, not a size/survey-conditioned population or calibrated null. Its proxy channels are not independent observations."
+    },
+    {
+      "basis": "input_inventory",
+      "key": "coverage",
+      "references": [
+        "/inventory/coverage",
+        "/inventory/missing_fields"
+      ],
+      "text": "The displayed profile counts recorded fields, not complete knowledge or verified source coverage. Missing physical uncertainties, observations and unresolved sources still limit scientific use."
+    }
+  ],
+  "inventory": {
+    "catalogue_solutions": [],
+    "coverage": {
+      "basic_catalogue": {
+        "fraction_present": 0.0,
+        "present": 0,
+        "required": 15
+      },
+      "eligible_source_coverage": null,
+      "meaning": "Field presence in the declared profile only; not full data completeness, source coverage, accuracy or scientific readiness.",
+      "overall_data_completeness": null,
+      "profile_id": "basic-catalogue-presence-15-v1",
+      "screening_orbit": {
+        "present": 0,
+        "required": 3
+      }
+    },
+    "designation": "SYNTHETIC missing-data control",
+    "encounters": [],
+    "measurements": [
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "semi_major_axis",
+        "label": "Semi-major axis",
+        "references": [
+          "/source_snapshot/orbital_elements/semi_major_axis"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "AU",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "eccentricity",
+        "label": "Eccentricity",
+        "references": [
+          "/source_snapshot/orbital_elements/eccentricity"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "dimensionless",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "inclination",
+        "label": "Inclination",
+        "references": [
+          "/source_snapshot/orbital_elements/inclination"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "degrees",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "ascending_node",
+        "label": "Ascending node",
+        "references": [
+          "/source_snapshot/orbital_elements/ra_of_ascending_node"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "degrees",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "periapsis_argument",
+        "label": "Periapsis argument",
+        "references": [
+          "/source_snapshot/orbital_elements/arg_of_periapsis"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "degrees",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "mean_anomaly",
+        "label": "Mean anomaly",
+        "references": [
+          "/source_snapshot/orbital_elements/mean_anomaly"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "degrees",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "orbit_epoch",
+        "label": "Orbit epoch",
+        "references": [
+          "/source_snapshot/orbital_elements/epoch"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "time_status": "not_available",
+        "units": "model timestamp; native solution retained",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "diameter",
+        "label": "Diameter",
+        "references": [
+          "/source_snapshot/physical_properties/diameter_km"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "km",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "absolute_magnitude",
+        "label": "Absolute magnitude H",
+        "references": [
+          "/source_snapshot/physical_properties/absolute_magnitude_h"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "mag",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "albedo",
+        "label": "Albedo",
+        "references": [
+          "/source_snapshot/physical_properties/albedo"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "dimensionless",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "spectral_type",
+        "label": "Spectral label",
+        "references": [
+          "/source_snapshot/physical_properties/spectral_type"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "catalogue label",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "rotation_period",
+        "label": "Rotation period",
+        "references": [
+          "/source_snapshot/physical_properties/rotation_period_hours"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "units": "h",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "first_observation",
+        "label": "First observation",
+        "references": [
+          "/source_snapshot/first_observation"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "time_status": "not_available",
+        "units": "catalogue timestamp; source precision retained",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "last_observation",
+        "label": "Last observation",
+        "references": [
+          "/source_snapshot/last_observation"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "time_status": "not_available",
+        "units": "catalogue timestamp; source precision retained",
+        "value": null
+      },
+      {
+        "basis": "catalogue_input_not_independently_verified",
+        "key": "fetched_at",
+        "label": "Retrieved at",
+        "references": [
+          "/source_snapshot/fetched_at"
+        ],
+        "source_assertion": null,
+        "status": "not_available",
+        "time_status": "not_available",
+        "units": "retrieval timestamp",
+        "value": null
+      }
+    ],
+    "missing_fields": [
+      {
+        "key": "semi_major_axis",
+        "status": "not_available"
+      },
+      {
+        "key": "eccentricity",
+        "status": "not_available"
+      },
+      {
+        "key": "inclination",
+        "status": "not_available"
+      },
+      {
+        "key": "ascending_node",
+        "status": "not_available"
+      },
+      {
+        "key": "periapsis_argument",
+        "status": "not_available"
+      },
+      {
+        "key": "mean_anomaly",
+        "status": "not_available"
+      },
+      {
+        "key": "orbit_epoch",
+        "status": "not_available"
+      },
+      {
+        "key": "diameter",
+        "status": "not_available"
+      },
+      {
+        "key": "absolute_magnitude",
+        "status": "not_available"
+      },
+      {
+        "key": "albedo",
+        "status": "not_available"
+      },
+      {
+        "key": "spectral_type",
+        "status": "not_available"
+      },
+      {
+        "key": "rotation_period",
+        "status": "not_available"
+      },
+      {
+        "key": "first_observation",
+        "status": "not_available"
+      },
+      {
+        "key": "last_observation",
+        "status": "not_available"
+      },
+      {
+        "key": "fetched_at",
+        "status": "not_available"
+      }
+    ],
+    "non_gravitational": null,
+    "query_coverage": {},
+    "raw_physical_assertions": [],
+    "schema_version": "object-field-inventory-v1",
+    "source_differences": {},
+    "source_id": "e4847344fcfe283e2c5fe2b0be19d106b3c18b4793a84030337349834bc2765e",
+    "source_snapshot": {
+      "close_approaches": [],
+      "completeness": 0.0,
+      "created_at": "2026-11-13T00:53:08.726925+00:00",
+      "designation": "SYNTHETIC missing-data control",
+      "dynamic_TAS": null,
+      "dynamic_category": null,
+      "evidence_metadata": {},
+      "fetched_at": null,
+      "first_observation": null,
+      "last_observation": null,
+      "nongrav": null,
+      "orbital_elements": null,
+      "physical_properties": null,
+      "raw_TAS": null,
+      "score_components": {},
+      "source_contributions": {},
+      "sources_used": [],
+      "updated_at": "2026-11-13T00:53:08.726925+00:00"
+    },
+    "sources_recorded": [],
+    "typed_physical_uncertainty_fields": {},
+    "uncertainty_note": "Scalar-model uncertainty fields and raw assertions are retained; unit/measurement reconciliation is not inferred."
+  },
+  "limitations": [
+    "Binding/replay verifies consistency, not source authenticity or measurement accuracy.",
+    "No natural/artificial origin, calibrated probability or five-sigma result is supplied.",
+    "Complete local enrichment and scientific operation readiness remain separate requirements."
+  ],
+  "ranking_trace": {
+    "interpretation": "Computation trace and assumed prototype reference parameters, not calibrated probabilities, independent evidence or population validation.",
+    "manual_inclination_enhancement": false,
+    "overall_rank_available": false,
+    "policy": {
+      "candidate_threshold": 5.0,
+      "version": "follow-up-ranking-v1"
+    },
+    "reference_parameters": {
+      "orbital_elements": {
+        "eccentricity": {
+          "confidence_interval_95": [
+            0.4285,
+            0.437
+          ],
+          "mean": 0.4329,
+          "n_samples": 9998,
+          "source": "Granvik et al. 2018, observational survey",
+          "std": 0.2266
+        },
+        "inclination": {
+          "confidence_interval_95": [
+            14.8526,
+            15.1699
+          ],
+          "mean": 15.0114,
+          "n_samples": 9998,
+          "source": "Granvik et al. 2018, observational survey",
+          "std": 7.7786
+        },
+        "semi_major_axis": {
+          "confidence_interval_95": [
+            1.6335,
+            1.6577
+          ],
+          "mean": 1.6451,
+          "n_samples": 9998,
+          "source": "Granvik et al. 2018, observational survey",
+          "std": 0.6317
+        }
+      },
+      "physical_properties": {
+        "absolute_magnitude": {
+          "mean": 21.5,
+          "n_samples": 158000,
+          "source": "WISE/NEOWISE survey data",
+          "std": 2.8
+        },
+        "albedo": {
+          "mean": 0.14,
+          "n_samples": 25000,
+          "source": "WISE albedo measurements",
+          "std": 0.12
+        },
+        "diameter": {
+          "mean": 800.0,
+          "n_samples": 50000,
+          "source": "WISE diameter measurements",
+          "std": 1.2
+        }
+      }
+    },
+    "schema_version": "ranking-trace-v1",
+    "terms": [],
+    "total_squared_rank": 0
+  },
+  "review_id": "21c785e3ed0f5acc4ef4b90d27191fe391f126b48b47fb8d46f2284cd3dca2c0",
+  "schema_version": "object-evidence-review-v1",
+  "scientific_status": "not_independently_validated",
+  "scope": "full_object_snapshot",
+  "screening_policy": {
+    "candidate_threshold": 5.0,
+    "version": "follow-up-ranking-v1"
+  }
+}

@@ -575,17 +575,28 @@ class ANEOSMenuV2(ANEOSMenuBase):
         # Build flat records list
         records = []
         for desg, result in self._detection_results.items():
+            from aneos_core.analysis.object_review import verify_object_review
+            review=getattr(result,'object_review',None)
+            if review is not None:
+                try:
+                    review=verify_object_review(review)
+                    if review['designation']!=desg and review['designation'].upper()!=desg:
+                        raise ValueError('Object identity mismatch')
+                except (ValueError,TypeError,KeyError):
+                    self.show_error('Export refused: modified or unbound object review.');return
+            assessment=review['assessment'] if review else None
+            metadata=(getattr(result,'metadata',{}) or {})
             records.append({
-                "designation": desg,
-                "type": "detection",
-                "sigma_level": getattr(result, "sigma_level", None),
-                "screening_score": getattr(result, "screening_score", None),
-                "evidence_id": (getattr(result, "metadata", {}) or {}).get("evidence_id"),
-                "artificial_probability": getattr(result, "artificial_probability", None),
-                "classification": getattr(result, "classification", None),
-                "evidence_count": (getattr(result, "metadata", {}) or {}).get("evidence_count"),
-                "combined_p_value": (getattr(result, "metadata", {}) or {}).get("combined_p_value"),
-                "non_gravitational_evidence": (getattr(result, "metadata", {}) or {}).get("non_gravitational_evidence"),
+                'object_review':review,
+                'object_review_json':json.dumps(review,sort_keys=True,allow_nan=False) if review else None,
+                'evidence_basis':'replayed_screening_review' if review else 'legacy_unverified_export',
+                'designation':desg,'type':'detection',
+                'sigma_level':None,'artificial_probability':None,'combined_p_value':None,
+                'screening_score':assessment['screening_score'] if assessment else getattr(result,'screening_score',None),
+                'evidence_id':assessment['evidence_id'] if assessment else metadata.get('evidence_id'),
+                'classification':assessment['classification'] if assessment else 'LEGACY_UNVERIFIED',
+                'evidence_count':len(assessment['evidence_sources']) if assessment else None,
+                'non_gravitational_evidence':review['inventory']['non_gravitational'] if review and review['inventory'] else metadata.get('non_gravitational_evidence'),
             })
         for desg, impact in self._impact_results.items():
             from aneos_core.analysis.impact_evidence import require_sentry_report
@@ -674,7 +685,20 @@ class ANEOSMenuV2(ANEOSMenuBase):
         from aneos_core.analysis.screening import ScreeningAnalysisService
         try:
             service = manager if isinstance(manager, ScreeningAnalysisService) else ScreeningAnalysisService()
-            return service.analyze_neo(neo_data, extra_additional).to_detection_result()
+            from aneos_core.data.models import NEOData
+            from aneos_core.analysis.object_review import build_object_review
+            from dataclasses import asdict
+            if not isinstance(neo_data,NEOData) or neo_data.designation!=designation:
+                raise ValueError('Typed source data/object identity unavailable')
+            review=build_object_review(neo_data,policy=service.policy,additional_data=extra_additional)
+            result=service.analyze_neo(neo_data,extra_additional).to_detection_result()
+            if result.analysis['assessment']!=review['assessment']:
+                raise ValueError('Source changed during screening')
+            result.object_review=review
+            result.screening_policy=asdict(service.policy)
+            result.neo_data=NEOData.from_dict(review['inventory']['source_snapshot'])
+            result.analysis['object_review']=review
+            return result
         except Exception as exc:
             self.show_error(f"Screening failed for {designation!r}: {exc}")
             return None
@@ -801,161 +825,44 @@ class ANEOSMenuV2(ANEOSMenuBase):
     # ==================================================================
 
     def _display_neo_data(self, designation: str, neo_data) -> None:
-        """Show a summary panel of fetched NEO data before running detection."""
-        lines = []
-
-        # Orbital elements
-        from aneos_core.data.models import NonGravitationalParameters
-        ng = getattr(neo_data, 'nongrav', None)
-        if isinstance(ng, NonGravitationalParameters):
-            report = ng.evidence_report()
-            lines.append('[bold]Non-gravitational orbit-fit evidence (not thrust):[/bold]')
-            for name, component in report['components'].items():
-                if component['status'] == 'available':
-                    native = component['native']
-                    sigma = native['sigma'] if native['sigma'] is not None else 'not available'
-                    lines.append(f"{name}: {native['value']} ± {sigma} {native['units']} ({native['kind']})")
-                else:
-                    lines.append(f"{name}: {component['status']}")
-            if ng.covariance:
-                lines.append(f'Covariance: JD(TDB) {ng.covariance.epoch_jd_tdb}; order {ng.covariance.labels}')
-            if report['covariance_applies_to_display_epoch'] is False:
-                lines.append('Covariance epoch differs from displayed orbit; propagation is required before joint use.')
-
-        oe = getattr(neo_data, "orbital_elements", None)
-        if oe is not None:
-            a = getattr(oe, "semi_major_axis", None)
-            e = getattr(oe, "eccentricity", None)
-            i = getattr(oe, "inclination", None)
-            om = getattr(oe, "ra_of_ascending_node", None)
-            w = getattr(oe, "arg_of_periapsis", None)
-            m = getattr(oe, "mean_anomaly", None)
-            parts = []
-            if a is not None:
-                parts.append(f"a={a:.3f} AU")
-            if e is not None:
-                parts.append(f"e={e:.4f}")
-            if i is not None:
-                parts.append(f"i={i:.2f}°")
-            if om is not None:
-                parts.append(f"Ω={om:.1f}°")
-            if w is not None:
-                parts.append(f"ω={w:.1f}°")
-            if m is not None:
-                parts.append(f"M={m:.2f}°")
-            if parts:
-                lines.append(f"[bold]Orbital elements:[/bold]   {  '  '.join(parts)}")
-
-        # Physical properties
-        pp = getattr(neo_data, "physical_properties", None)
-        if pp is not None:
-            phys_parts = []
-            diam = getattr(pp, "diameter_km", None)
-            albedo = getattr(pp, "albedo", None)
-            stype = getattr(pp, "spectral_type", None)
-            rot = getattr(pp, "rotation_period_hours", None)
-            h = getattr(pp, "absolute_magnitude_h", None)
-            if diam is not None:
-                phys_parts.append(f"diameter={diam:.3f} km")
-            if albedo is not None:
-                phys_parts.append(f"albedo={albedo:.3f}")
-            if stype is not None:
-                phys_parts.append(f"type={stype}")
-            if rot is not None:
-                phys_parts.append(f"rot={rot:.2f} h")
-            if h is not None:
-                phys_parts.append(f"H={h:.1f}")
-            if phys_parts:
-                lines.append(f"[bold]Physical:[/bold]            {'  '.join(phys_parts)}")
-
-        # Observation arc
-        first_obs = getattr(neo_data, "first_observation", None)
-        last_obs = getattr(neo_data, "last_observation", None)
-        if first_obs is not None or last_obs is not None:
-            from datetime import datetime as _dt
-            f_str = str(first_obs)[:10] if first_obs else "?"
-            l_str = str(last_obs)[:10] if last_obs else "?"
-            arc_note = ""
-            if isinstance(first_obs, _dt) and isinstance(last_obs, _dt):
-                arc_yr = (last_obs - first_obs).days / 365.25
-                arc_note = f"  ({arc_yr:.1f} yr)"
-            lines.append(f"[bold]Observation arc:[/bold]     {f_str} → {l_str}{arc_note}")
-
-        # Data completeness
-        completeness = getattr(neo_data, "completeness", None)
-        if completeness is not None:
-            try:
-                pct = int(float(completeness) * 100) if float(completeness) <= 1.0 else int(float(completeness))
-                lines.append(f"[bold]Data completeness:[/bold]   {pct}%")
-            except (TypeError, ValueError):
-                pass
-
-        # Close approaches
-        close_approaches = getattr(neo_data, "close_approaches", None)
-        if close_approaches:
-            n_ca = len(close_approaches)
-            # Find nearest by distance_au
-            try:
-                nearest = min(
-                    close_approaches,
-                    key=lambda ca: getattr(ca, "distance_au", float("inf"))
-                    or float("inf"),
-                )
-                nd = getattr(nearest, "distance_au", None)
-                nd_date = getattr(nearest, "close_approach_date", None) or getattr(nearest, "date", None)
-                nd_str = (
-                    f"  |  nearest: {nd:.4f} AU"
-                    + (f" ({str(nd_date)[:10]})" if nd_date else "")
-                    if nd is not None
-                    else ""
-                )
-            except Exception:
-                nd_str = ""
-            lines.append(f"[bold]Close approaches:[/bold]    {n_ca} recorded{nd_str}")
-
-        # Sources used
-        sources = getattr(neo_data, "sources_used", None)
-        if sources:
-            lines.append(f"[bold]Sources:[/bold]             {', '.join(sources)}")
-
-        # Non-gravitational parameters
-        nongrav = getattr(neo_data, "nongrav", None)
-        if nongrav is not None:
-            a2 = getattr(nongrav, "A2", None)
-            if a2 is not None:
-                lines.append(f"[bold]Non-grav A2:[/bold]         {a2:.3e} AU/day²")
-
-        if lines:
-            self.display_panel(
-                "\n".join(lines),
-                title=f"Object Data — {designation}",
-                style="blue",
-            )
+        """Render a typed, source-bound inventory; no broad completeness claim."""
+        from aneos_core.analysis.object_review import build_data_inventory, render_data_inventory
+        try:
+            if neo_data.designation!=designation:raise ValueError('Source identity mismatch')
+            inventory=build_data_inventory(neo_data)
+            render_data_inventory(inventory,console=self.console)
+        except (ValueError,TypeError,AttributeError):
+            self.show_error('Object data cannot be bound to a valid typed snapshot; no completeness claim is available.')
 
     def _display_detection_result(self, designation: str, result, verbose: bool = False) -> None:
         cls = getattr(result, 'classification', 'INCONCLUSIVE')
         if cls.startswith('PIPELINE:'):
             self._display_pipeline_candidate_detail(designation, result)
             return
-        payload = (getattr(result, 'analysis', {}) or {}).get('assessment', {})
-        lines = [
-            f'Designation: {designation}', f'Classification: {cls}',
-            f'Screening score: {self._format_score(getattr(result, "screening_score", None))}',
-            'Statistical significance: unavailable (uncalibrated model)',
-            'Artificial-origin probability: unavailable',
-            'Human origin: not assessed',
-            f'Evidence ID: {payload.get("evidence_id", "unavailable")}',
-            'A follow-up candidate is not a confirmed artificial object.',
-        ]
-        if verbose:
-            for ev in payload.get('evidence_sources', []):
-                value = self._format_score(ev.get('effect_size')) if ev['analyzed'] else ev.get('unavailable_reason', 'unavailable')
-                lines.append(f"{ev['type']}: {value}")
-        self.display_panel('\n'.join(lines), title=f'Screening — {designation}', style='cyan')
+        from aneos_core.analysis.object_review import build_assessment_review, verify_object_review, render_object_review
+        from aneos_core.analysis.screening import ScreeningPolicy
+        try:
+            payload=(getattr(result,'analysis',{}) or {}).get('assessment')
+            if not isinstance(payload,dict) or str(payload.get('designation','')).casefold()!=designation.casefold():
+                raise ValueError('Canonical assessment or object binding unavailable')
+            review=getattr(result,'object_review',None)
+            if review is None:
+                policy=ScreeningPolicy(**(getattr(result,'screening_policy',None) or {}))
+                review=build_assessment_review(payload,policy=policy)
+            else:
+                review=verify_object_review(review)
+                if review['assessment']!=payload:raise ValueError('Assessment changed after review')
+            if (getattr(result,'classification',None)!=payload['classification'] or
+                getattr(result,'screening_score',None)!=payload['screening_score']):
+                raise ValueError('Displayed legacy result differs from canonical assessment')
+            render_object_review(review,console=self.console,verbose=verbose)
+        except (ValueError,TypeError,KeyError,AttributeError):
+            self.show_error('Result is legacy, modified or unbound; a verified object explanation is unavailable.')
 
     @staticmethod
     def _format_score(value):
-        return 'unavailable' if value is None else f'{value:.4f} (heuristic)'
+        from aneos_core.analysis.object_review import number
+        return 'unavailable' if value is None else number(value,exact=True)+' (heuristic)'
 
     def _display_pipeline_candidate_detail(self, designation: str, result) -> None:
         """Detailed ATLAS breakdown for a pipeline candidate (stored proxy object)."""

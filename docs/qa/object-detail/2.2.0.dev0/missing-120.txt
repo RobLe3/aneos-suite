@@ -1,0 +1,65 @@
+╭─────────────────────────────────── Object review — SYNTHETIC missing-data control ───────────────────────────────────╮
+│                                                                                                                      │
+│ Screening classification                                                                                             │
+│ INCONCLUSIVE                                                                                                         │
+│                                                                                                                      │
+│ Interpretation                                                                                                       │
+│ Screening abstained: required orbital inputs are missing or outside this prototype domain. Missing evidence is not a │
+│ negative scientific finding.                                                                                         │
+│                                                                                                                      │
+│ Scientific status                                                                                                    │
+│ not independently validated; significance and origin probability unavailable                                         │
+│                                                                                                                      │
+│ Evidence binding                                                                                                     │
+│ Review ID: 21c785e3ed0f5acc4ef4b90d27191fe391f126b48b47fb8d46f2284cd3dca2c0                                          │
+│ Evidence ID: ee9cd968e2c1763aee7ae4247b0d60d55589f0289462a1dfbc7a5cd11ef42914                                        │
+│ Policy ID: 7998396ede12e26a30e9f2e4f13daf37c6c794a6b0d1138af1a5a17134518d37                                          │
+│                                                                                                                      │
+│ Data coverage                                                                                                        │
+│ Basic catalogue field presence: 0/15 (declared 15-field profile only).                                               │
+│ Screening orbital fields present: 0/3; domain eligibility is separate.                                               │
+│ Overall data completeness: not established. Eligible source coverage: not established.                               │
+│                                                                                                                      │
+│                                               Recorded catalogue data                                                │
+│ ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
+│ ┃ Field                ┃ Recorded value / display conversion ┃ Units / status                                      ┃ │
+│ ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩ │
+│ │ Semi-major axis      │ not available                       │ AU; not_available                                   │ │
+│ │ Eccentricity         │ not available                       │ dimensionless; not_available                        │ │
+│ │ Inclination          │ not available                       │ degrees; not_available                              │ │
+│ │ Ascending node       │ not available                       │ degrees; not_available                              │ │
+│ │ Periapsis argument   │ not available                       │ degrees; not_available                              │ │
+│ │ Mean anomaly         │ not available                       │ degrees; not_available                              │ │
+│ │ Orbit epoch          │ not available                       │ model timestamp; native solution retained;          │ │
+│ │                      │                                     │ not_available                                       │ │
+│ │ Diameter             │ not available                       │ km; not_available                                   │ │
+│ │ Absolute magnitude H │ not available                       │ mag; not_available                                  │ │
+│ │ Albedo               │ not available                       │ dimensionless; not_available                        │ │
+│ │ Spectral label       │ not available                       │ catalogue label; not_available                      │ │
+│ │ Rotation period      │ not available                       │ h; not_available                                    │ │
+│ │ First observation    │ not available                       │ catalogue timestamp; source precision retained;     │ │
+│ │                      │                                     │ not_available                                       │ │
+│ │ Last observation     │ not available                       │ catalogue timestamp; source precision retained;     │ │
+│ │                      │                                     │ not_available                                       │ │
+│ │ Retrieved at         │ not available                       │ retrieval timestamp; not_available                  │ │
+│ └──────────────────────┴─────────────────────────────────────┴─────────────────────────────────────────────────────┘ │
+│                                                                                                                      │
+│ Ranking decomposition unavailable: no supported terms.                                                               │
+│                                                                                                                      │
+│ Evidence-grounded explanation                                                                                        │
+│ The rank uses fixed global prototype reference parameters, not a size/survey-conditioned population or calibrated    │
+│ null. Its proxy channels are not independent observations.                                                           │
+│                                                                                                                      │
+│ The displayed profile counts recorded fields, not complete knowledge or verified source coverage. Missing physical   │
+│ uncertainties, observations and unresolved sources still limit scientific use.                                       │
+│                                                                                                                      │
+│ Follow-up and limits                                                                                                 │
+│ • Verify source identity, dated measurements, required uncertainty and compatible solutions.                         │
+│ • Use fitted natural/human-technology/artifact comparisons and withheld observations before physical-origin          │
+│ inference.                                                                                                           │
+│ • Independent population calibration and search-wide error control are required before significance claims.          │
+│ • Binding/replay verifies consistency, not source authenticity or measurement accuracy.                              │
+│ • No natural/artificial origin, calibrated probability or five-sigma result is supplied.                             │
+│ • Complete local enrichment and scientific operation readiness remain separate requirements.                         │
+│                                                                                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

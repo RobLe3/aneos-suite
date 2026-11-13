@@ -119,7 +119,7 @@ class TestVerboseEvidenceBreakdown:
         assert result.analysis["evidence_breakdown"]
         assert result.analysis["evidence_breakdown"] == result.analysis["assessment"]["evidence_sources"]
 
-    def test_display_reads_evidence_breakdown_key(self):
+    def test_display_reads_evidence_breakdown_key(self, capsys):
         from aneos_core.detection.detection_manager import DetectionManager
         from aneos_menu_v2 import ANEOSMenuV2
         from unittest.mock import Mock
@@ -127,8 +127,8 @@ class TestVerboseEvidenceBreakdown:
         menu.console = None
         menu.display_panel = Mock()
         result = DetectionManager().analyze_neo({"a": 1, "e": .2, "i": 20})
-        menu._display_detection_result("marker", result, verbose=True)
-        content = menu.display_panel.call_args.args[0]
+        menu._display_detection_result(result.analysis["assessment"]["designation"], result, verbose=True)
+        content = capsys.readouterr().out
         assert "orbital_dynamics" in content
         assert "unavailable" in content
 

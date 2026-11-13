@@ -138,15 +138,15 @@ async def test_actual_menu_get_post_batch_and_automatic_paths_match(monkeypatch)
         assert_unavailable(adapter)
 
 
-def test_menu_displays_unavailable_not_artificial_certainty():
+def test_menu_displays_unavailable_not_artificial_certainty(capsys):
     from aneos_menu_v2 import ANEOSMenuV2
     menu = ANEOSMenuV2.__new__(ANEOSMenuV2)
     menu.console = None
     menu.display_panel = Mock()
     result = ScreeningAnalysisService().analyze_neo(snapshot()).to_detection_result()
     menu._display_detection_result('synthetic-marker', result, verbose=True)
-    panel = menu.display_panel.call_args.args[0]
-    assert 'Screening score:' in panel
+    panel = capsys.readouterr().out
+    assert 'Uncalibrated rank' in panel
     assert 'unavailable' in panel
     assert 'σ=5' not in panel
     assert '99.999' not in panel

@@ -40,6 +40,9 @@ jobs:
       - name: Verify application identity and real menu-entry renders
         run: python -m pytest tests/test_application_identity.py -q --tb=short
 
+      - name: Verify evidence-bound object detail coverage and renders
+        run: python -m pytest tests/test_object_evidence_review.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-object-review.ini --cov-report=term-missing --cov-fail-under=85
+
   docker-build:
     name: Docker build
     runs-on: ubuntu-latest

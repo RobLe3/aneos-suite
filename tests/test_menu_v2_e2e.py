@@ -84,6 +84,7 @@ def make_fake_detection_result(sigma=3.7, prob=0.037, cls="⚠️ SUSPICIOUS (σ
         "detector_type": "validated",
     }
     result.analysis = {}
+    result.object_review = None  # Explicit legacy mock, not a replayable review.
     return result
 
 

@@ -924,3 +924,5 @@ readiness is implied; historical result versions are preserved.
 include actual text/HTML/SVG at80/120/160 columns, current Scientific Help and a
 machine-readable inventory. Fifteen feature dispatch routes are checked; detailed
 prerequisite/behavior/result QA remains explicitly pending in #41.
+
+For the canonical V2 object-detail scope and its limits, see [evidence-bound object details](docs/engineering/evidence-bound-object-detail.md).

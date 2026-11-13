@@ -2690,3 +2690,29 @@ legacy process-memory research automatically. No scientific validation, full sou
 enrichment, complete dataset, human-origin exclusion or five-sigma claim follows from
 successful execution. See `durable-network-api.md` and the additional user-quality
 requirements register (#40–#46) before claiming whole-project readiness.
+
+### ADR-080: Replay-bound object explanations and explicit coverage profiles
+
+**Status**: Implemented for canonical V2 detail/export; broader integration pending.
+**Date**: 2026-11-13
+
+The presentation layer must explain the computation it actually displays. Record a
+calculation trace during canonical screening without changing historical v1 payloads,
+weights, score order or thresholds. Build the object review from a frozen typed NEO
+snapshot, policy and canonical assessment. Verify by recomputing the whole review,
+not merely checking a self-supplied hash. Hashes establish consistency, not source
+authenticity. Recorded application identity remains metadata, not a scientific gate.
+
+Use the existing analysis and presentation boundaries; no second origin detector or
+new bounded context. Preserve source alternatives, missing values, native epochs and
+unrounded JSON. Explicitly distinguish the fixed 15-field catalogue-presence profile,
+three screening inputs, source acquisition coverage and scientific readiness. Neither
+profile means complete scientific knowledge. Trace graphics show shares of squared
+heuristic rank, never probabilities or independent evidence.
+
+Canonical V2 detailed views verify source/result binding; legacy assessment-only
+views disclose the absent full snapshot. Exports preserve the review, remove unsupported
+flat significance/origin claims and use exclusive creation. Legacy exports remain
+labeled unverified. Pipeline-specific views, historical SQL playback, all other
+entrypoints, durable evidence enrichment and physical-model inference are not certified
+by this change. See `docs/engineering/evidence-bound-object-detail.md` and #40–#43.
