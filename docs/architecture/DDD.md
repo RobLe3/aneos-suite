@@ -1599,3 +1599,12 @@ Reporting owns the existing per-object reports and batch envelope. Primary-menu
 adapters submit/resume and render only verified terminal results. The fixed local
 owner is not a new authentication context. No new database or bounded context is
 introduced; other job families and independent scientific validation remain separate.
+
+### Explicit statistical utility assumptions (ADR-096)
+
+Scientific Validation owns supplied-model tail arithmetic, multiple-testing
+adjustments and hypothetical sample-size/power planning. It does not infer a
+reference population, certify valid p-values or independently estimate deployment
+error rates. Invalid/missing prerequisites raise errors; unavailable empirical
+FDR/FWER remain null. Canonical analysis retains its ranking policy and unavailable
+calibrated significance. No new bounded context is introduced.

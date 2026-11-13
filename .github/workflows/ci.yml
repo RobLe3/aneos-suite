@@ -28,6 +28,9 @@ jobs:
       - name: Verify durable job store component coverage
         run: python -m pytest tests/test_durable_job_store.py tests/test_durable_batch_jobs.py -q --tb=short --cov=aneos_api.job_store --cov-report=term-missing --cov-fail-under=85
 
+      - name: Verify supplied-model statistics and explicit unavailable error rates
+        run: python -m pytest tests/test_statistical_utility_contract.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-statistical-utilities.ini --cov-report=term-missing --cov-fail-under=95
+
       - name: Verify population report component coverage
         run: python -m pytest tests/test_network_evidence_report.py tests/test_pattern_api.py -q --tb=short --cov=aneos_core --cov-config=tests/coverage-network-report.ini --cov-report=term-missing --cov-fail-under=90
 

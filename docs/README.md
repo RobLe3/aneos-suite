@@ -51,6 +51,7 @@ route before integrating it. Do not infer deployment readiness from a schema.
 - [Configuration reference](reference/configuration-reference.md)
 - [Policy inspection and controlled configuration](engineering/truthful-policy-menu.md)
 - [Primary-menu durable batch jobs](engineering/durable-batch-execution.md)
+- [Statistical utility inputs and limits](engineering/statistical-utility-contract.md)
 - [Durable job storage](engineering/durable-job-store.md) and
   [resumable network worker](engineering/resumable-network-worker.md): scoped families,
   not proof that every legacy task survives failure.

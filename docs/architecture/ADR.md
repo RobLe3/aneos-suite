@@ -3323,3 +3323,37 @@ execution and non-daemon heartbeats are explicitly hosted; imports start no work
 No automatic daemon service, source monitoring, external backup or version bump.
 Scientific inference/calibration and other job families remain unqualified until
 their separate acceptance evidence exists.
+
+## ADR-096 — Statistical utilities require explicit models and valid inputs
+
+**2026-11-13; #6/#10/#11.** Scientific Validation owns the existing exported
+`StatisticalTesting` utility. It is not a fitted population model or a permission
+to promote screening ranks to discovery significance. Canonical screening and
+required review gates remain unchanged.
+
+Remove fail-to-number behavior: invalid models, nonfinite measurements, invalid
+probabilities and unsupported tests raise explicit errors, not p=1, zero effect,
+50% power or zero-width uncertainty. A scalar normal-reference tail needs explicit
+mean and positive standard deviation; it is not automatically a confidence interval
+for an estimated mean. A summary Student test needs a supplied standard error and
+degrees of freedom. Withdraw the scalar median/MAD approximation under the name
+Wilcoxon; retain its callable name with a controlled NotImplementedError because
+paired observations/ranks are absent. Confidence intervals require an actual
+positive standard error and explicit degrees of freedom for a Student interval.
+
+Multiplicity helpers return adjusted p-values and conditional rejection decisions,
+not measured FDR/FWER. Existing error-rate fields become nullable; add method,
+nominal control target and assumptions separately. BH requires valid marginal
+p-values with independence or the stated positive-dependence condition. BY permits
+arbitrary dependence of valid marginal p-values; neither repairs invalid inputs
+or unrecorded selection/trials. Empty families have no estimated error rates.
+Bonferroni uses the predeclared family size, not an invented realized error rate.
+
+Power calculations are hypothetical one-sample, two-sided independent-normal
+planning calculations (known variance z, unknown variance t). Use both tails and
+solve the stated 80%-power minimum detectable effect rather than substituting the
+requested effect for t. These assumptions must remain visible. No synthetic
+planning output is an independent empirical performance estimate. Preserve old
+callable entry points where scientifically meaningful, document stricter input
+requirements, and keep historical artifacts unchanged. No new bounded context,
+database, classifier, dependency or release-version change.
