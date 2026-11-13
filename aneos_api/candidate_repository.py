@@ -38,6 +38,12 @@ def _ready(engine):
                     for name in ('query_id','receipt_id')))
 
 
+def _binding(query_id, receipt_id, projection_ids, assertion_ids, recorded_at):
+    """Storage seal excludes derived read-model status fields."""
+    return {'query_id': query_id, 'receipt_id': receipt_id,
+            'projection_ids': projection_ids, 'assertion_ids': assertion_ids, 'recorded_at': recorded_at}
+
+
 def _native_body(receipt, archive):
     response = receipt['response']
     if response['body_base64'] is None:
@@ -99,10 +105,7 @@ class CandidateQueryRepository:
             native_body = _native_body(receipt, row.native_body)
             projection_ids = json.loads(row.projection_ids_json)
             assertion_ids = json.loads(row.assertion_ids_json)
-            binding = {'query_id': row.query_id, 'receipt_id': row.receipt_id,
-                       'projection_ids': projection_ids, 'assertion_ids': assertion_ids,
-                       'recorded_at': row.recorded_at,
-                    'native_body_status': 'complete_entity_verified' if native_body is not None else 'not_available_from_transport'}
+            binding = _binding(row.query_id, row.receipt_id, projection_ids, assertion_ids, row.recorded_at)
             if fingerprint(binding) != row.binding_sha256 or sorted(assertion_ids) != sorted(a['assertion_id'] for a in verified):
                 raise ValueError('Candidate storage binding changed')
             if set(projection_ids) != {p['designation'] for p in packets}:
@@ -162,8 +165,7 @@ class CandidateQueryRepository:
             assertion_ids = list(db.scalars(select(SourceAssertion.assertion_id).where(
                 SourceAssertion.session_id == query_id, SourceAssertion.kind == 'source_assertion').order_by(SourceAssertion.sequence)))
             stamp = datetime.now(timezone.utc).isoformat()
-            binding = {'query_id': query_id, 'receipt_id': receipt['receipt_id'],
-                       'projection_ids': projection_ids, 'assertion_ids': assertion_ids, 'recorded_at': stamp}
+            binding = _binding(query_id, receipt['receipt_id'], projection_ids, assertion_ids, stamp)
             db.add(CandidateQuery(query_id=query_id, receipt_id=receipt['receipt_id'],
                                   receipt_json=dumps(receipt), recorded_at=stamp,
                                   projection_ids_json=dumps(projection_ids), assertion_ids_json=dumps(assertion_ids),
