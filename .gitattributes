@@ -1,0 +1,4 @@
+# Release source archives omit mutable local config/data. Git history/checkouts
+# retain these existing files; the beta uses an explicitly separate runtime DB.
+/.env export-ignore
+/aneos.db export-ignore

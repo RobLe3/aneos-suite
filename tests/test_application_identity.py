@@ -15,9 +15,11 @@ def test_application_version_bumps_known_tags_without_changing_contracts():
     from aneos_version import APPLICATION_VERSION,API_CONTRACT_VERSION,BUILD_CHANNEL
     from packaging.version import Version
     assert Version(APPLICATION_VERSION)>Version('2.1.6')
-    assert Version(APPLICATION_VERSION).is_devrelease
+    assert Version(APPLICATION_VERSION).is_prerelease
+    assert Version(APPLICATION_VERSION).pre==('b',1)
+    assert not Version(APPLICATION_VERSION).is_devrelease
     assert API_CONTRACT_VERSION=='2.0.0'
-    assert BUILD_CHANNEL=='development'
+    assert BUILD_CHANNEL=='beta'
 
 
 def test_package_exports_use_one_application_identity():
@@ -41,15 +43,15 @@ runpy.run_path(sys.argv[0],run_name='__main__')
         env={**os.environ,'PYTHONDONTWRITEBYTECODE':'1'},timeout=10)
     from aneos_version import APPLICATION_VERSION
     assert done.returncode==0,done.stderr
-    assert done.stdout.strip()==f'aNEOS {APPLICATION_VERSION} (development)'
+    assert done.stdout.strip()==f'aNEOS {APPLICATION_VERSION} (beta)'
     assert not list(tmp_path.iterdir())
 
 
 def test_readme_and_release_note_identify_development_not_scientific_readiness():
     from aneos_version import APPLICATION_VERSION
     readme=(ROOT/'README.md').read_text();change=(ROOT/'CHANGELOG.md').read_text()
-    assert f'**v{APPLICATION_VERSION} | Development review' in readme
-    assert f'## [{APPLICATION_VERSION}] - Unreleased' in change
+    assert f'**v{APPLICATION_VERSION} | Beta preview' in readme
+    assert f'## [{APPLICATION_VERSION}] - 2026-11-13' in change
     assert 'v1.2.2' in change  # Historical release identity is not rewritten.
 
 
@@ -60,7 +62,7 @@ def test_real_v2_banner_readable_and_no_false_significance(width):
     from aneos_version import APPLICATION_VERSION
     output=io.StringIO();menu=ANEOSMenuV2();menu.console=Console(file=output,width=width,color_system=None)
     menu._print_banner();text=output.getvalue()
-    assert APPLICATION_VERSION in text and 'development' in text
+    assert APPLICATION_VERSION in text and 'beta' in text
     assert 'Network sigma' not in text and 'network sigma' not in text and 'σ thresholds' not in text
     assert '[cyan]' not in text and '[uncalibrated' not in text
     assert max(map(len,text.splitlines()))<=width

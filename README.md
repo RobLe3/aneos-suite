@@ -2,7 +2,13 @@
 
 # aNEOS: Advanced Near Earth Object Suite
 
-**v2.2.0.dev0 | Development review | Unreleased reliability work | 2026-11-13**
+**v2.2.0b1 | Beta preview | Engineering test release — not scientific validation | 2026-11-13**
+
+**Start here:** [2.2.0b1 installation, test workflows and known limitations](docs/releases/2.2.0b1.md).
+Use a new checkout and a separate database; do not overwrite an existing research
+installation or its uncommitted work. This preview supports testing the unified
+per-object screening/reporting path. Known-bad root legacy candidate polling/inference is temporarily unavailable
+while #71/#73 are repaired; it cannot return synthetic scores in this preview.
 
 aNEOS is a Python research platform for:
 
@@ -11,10 +17,10 @@ aNEOS is a Python research platform for:
 2. **Impact research support:** scoped external JPL Sentry evidence and explicitly
    conditional physical scenarios, not a validated local Earth/Moon risk solver.
 
-> **Current contract:** this review branch does not provide independently calibrated
+> **Current contract:** this beta does not provide independently calibrated
 > origin probabilities, FDR estimates or five-sigma discovery significance. Earlier
 > numerical examples and aspirational capability descriptions below are not current
-> scientific validation. Follow the scoped engineering reports and ADR-065–079;
+> scientific validation. Follow the scoped engineering reports and ADR-065–090;
 > remaining work is tracked in [programme #2](https://github.com/RobLe3/aneos-suite/issues/2).
 > This is not an operational warning or planetary-defense decision service.
 
@@ -935,9 +941,9 @@ They remain acceptance work, not claims already achieved by engineering test cou
 
 Application version is defined in `aneos_version.py`. Run `python aneos.py --version`
 without starting scientific or API services. The REST API contract remains2.0.0;
-`application_version` and `X-Application-Version` identify this development build.
-Model/schema/provider versions remain independent. No release tag or scientific
-readiness is implied; historical result versions are preserved.
+`application_version` and `X-Application-Version` identify this beta build.
+Model/schema/provider versions remain independent. The beta tag identifies an engineering checkpoint, not scientific
+readiness; historical result versions are preserved.
 
 [Menu-entry before/after captures and scope](docs/engineering/version-and-menu-identity.md)
 include actual text/HTML/SVG at80/120/160 columns, current Scientific Help and a

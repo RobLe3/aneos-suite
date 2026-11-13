@@ -3095,3 +3095,11 @@ Rendering does not query providers. Root legacy source polling and its first-pay
 loss remain separate confirmed defects (#73/#71). Add a 90% dashboard/browser
 component gate and actual 80/120/160 captures, retaining every existing gate. Neither
 these tests nor source replay establish independent scientific readiness.
+
+ADR-090 release clarification — 2.2.0b1: the root legacy candidate-polling/inference
+methods with confirmed schema, zero-default and synthetic-score defects (#73) are
+controlled deprecations during the preview. They fail before provider/inference work;
+no confidence or empty-success replacement is emitted. Native retrieval and the typed
+per-object service remain available. This quarantine is not completion of discovery
+polling or source-retention#71. Restoring those capabilities needs shared-adapter,
+identity/unit/provenance and actual-path regression evidence. The full goal remains.

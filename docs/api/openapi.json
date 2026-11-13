@@ -1537,7 +1537,7 @@
             "type": "string"
           },
           "application_version": {
-            "default": "2.2.0.dev0",
+            "default": "2.2.0b1",
             "title": "Application Version",
             "type": "string"
           },
@@ -4007,8 +4007,8 @@
     "description": "Uncalibrated NEO screening and scoped research evidence. Persistent network jobs require verified API credentials or scoped JWTs; development mock tokens do not authorize them. Authentication on other routes varies; see their documented contracts.",
     "title": "aNEOS API",
     "version": "2.0.0",
-    "x-application-version": "2.2.0.dev0",
-    "x-build-channel": "development"
+    "x-application-version": "2.2.0b1",
+    "x-build-channel": "beta"
   },
   "openapi": "3.1.0",
   "paths": {

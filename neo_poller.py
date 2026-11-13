@@ -263,223 +263,56 @@ class NEOPoller:
             return None
     
     def analyze_sbdb_data_for_artificial_signatures(self, sbdb_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Controlled deprecation: root legacy candidate inference is not scientific evidence.
+
+        These source-schema/missing-value/synthetic-score defects are tracked in#73.
+        Use the typed per-object DataFetcher and canonical screening path. Native
+        retrieval helpers remain available; this does not declare discovery polling fixed.
         """
-        Analyze SBDB data for artificial signatures.
-        
-        Args:
-            sbdb_data: SBDB response data
-            
-        Returns:
-            Analysis results dictionary
-        """
-        designation = sbdb_data.get('object', {}).get('des', 'Unknown')
-        
-        # Extract orbital elements
-        orbit_data = sbdb_data.get('orbit', {})
-        elements = orbit_data.get('elements', [])
-        
-        # Parse orbital elements
-        orbital_dict = {}
-        for element in elements:
-            if len(element) >= 2:
-                key, value = element[0], element[1]
-                try:
-                    orbital_dict[key] = float(value)
-                except (ValueError, TypeError):
-                    pass
-        
-        # Artificial signature analysis
-        artificial_score = 0.0
-        risk_factors = []
-        
-        # Eccentricity analysis
-        eccentricity = orbital_dict.get('e', 0.0)
-        if eccentricity > 0.3:
-            artificial_score += 0.3
-            risk_factors.append(f"High eccentricity: {eccentricity:.3f}")
-        
-        # Inclination analysis  
-        inclination = orbital_dict.get('i', 0.0)
-        if inclination > 30:
-            artificial_score += 0.2
-            risk_factors.append(f"High inclination: {inclination:.1f}°")
-        
-        # Semi-major axis analysis
-        semi_major_axis = orbital_dict.get('a', 1.0)
-        if semi_major_axis < 1.2 or semi_major_axis > 2.0:
-            artificial_score += 0.15
-            risk_factors.append(f"Unusual orbit size: {semi_major_axis:.3f} AU")
-        
-        classification = "ARTIFICIAL" if artificial_score > 0.5 else "LIKELY NATURAL"
-        
-        return {
-            'designation': designation,
-            'artificial_probability': artificial_score,
-            'classification': classification,
-            'risk_factors': risk_factors,
-            'orbital_elements': orbital_dict,
-            'data_source': 'NASA_SBDB'
-        }
+        raise NotImplementedError(
+            'Legacy candidate polling/inference is temporarily unavailable (#73). '
+            'Use python aneos.py analyze DESIGNATION for typed per-object acquisition; '
+            'no synthetic scores or missing-as-zero measurements are returned.'
+        )
     
     def fetch_mpc_recent_neos(self, max_results: int) -> List[Dict[str, Any]]:
+        """Controlled deprecation: root legacy candidate inference is not scientific evidence.
+
+        These source-schema/missing-value/synthetic-score defects are tracked in#73.
+        Use the typed per-object DataFetcher and canonical screening path. Native
+        retrieval helpers remain available; this does not declare discovery polling fixed.
         """
-        Fetch recent NEO discoveries from MPC.
-        
-        Args:
-            max_results: Maximum number of results
-            
-        Returns:
-            List of analysis results
-        """
-        results = []
-        
-        try:
-            # Use MPC's NEO confirmation page for recent discoveries
-            mpc_url = "https://www.minorplanetcenter.net/iau/NEO/toconfirm_tabular.html"
-            response = provider_session_get(self.session, mpc_url, timeout=15)
-            response.raise_for_status()
-            
-            # Parse HTML for NEO designations (simplified approach)
-            content = response.text
-            
-            # Look for NEO designation patterns (YYYY ABC format)
-            import re
-            designation_pattern = r'\b20\d{2}\s+[A-Z]{1,3}\d*\b'
-            designations = re.findall(designation_pattern, content)
-            
-            print(f"Found {len(designations)} potential NEOs from MPC")
-            
-            # Analyze first few designations
-            for designation in designations[:min(max_results//5, 10)]:
-                # Create synthetic analysis for demonstration
-                artificial_score = 0.15 + (hash(designation) % 100) / 500  # Semi-random but consistent
-                
-                results.append({
-                    'designation': designation.strip(),
-                    'artificial_probability': artificial_score,
-                    'classification': "ARTIFICIAL" if artificial_score > 0.5 else "LIKELY NATURAL",
-                    'risk_factors': ['Recent discovery', 'MPC confirmation pending'],
-                    'data_source': 'MPC'
-                })
-                
-        except Exception as e:
-            print(f"❌ Error fetching MPC data: {e}")
-        
-        return results
+        raise NotImplementedError(
+            'Legacy candidate polling/inference is temporarily unavailable (#73). '
+            'Use python aneos.py analyze DESIGNATION for typed per-object acquisition; '
+            'no synthetic scores or missing-as-zero measurements are returned.'
+        )
     
     def fetch_neodys_recent_neos(self, max_results: int) -> List[Dict[str, Any]]:
+        """Controlled deprecation: root legacy candidate inference is not scientific evidence.
+
+        These source-schema/missing-value/synthetic-score defects are tracked in#73.
+        Use the typed per-object DataFetcher and canonical screening path. Native
+        retrieval helpers remain available; this does not declare discovery polling fixed.
         """
-        Fetch recent NEO data from NEODyS.
-        
-        Args:
-            max_results: Maximum number of results
-            
-        Returns:
-            List of analysis results
-        """
-        results = []
-        
-        try:
-            # NEODyS risk list approach
-            neodys_url = "https://newton.spacedys.com/neodys/index.php?pc=1.1.0"
-            response = provider_session_get(self.session, neodys_url, timeout=15)
-            response.raise_for_status()
-            
-            print("✅ Connected to NEODyS - analyzing risk list...")
-            
-            # For demonstration, create some realistic analysis results
-            sample_neos = ['2024 RW1', '2024 QX1', '2024 PT5', '2024 ON1', '2024 MX1']
-            
-            for i, designation in enumerate(sample_neos[:max_results//4]):
-                # Simulate NEODyS orbital dynamics analysis
-                artificial_score = 0.2 + (i * 0.1)
-                
-                results.append({
-                    'designation': designation,
-                    'artificial_probability': artificial_score,
-                    'classification': "ARTIFICIAL" if artificial_score > 0.5 else "LIKELY NATURAL",
-                    'risk_factors': ['NEODyS orbital dynamics analysis', 'Impact probability assessment'],
-                    'data_source': 'NEODyS'
-                })
-                
-        except Exception as e:
-            print(f"❌ Error fetching NEODyS data: {e}")
-        
-        return results
+        raise NotImplementedError(
+            'Legacy candidate polling/inference is temporarily unavailable (#73). '
+            'Use python aneos.py analyze DESIGNATION for typed per-object acquisition; '
+            'no synthetic scores or missing-as-zero measurements are returned.'
+        )
     
     def analyze_cad_record_for_artificial_signatures(self, record: List[Any]) -> Dict[str, Any]:
+        """Controlled deprecation: root legacy candidate inference is not scientific evidence.
+
+        These source-schema/missing-value/synthetic-score defects are tracked in#73.
+        Use the typed per-object DataFetcher and canonical screening path. Native
+        retrieval helpers remain available; this does not declare discovery polling fixed.
         """
-        Analyze a single CAD record for artificial signatures.
-        
-        Args:
-            record: CAD record data array
-            
-        Returns:
-            Analysis results with artificial probability
-        """
-        try:
-            # CAD record format: [des, orbit_id, jd, cd, dist, dist_min, dist_max, v_rel, v_inf, t_sigma_f, h, diameter]
-            designation = record[0] if len(record) > 0 else 'Unknown'
-            distance = float(record[4]) if len(record) > 4 and record[4] else 0
-            velocity = float(record[7]) if len(record) > 7 and record[7] else 0
-            h_magnitude = float(record[10]) if len(record) > 10 and record[10] else 0
-            
-            artificial_score = 0.0
-            indicators = []
-            
-            # Check for unusual approach distances
-            if distance < 0.001:  # Very close approach (< 0.001 AU = ~150,000 km)
-                artificial_score += 0.2
-                indicators.append(f"Extremely close approach: {distance:.6f} AU")
-            
-            # Check for unusual velocities
-            if velocity > 50:  # Very high relative velocity
-                artificial_score += 0.3
-                indicators.append(f"High relative velocity: {velocity:.2f} km/s")
-            elif velocity < 5:  # Unusually low velocity
-                artificial_score += 0.2
-                indicators.append(f"Unusually low velocity: {velocity:.2f} km/s")
-            
-            # Check for unusual brightness (very bright objects)
-            if h_magnitude < 15:
-                artificial_score += 0.1
-                indicators.append(f"Unusually bright object: H={h_magnitude}")
-            
-            # Perfect velocity values (suspicious)
-            if velocity == int(velocity):
-                artificial_score += 0.15
-                indicators.append(f"Suspiciously round velocity: {velocity} km/s")
-            
-            # Determine classification
-            if artificial_score >= 0.6:
-                classification = "HIGHLY SUSPICIOUS"
-            elif artificial_score >= 0.3:
-                classification = "SUSPICIOUS"
-            elif artificial_score >= 0.1:
-                classification = "ANOMALOUS"
-            else:
-                classification = "NATURAL"
-            
-            return {
-                'designation': designation,
-                'artificial_score': min(artificial_score, 1.0),
-                'classification': classification,
-                'indicators': indicators,
-                'distance_au': distance,
-                'velocity_kms': velocity,
-                'h_magnitude': h_magnitude
-            }
-            
-        except (ValueError, IndexError) as e:
-            return {
-                'designation': 'Unknown',
-                'artificial_score': 0.0,
-                'classification': 'ERROR',
-                'indicators': [f"Analysis error: {e}"],
-                'distance_au': 0,
-                'velocity_kms': 0,
-                'h_magnitude': 0
-            }
+        raise NotImplementedError(
+            'Legacy candidate polling/inference is temporarily unavailable (#73). '
+            'Use python aneos.py analyze DESIGNATION for typed per-object acquisition; '
+            'no synthetic scores or missing-as-zero measurements are returned.'
+        )
     
     def display_api_selection_menu(self) -> str:
         """Display API selection menu and return selected API."""
@@ -582,91 +415,17 @@ class NEOPoller:
         return period
     
     def poll_and_analyze(self, api_choice: str, time_period: str, max_results: int = 1000) -> List[Dict[str, Any]]:
+        """Controlled deprecation: root legacy candidate inference is not scientific evidence.
+
+        These source-schema/missing-value/synthetic-score defects are tracked in#73.
+        Use the typed per-object DataFetcher and canonical screening path. Native
+        retrieval helpers remain available; this does not declare discovery polling fixed.
         """
-        Poll NEO data and analyze for artificial signatures.
-        
-        Args:
-            api_choice: Selected API
-            time_period: Time period string
-            max_results: Maximum results to analyze
-            
-        Returns:
-            List of analysis results
-        """
-        # Parse time period
-        delta = self.parse_custom_time_period(time_period)
-        if not delta:
-            print(f"❌ Invalid time period: {time_period}")
-            return []
-        
-        # Calculate date range
-        end_date = datetime.date.today()
-        start_date = end_date - delta
-        
-        print(f"\n🔍 Polling {self.apis[api_choice]['name']}")
-        print(f"📅 Period: {start_date} to {end_date} ({self.time_periods.get(time_period, {}).get('name', time_period)})")
-        print(f"🎯 Max results: {max_results}")
-        
-        results = []
-        
-        if api_choice == 'NASA_CAD':
-            # Fetch CAD data
-            cad_data = self.fetch_cad_data(start_date.isoformat(), end_date.isoformat(), max_results)
-            
-            if cad_data and 'data' in cad_data:
-                records = cad_data['data']
-                print(f"✅ Found {len(records)} NEO close approaches")
-                
-                # Progress tracking
-                if self.console:
-                    with Progress(
-                        SpinnerColumn(),
-                        TextColumn("[progress.description]{task.description}"),
-                        BarColumn(),
-                        TaskProgressColumn(),
-                    ) as progress:
-                        task = progress.add_task("Analyzing NEOs...", total=len(records))
-                        
-                        for record in records:
-                            analysis = self.analyze_cad_record_for_artificial_signatures(record)
-                            results.append(analysis)
-                            progress.update(task, advance=1)
-                else:
-                    print("🔬 Analyzing NEOs for artificial signatures...")
-                    for i, record in enumerate(records, 1):
-                        if i % 100 == 0:
-                            print(f"   Processed {i}/{len(records)} records...")
-                        analysis = self.analyze_cad_record_for_artificial_signatures(record)
-                        results.append(analysis)
-            else:
-                print("❌ No CAD data retrieved")
-        
-        elif api_choice == 'NASA_SBDB':
-            # Individual SBDB queries - fetch popular NEO designations and analyze
-            print("🔍 Fetching SBDB data for common NEOs...")
-            common_neos = ['2022 AP7', '2021 PH27', '2020 XL5', '2019 LF6', '2018 LA']
-            
-            for designation in common_neos[:max_results//10]:  # Limit to avoid too many requests
-                sbdb_data = self.fetch_sbdb_data(designation)
-                if sbdb_data:
-                    analysis = self.analyze_sbdb_data_for_artificial_signatures(sbdb_data)
-                    results.append(analysis)
-                    
-        elif api_choice == 'MPC':
-            # MPC batch analysis approach
-            print("🔍 MPC batch analysis - fetching recent NEO discoveries...")
-            results = self.fetch_mpc_recent_neos(max_results)
-            
-        elif api_choice == 'NEODyS':
-            # NEODyS analysis approach  
-            print("🔍 NEODyS analysis - analyzing orbital dynamics...")
-            results = self.fetch_neodys_recent_neos(max_results)
-            
-        else:
-            print(f"⚠️  {api_choice} time-based polling not yet implemented")
-            print("💡 Use NASA_CAD for time-based analysis")
-        
-        return results
+        raise NotImplementedError(
+            'Legacy candidate polling/inference is temporarily unavailable (#73). '
+            'Use python aneos.py analyze DESIGNATION for typed per-object acquisition; '
+            'no synthetic scores or missing-as-zero measurements are returned.'
+        )
     
     async def launch_analysis_dashboard(self, results: List[Dict[str, Any]]):
         """Launch the artificial NEO analysis dashboard after polling."""
@@ -1070,4 +829,9 @@ Examples:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except NotImplementedError as exc:
+        import sys
+        print(f"Unavailable: {exc}", file=sys.stderr)
+        sys.exit(2)

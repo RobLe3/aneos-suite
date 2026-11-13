@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0b1] - 2026-11-13
+
+Engineering beta for testing, integrating the incremental reliability review stack.
+The application/CLI/menus/API application metadata now share2.2.0b1; the API contract
+remains2.0.0. This is not a calibrated scientific or production-readiness declaration.
+See [installation, tested workflows and known limitations](docs/releases/2.2.0b1.md).
+
+- Canonical nullable screening, source/uncertainty/epoch provenance, append-only local
+  evidence, durable screening jobs, role-separated dates and truthful reports.
+- Legacy dashboard/browser now delegates to the same screening/object-review contract.
+- Core installation includes the Uvicorn runtime used by the documented API command.
+- Known-bad root legacy candidate polling/inference is quarantined with explicit
+  controlled deprecations pending#73; it returns no synthetic or missing-as-zero results.
+- Historical source/results and prior development-version labels remain unchanged.
+- Remaining release limitations include legacy candidate polling/data retention#71/#73,
+  all-menu QA, independent physical fits/calibration and scientific five-sigma claims.
+
 ## [2.2.0.dev0] - Unreleased
 
 Development review, 2026-11-13. This advances beyond the existingv2.1.6 repository

@@ -46,7 +46,7 @@ def main():
         
     elif command in ['api', 'server', 'start']:
         print("🚀 Starting aNEOS API Server...")
-        args = ["python", "start_api.py"]
+        args = [sys.executable, "start_api.py"]
         
         # Parse additional arguments
         if len(sys.argv) > 2:

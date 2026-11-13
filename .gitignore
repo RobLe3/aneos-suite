@@ -206,3 +206,7 @@ enhanced_neo_poll_*.json
 !tests/test_cad_evidence_integrity.py
 
 !tests/test_legacy_validation_integrity.py
+
+# Beta/research runtime artifacts are local data, not source revisions.
+/beta-runtime/
+/dashboard_results/
